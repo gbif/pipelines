@@ -34,14 +34,23 @@ public final class SparkMappingPathExecutor {
 
   private final SchemaGraph graph;
   private final ExecutionMetricsCollector metricsCollector;
+  private final SparkPathPrefixCache prefixCache;
 
   public SparkMappingPathExecutor(SchemaGraph graph) {
-    this(graph, new ExecutionMetricsCollector());
+    this(graph, new ExecutionMetricsCollector(), SparkPathPrefixCache.disabled());
   }
 
   SparkMappingPathExecutor(SchemaGraph graph, ExecutionMetricsCollector metricsCollector) {
+    this(graph, metricsCollector, SparkPathPrefixCache.disabled());
+  }
+
+  SparkMappingPathExecutor(
+      SchemaGraph graph,
+      ExecutionMetricsCollector metricsCollector,
+      SparkPathPrefixCache prefixCache) {
     this.graph = graph;
     this.metricsCollector = metricsCollector;
+    this.prefixCache = prefixCache;
   }
 
   public MappingExecutionResult execute(TableLoader loader, Mapping mapping) {
@@ -56,8 +65,21 @@ public final class SparkMappingPathExecutor {
     current = aliasResource(current, currentPath, aliases);
 
     List<RelationExecutionMetrics> metrics = new ArrayList<>();
+    int startRelation = 0;
+    Optional<SparkPathPrefixCache.Hit> cached =
+        prefixCache.longest(mapping.sourceResource(), mapping.relations());
+    if (cached.isPresent()) {
+      SparkPathPrefixCache.Hit hit = cached.get();
+      current = hit.result().dataset();
+      aliases.clear();
+      aliases.putAll(hit.result().aliases());
+      metrics.addAll(hit.metrics());
+      currentPath = pathAfter(mapping.sourceResource(), mapping.relations(), hit.relationCount());
+      startRelation = hit.relationCount();
+    }
 
-    for (RelationStep step : mapping.relations()) {
+    for (int relationIndex = startRelation; relationIndex < mapping.relations().size(); relationIndex++) {
+      RelationStep step = mapping.relations().get(relationIndex);
       SchemaRelation relation = resolveRelation(currentPath.currentResource(), step);
 
       Optional<Dataset<Row>> targetRawOpt = loader.load(relation.targetResource());
@@ -73,6 +95,7 @@ public final class SparkMappingPathExecutor {
             RelationExecutionMetrics.skipped(
                 relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
+        rememberPrefix(mapping, relationIndex, current, aliases, metrics);
         continue;
       }
 
@@ -91,6 +114,7 @@ public final class SparkMappingPathExecutor {
             RelationExecutionMetrics.skipped(
                 relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
+        rememberPrefix(mapping, relationIndex, current, aliases, metrics);
         continue;
       }
       Dataset<Row> targetRaw = targetRawOpt.get();
@@ -108,6 +132,7 @@ public final class SparkMappingPathExecutor {
             RelationExecutionMetrics.skipped(
                 relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
+        rememberPrefix(mapping, relationIndex, current, aliases, metrics);
         continue;
       }
 
@@ -204,6 +229,7 @@ public final class SparkMappingPathExecutor {
       current = joined;
       aliases.putAll(targetAliases);
       currentPath = targetPath;
+      rememberPrefix(mapping, relationIndex, current, aliases, metrics);
     }
 
     metricsCollector.record(mapping.name(), metrics);
@@ -266,6 +292,28 @@ public final class SparkMappingPathExecutor {
     throw new IllegalArgumentException("Unsupported cardinality strategy: " + strategy);
   }
 
+
+  private void rememberPrefix(
+      Mapping mapping,
+      int relationIndex,
+      Dataset<Row> dataset,
+      Map<FieldRef, String> aliases,
+      List<RelationExecutionMetrics> metrics) {
+    prefixCache.remember(
+        mapping.sourceResource(),
+        mapping.relations().subList(0, relationIndex + 1),
+        new SparkPathResult(dataset, new LinkedHashMap<>(aliases)),
+        metrics);
+  }
+
+  private SchemaPath pathAfter(
+      String sourceResource, List<RelationStep> relations, int relationCount) {
+    SchemaPath path = SchemaPath.root(sourceResource);
+    for (int i = 0; i < relationCount; i++) {
+      path = path.append(resolveRelation(path.currentResource(), relations.get(i)));
+    }
+    return path;
+  }
 
   private SchemaRelation resolveRelation(String sourceResource, RelationStep step) {
     if (step.explicitColumns()) {

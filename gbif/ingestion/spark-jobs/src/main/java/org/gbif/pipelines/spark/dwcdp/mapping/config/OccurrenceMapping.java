@@ -5,6 +5,7 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder.ex
 import java.util.HashSet;
 import java.util.Set;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.spark.dwcdp.mapping.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
@@ -70,7 +71,7 @@ public final class OccurrenceMapping {
             .rowMatch(occurrence.field("occurrence_pk"))
             .join("identification")
             .via("occurrence_fk")
-            .filter(cols -> cols.col("isAcceptedIdentification").equalTo(true))
+            .filter(FilterExpression.eq("isAcceptedIdentification", true))
             .optional()
             .exactlyOne()
             .endJoin();

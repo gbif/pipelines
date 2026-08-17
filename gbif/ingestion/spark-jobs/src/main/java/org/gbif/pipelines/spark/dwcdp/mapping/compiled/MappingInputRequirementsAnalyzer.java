@@ -100,10 +100,19 @@ public final class MappingInputRequirementsAnalyzer {
       return;
     }
     addSchemaRelation(out, relationStep.relation());
+    relationStep.cardinalityStrategy().ifPresent(
+        strategy -> {
+          if (strategy instanceof org.gbif.pipelines.spark.dwcdp.mapping.CardinalityStrategy.Select select) {
+            column(out, relationStep.relation().targetResource(), select.selector());
+          }
+        });
     if (relationStep.filter().isPresent()) {
-      // FilterExpression currently exposes an arbitrary Spark lambda. Until filters carry explicit
-      // field dependencies, retaining the complete target resource is the only sound projection.
-      allColumns(out, relationStep.relation().targetResource());
+      String targetResource = relationStep.relation().targetResource();
+      if (relationStep.filter().requiresAllColumns()) {
+        allColumns(out, targetResource);
+      } else {
+        relationStep.filter().requiredColumns().forEach(field -> column(out, targetResource, field));
+      }
     }
   }
 

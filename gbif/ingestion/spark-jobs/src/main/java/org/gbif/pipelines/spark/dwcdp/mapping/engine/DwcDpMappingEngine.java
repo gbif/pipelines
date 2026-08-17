@@ -102,13 +102,15 @@ public final class DwcDpMappingEngine {
   }
 
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {
-    return executeWithMetrics(loader, plan).records();
+    return executeCompiled(loader, compile(plan), null, false).records();
   }
 
   /** Executes the canonical mapping after pruning it to one datapackage.json. */
   public Dataset<ExtendedRecord> execute(
       TableLoader loader, MappingPlan plan, DataPackage dataPackage) {
-    return executeWithMetrics(loader, plan, dataPackage).records();
+    MappingDatasetScope scope = MappingDatasetScope.from(dataPackage);
+    CompiledMapping compiled = new CompiledMappingDatasetPruner().prune(compile(plan), scope);
+    return executeCompiled(loader, compiled, scope, false).records();
   }
 
   /** Executes the mapping and exposes the relation-branch diagnostics already gathered by the Spark path executor. */
@@ -121,15 +123,18 @@ public final class DwcDpMappingEngine {
       TableLoader loader, MappingPlan plan, DataPackage dataPackage) {
     MappingDatasetScope scope = MappingDatasetScope.from(dataPackage);
     CompiledMapping compiled = new CompiledMappingDatasetPruner().prune(compile(plan), scope);
-    return executeCompiled(loader, compiled, scope);
+    return executeCompiled(loader, compiled, scope, true);
   }
 
   private MappingExecutionOutput executeCompiled(TableLoader loader, CompiledMapping compiled) {
-    return executeCompiled(loader, compiled, null);
+    return executeCompiled(loader, compiled, null, true);
   }
 
   private MappingExecutionOutput executeCompiled(
-      TableLoader loader, CompiledMapping compiled, MappingDatasetScope datasetScope) {
+      TableLoader loader,
+      CompiledMapping compiled,
+      MappingDatasetScope datasetScope,
+      boolean sharePathPrefixes) {
     Objects.requireNonNull(loader, "loader");
     MappingInputRequirementsAnalyzer analyzer =
         datasetScope == null
@@ -139,8 +144,13 @@ public final class DwcDpMappingEngine {
     TableLoader projectedLoader = ProjectedTableLoader.wrap(loader, requirements);
 
     ExecutionMetricsCollector collector = new ExecutionMetricsCollector();
-    SparkExtendedRecordExecutor executor = new SparkExtendedRecordExecutor(schemaGraph, collector);
+    org.gbif.pipelines.spark.dwcdp.mapping.SparkPathPrefixCache prefixCache =
+        sharePathPrefixes
+            ? org.gbif.pipelines.spark.dwcdp.mapping.SparkPathPrefixCache.enabled()
+            : org.gbif.pipelines.spark.dwcdp.mapping.SparkPathPrefixCache.disabled();
+    SparkExtendedRecordExecutor executor =
+        new SparkExtendedRecordExecutor(schemaGraph, collector, prefixCache);
     Dataset<ExtendedRecord> records = executor.execute(projectedLoader, compiled);
-    return new MappingExecutionOutput(records, collector.snapshot());
+    return new MappingExecutionOutput(records, collector.snapshot(), prefixCache::close);
   }
 }

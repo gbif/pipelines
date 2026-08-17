@@ -58,9 +58,16 @@ public final class SparkExtendedRecordExecutor {
 
   public SparkExtendedRecordExecutor(
       SchemaGraph graph, ExecutionMetricsCollector metricsCollector) {
+    this(graph, metricsCollector, SparkPathPrefixCache.disabled());
+  }
+
+  public SparkExtendedRecordExecutor(
+      SchemaGraph graph,
+      ExecutionMetricsCollector metricsCollector,
+      SparkPathPrefixCache prefixCache) {
     this.graph = graph;
-    this.extensionMaterializer = new SparkExtensionMaterializer(graph, metricsCollector);
-    this.pathExecutor = new SparkMappingPathExecutor(graph, metricsCollector);
+    this.extensionMaterializer = new SparkExtensionMaterializer(graph, metricsCollector, prefixCache);
+    this.pathExecutor = new SparkMappingPathExecutor(graph, metricsCollector, prefixCache);
   }
 
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {

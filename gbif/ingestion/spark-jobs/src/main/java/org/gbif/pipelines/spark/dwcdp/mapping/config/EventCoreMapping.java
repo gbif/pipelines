@@ -3,6 +3,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 import static org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder.coreFragment;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.spark.dwcdp.mapping.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.RelationCardinality;
@@ -198,9 +199,8 @@ public final class EventCoreMapping {
     if (georeferenceOnly) {
       protocolJoin =
           protocolJoin.filter(
-              cols ->
-                  cols.colOrNull("protocolType")
-                      .isin("georeferencing", "georeference"));
+              FilterExpression.optionalIn(
+                  "protocolType", "georeferencing", "georeference"));
     }
 
     return protocolJoin

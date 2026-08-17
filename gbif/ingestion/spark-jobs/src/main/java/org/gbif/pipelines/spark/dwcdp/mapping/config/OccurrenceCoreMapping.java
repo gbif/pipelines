@@ -3,6 +3,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 import static org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder.coreFragment;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.spark.dwcdp.mapping.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
@@ -48,7 +49,7 @@ public final class OccurrenceCoreMapping {
         coreFragment("occurrence-core-accepted-identification", "occurrence")
             .join("identification")
             .via("occurrence_fk")
-            .filter(cols -> cols.col("isAcceptedIdentification").equalTo(true))
+            .filter(FilterExpression.eq("isAcceptedIdentification", true))
             .optional()
             .exactlyOne()
             .endJoin();

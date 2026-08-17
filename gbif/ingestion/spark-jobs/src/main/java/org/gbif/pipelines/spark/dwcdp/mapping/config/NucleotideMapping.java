@@ -5,6 +5,7 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder.ex
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.dwc.terms.MixsTerm;
+import org.gbif.pipelines.spark.dwcdp.mapping.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.FieldRef;
@@ -37,7 +38,7 @@ public final class NucleotideMapping {
             .scopeKey("event_pk")
             .join("nucleotide-analysis")
             .via("event_fk")
-            .filter(cols -> cols.col("materialEntity_fk").isNull())
+            .filter(FilterExpression.isNull("materialEntity_fk"))
             .optional()
             .fanOut()
             .rowIdentity(paths.analysis().field("nucleotideAnalysis_pk"));
@@ -62,7 +63,7 @@ public final class NucleotideMapping {
             .scopeKey("event_pk")
             .join("nucleotide-analysis")
             .via("event_fk")
-            .filter(cols -> cols.col("materialEntity_fk").isNull())
+            .filter(FilterExpression.isNull("materialEntity_fk"))
             .optional()
             .fanOut()
             .join("nucleotide-sequence")
@@ -91,7 +92,7 @@ public final class NucleotideMapping {
             .scopeKey("event_pk")
             .join("nucleotide-analysis")
             .via("event_fk")
-            .filter(cols -> cols.col("materialEntity_fk").isNull())
+            .filter(FilterExpression.isNull("materialEntity_fk"))
             .optional()
             .fanOut()
             .join("molecular-protocol")

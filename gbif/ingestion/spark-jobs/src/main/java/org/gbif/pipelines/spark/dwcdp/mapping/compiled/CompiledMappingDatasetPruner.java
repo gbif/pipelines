@@ -149,7 +149,7 @@ public final class CompiledMappingDatasetPruner {
         fragment.name(),
         fragment.sourceResource(),
         fragment.path(),
-        pruneUnusedOptionalRelations(fragment.relations(), requiredFields),
+        pruneUnreachableRelations(fragment.relations(), requiredFields),
         targets);
   }
 
@@ -173,7 +173,7 @@ public final class CompiledMappingDatasetPruner {
         fragment.rowType(),
         fragment.sourceResource(),
         fragment.path(),
-        pruneUnusedOptionalRelations(fragment.relations(), requiredFields),
+        pruneUnreachableRelations(fragment.relations(), requiredFields),
         fragment.scopeKey(),
         rowIdentity,
         rowMatch,
@@ -208,15 +208,22 @@ public final class CompiledMappingDatasetPruner {
     return fields;
   }
 
-  private static List<CompiledRelationStep> pruneUnusedOptionalRelations(
+  /**
+   * Retains only relation steps that are on a path to a surviving physical dependency.
+   *
+   * <p>Relation requirement controls runtime behavior when a needed relation is unavailable; it is
+   * not itself a reason to execute an otherwise dead join. A later required field always carries
+   * the complete SchemaPath prefix, so keeping relations referenced by required field paths also
+   * preserves every intermediate hop needed to reach that field.
+   */
+  private static List<CompiledRelationStep> pruneUnreachableRelations(
       List<CompiledRelationStep> relations,
       Set<org.gbif.pipelines.spark.dwcdp.mapping.FieldRef> requiredFields) {
     return relations.stream()
         .filter(
             step ->
-                step.requirement() == RelationRequirement.REQUIRED
-                    || requiredFields.stream()
-                        .anyMatch(field -> field.path().relations().contains(step.relation())))
+                requiredFields.stream()
+                    .anyMatch(field -> field.path().relations().contains(step.relation())))
         .toList();
   }
 
@@ -297,23 +304,16 @@ public final class CompiledMappingDatasetPruner {
 
   private static boolean supportsCoreFragmentStructure(
       CompiledCoreFragment fragment, MappingDatasetScope scope) {
-    return scope.hasResource(fragment.sourceResource())
-        && fragment.relations().stream()
-            .allMatch(
-                relation ->
-                    relation.requirement() == RelationRequirement.OPTIONAL
-                        || scope.supports(relation));
+    // Relation reachability is decided after surviving producers are known. A dead REQUIRED
+    // relation must not make an otherwise executable fragment disappear.
+    return scope.hasResource(fragment.sourceResource());
   }
 
   private static boolean supportsExtensionFragmentStructure(
       CompiledFragment fragment, MappingDatasetScope scope) {
-    return scope.hasResource(fragment.sourceResource())
-        && fragment.relations().stream()
-            .allMatch(
-                relation ->
-                    relation.requirement() == RelationRequirement.OPTIONAL
-                        || scope.supports(relation))
-        && scope.supports(fragment.scopeKey());
+    // scopeKey is structural because extension rows cannot be attached without it. Other relation
+    // resources are evaluated only if a surviving target/identity actually depends on their path.
+    return scope.hasResource(fragment.sourceResource()) && scope.supports(fragment.scopeKey());
   }
 
   private static Set<String> producerOwners(List<CompiledTargetMerge> merges) {

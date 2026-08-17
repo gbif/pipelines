@@ -60,4 +60,25 @@ class MappingInputRequirementsTest {
 
     assertFalse(requirements.usesResource("chronometric-age"));
   }
+  @Test
+  void declarativeFiltersContributeOnlyTheirReferencedColumns() {
+    MappingInputRequirements requirements =
+        engine.inputRequirements(OccurrenceDwcaMapping.current(engine.schemaGraph()));
+
+    MappingInputRequirements.ResourceRequirement identification =
+        requirements.resource("identification");
+    assertFalse(identification.allColumns());
+    assertTrue(identification.columns().contains("isAcceptedIdentification"));
+  }
+
+  @Test
+  void declarativeProtocolFilterDoesNotDisableProjection() {
+    MappingInputRequirements requirements =
+        engine.inputRequirements(EventDwcaMapping.current(engine.schemaGraph()));
+
+    MappingInputRequirements.ResourceRequirement protocol = requirements.resource("protocol");
+    assertFalse(protocol.allColumns());
+    assertTrue(protocol.columns().contains("protocolType"));
+  }
+
 }

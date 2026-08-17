@@ -55,8 +55,15 @@ public final class SparkExtensionMaterializer {
   }
 
   SparkExtensionMaterializer(SchemaGraph graph, ExecutionMetricsCollector metricsCollector) {
+    this(graph, metricsCollector, SparkPathPrefixCache.disabled());
+  }
+
+  SparkExtensionMaterializer(
+      SchemaGraph graph,
+      ExecutionMetricsCollector metricsCollector,
+      SparkPathPrefixCache prefixCache) {
     this.graph = graph;
-    this.pathExecutor = new SparkMappingPathExecutor(graph, metricsCollector);
+    this.pathExecutor = new SparkMappingPathExecutor(graph, metricsCollector, prefixCache);
     this.compiler = new MappingCompiler(graph);
   }
 

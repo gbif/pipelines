@@ -128,6 +128,7 @@ public class DwcDpVerbatimConverter {
                 .map(r -> spark.read().parquet(parquetBasePath + "/" + r.getPath()));
 
     Dataset<ExtendedRecord> records;
+    MappingExecutionOutput mappingExecution = null;
     List<MappingBranchExecutionMetrics> branchMetrics = List.of();
     DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
     MappingPlan ingestPlan = null;
@@ -135,15 +136,15 @@ public class DwcDpVerbatimConverter {
     if (containsEvents && dataPackage.findResource("event").isPresent()) {
       log.info("Building event-core ExtendedRecords with declarative mapping engine");
       ingestPlan = EventDwcaMapping.current(mappingEngine.schemaGraph());
-      MappingExecutionOutput execution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
-      records = execution.records();
-      branchMetrics = execution.branchMetrics();
+      mappingExecution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
+      records = mappingExecution.records();
+      branchMetrics = mappingExecution.branchMetrics();
     } else if (containsOccurrences && dataPackage.findResource("occurrence").isPresent()) {
       log.info("Building occurrence-core ExtendedRecords with declarative mapping engine");
       ingestPlan = OccurrenceDwcaMapping.current(mappingEngine.schemaGraph());
-      MappingExecutionOutput execution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
-      records = execution.records();
-      branchMetrics = execution.branchMetrics();
+      mappingExecution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
+      records = mappingExecution.records();
+      branchMetrics = mappingExecution.branchMetrics();
     } else {
       log.warn(
           "Dataset {} has no event or occurrence table in datapackage.json; writing empty verbatim",
@@ -180,6 +181,9 @@ public class DwcDpVerbatimConverter {
               branchMetrics);
     } finally {
       records.unpersist(false);
+      if (mappingExecution != null) {
+        mappingExecution.close();
+      }
     }
 
     log.info(
