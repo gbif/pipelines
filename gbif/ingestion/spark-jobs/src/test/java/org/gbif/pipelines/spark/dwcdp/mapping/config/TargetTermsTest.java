@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.EcoTerm;
 import org.junit.jupiter.api.Test;
 
 class TargetTermsTest {
@@ -34,6 +35,17 @@ class TargetTermsTest {
     assertEquals(
         "surveyTargetDescription",
         TargetTerms.resolveHumboldtOutput("surveyTargetDescription").orElseThrow());
+  }
+
+
+  @Test
+  void humboldtOverlappingAgentTermsUseEcoNamespace() {
+    assertEquals(
+        EcoTerm.identifiedBy.qualifiedName(),
+        TargetTerms.resolveHumboldtOutput("identifiedBy").orElseThrow());
+    assertEquals(
+        EcoTerm.identificationReferences.qualifiedName(),
+        TargetTerms.resolveHumboldtOutput("identificationReferences").orElseThrow());
   }
 
   @Test

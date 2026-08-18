@@ -6,6 +6,9 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.dwc.terms.DwcTerm;
+
+import java.util.Optional;
 
 /** Declarative mappings for DwC Identification extension rows. */
 public final class IdentificationMapping {
@@ -31,4 +34,21 @@ public final class IdentificationMapping {
     DirectFieldMappings.from(graph, "identification", identification).addTo(builder);
     return builder.build();
   }
+
+  /** Resolves identification.identifiedByID through agent.agentID on existing history rows. */
+  public static ExtensionFragment identifiedBy(SchemaGraph graph) {
+    SchemaPath identification = SchemaPath.root("identification");
+    return AgentMapping.extension(
+        graph,
+        ROW_TYPE_IDENTIFICATION,
+        new AgentMapping.Spec(
+            "identification-identified-by-agent",
+            "identification",
+            "identifiedByID",
+            "identifiedBy",
+            DwcTerm.identifiedBy.qualifiedName()),
+        Optional.of("occurrence_fk"),
+        Optional.of(identification.field("identification_pk")));
+  }
+
 }

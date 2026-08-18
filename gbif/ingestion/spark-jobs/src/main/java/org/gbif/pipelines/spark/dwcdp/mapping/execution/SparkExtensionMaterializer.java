@@ -569,17 +569,78 @@ public final class SparkExtensionMaterializer {
    * fragment's already-aggregated value. This is the extension analogue of core target merging and
    * preserves contribution identity and ordering across independent relation paths.
    */
-  private Dataset<Row> materializeExtensionTargetMerge(
+  private Dataset<Row> materializeExtensionFirstNonNullMerge(
       TableLoader loader,
       CompiledExtension extension,
       org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge) {
     Dataset<Row> contributions = null;
-    boolean anyOrdered = merge.producers().stream().anyMatch(p -> p.orderBy().isPresent());
-    boolean allOrdered = merge.producers().stream().allMatch(p -> p.orderBy().isPresent());
-    if (anyOrdered && !allOrdered) {
-      throw new IllegalArgumentException(
-          "Merged extension target mixes ordered and unordered producers: " + merge.targetTerm());
+    int producerOrder = 0;
+
+    for (CompiledTargetProducer producer : merge.producers()) {
+      CompiledFragment fragment =
+          extension.fragments().stream()
+              .filter(candidate -> candidate.name().equals(producer.owner()))
+              .findFirst()
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Merged extension producer references unknown fragment: "
+                              + producer.owner()));
+      Mapping mapping =
+          new Mapping(
+              "extension-first-non-null-merge:" + fragment.name(),
+              fragment.sourceResource(),
+              fragment.relations().stream().map(r -> r.toRelationStep()).toList(),
+              List.of(),
+              Projection.none());
+      SparkPathResult pathResult = pathExecutor.execute(loader, mapping).pathResult();
+      FieldRef parentKey = fragment.scopeKey();
+      FieldRef rowKey =
+          fragment.rowIdentity().orElseGet(() -> fragment.rowMatch().orElse(parentKey));
+
+      String parentAlias = pathResult.columnName(parentKey);
+      String rowAlias = pathResult.columnName(rowKey);
+      Dataset<Row> contribution =
+          pathResult
+              .dataset()
+              .groupBy(
+                  pathResult.dataset().col(parentAlias).cast("string").as(COL_PARENT_KEY),
+                  pathResult.dataset().col(rowAlias).cast("string").as(COL_ROW_KEY))
+              .agg(aggregateExpression(producer, pathResult).cast("string").as("__dwca_merge_value"))
+              .withColumn("__dwca_merge_producer_order", lit(producerOrder))
+              .filter(
+                  col("__dwca_merge_value")
+                      .isNotNull()
+                      .and(col("__dwca_merge_value").notEqual("")));
+      contributions =
+          contributions == null ? contribution : contributions.unionByName(contribution);
+      producerOrder++;
     }
+
+    if (contributions == null) {
+      return null;
+    }
+    Column ordered =
+        sort_array(
+            collect_list(
+                struct(
+                    col("__dwca_merge_producer_order").as("producerOrder"),
+                    col("__dwca_merge_value").as("value"))));
+    return contributions
+        .groupBy(COL_PARENT_KEY, COL_ROW_KEY)
+        .agg(ordered.getItem(0).getField("value").as(targetAlias(merge.targetTerm())));
+  }
+
+  private Dataset<Row> materializeExtensionTargetMerge(
+      TableLoader loader,
+      CompiledExtension extension,
+      org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge) {
+    if (merge.aggregation() instanceof ValueAggregation.FirstNonNull) {
+      return materializeExtensionFirstNonNullMerge(loader, extension, merge);
+    }
+
+    Dataset<Row> contributions = null;
+    int producerOrder = 0;
 
     for (CompiledTargetProducer producer : merge.producers()) {
       CompiledFragment fragment =
@@ -618,15 +679,18 @@ public final class SparkExtensionMaterializer {
                   producer.orderBy()
                       .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
                       .orElse(lit(null).cast("string"))
-                      .as("__dwca_merge_order"))
+                      .as("__dwca_merge_order"),
+                  lit(producerOrder).as("__dwca_merge_producer_order"))
               .filter(
                   col("__dwca_merge_value")
                       .isNotNull()
                       .and(col("__dwca_merge_value").notEqual("")));
       contributions =
           contributions == null ? contribution : contributions.unionByName(contribution);
+      producerOrder++;
     }
 
+    String alias = targetAlias(merge.targetTerm());
     boolean anyIdentity =
         merge.producers().stream().anyMatch(p -> p.contributionIdentity().isPresent());
     boolean allIdentity =
@@ -642,8 +706,13 @@ public final class SparkExtensionMaterializer {
               COL_PARENT_KEY, COL_ROW_KEY, "__dwca_merge_identity", "__dwca_merge_value");
     }
 
-    String alias = targetAlias(merge.targetTerm());
     if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      boolean anyOrdered = merge.producers().stream().anyMatch(p -> p.orderBy().isPresent());
+      boolean allOrdered = merge.producers().stream().allMatch(p -> p.orderBy().isPresent());
+      if (anyOrdered && !allOrdered) {
+        throw new IllegalArgumentException(
+            "Merged extension target mixes ordered and unordered producers: " + merge.targetTerm());
+      }
       if (allOrdered) {
         Column ordered =
             sort_array(
@@ -680,6 +749,12 @@ public final class SparkExtensionMaterializer {
   private static Column mergeExpression(
       org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge,
       List<MaterializedTarget> contributions) {
+    if (merge.aggregation() instanceof ValueAggregation.FirstNonNull) {
+      return coalesce(
+          contributions.stream()
+              .map(target -> col(target.physicalColumn()).cast("string"))
+              .toArray(Column[]::new));
+    }
     if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
       Column values = array(
           contributions.stream()

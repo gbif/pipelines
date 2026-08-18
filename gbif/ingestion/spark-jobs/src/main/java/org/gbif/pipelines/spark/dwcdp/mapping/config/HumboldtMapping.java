@@ -81,6 +81,33 @@ public final class HumboldtMapping {
     return builder.build();
   }
 
+
+  /** Resolves survey.identifiedByID through agent.agentID while preserving publisher text. */
+  public static ExtensionFragment identifiedBy(SchemaGraph graph) {
+    return AgentMapping.extension(
+        graph,
+        ROW_TYPE_HUMBOLDT,
+        new AgentMapping.Spec(
+            "humboldt-identified-by-agent",
+            "survey",
+            "identifiedByID",
+            "identifiedBy",
+            EcoTerm.identifiedBy.qualifiedName()));
+  }
+
+  /** Resolves survey.samplingPerformedByID through agent.agentID while preserving publisher text. */
+  public static ExtensionFragment samplingPerformedBy(SchemaGraph graph) {
+    return AgentMapping.extension(
+        graph,
+        ROW_TYPE_HUMBOLDT,
+        new AgentMapping.Spec(
+            "humboldt-sampling-performed-by-agent",
+            "survey",
+            "samplingPerformedByID",
+            "samplingPerformedBy",
+            EcoTerm.samplingPerformedBy.qualifiedName()));
+  }
+
   /**
    * {@code survey.samplingProtocol} is represented as {@code eco:protocolDescriptions}. If the
    * publisher already supplied a textual value it wins; otherwise the protocol FK is resolved to

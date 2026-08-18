@@ -13,6 +13,8 @@ import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
+import java.util.List;
+
 /** Reusable Event-core enrichments, including explicit protocol contribution paths. */
 public final class EventCoreMapping {
 
@@ -61,20 +63,26 @@ public final class EventCoreMapping {
 
   /** Resolves eventConductedByID through agent.agentID while preserving an explicit publisher value. */
   public static CoreFragment eventConductedBy(SchemaGraph graph) {
-    return agentName(
-        "event-conducted-by-agent",
-        "eventConductedByID",
-        "eventConductedBy",
-        TargetTerms.resolve("eventConductedBy"));
+    return AgentMapping.core(
+        graph,
+        new AgentMapping.Spec(
+            "event-conducted-by-agent",
+            "event",
+            "eventConductedByID",
+            "eventConductedBy",
+            TargetTerms.resolve("eventConductedBy")));
   }
 
   /** Resolves georeferencedByID through agent.agentID while preserving an explicit publisher value. */
   public static CoreFragment georeferencedBy(SchemaGraph graph) {
-    return agentName(
-        "event-georeferenced-by-agent",
-        "georeferencedByID",
-        "georeferencedBy",
-        DwcTerm.georeferencedBy.qualifiedName());
+    return AgentMapping.core(
+        graph,
+        new AgentMapping.Spec(
+            "event-georeferenced-by-agent",
+            "event",
+            "georeferencedByID",
+            "georeferencedBy",
+            DwcTerm.georeferencedBy.qualifiedName()));
   }
 
 
@@ -255,7 +263,7 @@ public final class EventCoreMapping {
 
   private static void addProvenanceTargets(CoreFragmentBuilder builder, SchemaPath provenance) {
     for (String field :
-        java.util.List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
+        List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
       builder.field(
           TargetFieldMapping.oneOf(
                   TargetTerms.resolve(field),
@@ -264,26 +272,5 @@ public final class EventCoreMapping {
               .contributionIdentity(provenance.field("provenance_pk"))
               .orderBy(provenance.field("provenanceID")));
     }
-  }
-  private static CoreFragment agentName(
-      String name, String idColumn, String valueColumn, String targetTerm) {
-    SchemaPath event = SchemaPath.root("event");
-    SchemaPath agent =
-        event.append(
-            SchemaRelation.relation(
-                "event", idColumn, "agent", "agentID", null, RelationCardinality.UNKNOWN));
-
-    return coreFragment(name, "event")
-        .join("agent")
-        .on(idColumn, "agentID")
-        .optional()
-        .fanOut()
-        .field(
-            TargetFieldMapping.oneOf(
-                targetTerm,
-                ValueAggregation.firstNonNull(),
-                event.field(valueColumn),
-                agent.field("preferredAgentName")))
-        .build();
   }
 }

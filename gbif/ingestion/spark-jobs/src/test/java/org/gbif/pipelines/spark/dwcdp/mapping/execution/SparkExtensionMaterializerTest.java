@@ -297,6 +297,57 @@ class SparkExtensionMaterializerTest {
     assertEquals("3|E1", merged);
   }
 
+
+  @Test
+  void firstNonNullTargetMergePreservesProducerPrecedence() {
+    SchemaPath surveyPath = SchemaPath.root("survey");
+
+    ExtensionFragment publisher =
+        ExtensionFragmentBuilder.extensionFragment("publisher", HUMBOLDT, "survey")
+            .rowIdentity(surveyPath.field("survey_pk"))
+            .field(
+                TargetFieldMapping.oneOf(
+                    TERM_SITE_COUNT,
+                    ValueAggregation.firstNonNull(),
+                    surveyPath.field("siteCount")))
+            .build();
+
+    ExtensionFragment fallback =
+        ExtensionFragmentBuilder.extensionFragment("fallback", HUMBOLDT, "survey")
+            .field(
+                TargetFieldMapping.oneOf(
+                    TERM_SITE_COUNT,
+                    ValueAggregation.firstNonNull(),
+                    surveyPath.field("event_fk")))
+            .build();
+
+    ExtensionMapping extension =
+        new ExtensionMapping(
+            HUMBOLDT,
+            ExtensionRowComposition.ENRICH,
+            java.util.Optional.empty(),
+            List.of(new TargetMerge(TERM_SITE_COUNT, ValueAggregation.firstNonNull())),
+            List.of(publisher, fallback));
+
+    Dataset<Row> surveys =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("S1", "E1", "publisher"),
+                RowFactory.create("S2", "E2", null)),
+            new StructType()
+                .add("survey_pk", DataTypes.StringType)
+                .add("event_fk", DataTypes.StringType)
+                .add("siteCount", DataTypes.StringType));
+
+    ExtensionMaterializationResult result =
+        new SparkExtensionMaterializer(graph)
+            .materialize(TestTableLoader.of("survey", surveys), extension);
+
+    List<Row> rows = result.dataset().orderBy(result.parentKeyColumn()).collectAsList();
+    assertEquals("publisher", rows.get(0).getAs(result.columnName(TERM_SITE_COUNT)));
+    assertEquals("E2", rows.get(1).getAs(result.columnName(TERM_SITE_COUNT)));
+  }
+
   private Dataset<Row> survey() {
     return spark.createDataFrame(
         List.of(RowFactory.create("S1", "E1", "3")),

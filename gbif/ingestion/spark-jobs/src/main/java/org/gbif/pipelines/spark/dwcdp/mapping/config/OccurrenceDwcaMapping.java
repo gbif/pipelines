@@ -22,6 +22,7 @@ public final class OccurrenceDwcaMapping {
     return builder
         .extension(IdentificationMapping.ROW_TYPE_IDENTIFICATION)
         .importFragment(IdentificationMapping.occurrenceHistory(graph))
+        .importFragment(IdentificationMapping.identifiedBy(graph))
         .build();
   }
 
@@ -58,6 +59,7 @@ public final class OccurrenceDwcaMapping {
         .endExtension()
         .extension(IdentificationMapping.ROW_TYPE_IDENTIFICATION)
         .importFragment(IdentificationMapping.occurrenceHistory(graph))
+        .importFragment(IdentificationMapping.identifiedBy(graph))
         .endExtension()
         .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
         .unionRows()
@@ -107,16 +109,22 @@ public final class OccurrenceDwcaMapping {
         mappingPlan(name, CoreType.OCCURRENCE, "occurrence");
     DirectFieldMappings.from(graph, "occurrence", SchemaPath.root("occurrence")).addTo(builder);
     return builder
+        .importCoreFragment(OccurrenceCoreMapping.recordedBy(graph))
+        .importCoreFragment(OccurrenceCoreMapping.identifiedBy(graph))
         .importCoreFragment(OccurrenceCoreMapping.organism(graph))
         .importCoreFragment(OccurrenceCoreMapping.acceptedIdentification(graph))
+        .importCoreFragment(OccurrenceCoreMapping.acceptedIdentificationAgent(graph))
         .importCoreFragment(OccurrenceCoreMapping.material(graph))
+        .importCoreFragment(OccurrenceCoreMapping.materialCollectedBy(graph))
+        .importCoreFragment(OccurrenceCoreMapping.materialIdentifiedBy(graph))
+        .importCoreFragment(OccurrenceCoreMapping.materialCollectorRoles(graph))
         .importCoreFragment(OccurrenceCoreMapping.materialGeologicalContext(graph))
         .importCoreFragment(OccurrenceCoreMapping.materialProtocols(graph))
         .importCoreFragment(OccurrenceCoreMapping.materialDirectProvenance(graph))
         .importCoreFragment(OccurrenceCoreMapping.materialProvenance(graph))
         .importCoreFragment(OccurrenceCoreMapping.directSamplingProtocol(graph))
-        .importCoreFragment(OccurrenceCoreMapping.recordedBy(graph))
-        .importCoreFragment(OccurrenceCoreMapping.identifiedBy(graph))
+        .mergeCoreTarget(org.gbif.dwc.terms.DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(org.gbif.dwc.terms.DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeCoreTarget(org.gbif.dwc.terms.DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeCoreTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())

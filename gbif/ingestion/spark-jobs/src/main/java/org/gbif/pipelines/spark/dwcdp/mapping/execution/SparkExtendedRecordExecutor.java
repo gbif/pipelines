@@ -21,6 +21,7 @@ import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
 import static org.apache.spark.sql.functions.filter;
+import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.sort_array;
 import static org.apache.spark.sql.functions.struct;
@@ -322,19 +323,158 @@ public final class SparkExtendedRecordExecutor {
     return new CoreProjection(assembled, targetColumns);
   }
 
-  private Dataset<Row> materializeCoreTargetMerge(
+  private Dataset<Row> materializeCoreFirstNonNullMerge(
       TableLoader loader,
       Dataset<Row> rawCore,
       CompiledMapping plan,
       CompiledTargetMerge merge,
       String corePk) {
     Dataset<Row> contributions = null;
-    boolean anyOrdered = merge.producers().stream().anyMatch(p -> p.orderBy().isPresent());
-    boolean allOrdered = merge.producers().stream().allMatch(p -> p.orderBy().isPresent());
-    if (anyOrdered && !allOrdered) {
-      throw new IllegalArgumentException(
-          "Merged target mixes ordered and unordered producers: " + merge.targetTerm());
+    int producerOrder = 0;
+
+    for (CompiledTargetProducer producer : merge.producers()) {
+      Dataset<Row> contribution;
+      if (producer.owner().equals("core")) {
+        contribution =
+            rawCore
+                .groupBy(rawCore.col(corePk).cast("string").as("__dwca_merge_core_pk"))
+                .agg(coreAggregateExpression(producer, rawCore).cast("string").as("__dwca_merge_value"));
+      } else {
+        CompiledCoreFragment fragment =
+            plan.coreFragments().stream()
+                .filter(candidate -> candidate.name().equals(producer.owner()))
+                .findFirst()
+                .orElseThrow(
+                    () ->
+                        new IllegalStateException(
+                            "Merged core producer references unknown fragment: " + producer.owner()));
+        Mapping mapping =
+            new Mapping(
+                "core-first-non-null-merge:" + fragment.name(),
+                fragment.sourceResource(),
+                fragment.relations().stream().map(r -> r.toRelationStep()).toList(),
+                List.of(),
+                Projection.none());
+        TableLoader fragmentLoader =
+            resource ->
+                resource.equals(plan.coreSourceResource())
+                    ? java.util.Optional.of(rawCore)
+                    : loader.load(resource);
+        SparkPathResult pathResult = pathExecutor.execute(fragmentLoader, mapping).pathResult();
+        String corePkAlias =
+            pathResult.columnName(SchemaPath.root(plan.coreSourceResource()).field(corePk));
+        contribution =
+            pathResult
+                .dataset()
+                .groupBy(pathResult.dataset().col(corePkAlias).cast("string").as("__dwca_merge_core_pk"))
+                .agg(coreAggregateExpression(producer, pathResult).cast("string").as("__dwca_merge_value"));
+      }
+      contribution =
+          contribution
+              .withColumn("__dwca_merge_producer_order", lit(producerOrder))
+              .filter(
+                  col("__dwca_merge_value")
+                      .isNotNull()
+                      .and(col("__dwca_merge_value").notEqual("")));
+      contributions =
+          contributions == null ? contribution : contributions.unionByName(contribution);
+      producerOrder++;
     }
+
+    if (contributions == null) {
+      return null;
+    }
+    Column ordered =
+        sort_array(
+            collect_list(
+                struct(
+                    col("__dwca_merge_producer_order").as("producerOrder"),
+                    col("__dwca_merge_value").as("value"))));
+    return contributions
+        .groupBy("__dwca_merge_core_pk")
+        .agg(ordered.getItem(0).getField("value").as(targetAlias(merge.targetTerm())));
+  }
+
+  private Column coreAggregateExpression(CompiledTargetProducer target, Dataset<Row> root) {
+    List<Column> sources =
+        target.sources().stream()
+            .map(source -> columnOrNull(root, source.field()).cast("string"))
+            .toList();
+    return coreAggregateExpression(target, sources,
+        target.contributionIdentity().map(source -> columnOrNull(root, source.field()).cast("string")),
+        target.orderBy().map(source -> columnOrNull(root, source.field()).cast("string")));
+  }
+
+  private Column coreAggregateExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
+    List<Column> sources =
+        target.sources().stream()
+            .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
+            .toList();
+    return coreAggregateExpression(target, sources,
+        target.contributionIdentity().map(source -> pathResult.columnOrNull(source.field()).cast("string")),
+        target.orderBy().map(source -> pathResult.columnOrNull(source.field()).cast("string")));
+  }
+
+  private Column coreAggregateExpression(
+      CompiledTargetProducer target,
+      List<Column> sources,
+      java.util.Optional<Column> contributionIdentity,
+      java.util.Optional<Column> orderBy) {
+    if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
+        && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
+      return first(coalesce(sources.toArray(Column[]::new)), true);
+    }
+    if (target.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      List<Column> entries = new ArrayList<>();
+      for (Column source : sources) {
+        List<Column> fields = new ArrayList<>();
+        orderBy.ifPresent(order -> fields.add(order.as("order")));
+        contributionIdentity.ifPresent(identity -> fields.add(identity.as("identity")));
+        fields.add(source.cast("string").as("value"));
+        entries.add(struct(fields.toArray(Column[]::new)));
+      }
+      Column values;
+      if (contributionIdentity.isPresent() || orderBy.isPresent()) {
+        Column contributions =
+            org.apache.spark.sql.functions.flatten(
+                collect_list(org.apache.spark.sql.functions.array(entries.toArray(Column[]::new))));
+        if (contributionIdentity.isPresent()) {
+          contributions = array_distinct(contributions);
+        }
+        if (orderBy.isPresent()) {
+          contributions = sort_array(contributions);
+        }
+        values = transform(contributions, entry -> entry.getField("value"));
+      } else {
+        values = collect_list(sources.get(0));
+      }
+      values = filter(values, Column::isNotNull);
+      if (delimited.distinct()) {
+        values = array_distinct(values);
+      }
+      return when(
+          org.apache.spark.sql.functions.size(values).gt(0),
+          array_join(values, delimited.delimiter()));
+    }
+    throw new UnsupportedOperationException(
+        "Unsupported producer aggregation inside first-non-null merge: "
+            + target.targetTerm()
+            + " / "
+            + target.aggregation());
+  }
+
+  private Dataset<Row> materializeCoreTargetMerge(
+      TableLoader loader,
+      Dataset<Row> rawCore,
+      CompiledMapping plan,
+      CompiledTargetMerge merge,
+      String corePk) {
+    if (merge.aggregation() instanceof ValueAggregation.FirstNonNull) {
+      return materializeCoreFirstNonNullMerge(loader, rawCore, plan, merge, corePk);
+    }
+
+    Dataset<Row> contributions = null;
+    int producerOrder = 0;
 
     for (CompiledTargetProducer producer : merge.producers()) {
       Dataset<Row> contribution;
@@ -350,7 +490,8 @@ public final class SparkExtendedRecordExecutor {
                 producer.orderBy()
                     .map(source -> columnOrNull(rawCore, source.field()).cast("string"))
                     .orElse(lit(null).cast("string"))
-                    .as("__dwca_merge_order"));
+                    .as("__dwca_merge_order"),
+                lit(producerOrder).as("__dwca_merge_producer_order"));
       } else {
         CompiledCoreFragment fragment =
             plan.coreFragments().stream()
@@ -390,32 +531,43 @@ public final class SparkExtendedRecordExecutor {
                     producer.orderBy()
                         .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
                         .orElse(lit(null).cast("string"))
-                        .as("__dwca_merge_order"));
+                        .as("__dwca_merge_order"),
+                    lit(producerOrder).as("__dwca_merge_producer_order"));
       }
       contribution =
           contribution.filter(
               col("__dwca_merge_value").isNotNull().and(col("__dwca_merge_value").notEqual("")));
       contributions =
           contributions == null ? contribution : contributions.unionByName(contribution);
+      producerOrder++;
     }
 
     if (contributions == null) {
       return null;
     }
 
-    boolean anyIdentity = merge.producers().stream().anyMatch(p -> p.contributionIdentity().isPresent());
-    boolean allIdentity = merge.producers().stream().allMatch(p -> p.contributionIdentity().isPresent());
-    if (anyIdentity && !allIdentity) {
-      throw new IllegalArgumentException(
-          "Merged target mixes identified and unidentified contributions: " + merge.targetTerm());
-    }
-    if (allIdentity) {
-      contributions =
-          contributions.dropDuplicates(
-              "__dwca_merge_core_pk", "__dwca_merge_identity", "__dwca_merge_value");
-    }
-
     if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      boolean anyOrdered = merge.producers().stream().anyMatch(p -> p.orderBy().isPresent());
+      boolean allOrdered = merge.producers().stream().allMatch(p -> p.orderBy().isPresent());
+      if (anyOrdered && !allOrdered) {
+        throw new IllegalArgumentException(
+            "Merged target mixes ordered and unordered producers: " + merge.targetTerm());
+      }
+
+      boolean anyIdentity =
+          merge.producers().stream().anyMatch(p -> p.contributionIdentity().isPresent());
+      boolean allIdentity =
+          merge.producers().stream().allMatch(p -> p.contributionIdentity().isPresent());
+      if (anyIdentity && !allIdentity) {
+        throw new IllegalArgumentException(
+            "Merged target mixes identified and unidentified contributions: " + merge.targetTerm());
+      }
+      if (allIdentity) {
+        contributions =
+            contributions.dropDuplicates(
+                "__dwca_merge_core_pk", "__dwca_merge_identity", "__dwca_merge_value");
+      }
+
       if (allOrdered) {
         Column ordered =
             sort_array(

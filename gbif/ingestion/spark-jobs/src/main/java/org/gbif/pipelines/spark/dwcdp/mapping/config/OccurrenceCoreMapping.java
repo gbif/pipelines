@@ -82,6 +82,35 @@ public final class OccurrenceCoreMapping {
     return builder.build();
   }
 
+
+
+  /** Resolves the sole accepted identification's identifiedByID before material fallback. */
+  public static CoreFragment acceptedIdentificationAgent(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath identification =
+        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
+    SchemaPath agent =
+        identification.append(graph.resolve("identification", "agent", "identifiedByID"));
+
+    return coreFragment("occurrence-core-accepted-identification-agent", "occurrence")
+        .join("identification")
+        .via("occurrence_fk")
+        .filter(FilterExpression.eq("isAcceptedIdentification", true))
+        .optional()
+        .exactlyOne()
+        .join("agent")
+        .via("identifiedByID")
+        .optional()
+        .fanOut()
+        .field(
+            TargetFieldMapping.oneOf(
+                DwcTerm.identifiedBy.qualifiedName(),
+                ValueAggregation.firstNonNull(),
+                identification.field("identifiedBy"),
+                agent.field("preferredAgentName")))
+        .build();
+  }
+
   /**
    * Exactly one material citing the occurrence as evidence enriches Occurrence. Usage-policy is on
    * the same path, so license/rightsHolder are suppressed whenever the material relationship is
@@ -129,6 +158,57 @@ public final class OccurrenceCoreMapping {
 
 
 
+
+
+
+  /** Resolves material.collectedByID for one unambiguous evidence material. */
+  public static CoreFragment materialCollectedBy(SchemaGraph graph) {
+    return materialAgent(
+        graph,
+        "occurrence-core-material-collected-by-agent",
+        "collectedByID",
+        "collectedBy",
+        DwcTerm.recordedBy.qualifiedName());
+  }
+
+  /** Resolves material.identifiedByID for one unambiguous evidence material. */
+  public static CoreFragment materialIdentifiedBy(SchemaGraph graph) {
+    return materialAgent(
+        graph,
+        "occurrence-core-material-identified-by-agent",
+        "identifiedByID",
+        "identifiedBy",
+        DwcTerm.identifiedBy.qualifiedName());
+  }
+
+  /** Ordered collector AgentRoles are the final recordedBy fallback for one evidence material. */
+  public static CoreFragment materialCollectorRoles(SchemaGraph graph) {
+    return AgentRoleMapping.linkedCore(
+        graph,
+        AgentRoleMapping.LinkedSpec.orderedDistinctNames(
+            "occurrence-core-material-collector-roles",
+            "occurrence",
+            "material",
+            "evidenceForOccurrenceID",
+            "material-agent-role",
+            "materialEntity_fk",
+            "collector",
+            DwcTerm.recordedBy.qualifiedName()));
+  }
+
+  private static CoreFragment materialAgent(
+      SchemaGraph graph, String fragmentName, String idColumn, String valueColumn, String targetTerm) {
+    return AgentMapping.linkedCore(
+        graph,
+        new AgentMapping.LinkedSpec(
+            fragmentName,
+            "occurrence",
+            "material",
+            "evidenceForOccurrenceID",
+            idColumn,
+            valueColumn,
+            targetTerm));
+  }
 
   /** Geological-context fields from one unambiguous context on one evidence material. */
   public static CoreFragment materialGeologicalContext(SchemaGraph graph) {
@@ -280,20 +360,26 @@ public final class OccurrenceCoreMapping {
 
   /** Resolves recordedByID through agent.agentID while preserving an explicit publisher value. */
   public static CoreFragment recordedBy(SchemaGraph graph) {
-    return agentName(
-        "occurrence-recorded-by-agent",
-        "recordedByID",
-        "recordedBy",
-        DwcTerm.recordedBy.qualifiedName());
+    return AgentMapping.core(
+        graph,
+        new AgentMapping.Spec(
+            "occurrence-recorded-by-agent",
+            "occurrence",
+            "recordedByID",
+            "recordedBy",
+            DwcTerm.recordedBy.qualifiedName()));
   }
 
   /** Resolves identifiedByID through agent.agentID while preserving an explicit publisher value. */
   public static CoreFragment identifiedBy(SchemaGraph graph) {
-    return agentName(
-        "occurrence-identified-by-agent",
-        "identifiedByID",
-        "identifiedBy",
-        DwcTerm.identifiedBy.qualifiedName());
+    return AgentMapping.core(
+        graph,
+        new AgentMapping.Spec(
+            "occurrence-identified-by-agent",
+            "occurrence",
+            "identifiedByID",
+            "identifiedBy",
+            DwcTerm.identifiedBy.qualifiedName()));
   }
 
   /** Direct occurrenceProtocol_fk -> resolved samplingProtocol when the protocol exists. */
@@ -317,27 +403,7 @@ public final class OccurrenceCoreMapping {
         .build();
   }
 
-  private static CoreFragment agentName(
-      String name, String idColumn, String valueColumn, String targetTerm) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath agent =
-        occurrence.append(
-            SchemaRelation.relation(
-                "occurrence", idColumn, "agent", "agentID", null, RelationCardinality.UNKNOWN));
 
-    return coreFragment(name, "occurrence")
-        .join("agent")
-        .on(idColumn, "agentID")
-        .optional()
-        .fanOut()
-        .field(
-            TargetFieldMapping.oneOf(
-                targetTerm,
-                ValueAggregation.firstNonNull(),
-                occurrence.field(valueColumn),
-                agent.field("preferredAgentName")))
-        .build();
-  }
 
   private static void addOrganismTargets(
       SchemaGraph graph,

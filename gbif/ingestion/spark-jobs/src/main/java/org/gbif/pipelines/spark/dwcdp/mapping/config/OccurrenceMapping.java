@@ -3,6 +3,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
@@ -102,6 +103,37 @@ public final class OccurrenceMapping {
               });
     }
     return builder.build();
+  }
+
+
+
+  /** Resolves the sole accepted identification's identifiedByID before material fallback. */
+  public static ExtensionFragment acceptedIdentificationAgent(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath identification =
+        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
+    SchemaPath agent =
+        identification.append(graph.resolve("identification", "agent", "identifiedByID"));
+
+    return extensionFragment("occurrence-accepted-identification-agent", ROW_TYPE_OCCURRENCE, "occurrence")
+        .scopeKey("event_fk")
+        .rowMatch(occurrence.field("occurrence_pk"))
+        .join("identification")
+        .via("occurrence_fk")
+        .filter(FilterExpression.eq("isAcceptedIdentification", true))
+        .optional()
+        .exactlyOne()
+        .join("agent")
+        .via("identifiedByID")
+        .optional()
+        .fanOut()
+        .field(
+            TargetFieldMapping.oneOf(
+                DwcTerm.identifiedBy.qualifiedName(),
+                ValueAggregation.firstNonNull(),
+                identification.field("identifiedBy"),
+                agent.field("preferredAgentName")))
+        .build();
   }
 
   /**
@@ -213,20 +245,93 @@ public final class OccurrenceMapping {
 
   /** Resolves recordedByID through agent.agentID for an Event-nested Occurrence row. */
   public static ExtensionFragment recordedBy(SchemaGraph graph) {
-    return agentName(
-        "occurrence-recorded-by-agent",
-        "recordedByID",
-        "recordedBy",
-        DwcTerm.recordedBy.qualifiedName());
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    return AgentMapping.extension(
+        graph,
+        ROW_TYPE_OCCURRENCE,
+        new AgentMapping.Spec(
+            "occurrence-recorded-by-agent",
+            "occurrence",
+            "recordedByID",
+            "recordedBy",
+            DwcTerm.recordedBy.qualifiedName()),
+        Optional.of("event_fk"),
+        Optional.of(occurrence.field("occurrence_pk")));
   }
 
   /** Resolves identifiedByID through agent.agentID for an Event-nested Occurrence row. */
   public static ExtensionFragment identifiedBy(SchemaGraph graph) {
-    return agentName(
-        "occurrence-identified-by-agent",
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    return AgentMapping.extension(
+        graph,
+        ROW_TYPE_OCCURRENCE,
+        new AgentMapping.Spec(
+            "occurrence-identified-by-agent",
+            "occurrence",
+            "identifiedByID",
+            "identifiedBy",
+            DwcTerm.identifiedBy.qualifiedName()),
+        Optional.of("event_fk"),
+        Optional.of(occurrence.field("occurrence_pk")));
+  }
+
+
+
+  /** Resolves material.collectedByID for one unambiguous evidence material. */
+  public static ExtensionFragment materialCollectedBy(SchemaGraph graph) {
+    return materialAgent(
+        graph,
+        "occurrence-material-collected-by-agent",
+        "collectedByID",
+        "collectedBy",
+        DwcTerm.recordedBy.qualifiedName());
+  }
+
+  /** Resolves material.identifiedByID for one unambiguous evidence material. */
+  public static ExtensionFragment materialIdentifiedBy(SchemaGraph graph) {
+    return materialAgent(
+        graph,
+        "occurrence-material-identified-by-agent",
         "identifiedByID",
         "identifiedBy",
         DwcTerm.identifiedBy.qualifiedName());
+  }
+
+  /** Ordered collector AgentRoles are the final recordedBy fallback for one evidence material. */
+  public static ExtensionFragment materialCollectorRoles(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    return AgentRoleMapping.linkedExtension(
+        graph,
+        ROW_TYPE_OCCURRENCE,
+        AgentRoleMapping.LinkedSpec.orderedDistinctNames(
+            "occurrence-material-collector-roles",
+            "occurrence",
+            "material",
+            "evidenceForOccurrenceID",
+            "material-agent-role",
+            "materialEntity_fk",
+            "collector",
+            DwcTerm.recordedBy.qualifiedName()),
+        Optional.of("event_fk"),
+        Optional.of(occurrence.field("occurrence_pk")));
+  }
+
+  private static ExtensionFragment materialAgent(
+      SchemaGraph graph, String fragmentName, String idColumn, String valueColumn, String targetTerm) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    return AgentMapping.linkedExtension(
+        graph,
+        ROW_TYPE_OCCURRENCE,
+        new AgentMapping.LinkedSpec(
+            fragmentName,
+            "occurrence",
+            "material",
+            "evidenceForOccurrenceID",
+            idColumn,
+            valueColumn,
+            targetTerm),
+        Optional.of("event_fk"),
+        Optional.of(occurrence.field("occurrence_pk")));
   }
 
   /** Geological-context fields from one context on one unambiguous evidence material. */
@@ -318,29 +423,7 @@ public final class OccurrenceMapping {
         .build();
   }
 
-  private static ExtensionFragment agentName(
-      String name, String idColumn, String valueColumn, String targetTerm) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath agent =
-        occurrence.append(
-            SchemaRelation.relation(
-                "occurrence", idColumn, "agent", "agentID", null, RelationCardinality.UNKNOWN));
 
-    return extensionFragment(name, ROW_TYPE_OCCURRENCE, "occurrence")
-        .scopeKey("event_fk")
-        .rowMatch(occurrence.field("occurrence_pk"))
-        .join("agent")
-        .on(idColumn, "agentID")
-        .optional()
-        .fanOut()
-        .field(
-            TargetFieldMapping.oneOf(
-                targetTerm,
-                ValueAggregation.firstNonNull(),
-                occurrence.field(valueColumn),
-                agent.field("preferredAgentName")))
-        .build();
-  }
 
   private static void addProvenanceTargets(
       ExtensionFragmentBuilder builder, SchemaPath provenance) {

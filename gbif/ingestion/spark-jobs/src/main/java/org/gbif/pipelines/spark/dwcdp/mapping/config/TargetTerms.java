@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.dwc.terms.UnknownTerm;
@@ -22,6 +23,13 @@ final class TargetTerms {
           "eventConductedByID", DwcTerm.recordedByID.qualifiedName(),
           "accessURI", DcTerm.identifier.qualifiedName(),
           "mediaType", DcTerm.type.qualifiedName());
+
+
+  /** Humboldt fields whose simple names overlap terms in other namespaces. */
+  private static final Map<String, String> HUMBOLDT_RENAMES =
+      Map.of(
+          "identifiedBy", EcoTerm.identifiedBy.qualifiedName(),
+          "identificationReferences", EcoTerm.identificationReferences.qualifiedName());
 
   /** Raw extension keys deliberately retained as part of their current extension contracts. */
   private static final Set<String> RAW_OUTPUT_ALLOWLIST =
@@ -65,7 +73,8 @@ final class TargetTerms {
 
   /** Humboldt resource fields form an extension contract; known terms are qualified, others retained. */
   static Optional<String> resolveHumboldtOutput(String column) {
-    return Optional.of(resolveKnown(column).orElse(column));
+    String renamed = HUMBOLDT_RENAMES.get(column);
+    return Optional.of(renamed != null ? renamed : resolveKnown(column).orElse(column));
   }
 
   static boolean isAllowedRawOutput(String column) {
