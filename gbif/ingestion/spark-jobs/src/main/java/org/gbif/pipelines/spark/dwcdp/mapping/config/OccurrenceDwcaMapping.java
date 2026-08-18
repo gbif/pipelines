@@ -23,7 +23,6 @@ public final class OccurrenceDwcaMapping {
     return builder
         .extension(IdentificationMapping.ROW_TYPE_IDENTIFICATION)
         .importFragment(IdentificationMapping.occurrenceHistory(graph))
-        .importFragment(IdentificationMapping.identifiedBy(graph))
         .build();
   }
 
@@ -63,8 +62,10 @@ public final class OccurrenceDwcaMapping {
         .importFragment(AssertionMapping.chronometricAgeAssertionsForOccurrence(graph))
         .endExtension()
         .extension(IdentificationMapping.ROW_TYPE_IDENTIFICATION)
+        .unionRows()
         .importFragment(IdentificationMapping.occurrenceHistory(graph))
-        .importFragment(IdentificationMapping.identifiedBy(graph))
+        .importFragment(IdentificationMapping.occurrenceDnaAnalysisIdentifications(graph))
+        .importFragment(IdentificationMapping.occurrenceDnaSequenceIdentifications(graph))
         .endExtension()
         .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
         .unionRows()
@@ -78,6 +79,8 @@ public final class OccurrenceDwcaMapping {
         .importFragment(ReferenceMapping.identificationReferencesForOccurrence(graph))
         .importFragment(ReferenceMapping.chronometricAgeReferencesForOccurrence(graph))
         .importFragment(ReferenceMapping.molecularProtocolReferencesForOccurrence(graph))
+        .importFragment(ReferenceMapping.dnaAnalysisIdentificationReferencesForOccurrence(graph))
+        .importFragment(ReferenceMapping.dnaSequenceIdentificationReferencesForOccurrence(graph))
         .endExtension()
         .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
         .importFragment(NucleotideMapping.materialAnalysesForOccurrence(graph))

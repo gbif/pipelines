@@ -57,6 +57,22 @@ class ReferenceMappingTest {
             "molecular-protocol",
             "molecular-protocol-reference",
             "bibliographic-resource"));
+    assertCompiledPath(
+        ReferenceMapping.dnaAnalysisIdentificationReferencesForEvent(graph),
+        List.of(
+            "nucleotide-analysis",
+            "identification",
+            "identification-reference",
+            "bibliographic-resource"));
+    assertCompiledPath(
+        ReferenceMapping.dnaSequenceIdentificationReferencesForOccurrence(graph),
+        List.of(
+            "material",
+            "nucleotide-analysis",
+            "nucleotide-sequence",
+            "identification",
+            "identification-reference",
+            "bibliographic-resource"));
   }
 
   @Test
@@ -88,7 +104,9 @@ class ReferenceMappingTest {
             "event-references",
             "survey-references-for-event",
             "chronometric-age-references-for-event",
-            "event-molecular-protocol-references"),
+            "event-molecular-protocol-references",
+            "event-dna-analysis-identification-references",
+            "event-dna-sequence-identification-references"),
         eventReferences.fragments().stream()
             .map(ExtensionFragment::name)
             .collect(Collectors.toSet()));
@@ -101,7 +119,9 @@ class ReferenceMappingTest {
             "material-references-for-occurrence",
             "identification-references-for-occurrence",
             "chronometric-age-references-for-occurrence",
-            "material-molecular-protocol-references-for-occurrence"),
+            "material-molecular-protocol-references-for-occurrence",
+            "material-dna-analysis-identification-references-for-occurrence",
+            "material-dna-sequence-identification-references-for-occurrence"),
         occurrenceReferences.fragments().stream()
             .map(ExtensionFragment::name)
             .collect(Collectors.toSet()));

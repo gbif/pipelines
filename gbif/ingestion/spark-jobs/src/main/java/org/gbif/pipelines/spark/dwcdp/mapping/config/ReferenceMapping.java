@@ -65,6 +65,40 @@ public final class ReferenceMapping {
                 OwnershipStep.fanOut("molecular-protocol-reference", "molecularProtocol_fk"))));
   }
 
+  public static ExtensionFragment dnaAnalysisIdentificationReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "event-dna-analysis-identification-references",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                    .filter(FilterExpression.isNull("materialEntity_fk")),
+                OwnershipStep.fanOut("identification", "nucleotideAnalysis_fk")
+                    .filter(FilterExpression.isNull("occurrence_fk")),
+                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+  }
+
+  public static ExtensionFragment dnaSequenceIdentificationReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "event-dna-sequence-identification-references",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                    .filter(FilterExpression.isNull("materialEntity_fk")),
+                OwnershipStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
+                OwnershipStep.fanOut("identification", "nucleotideSequence_fk")
+                    .filter(
+                        FilterExpression.and(
+                            FilterExpression.isNull("occurrence_fk"),
+                            FilterExpression.isNull("nucleotideAnalysis_fk"))),
+                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+  }
+
   public static ExtensionFragment occurrenceReferences(SchemaGraph graph) {
     return references(
         graph, new Spec("occurrence-references", "occurrence-reference", "occurrence_fk", List.of()));
@@ -119,6 +153,42 @@ public final class ReferenceMapping {
                 OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
                 OwnershipStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"),
                 OwnershipStep.fanOut("molecular-protocol-reference", "molecularProtocol_fk"))));
+  }
+
+  public static ExtensionFragment dnaAnalysisIdentificationReferencesForOccurrence(
+      SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "material-dna-analysis-identification-references-for-occurrence",
+            "occurrence",
+            "occurrence_pk",
+            List.of(
+                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipStep.fanOut("identification", "nucleotideAnalysis_fk")
+                    .filter(FilterExpression.isNull("occurrence_fk")),
+                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+  }
+
+  public static ExtensionFragment dnaSequenceIdentificationReferencesForOccurrence(
+      SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "material-dna-sequence-identification-references-for-occurrence",
+            "occurrence",
+            "occurrence_pk",
+            List.of(
+                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
+                OwnershipStep.fanOut("identification", "nucleotideSequence_fk")
+                    .filter(
+                        FilterExpression.and(
+                            FilterExpression.isNull("occurrence_fk"),
+                            FilterExpression.isNull("nucleotideAnalysis_fk"))),
+                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
   }
 
   private static ExtensionFragment references(SchemaGraph graph, Spec spec) {
