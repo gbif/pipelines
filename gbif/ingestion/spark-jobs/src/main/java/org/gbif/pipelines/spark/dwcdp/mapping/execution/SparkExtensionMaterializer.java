@@ -16,11 +16,15 @@ import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.concat_ws;
+import static org.apache.spark.sql.functions.filter;
 import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.flatten;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.monotonically_increasing_id;
+import static org.apache.spark.sql.functions.size;
 import static org.apache.spark.sql.functions.sort_array;
+import static org.apache.spark.sql.functions.struct;
+import static org.apache.spark.sql.functions.transform;
 import static org.apache.spark.sql.functions.when;
 
 import java.nio.charset.StandardCharsets;
@@ -478,11 +482,48 @@ public final class SparkExtensionMaterializer {
     }
 
     if (target.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      Optional<Column> contributionIdentity =
+          target.contributionIdentity().map(source -> pathResult.columnOrNull(source.field()));
+      Optional<Column> orderBy =
+          target.orderBy().map(source -> pathResult.columnOrNull(source.field()));
+
+      if (contributionIdentity.isPresent() || orderBy.isPresent()) {
+        List<Column> contributionEntries = new ArrayList<>();
+        for (Column source : sources) {
+          List<Column> fields = new ArrayList<>();
+          orderBy.ifPresent(order -> fields.add(order.as("order")));
+          contributionIdentity.ifPresent(identity -> fields.add(identity.as("identity")));
+          fields.add(source.cast("string").as("value"));
+          contributionEntries.add(struct(fields.toArray(Column[]::new)));
+        }
+
+        Column contributions =
+            flatten(collect_list(array(contributionEntries.toArray(Column[]::new))));
+        if (contributionIdentity.isPresent()) {
+          contributions = array_distinct(contributions);
+        }
+        if (orderBy.isPresent()) {
+          contributions = sort_array(contributions);
+        }
+
+        Column values = transform(contributions, entry -> entry.getField("value"));
+        values = filter(values, Column::isNotNull);
+        if (delimited.distinct()) {
+          values = array_distinct(values);
+        }
+        if (orderBy.isEmpty()) {
+          values = sort_array(values);
+        }
+        return when(size(values).gt(0), concat_ws(delimited.delimiter(), values));
+      }
+
       Column values = flatten(collect_list(array(sources.toArray(Column[]::new))));
+      values = filter(values, Column::isNotNull);
       if (delimited.distinct()) {
         values = array_distinct(values);
       }
-      return concat_ws(delimited.delimiter(), sort_array(values));
+      return when(
+          size(values).gt(0), concat_ws(delimited.delimiter(), sort_array(values)));
     }
 
     throw new UnsupportedOperationException(

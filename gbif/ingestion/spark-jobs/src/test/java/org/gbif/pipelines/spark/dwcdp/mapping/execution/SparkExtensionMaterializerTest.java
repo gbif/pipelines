@@ -102,9 +102,11 @@ class SparkExtensionMaterializerTest {
             .exactlyOne()
             .field(
                 TargetFieldMapping.allOf(
-                    TERM_COLLECTORS,
-                    ValueAggregation.pipeDelimitedDistinct(),
-                    agentPath.field("preferredAgentName")))
+                        TERM_COLLECTORS,
+                        ValueAggregation.pipeDelimitedDistinct(),
+                        agentPath.field("preferredAgentName"))
+                    .contributionIdentity(rolePath.field("agent_fk"))
+                    .orderBy(rolePath.field("agentRoleOrder")))
             .build();
 
     ExtensionMapping extension = new ExtensionMapping(HUMBOLDT, List.of(surveyTargets, collectors));
@@ -129,8 +131,8 @@ class SparkExtensionMaterializerTest {
     String secondCollectors = rows.get(1).getAs(result.columnName(TERM_COLLECTORS));
     assertEquals("S1", parentKey);
     assertEquals("3", siteCount);
-    assertEquals("Alice|Bob", firstCollectors);
-    assertEquals("Alice|Bob", secondCollectors);
+    assertEquals("Zoe|Bob", firstCollectors);
+    assertEquals("Zoe|Bob", secondCollectors);
 
     List<String> descriptions =
         rows.stream()
@@ -138,6 +140,69 @@ class SparkExtensionMaterializerTest {
             .sorted()
             .toList();
     assertEquals(List.of("All birds", "All mammals"), descriptions);
+  }
+
+  @Test
+  void singleProducerDistinctAggregationDeduplicatesRenderedValuesInDeclaredOrder() {
+    SchemaPath surveyPath = SchemaPath.root("survey");
+    SchemaRelation surveyToRole = graph.resolve("survey", "survey-agent-role", "survey_fk");
+    SchemaPath rolePath = surveyPath.append(surveyToRole);
+    SchemaRelation roleToAgent = graph.resolve("survey-agent-role", "agent", "agent_fk");
+    SchemaPath agentPath = rolePath.append(roleToAgent);
+
+    ExtensionFragment collectors =
+        ExtensionFragmentBuilder.extensionFragment("survey-collectors", HUMBOLDT, "survey")
+            .join("survey-agent-role")
+            .via("survey_fk")
+            .filter(cols -> cols.col("agentRole").equalTo("collector"))
+            .fanOut()
+            .join("agent")
+            .via("agent_fk")
+            .exactlyOne()
+            .rowIdentity(surveyPath.field("survey_pk"))
+            .field(
+                TargetFieldMapping.allOf(
+                        TERM_COLLECTORS,
+                        ValueAggregation.pipeDelimitedDistinct(),
+                        agentPath.field("preferredAgentName"))
+                    .contributionIdentity(rolePath.field("agent_fk"))
+                    .orderBy(rolePath.field("agentRoleOrder")))
+            .build();
+
+    Dataset<Row> duplicateNamedRoles =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("S1", "A1", "collector", 1),
+                RowFactory.create("S1", "A1", "collector", 1),
+                RowFactory.create("S1", "A2", "collector", 2),
+                RowFactory.create("S1", "A3", "collector", 3)),
+            new StructType()
+                .add("survey_fk", DataTypes.StringType)
+                .add("agent_fk", DataTypes.StringType)
+                .add("agentRole", DataTypes.StringType)
+                .add("agentRoleOrder", DataTypes.IntegerType));
+    Dataset<Row> duplicateNamedAgents =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("A1", "Same"),
+                RowFactory.create("A2", "Other"),
+                RowFactory.create("A3", "Same")),
+            new StructType()
+                .add("agent_pk", DataTypes.StringType)
+                .add("preferredAgentName", DataTypes.StringType));
+
+    ExtensionMaterializationResult result =
+        new SparkExtensionMaterializer(graph)
+            .materialize(
+                TestTableLoader.of(
+                    "survey", survey(),
+                    "survey-agent-role", duplicateNamedRoles,
+                    "agent", duplicateNamedAgents),
+                new ExtensionMapping(HUMBOLDT, List.of(collectors)));
+
+    List<Row> rows = result.dataset().collectAsList();
+    assertEquals(1, rows.size());
+    assertEquals("Same|Other", rows.get(0).getAs(result.columnName(TERM_COLLECTORS)));
   }
 
   @Test
@@ -273,7 +338,7 @@ class SparkExtensionMaterializerTest {
   private Dataset<Row> agents() {
     return spark.createDataFrame(
         List.of(
-            RowFactory.create("A1", "Alice"),
+            RowFactory.create("A1", "Zoe"),
             RowFactory.create("A2", "Bob"),
             RowFactory.create("A3", "Carol")),
         new StructType()
