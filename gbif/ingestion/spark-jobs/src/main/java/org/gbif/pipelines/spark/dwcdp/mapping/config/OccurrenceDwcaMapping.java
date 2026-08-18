@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder.mappingPlan;
 
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
@@ -127,9 +128,9 @@ public final class OccurrenceDwcaMapping {
         .importCoreFragment(OccurrenceCoreMapping.materialDirectProvenance(graph))
         .importCoreFragment(OccurrenceCoreMapping.materialProvenance(graph))
         .importCoreFragment(OccurrenceCoreMapping.directSamplingProtocol(graph))
-        .mergeCoreTarget(org.gbif.dwc.terms.DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
-        .mergeCoreTarget(org.gbif.dwc.terms.DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
-        .mergeCoreTarget(org.gbif.dwc.terms.DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeCoreTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeCoreTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())

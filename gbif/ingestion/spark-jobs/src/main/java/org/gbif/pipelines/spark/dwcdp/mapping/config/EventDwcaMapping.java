@@ -78,7 +78,9 @@ public final class EventDwcaMapping {
         .importFragment(AssertionMapping.molecularProtocolAssertionsForEvent(graph))
         .endExtension()
         .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
+        .unionRows()
         .importFragment(IdentifierMapping.eventIdentifiers(graph))
+        .importFragment(IdentifierMapping.surveyIdentifiersForEvent(graph))
         .endExtension()
         .extension(HumboldtMapping.ROW_TYPE_HUMBOLDT)
         .importFragment(HumboldtMapping.surveyTargets(graph))
@@ -153,7 +155,9 @@ public final class EventDwcaMapping {
   public static MappingPlan withIdentifier(SchemaGraph graph) {
     return eventBase("event-core:identifier")
         .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
+        .unionRows()
         .importFragment(IdentifierMapping.eventIdentifiers(graph))
+        .importFragment(IdentifierMapping.surveyIdentifiersForEvent(graph))
         .build();
   }
 

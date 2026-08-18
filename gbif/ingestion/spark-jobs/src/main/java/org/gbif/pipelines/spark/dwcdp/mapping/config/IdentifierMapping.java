@@ -26,6 +26,31 @@ public final class IdentifierMapping {
     return builder.build();
   }
 
+  /** {@code survey-identifier} rows promoted to their owning Event core record. */
+  public static ExtensionFragment surveyIdentifiersForEvent(SchemaGraph graph) {
+    SchemaPath event = SchemaPath.root("event");
+    SchemaPath survey =
+        event.append(graph.resolve("event", "survey", "event_fk", null));
+    SchemaPath identifiers =
+        survey.append(graph.resolve("survey", "survey-identifier", "survey_fk", null));
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment("survey-identifiers-for-event", ROW_TYPE_IDENTIFIER, "event")
+            .scopeKey("event_pk")
+            .join("survey")
+            .via("event_fk")
+            .optional()
+            .fanOut()
+            .join("survey-identifier")
+            .via("survey_fk")
+            .optional()
+            .fanOut()
+            .endJoin();
+
+    DirectFieldMappings.from(graph, "survey-identifier", identifiers).addTo(builder);
+    return builder.build();
+  }
+
   /** Direct {@code occurrence-identifier} rows attached to Occurrence core records. */
   public static ExtensionFragment occurrenceIdentifiers(SchemaGraph graph) {
     SchemaPath identifiers = SchemaPath.root("occurrence-identifier");
