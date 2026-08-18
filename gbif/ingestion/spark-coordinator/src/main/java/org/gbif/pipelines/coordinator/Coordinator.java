@@ -71,12 +71,16 @@ public class Coordinator {
     Mode mode = Mode.valueOf(args.mode);
     PipelinesConfig config = loadConfig(args.config);
 
-    JvmMetrics.builder().register();
+    JvmMetrics.builder().register(PrometheusMetrics.PROMETHEUS_REGISTRY);
 
     // start Prometheus HTTP server
     if (args.prometheusPort > 0) {
       log.info("Starting Prometheus HTTP server on port {}", args.prometheusPort);
-      try (HTTPServer httpServer = HTTPServer.builder().port(args.prometheusPort).buildAndStart()) {
+      try (HTTPServer httpServer =
+          HTTPServer.builder()
+              .registry(PrometheusMetrics.PROMETHEUS_REGISTRY)
+              .port(args.prometheusPort)
+              .buildAndStart()) {
         new Coordinator()
             .start(
                 mode,
@@ -143,113 +147,71 @@ public class Coordinator {
       Supplier<MessageListener> listenerSupplier,
       Supplier<DefaultMessagePublisher> publisherSupplier) {
 
-    Function<MessagePublisher, CloseableMessageCallback> callbackFn = null;
-
-    switch (mode) {
-      case IDENTIFIER:
-        callbackFn = (messagePublisher -> new IdentifierCallback(config, messagePublisher, master));
-        break;
-      case IDENTIFIER_DISTRIBUTED:
-        callbackFn =
-            (messagePublisher -> new IdentifierDistributedCallback(config, messagePublisher));
-        break;
-      case INTERPRETATION:
-        callbackFn =
-            (messagePublisher ->
-                new OccurrenceInterpretationCallback(config, messagePublisher, master));
-        break;
-      case INTERPRETATION_DISTRIBUTED:
-        callbackFn =
-            (messagePublisher ->
-                new OccurrenceInterpretationDistributedCallback(config, messagePublisher));
-        break;
-      case EVENTS_INTERPRETATION:
-        callbackFn =
-            (messagePublisher ->
-                new EventsInterpretationCallback(config, messagePublisher, master));
-        break;
-      case EVENTS_INTERPRETATION_DISTRIBUTED:
-        callbackFn =
-            (messagePublisher ->
-                new EventsInterpretationDistributedCallback(config, messagePublisher));
-        break;
-      case TABLEBUILD:
-        callbackFn =
-            (messagePublisher ->
-                new OccurrenceTableBuildCallback(
-                    config, messagePublisher, master, "occurrence", OCCURRENCE_HDFS));
-        break;
-      case TABLEBUILD_DISTRIBUTED:
-        callbackFn =
-            (messagePublisher ->
-                new OccurrenceTableBuildDistributedCallback(
-                    config, messagePublisher, "occurrence", OCCURRENCE_HDFS));
-        break;
-      case EVENTS_TABLEBUILD:
-        callbackFn =
-            (messagePublisher ->
-                new EventsTableBuildCallback(
-                    config, messagePublisher, master, "event", EVENT_HDFS));
-        break;
-      case EVENTS_TABLEBUILD_DISTRIBUTED:
-        callbackFn =
-            (messagePublisher ->
-                new EventsTableBuildDistributedCallback(
-                    config, messagePublisher, "event", EVENT_HDFS));
-        break;
-      case INDEXING:
-        callbackFn =
-            (messagePublisher -> new OccurrenceIndexingCallback(config, messagePublisher, master));
-        break;
-      case INDEXING_DISTRIBUTED:
-        callbackFn =
-            (messagePublisher ->
-                new OccurrenceIndexingDistributedCallback(config, messagePublisher));
-        break;
-      case EVENTS_INDEXING:
-        callbackFn =
-            (messagePublisher -> new EventsIndexingCallback(config, messagePublisher, master));
-        break;
-      case EVENTS_INDEXING_DISTRIBUTED:
-        callbackFn =
-            (messagePublisher -> new EventsIndexingDistributedCallback(config, messagePublisher));
-        break;
-      case FRAGMENTER:
-        callbackFn = (messagePublisher -> new FragmenterCallback(config, messagePublisher, master));
-        break;
-      case FRAGMENTER_DISTRIBUTED:
-        callbackFn =
-            (messagePublisher -> new FragmenterDistributedCallback(config, messagePublisher));
-        break;
-      case OCCURRENCE_DELETION:
-        callbackFn =
-            (messagePublisher -> new DatasetDeleteCallback(config, master, DatasetType.OCCURRENCE));
-        break;
-      case EVENT_DELETION:
-        callbackFn =
-            (messagePublisher ->
-                new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
-        break;
-      case DWCDP_STAGE_STANDALONE:
-        callbackFn = messagePublisher -> new DwcDpStageCallback(config, messagePublisher, master);
-        break;
-      case DWCDP_TO_VERBATIM_STANDALONE:
-        callbackFn =
-            messagePublisher -> new DwcDpToVerbatimCallback(config, messagePublisher, master);
-        break;
-      case DWCDP_TO_VERBATIM_DISTRIBUTED:
-        callbackFn =
-            messagePublisher ->
-                new DwcDpToVerbatimDistributedCallback(config, messagePublisher, master);
-        break;
-
-      default:
-        throw new IllegalArgumentException(
-            "Unknown mode: "
-                + mode
-                + ". Recognized modes are: "
-                + Stream.of(Mode.values()).map(Enum::name).collect(Collectors.joining(",")));
-    }
+    Function<MessagePublisher, CloseableMessageCallback> callbackFn =
+        switch (mode) {
+          case IDENTIFIER -> (messagePublisher ->
+              new IdentifierCallback(config, messagePublisher, master));
+          case IDENTIFIER_DISTRIBUTED -> (messagePublisher ->
+              new IdentifierDistributedCallback(config, messagePublisher));
+          case INTERPRETATION -> (messagePublisher ->
+              new OccurrenceInterpretationCallback(config, messagePublisher, master));
+          case INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
+              new OccurrenceInterpretationDistributedCallback(config, messagePublisher));
+          case VALIDATOR_IDENTIFIER -> (messagePublisher ->
+              new ValidatorIdentifierCallback(config, messagePublisher, master));
+          case VALIDATOR_IDENTIFIER_DISTRIBUTED -> (messagePublisher ->
+              new ValidatorIdentifierDistributedCallback(config, messagePublisher));
+          case VALIDATOR_INTERPRETATION -> (messagePublisher ->
+              new ValidatorInterpretationCallback(config, messagePublisher, master));
+          case VALIDATOR_INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
+              new ValidatorInterpretationDistributedCallback(config, messagePublisher));
+          case VALIDATOR_METRICS -> (messagePublisher ->
+              new ValidatorMetricsCallback(config, messagePublisher, master));
+          case VALIDATOR_METRICS_DISTRIBUTED -> (messagePublisher ->
+              new ValidatorMetricsDistributedCallback(config, messagePublisher));
+          case EVENTS_INTERPRETATION -> (messagePublisher ->
+              new EventsInterpretationCallback(config, messagePublisher, master));
+          case EVENTS_INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
+              new EventsInterpretationDistributedCallback(config, messagePublisher));
+          case TABLEBUILD -> (messagePublisher ->
+              new OccurrenceTableBuildCallback(
+                  config, messagePublisher, master, "occurrence", OCCURRENCE_HDFS));
+          case TABLEBUILD_DISTRIBUTED -> (messagePublisher ->
+              new OccurrenceTableBuildDistributedCallback(
+                  config, messagePublisher, "occurrence", OCCURRENCE_HDFS));
+          case EVENTS_TABLEBUILD -> (messagePublisher ->
+              new EventsTableBuildCallback(config, messagePublisher, master, "event", EVENT_HDFS));
+          case EVENTS_TABLEBUILD_DISTRIBUTED -> (messagePublisher ->
+              new EventsTableBuildDistributedCallback(
+                  config, messagePublisher, "event", EVENT_HDFS));
+          case INDEXING -> (messagePublisher ->
+              new OccurrenceIndexingCallback(config, messagePublisher, master));
+          case INDEXING_DISTRIBUTED -> (messagePublisher ->
+              new OccurrenceIndexingDistributedCallback(config, messagePublisher));
+          case EVENTS_INDEXING -> (messagePublisher ->
+              new EventsIndexingCallback(config, messagePublisher, master));
+          case EVENTS_INDEXING_DISTRIBUTED -> (messagePublisher ->
+              new EventsIndexingDistributedCallback(config, messagePublisher));
+          case FRAGMENTER -> (messagePublisher ->
+              new FragmenterCallback(config, messagePublisher, master));
+          case FRAGMENTER_DISTRIBUTED -> (messagePublisher ->
+              new FragmenterDistributedCallback(config, messagePublisher));
+          case OCCURRENCE_DELETION -> (messagePublisher ->
+              new DatasetDeleteCallback(config, master, DatasetType.OCCURRENCE));
+          case EVENT_DELETION -> (messagePublisher ->
+              new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
+          case DWCDP_STAGE_STANDALONE -> (messagePublisher ->
+              new DwcDpStageCallback(config, messagePublisher, master));
+          case DWCDP_TO_VERBATIM_STANDALONE -> (messagePublisher ->
+              new DwcDpToVerbatimCallback(config, messagePublisher, master));
+          case DWCDP_TO_VERBATIM_DISTRIBUTED -> (messagePublisher ->
+              new DwcDpToVerbatimDistributedCallback(config, messagePublisher, master));
+          default -> throw new IllegalArgumentException(
+              "Unknown mode: "
+                  + mode
+                  + ". Recognized modes are: "
+                  + Stream.of(Mode.values()).map(Enum::name).collect(Collectors.joining(",")));
+        };
 
     log.info(
         "Running {}, listening to queue: {} on virtual host {}",
@@ -354,6 +316,12 @@ public class Coordinator {
     FRAGMENTER_DISTRIBUTED,
     OCCURRENCE_DELETION,
     EVENT_DELETION,
+    VALIDATOR_IDENTIFIER,
+    VALIDATOR_IDENTIFIER_DISTRIBUTED,
+    VALIDATOR_INTERPRETATION,
+    VALIDATOR_INTERPRETATION_DISTRIBUTED,
+    VALIDATOR_METRICS,
+    VALIDATOR_METRICS_DISTRIBUTED,
     DWCDP_STAGE_STANDALONE,
     DWCDP_STAGE_DISTRIBUTED,
     DWCDP_TO_VERBATIM_STANDALONE,

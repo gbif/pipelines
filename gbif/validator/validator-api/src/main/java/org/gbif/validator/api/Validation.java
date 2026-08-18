@@ -2,7 +2,6 @@ package org.gbif.validator.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Set;
@@ -11,19 +10,25 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
 import org.gbif.api.model.registry.Dataset;
 
 @Data
 @Builder
+@Jacksonized
 // Constructors are needed for MyBatis, persistence layer.
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonDeserialize(builder = Validation.ValidationBuilder.class)
 public class Validation {
 
   private static final EnumSet<Status> EXECUTING_STATUSES =
-      EnumSet.of(Status.SUBMITTED, Status.DOWNLOADING, Status.RUNNING, Status.QUEUED);
+      EnumSet.of(
+          Status.SUBMITTED,
+          Status.DOWNLOADING,
+          Status.RUNNING,
+          Status.QUEUED,
+          Status.WAITING_FOR_CHECKLISTBANK);
 
   private static final EnumSet<Status> FINISHED_STATUSES =
       EnumSet.of(Status.FINISHED, Status.FAILED, Status.ABORTED);
@@ -35,7 +40,8 @@ public class Validation {
     FINISHED,
     ABORTED,
     FAILED,
-    QUEUED
+    QUEUED,
+    WAITING_FOR_CHECKLISTBANK
   }
 
   /** Validation key/identifier. */

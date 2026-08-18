@@ -282,16 +282,23 @@ public class HumboldtInterpreter {
     };
   }
 
-  private static Function<Humboldt, List<String>> checkAreas() {
+  static Function<Humboldt, List<String>> checkAreas() {
     return humboldt -> {
-      if (humboldt.getGeospatialScopeAreaValue() != null
-          && humboldt.getTotalAreaSampledValue() != null
-          // we only check them if they have the same unit since we can't interpret the units until
-          // we have a vocabulary
-          && humboldt
-              .getGeospatialScopeAreaUnit()
-              .equalsIgnoreCase(humboldt.getTotalAreaSampledUnit())
-          && humboldt.getGeospatialScopeAreaValue() < humboldt.getTotalAreaSampledValue()) {
+      Double geospatialScopeAreaValue = humboldt.getGeospatialScopeAreaValue();
+      Double totalAreaSampledValue = humboldt.getTotalAreaSampledValue();
+      String geospatialScopeAreaUnit = humboldt.getGeospatialScopeAreaUnit();
+      String totalAreaSampledUnit = humboldt.getTotalAreaSampledUnit();
+
+      // no unit-conversion vocabulary yet, so only directly matching units are comparable
+      boolean unitsComparable =
+          geospatialScopeAreaUnit != null
+              && totalAreaSampledUnit != null
+              && geospatialScopeAreaUnit.equalsIgnoreCase(totalAreaSampledUnit);
+
+      if (geospatialScopeAreaValue != null
+          && totalAreaSampledValue != null
+          && unitsComparable
+          && geospatialScopeAreaValue < totalAreaSampledValue) {
         return List.of(EventIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_AREA_SAMPLED.name());
       }
       return List.of();

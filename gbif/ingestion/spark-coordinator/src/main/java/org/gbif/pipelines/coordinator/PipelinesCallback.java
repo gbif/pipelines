@@ -3,6 +3,7 @@ package org.gbif.pipelines.coordinator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.api.model.pipelines.PipelineStep.Status.RUNNING;
 import static org.gbif.pipelines.coordinator.PrometheusMetrics.*;
+import static org.gbif.pipelines.util.CallbackUtil.checkIfPaused;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +17,6 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Duration;
@@ -33,9 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.*;
@@ -47,6 +44,7 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.util.CallbackUtil;
 
 @Slf4j
 public abstract class PipelinesCallback<
@@ -55,13 +53,11 @@ public abstract class PipelinesCallback<
 
   private static final AtomicInteger runningCounter = new AtomicInteger(0);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  public static final String PAUSE_FILE_PATH = "/tmp/pause_message_processing";
-  public static final String SHUTDOWN_FILE_PATH = "/tmp/shutdown_now";
+
   public static final int ERROR_CONTEXT_MAX_SIZE = 10;
   protected final PipelinesConfig pipelinesConfig;
   protected final PipelinesHistoryClient historyClient;
   protected final MessagePublisher publisher;
-  protected final CloseableHttpClient httpClient;
   protected SparkSession sparkSession;
   protected FileSystem fileSystem;
   protected String sparkMaster;
@@ -126,11 +122,7 @@ public abstract class PipelinesCallback<
             .target(
                 PipelinesHistoryClient.class,
                 pipelinesConfig.getStandalone().getRegistry().getWsUrl());
-    this.httpClient =
-        HttpClients.custom()
-            .setDefaultRequestConfig(
-                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
-            .build();
+
     this.sparkMaster = sparkMaster;
   }
 
@@ -261,6 +253,10 @@ public abstract class PipelinesCallback<
 
         CONCURRENT_DATASETS.inc();
 
+        if (CallbackUtil.simulatePipelineStepFail()) {
+          throw new PipelinesException("Simulated backend failure");
+        }
+
         // Run pipeline for this callback
         runPipeline(message);
 
@@ -273,6 +269,8 @@ public abstract class PipelinesCallback<
         sendOutgoingMessage(trackingInfo, message);
 
         log.info("Finished processing datasetKey: {}", message.getDatasetUuid());
+
+        markAsFinishedIfComplete(message);
 
       } catch (Exception ex) {
 
@@ -300,28 +298,30 @@ public abstract class PipelinesCallback<
       } finally {
 
         CONCURRENT_DATASETS.dec();
-
-        if (message.getExecutionId() != null) {
-          ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
-          log.debug("Mark execution as FINISHED if all steps are FINISHED");
-          Runnable r =
-              () -> {
-                log.debug(
-                    "History client: mark pipeline execution if finished, executionId {}",
-                    message.getExecutionId());
-                historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
-              };
-          Retry.decorateRunnable(RETRY, r).run();
-        } else {
-          log.warn(
-              "Execution id is null for datasetKey {}, can't mark execution as FINISHED if all steps are FINISHED",
-              message.getDatasetUuid());
-        }
       }
     } catch (Exception e) {
       log.error("Error while processing execution", e);
     } finally {
       runningCounter.decrementAndGet();
+    }
+  }
+
+  private void markAsFinishedIfComplete(I message) {
+    if (message.getExecutionId() != null) {
+      ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+      log.debug("Mark execution as FINISHED if all steps are FINISHED");
+      Runnable r =
+          () -> {
+            log.debug(
+                "History client: mark pipeline execution if finished, executionId {}",
+                message.getExecutionId());
+            historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+          };
+      Retry.decorateRunnable(RETRY, r).run();
+    } else {
+      log.warn(
+          "Execution id is null for datasetKey {}, can't mark execution as FINISHED if all steps are FINISHED",
+          message.getDatasetUuid());
     }
   }
 
@@ -365,7 +365,7 @@ public abstract class PipelinesCallback<
       return;
     }
 
-    // if there is no more steps in the execution to run, dont send messages
+    // if there is no more steps in the execution to run, don't send messages
     if (!executionPipelineSteps.isEmpty()) {
       // are there any incomplete steps left in the execution? if not,
       // don't send message to balancer, just mark execution as finished
@@ -446,25 +446,11 @@ public abstract class PipelinesCallback<
     }
   }
 
-  private static void checkIfPaused() {
-    while (new File(PAUSE_FILE_PATH).exists()) {
-      log.warn(
-          "Found "
-              + PAUSE_FILE_PATH
-              + " file, pausing processing new messages for 10s. Delete to resume.");
-      try {
-        Thread.sleep(30_000);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-
   public boolean isRunning() {
-    return !new File(SHUTDOWN_FILE_PATH).exists();
+    return CallbackUtil.isRunning();
   }
 
-  private boolean isProcessingStopped(I message) {
+  protected boolean isProcessingStopped(I message) {
 
     Long currentKey = message.getExecutionId();
     UUID datasetKey = message.getDatasetUuid();
@@ -531,7 +517,7 @@ public abstract class PipelinesCallback<
     return new ArrayList<>();
   }
 
-  private void updateTrackingStatus(
+  protected void updateTrackingStatus(
       TrackingInfo trackingInfo, I message, PipelineStep.Status status) {
 
     String path =
@@ -597,24 +583,20 @@ public abstract class PipelinesCallback<
   private void updateQueuedStatus(TrackingInfo info, I message) {
 
     List<PipelinesWorkflow.Graph<StepType>.Edge> nodeEdges;
-    if (false /* isValidator*/) {
-      nodeEdges = PipelinesWorkflow.getValidatorWorkflow().getNodeEdges(getStepType());
-    } else {
-      boolean containsEvents = containsEvents(message);
-      boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
-      PipelinesWorkflow.Graph<StepType> workflow =
-          PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
-      nodeEdges = workflow.getNodeEdges(getStepType());
+    boolean containsEvents = containsEvents(message);
+    boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
+    PipelinesWorkflow.Graph<StepType> workflow =
+        PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
+    nodeEdges = workflow.getNodeEdges(getStepType());
 
-      if (log.isDebugEnabled() && nodeEdges != null) {
-        log.debug(
-            "Workflow for {} {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
-            message.getDatasetInfo().getDatasetType(),
-            message.getDatasetUuid(),
-            containsOccurrences,
-            containsEvents,
-            nodeEdges.stream().map(e -> e.getNode().name()).collect(Collectors.joining(", ")));
-      }
+    if (log.isDebugEnabled() && nodeEdges != null) {
+      log.debug(
+          "Workflow for {} {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
+          message.getDatasetInfo().getDatasetType(),
+          message.getDatasetUuid(),
+          containsOccurrences,
+          containsEvents,
+          nodeEdges.stream().map(e -> e.getNode().name()).collect(Collectors.joining(", ")));
     }
 
     if (nodeEdges == null || nodeEdges.isEmpty()) {
@@ -644,7 +626,7 @@ public abstract class PipelinesCallback<
     return containsEvents;
   }
 
-  private TrackingInfo trackPipelineStep(I message) throws Exception {
+  protected TrackingInfo trackPipelineStep(I message) throws Exception {
 
     // create pipeline process. If it already exists it returns the existing one (the db query
     // does an upsert).

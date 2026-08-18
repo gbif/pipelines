@@ -145,6 +145,8 @@ public class EventHdfsRecordConverterTest {
                         .setConcept("c11")
                         .setLineage(List.of("c00", "c11"))
                         .build()))
+            .setEventDurationValue(1d)
+            .setEventDurationUnit("HOURS")
             .build();
     HumboldtRecord humboldtRecord =
         HumboldtRecord.newBuilder()
@@ -232,6 +234,11 @@ public class EventHdfsRecordConverterTest {
                     + "    \"concepts\" : [ \"c1\", \"c11\" ],\n"
                     + "    \"lineage\" : [ \"c0\", \"c1\", \"c00\", \"c11\" ]\n"
                     + "  }"));
+    Assert.assertTrue(
+        new String(
+                Base64.getDecoder()
+                    .decode(hdfsRecord.getExt_humboldt().getBytes(StandardCharsets.UTF_8)))
+            .contains("\"humboldtEventDurationValueInMinutes\" : 60"));
   }
 
   @Test

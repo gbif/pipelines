@@ -12,11 +12,13 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.ValidatorCallback;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
-/** Callback which is called when the {@link PipelinesArchiveValidatorMessage} is received. */
+/** Callback that is called when the {@link PipelinesArchiveValidatorMessage} is received. */
 @Slf4j
 @AllArgsConstructor
 public class ArchiveValidatorCallback
@@ -31,17 +33,28 @@ public class ArchiveValidatorCallback
 
   @Override
   public void handleMessage(PipelinesArchiveValidatorMessage message) {
-    PipelinesCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
-        .historyClient(historyClient)
-        .validationClient(validationClient)
-        .config(config)
-        .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
-        .isValidator(config.validatorOnly)
-        .publisher(publisher)
-        .message(message)
-        .handler(this)
-        .build()
-        .handleMessage();
+
+    if (config.validatorOnly) {
+      ValidatorCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
+          .validationClient(validationClient)
+          .config(config)
+          .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
+          .publisher(publisher)
+          .message(message)
+          .handler(this)
+          .build()
+          .handleMessage();
+    } else {
+      PipelinesCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
+          .historyClient(historyClient)
+          .config(config)
+          .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
+          .publisher(publisher)
+          .message(message)
+          .handler(this)
+          .build()
+          .handleMessage();
+    }
   }
 
   @Override
@@ -67,6 +80,9 @@ public class ArchiveValidatorCallback
           .config(config)
           .message(message)
           .schemaValidatorFactory(schemaValidatorFactory)
+          .checklistValidator(
+              new ChecklistValidator(
+                  config.clbConfig.url, config.clbConfig.user, config.clbConfig.password))
           .build()
           .create()
           .validate();

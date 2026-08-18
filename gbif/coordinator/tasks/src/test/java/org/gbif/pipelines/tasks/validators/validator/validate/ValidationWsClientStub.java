@@ -27,11 +27,6 @@ public class ValidationWsClientStub implements ValidationWsClient {
   }
 
   @Override
-  public Validation submitFile(File file) {
-    return null;
-  }
-
-  @Override
   public Validation validateFile(File file, ValidationRequest validationRequest) {
     return null;
   }

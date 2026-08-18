@@ -6,16 +6,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Serializable;
+import java.io.*;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
@@ -40,6 +37,7 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.StandaloneConfig;
 import org.gbif.pipelines.spark.IdentifiersPipeline;
+import org.gbif.pipelines.util.CallbackUtil;
 
 @Slf4j
 @Builder
@@ -51,6 +49,13 @@ public class PostprocessValidation {
   private final CloseableHttpClient httpClient;
   private final FileSystem fileSystem;
   private final String outputPath;
+
+  /**
+   * Validator runs use ephemeral validation UUIDs that are not registered datasets, so the registry
+   * lookups below (machine tags, installation key, indexed occurrence count) don't apply. When
+   * true, skip them and fall back to defaults.
+   */
+  private final boolean bypassRegistry;
 
   private static final Retry RETRY =
       Retry.of(
@@ -162,6 +167,9 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private Optional<Double> getThresholdTagValue() {
+    if (bypassRegistry) {
+      return Optional.empty();
+    }
     String datasetKey = message.getDatasetUuid().toString();
     return getMachineTagValue(httpClient, datasetKey, "id_threshold_percent")
         .map(Double::parseDouble);
@@ -169,6 +177,9 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private boolean useThresholdSkipTagValue() {
+    if (bypassRegistry) {
+      return false;
+    }
     String datasetKey = message.getDatasetUuid().toString();
     return getMachineTagValue(httpClient, datasetKey, "id_threshold_skip")
         .map(Boolean::parseBoolean)
@@ -177,6 +188,9 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private boolean skipInstallationKey() {
+    if (bypassRegistry) {
+      return false;
+    }
     String datasetKey = message.getDatasetUuid().toString();
     String installationKey = getInstallationKey(httpClient, datasetKey);
     boolean r = config.getSkipInstallationsList().contains(installationKey);
@@ -192,6 +206,10 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private long getApiRecords() {
+    if (bypassRegistry) {
+      // Validator datasets are not indexed, so there are no API/occurrence records.
+      return 0;
+    }
     String datasetKey = message.getDatasetUuid().toString();
     return getIndexSize(httpClient, datasetKey);
   }
@@ -199,15 +217,79 @@ public class PostprocessValidation {
   /** Get number of record using Occurrence API */
   @SneakyThrows
   public long getIndexSize(HttpClient httpClient, String datasetId) {
-    int nano = LocalDateTime.now().getNano();
+
+    if (CallbackUtil.simulateBackendFail()) {
+      throw new PipelinesException("Simulated backend failure for testing");
+    }
+
     String url =
         config.getRegistry().getWsUrl()
             + "/occurrence/search?limit=0&datasetKey="
             + datasetId
-            + "&_"
-            + nano;
-    HttpResponse response = executeGet(httpClient, url);
-    return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asLong();
+            + "&_="
+            + System.nanoTime();
+
+    try {
+      HttpResponse response =
+          Retry.decorateSupplier(
+                  RETRY,
+                  () -> {
+                    try {
+                      HttpResponse httpResponse = httpClient.execute(new HttpGet(url));
+
+                      if (httpResponse == null) {
+                        throw new PipelinesException("Backend returned a null HTTP response");
+                      }
+
+                      int statusCode = httpResponse.getStatusLine().getStatusCode();
+                      if (statusCode < 200 || statusCode >= 300) {
+                        throw new PipelinesException(
+                            "Backend returned HTTP status "
+                                + statusCode
+                                + " "
+                                + httpResponse.getStatusLine().getReasonPhrase());
+                      }
+
+                      return httpResponse;
+                    } catch (IOException e) {
+                      throw new PipelinesException(
+                          "Failed to execute request to retrieve dataset count", e);
+                    }
+                  })
+              .get();
+
+      if (response.getEntity() == null) {
+        throw new PipelinesException(
+            "Backend returned an empty response while retrieving dataset count");
+      }
+
+      JsonNode root;
+      try (InputStream content = response.getEntity().getContent()) {
+        root = MAPPER.readTree(content);
+      }
+
+      if (root == null || root.isNull()) {
+        throw new PipelinesException(
+            "Backend returned an empty or invalid JSON response while retrieving dataset count");
+      }
+
+      JsonNode countNode = root.get("count");
+
+      if (countNode == null || countNode.isNull()) {
+        throw new PipelinesException("Backend response does not contain a 'count' field");
+      }
+
+      if (!countNode.isNumber()) {
+        throw new PipelinesException(
+            "Backend response contains an invalid 'count' field: " + countNode);
+      }
+
+      return countNode.asLong();
+
+    } catch (Exception e) {
+      throw new PipelinesException(
+          "Problem retrieving dataset count from index for dataset " + datasetId, e);
+    }
   }
 
   @SneakyThrows

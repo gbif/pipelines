@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.dwc.terms.*;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
@@ -546,6 +547,13 @@ public class EventHdfsRecordConverter {
                     }
                     if (h.getNonTargetTaxa() != null) {
                       jsonView.setNonTargetTaxa(convertToTaxonMap.apply(h.getNonTargetTaxa()));
+                    }
+
+                    if (h.getEventDurationValue() != null && h.getEventDurationUnit() != null) {
+                      DurationUnit eventDurationUnit =
+                          DurationUnit.valueOf(h.getEventDurationUnit());
+                      jsonView.setHumboldtEventDurationValueInMinutes(
+                          h.getEventDurationValue() * eventDurationUnit.getDurationInMinutes());
                     }
 
                     return jsonView;

@@ -46,7 +46,7 @@ public class MimeEmailSender implements EmailSender {
   @Value("${gbif.mail.bcc}")
   private final Set<String> bccAddresses;
 
-  @Value("classpath:email/images/GBIF-2015-full.png")
+  @Value("classpath:email/images/GBIF-logo.png")
   private final Resource logoFile;
 
   /**

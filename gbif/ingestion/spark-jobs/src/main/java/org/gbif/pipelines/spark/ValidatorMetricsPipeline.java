@@ -1,0 +1,528 @@
+package org.gbif.pipelines.spark;
+
+import static org.apache.spark.sql.functions.*;
+import static org.gbif.api.model.Constants.COL_DATASET_KEY;
+import static org.gbif.pipelines.spark.Directories.OCCURRENCE_JSON;
+import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
+import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
+import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.expressions.Window;
+import org.apache.spark.sql.expressions.WindowSpec;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.StringType;
+import org.apache.spark.sql.types.StructField;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
+import org.gbif.pipelines.spark.util.ValidationClient;
+import org.gbif.pipelines.spark.util.ValidationUtil;
+import org.gbif.validator.api.DwcFileType;
+import org.gbif.validator.api.EvaluationCategory;
+import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.IssueInfo;
+import org.gbif.validator.api.Metrics.IssueSample;
+import org.gbif.validator.api.Metrics.TermInfo;
+import org.gbif.validator.api.Validation;
+import org.jspecify.annotations.NonNull;
+import scala.collection.JavaConverters;
+import scala.collection.mutable.WrappedArray;
+
+/**
+ * Spark pipeline that computes validator metrics directly from interpreted occurrence Parquet
+ * files. Writes {@value #METRICS_FILENAME} to HDFS, which {@code SparkMetricsCollector} reads
+ * instead of querying Elasticsearch.
+ */
+@Slf4j
+public class ValidatorMetricsPipeline {
+
+  public static final String METRICS_FILENAME = "collect-metrics.json";
+
+  private static final int MAX_SAMPLES = 5;
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  @Parameters(separators = "=")
+  private static class Args extends SingleDatasetPipelineArgs {}
+
+  private static final List<String> classificationFields =
+      Stream.of(
+              DwcTerm.kingdom,
+              DwcTerm.phylum,
+              DwcTerm.class_,
+              DwcTerm.order,
+              DwcTerm.superfamily,
+              DwcTerm.family,
+              DwcTerm.subfamily,
+              DwcTerm.genus,
+              DwcTerm.subgenus)
+          .map(Term::qualifiedName)
+          .toList();
+
+  private static final Map<String, String> acceptedUsageFields =
+      Map.of(
+          DwcTerm.specificEpithet.qualifiedName(), "specificEpithet",
+          DwcTerm.infraspecificEpithet.qualifiedName(), "infraspecificEpithet",
+          DwcTerm.taxonRank.qualifiedName(), "rank",
+          DwcTerm.scientificName.qualifiedName(), "name");
+
+  private static List<String> alwaysShow =
+      Stream.of(
+              DwcTerm.basisOfRecord,
+              DwcTerm.occurrenceStatus,
+              DwcTerm.year,
+              DwcTerm.month,
+              DwcTerm.day,
+              DwcTerm.countryCode,
+              DwcTerm.stateProvince)
+          .map(Term::qualifiedName)
+          .toList();
+
+  public static void main(String[] argsv) throws Exception {
+    Args args = new Args();
+    JCommander jCommander = new JCommander(args);
+    jCommander.setAcceptUnknownOptions(true);
+    jCommander.parse(argsv);
+
+    if (args.help) {
+      jCommander.usage();
+      return;
+    }
+
+    org.gbif.pipelines.core.config.model.PipelinesConfig config = loadConfig(args.config);
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
+
+    try {
+      spark = getSparkSession(args.master, args.appName, config, (b, c) -> {});
+      fileSystem = getFileSystem(spark, config);
+
+      run(spark, fileSystem, config, args.datasetId, args.attempt);
+    } finally {
+      if (fileSystem != null) fileSystem.close();
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
+    }
+
+    if (args.useSystemExit) {
+      System.exit(0);
+    }
+  }
+
+  /**
+   * Runs the pipeline: reads interpreted occurrence JSON Parquet from {@code outputPath/json},
+   * computes metrics, and writes them as JSON to {@code outputPath/collect-metrics.json}.
+   */
+  public static void run(
+      SparkSession spark, FileSystem fs, PipelinesConfig config, String datasetId, Integer attempt)
+      throws IOException {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    log.info("Running ValidatorMetricsPipeline for {}", outputPath);
+
+    ValidationClient client = ValidationUtil.createValidationClient(config);
+    Validation validation = client.get(UUID.fromString(datasetId));
+
+    Dataset<OccurrenceJsonRecord> records =
+        spark
+            .read()
+            .parquet(outputPath + "/" + OCCURRENCE_JSON)
+            .as(Encoders.bean(OccurrenceJsonRecord.class));
+
+    records.cache();
+    try {
+      long indexedCount = records.count();
+      log.info("Indexed count: {}", indexedCount);
+
+      List<IssueInfo> issues = computeIssues(records);
+      log.info("Computed {} distinct issues", issues.size());
+
+      List<TermInfo> termInfos = computeInterpretedFieldCounts(records, validation);
+      log.info("Computed interpreted counts for {} terms", termInfos.size());
+
+      // add extensions
+      FileInfo coreFileInfo =
+          FileInfo.builder()
+              .fileType(DwcFileType.CORE)
+              .rowType(DwcTerm.Occurrence.qualifiedName())
+              .indexedCount(indexedCount)
+              .issues(issues)
+              .terms(termInfos)
+              .build();
+
+      List<FileInfo> extensions = computeExtensions(records);
+
+      List<FileInfo> all = new ArrayList<>();
+      all.add(coreFileInfo);
+      all.addAll(extensions);
+
+      Metrics generatedMetrics =
+          Metrics.builder().indexeable(indexedCount > 0).fileInfos(all).build();
+
+      String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(generatedMetrics);
+      FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
+      log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
+
+      // update the stored validation via the API
+      ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
+
+    } finally {
+      records.unpersist();
+    }
+  }
+
+  private static List<FileInfo> computeExtensions(Dataset<OccurrenceJsonRecord> records) {
+
+    List<String> extensionUris =
+        records
+            .select(
+                explode(col("verbatim.extensions")).as(new String[] {"extensionUri", "records"}))
+            .select("extensionUri")
+            .distinct()
+            .as(Encoders.STRING())
+            .collectAsList();
+
+    List<FileInfo> extensionFileInfos = new ArrayList<>();
+
+    for (String extensionUri : extensionUris) {
+      Dataset<Row> extension =
+          records
+              .select(
+                  col("verbatim.coreId").as("coreId"),
+                  explode(col("verbatim.extensions")).as(new String[] {"extensionUri", "records"}))
+              .filter(col("extensionUri").equalTo(extensionUri))
+              .select(explode(col("records")).as("records"));
+      Dataset<Row> extensionKeyValues = extension.select(explode(col("records")));
+
+      Dataset<Row> termCounts = extensionKeyValues.groupBy("key").agg(count("*"));
+
+      // get the count of unique values for each term
+      Dataset<Row> termUniqueCounts =
+          extensionKeyValues.groupBy("key").agg(countDistinct("value").alias("uniqueCount"));
+
+      List<String> termUris = termCounts.select("key").as(Encoders.STRING()).collectAsList();
+
+      List<TermInfo> termInfos = new ArrayList<>();
+
+      for (String termUri : termUris) {
+
+        TermInfo termInfo = new TermInfo();
+
+        termInfo.setTerm(termUri);
+
+        termCounts
+            .filter(col("key").equalTo(termUri))
+            .select("count(1)")
+            .as(Encoders.LONG())
+            .collectAsList()
+            .stream()
+            .findFirst()
+            .ifPresentOrElse(termInfo::setRawIndexed, () -> termInfo.setRawIndexed(0L));
+
+        termUniqueCounts
+            .filter(col("key").equalTo(termUri))
+            .select("uniqueCount")
+            .as(Encoders.LONG())
+            .collectAsList()
+            .stream()
+            .findFirst()
+            .ifPresentOrElse(termInfo::setUniqueRawValues, () -> termInfo.setUniqueRawValues(0L));
+
+        termInfos.add(termInfo);
+      }
+
+      FileInfo extensionFileInfo =
+          FileInfo.builder()
+              .fileType(DwcFileType.EXTENSION)
+              .rowType(extensionUri)
+              .indexedCount(extension.count())
+              .terms(termInfos)
+              .build();
+
+      extensionFileInfos.add(extensionFileInfo);
+    }
+
+    return extensionFileInfos;
+  }
+
+  /**
+   * Aggregates issues from the records, computing a total count and up to {@link #MAX_SAMPLES}
+   * sample records per issue. Samples include only verbatim values for terms related to the issue.
+   */
+  private static List<IssueInfo> computeIssues(Dataset<OccurrenceJsonRecord> records) {
+    // Explode the issues list so each (record, issue) pair becomes a row
+    Dataset<Row> exploded =
+        records.select(
+            col("id"),
+            col("verbatim.core").alias("verbatimCore"),
+            explode(col("issues")).alias("issue"));
+
+    // Count occurrences per issue across the full dataset
+    Dataset<Row> issueCounts = exploded.groupBy("issue").agg(count("*").alias("issueCount"));
+
+    // Use a window to rank records within each issue partition and keep only the top MAX_SAMPLES
+    WindowSpec window = Window.partitionBy("issue").orderBy("id");
+    Dataset<Row> ranked = exploded.withColumn("rn", row_number().over(window));
+    Dataset<Row> limited = ranked.filter(col("rn").leq(MAX_SAMPLES));
+
+    Dataset<Row> groupedSamples =
+        limited
+            .groupBy("issue")
+            .agg(collect_list(struct(col("id"), col("verbatimCore"))).alias("samples"));
+
+    Dataset<Row> joined = issueCounts.join(groupedSamples, "issue");
+
+    return joined.collectAsList().stream()
+        .map(ValidatorMetricsPipeline::rowToIssueInfo)
+        .collect(Collectors.toList());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static IssueInfo rowToIssueInfo(Row row) {
+    String issueName = row.getString(row.fieldIndex("issue"));
+    long count = row.getLong(row.fieldIndex("issueCount"));
+    List<Row> rawSamples = row.getList(row.fieldIndex("samples"));
+
+    Set<Term> relatedTerms = Collections.emptySet();
+    try {
+      relatedTerms = OccurrenceIssue.valueOf(issueName).getRelatedTerms();
+    } catch (IllegalArgumentException ex) {
+      log.warn("Unknown OccurrenceIssue: {}", issueName);
+    }
+
+    final Set<Term> terms = relatedTerms;
+    List<IssueSample> samples =
+        rawSamples.stream()
+            .map(
+                sampleRow -> {
+                  String recordId = sampleRow.getString(0);
+                  Map<String, String> verbatimCore = sampleRow.getJavaMap(1);
+                  Map<String, String> relatedData = new HashMap<>();
+                  for (Term term : terms) {
+                    String value =
+                        verbatimCore != null ? verbatimCore.get(term.qualifiedName()) : null;
+                    if (value != null && !value.trim().isEmpty()) {
+                      relatedData.put(term.toString(), value);
+                    }
+                  }
+                  return IssueSample.builder().recordId(recordId).relatedData(relatedData).build();
+                })
+            .collect(Collectors.toList());
+
+    return IssueInfo.builder()
+        .issue(issueName)
+        .count(count)
+        .issueCategory(EvaluationCategory.OCC_INTERPRETATION_BASED)
+        .samples(samples)
+        .build();
+  }
+
+  /**
+   * Counts non-null interpreted values for each term in a single Spark aggregation pass. Returns a
+   * {@link TermInfo} per term with only {@code interpretedIndexed} set; {@code rawIndexed} is left
+   * null and filled in by {@code SparkMetricsCollector} from the archive.
+   */
+  private static List<TermInfo> computeInterpretedFieldCounts(
+      Dataset<OccurrenceJsonRecord> records, Validation validation) {
+
+    List<String> columnNames =
+        Arrays.asList(records.schema().fieldNames()); // force schema evaluation
+    log.info("Interpreted fields: {}", columnNames);
+
+    // find the occurrence CORE or EXTENSION which is rowType == occurrence
+    List<String> suppliedTermsURIs =
+        validation.getMetrics().getFileInfos().stream()
+            .filter(
+                fileInfo ->
+                    fileInfo.getRowType() != null
+                        && fileInfo.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
+            .flatMap(fileInfo -> fileInfo.getTerms().stream())
+            .map(TermInfo::getTerm)
+            .toList();
+
+    // build a list of expected columns
+    List<String> termURIsToCheck = new ArrayList<>();
+    termURIsToCheck.addAll(
+        suppliedTermsURIs.stream()
+            .filter(uri -> columnNames.contains(convertSimpleName(uri)))
+            .collect(Collectors.toSet()));
+    termURIsToCheck.addAll(classificationFields);
+    termURIsToCheck.addAll(acceptedUsageFields.keySet());
+    termURIsToCheck.addAll(alwaysShow);
+
+    // Build one count(when(col.isNotNull, 1)) per term, aliased by ordinal index
+    Column firstAgg = null;
+    List<Column> restAggs = new ArrayList<>();
+
+    for (int i = 0; i < termURIsToCheck.size(); i++) {
+      String termURI = termURIsToCheck.get(i);
+      Column colExpr = resolveColumn(termURI);
+      log.debug("Term URI: " + termURI + ", Column Expression: " + colExpr);
+
+      if (colExpr != null) {
+        Column agg = count(when(colExpr.isNotNull(), 1)).alias("t" + i);
+        if (i == 0) {
+          firstAgg = agg;
+        } else {
+          restAggs.add(agg);
+        }
+      }
+    }
+
+    Row interpretedRowCount = records.agg(firstAgg, restAggs.toArray(new Column[0])).first();
+
+    List<TermInfo> result = new ArrayList<>();
+    for (int i = 0; i < termURIsToCheck.size(); i++) {
+
+      String termURI = termURIsToCheck.get(i);
+      Column colExpr = resolveColumn(termURI);
+
+      if (colExpr == null) {
+        log.warn("No column found for term {}", termURI);
+        continue;
+      }
+
+      Column filteredColExpr = colExpr.isNotNull();
+
+      log.debug("Term URI: " + termURI + ", Column Expression: " + colExpr);
+      List<StructField> fields =
+          Stream.of(records.schema().fields())
+              .filter(st -> st.name().equals(colExpr.toString().replace("`", "")))
+              .toList();
+
+      if (!fields.isEmpty()) {
+        DataType dataType = fields.get(0).dataType();
+        if (dataType instanceof StringType) {
+          filteredColExpr = colExpr.isNotNull().and(colExpr.notEqual(""));
+        } else if (dataType instanceof org.apache.spark.sql.types.ArrayType) {
+          filteredColExpr = colExpr.isNotNull().and(size(colExpr).gt(0));
+        }
+      }
+
+      Dataset<Row> interpretedUniqueValueCountDf =
+          records
+              .filter(filteredColExpr)
+              .groupBy(colExpr)
+              .agg(countDistinct(colExpr).alias("uniqueCount"));
+
+      Long interpretedUniqueValueCount = interpretedUniqueValueCountDf.count();
+
+      Map<String, Long> topValuesMap = Map.of();
+
+      if (interpretedUniqueValueCount > 0) {
+
+        // get the top 10 by count
+        Dataset<Row> topValues =
+            records
+                .filter(filteredColExpr)
+                .groupBy(colExpr)
+                .agg(count(colExpr).alias("counts"))
+                .orderBy(col("counts").desc())
+                .filter(col("counts").gt(0))
+                .limit(10);
+
+        topValuesMap =
+            topValues.collectAsList().stream()
+                .collect(
+                    Collectors.toMap(
+                        row -> {
+                          Object key = row.get(0);
+                          if (key instanceof WrappedArray<?> wa) {
+                            return JavaConverters.seqAsJavaList(wa).stream()
+                                .map(Object::toString)
+                                .collect(Collectors.joining(","));
+                          }
+                          return key.toString();
+                        },
+                        row -> row.getAs("counts")));
+      }
+
+      result.add(
+          TermInfo.builder()
+              .term(termURIsToCheck.get(i))
+              .interpretedIndexed(interpretedRowCount.getLong(i))
+              .uniqueInterpretedValues(interpretedUniqueValueCount)
+              .sampleInterpretedValuesMap(topValuesMap)
+              .build());
+    }
+
+    Dataset<Row> exploded = records.select(col("id"), explode(col("verbatim.core")));
+    Dataset<Row> termCounts = exploded.groupBy("key").agg(count("*"));
+
+    // get the count of unique values for each term
+    Dataset<Row> termUniqueCounts =
+        exploded.groupBy("key").agg(countDistinct("value").alias("uniqueCount"));
+
+    for (TermInfo termInfo : result) {
+      // add the verbatim value count
+      termCounts
+          .filter(col("key").equalTo(termInfo.getTerm()))
+          .select("count(1)")
+          .as(Encoders.LONG())
+          .collectAsList()
+          .stream()
+          .findFirst()
+          .ifPresentOrElse(termInfo::setRawIndexed, () -> termInfo.setRawIndexed(0L));
+
+      termUniqueCounts
+          .filter(col("key").equalTo(termInfo.getTerm()))
+          .select("uniqueCount")
+          .as(Encoders.LONG())
+          .collectAsList()
+          .stream()
+          .findFirst()
+          .ifPresentOrElse(termInfo::setUniqueRawValues, () -> termInfo.setUniqueRawValues(0L));
+    }
+
+    return result;
+  }
+
+  private static @NonNull String convertSimpleName(String termUri) {
+    int lastIndex = termUri.lastIndexOf('/');
+    return termUri.substring(lastIndex + 1);
+  }
+
+  /**
+   * Resolves a {@code termURI} to a Spark {@link Column} expression. For non-taxonomic terms, this
+   * is a direct column lookup via {@code col(convertSimpleName(termURI))}. For taxonomic terms, the
+   * column is resolved from the nested {@code classifications} map, which is keyed by dataset key
+   * and contains a {@code classification} map and an {@code acceptedUsage} map.
+   */
+  private static Column resolveColumn(String termURI) {
+    if (classificationFields.contains(termURI)) {
+
+      return element_at(
+          element_at(col("classifications"), COL_DATASET_KEY.toString()).getField("classification"),
+          convertSimpleName(termURI).toUpperCase(Locale.ROOT));
+    }
+
+    if (acceptedUsageFields.containsKey(termURI)) {
+      String fieldToUse = acceptedUsageFields.get(termURI);
+      return element_at(col("classifications"), COL_DATASET_KEY.toString())
+          .getField("acceptedUsage")
+          .getField(fieldToUse);
+    }
+
+    return col(convertSimpleName(termURI));
+  }
+}

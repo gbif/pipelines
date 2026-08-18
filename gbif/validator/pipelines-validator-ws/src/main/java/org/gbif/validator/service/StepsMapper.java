@@ -1,6 +1,7 @@
 package org.gbif.validator.service;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,11 +18,10 @@ import org.gbif.validator.api.Validation;
 public class StepsMapper {
 
   /** Maps raw step types to ValidationSteps. */
-  public static List<ValidationStep> mapToValidationSteps(Set<String> stepTypes) {
+  public static List<ValidationStep> mapToValidationSteps(Set<StepType> stepTypes) {
 
     List<ValidationStep> collect =
         stepTypes.stream()
-            .map(StepType::valueOf)
             .filter(st -> st != StepType.VALIDATOR_UPLOAD_ARCHIVE)
             .map(
                 st ->
@@ -29,9 +29,11 @@ public class StepsMapper {
                         .executionOrder(PipelinesWorkflow.getValidatorWorkflow().getLevel(st))
                         .stepType(st.name())
                         .build())
+            .sorted(Comparator.comparingInt(ValidationStep::getExecutionOrder))
             .collect(Collectors.toList());
 
     collect.add(
+        0,
         Metrics.ValidationStep.builder()
             .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
             .status(Validation.Status.FINISHED)

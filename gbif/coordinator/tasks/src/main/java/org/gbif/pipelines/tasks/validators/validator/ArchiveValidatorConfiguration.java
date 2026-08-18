@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.ChecklistBankConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 
 /** Configuration required to validate downloaded archive */
@@ -30,6 +31,9 @@ public class ArchiveValidatorConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
+
+  @ParametersDelegate @Valid @NotNull
+  public ChecklistBankConfiguration clbConfig = new ChecklistBankConfiguration();
 
   @Override
   public String getHdfsSiteConfig() {
