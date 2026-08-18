@@ -37,9 +37,7 @@ public final class IdentificationMapping {
         identification.append(graph.resolve(IDENTIFICATION, AGENT, "identifiedByID", null));
     ExtensionFragmentBuilder builder =
         extensionFragment(
-                "occurrence-identification-history",
-                ROW_TYPE_IDENTIFICATION,
-                IDENTIFICATION)
+                "occurrence-identification-history", ROW_TYPE_IDENTIFICATION, IDENTIFICATION)
             .scopeKey("occurrence_fk")
             .join(AGENT)
             .via("identifiedByID")
@@ -87,7 +85,10 @@ public final class IdentificationMapping {
                             FilterExpression.isNull("nucleotideAnalysis_fk"))))));
   }
 
-  /** Identifications explicitly linked to a DNA analysis owned by the Occurrence's evidence Material. */
+  /**
+   * Identifications explicitly linked to a DNA analysis owned by the Occurrence's evidence
+   * Material.
+   */
   public static ExtensionFragment occurrenceDnaAnalysisIdentifications(SchemaGraph graph) {
     return dnaIdentifications(
         graph,

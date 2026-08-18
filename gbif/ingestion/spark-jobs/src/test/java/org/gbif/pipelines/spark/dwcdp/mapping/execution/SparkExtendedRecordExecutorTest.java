@@ -1,17 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.SparkExtendedRecordExecutor;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -25,6 +13,17 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
@@ -44,7 +43,8 @@ class SparkExtendedRecordExecutorTest {
 
   @BeforeAll
   void setup() {
-    spark = SparkTestSession.createBuilder().appName("SparkExtendedRecordExecutorTest").getOrCreate();
+    spark =
+        SparkTestSession.createBuilder().appName("SparkExtendedRecordExecutorTest").getOrCreate();
     graph = new DwcDpSchemaLoader().current();
   }
 

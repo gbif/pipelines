@@ -345,5 +345,3 @@ class DataPackageFixtures {
     return f;
   }
 }
-
-

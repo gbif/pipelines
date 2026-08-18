@@ -1,25 +1,20 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompilationException;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingDecisionType;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingTraceRenderer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.InMemorySchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.InMemorySchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.junit.jupiter.api.Test;
 
 class MappingCompilerTest {
@@ -38,6 +33,7 @@ class MappingCompilerTest {
     assertTrue(trace.contains("surveyTargetDescription"));
     assertTrue(trace.contains("samplingProtocol_fk"));
   }
+
   @Test
   void invalidSchemaRelationIsAContextualMappingProblemWithBoundedPathHints() {
     InMemorySchemaGraph graph =
@@ -74,7 +70,8 @@ class MappingCompilerTest {
             .build();
 
     MappingCompilationException error =
-        assertThrows(MappingCompilationException.class, () -> new MappingCompiler(graph).compile(plan));
+        assertThrows(
+            MappingCompilationException.class, () -> new MappingCompiler(graph).compile(plan));
 
     assertEquals(1, error.problems().size());
     assertEquals(MappingDecisionType.INVALID_RELATION, error.problems().get(0).type());
@@ -82,5 +79,4 @@ class MappingCompilerTest {
     assertTrue(error.getMessage().contains("occurrence.material_fk -> material.material_pk"));
     assertTrue(error.getMessage().contains("material.organism_fk -> organism.organism_pk"));
   }
-
 }

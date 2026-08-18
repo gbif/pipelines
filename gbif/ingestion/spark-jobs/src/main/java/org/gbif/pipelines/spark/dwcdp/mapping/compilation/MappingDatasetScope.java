@@ -16,8 +16,7 @@ public record MappingDatasetScope(Map<String, Set<String>> columnsByResource) {
   public MappingDatasetScope {
     Objects.requireNonNull(columnsByResource, "columnsByResource");
     Map<String, Set<String>> copy = new LinkedHashMap<>();
-    columnsByResource.forEach(
-        (resource, columns) -> copy.put(resource, Set.copyOf(columns)));
+    columnsByResource.forEach((resource, columns) -> copy.put(resource, Set.copyOf(columns)));
     columnsByResource = Map.copyOf(copy);
   }
 
@@ -45,8 +44,8 @@ public record MappingDatasetScope(Map<String, Set<String>> columnsByResource) {
   /**
    * True when every resource traversed by this field path is present in the datapackage.
    *
-   * <p>Descriptor field lists are not used as hard negative evidence during execution pruning.
-   * The compiled mapping already determines which columns are required, and ProjectedTableLoader
+   * <p>Descriptor field lists are not used as hard negative evidence during execution pruning. The
+   * compiled mapping already determines which columns are required, and ProjectedTableLoader
    * intersects those requirements with the actual Spark schema after loading the resource. This
    * keeps datapackage pruning focused on whole resources/branches and avoids dropping valid
    * producers when a descriptor's field metadata is incomplete.
@@ -73,7 +72,9 @@ public record MappingDatasetScope(Map<String, Set<String>> columnsByResource) {
     return hasResource(relation.sourceResource()) && hasResource(relation.targetResource());
   }
 
-  /** A producer can contribute when at least one of its declared source alternatives is reachable. */
+  /**
+   * A producer can contribute when at least one of its declared source alternatives is reachable.
+   */
   public boolean supports(CompiledTargetProducer producer) {
     return producer.sources().stream().anyMatch(this::supports);
   }

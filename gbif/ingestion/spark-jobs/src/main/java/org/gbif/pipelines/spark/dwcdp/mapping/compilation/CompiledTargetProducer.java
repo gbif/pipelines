@@ -7,8 +7,8 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /**
- * One producer of a target term, including ownership, origin and complete source lineage.
- * Spark physical aliases are deliberately not part of this representation.
+ * One producer of a target term, including ownership, origin and complete source lineage. Spark
+ * physical aliases are deliberately not part of this representation.
  */
 public record CompiledTargetProducer(
     String targetTerm,
@@ -53,7 +53,8 @@ public record CompiledTargetProducer(
     if (origin == TargetFieldMapping.Origin.INFERRED) {
       out.append("inferred path depth: ").append(pathDepth()).append('\n');
     }
-    contributionIdentity.ifPresent(source -> out.append("contribution identity: ").append(source.describe()).append('\n'));
+    contributionIdentity.ifPresent(
+        source -> out.append("contribution identity: ").append(source.describe()).append('\n'));
     orderBy.ifPresent(source -> out.append("order by: ").append(source.describe()).append('\n'));
     out.append("sources:");
     for (CompiledSourceField source : sources) {

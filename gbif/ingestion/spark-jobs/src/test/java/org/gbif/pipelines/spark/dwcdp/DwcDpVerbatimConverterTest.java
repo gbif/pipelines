@@ -32,11 +32,11 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingBranchExecutionMetrics;
 import org.gbif.pipelines.spark.dwcdp.mapping.execution.RelationExecutionMetrics;
-import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.SparkTest;
@@ -716,8 +716,7 @@ class DwcDpVerbatimConverterTest {
   }
 
   @Test
-  void assertionProtocolFkDoesNotLeakWhenProtocolTableAbsent(@TempDir Path dir)
-      throws Exception {
+  void assertionProtocolFkDoesNotLeakWhenProtocolTableAbsent(@TempDir Path dir) throws Exception {
     writeParquet(
         dir,
         "data/event.parquet",
@@ -1233,14 +1232,15 @@ class DwcDpVerbatimConverterTest {
    * this class.
    *
    * <p>Every other "round trip" test in this file (e.g. {@code
-   * eventCore_fullPackage_roundTripAvroWriteAndRead}) calls {@link DwcDpVerbatimConverter#buildEventCoreDataset} directly
-   * and writes Avro by hand — none of them go through {@code convert()}'s own {@code
-   * datapackage.json} reading ({@link DataPackageDescriptorReader}), path resolution ({@link
+   * eventCore_fullPackage_roundTripAvroWriteAndRead}) calls {@link
+   * DwcDpVerbatimConverter#buildEventCoreDataset} directly and writes Avro by hand — none of them
+   * go through {@code convert()}'s own {@code datapackage.json} reading ({@link
+   * DataPackageDescriptorReader}), path resolution ({@link
    * org.gbif.pipelines.spark.util.PathUtil#interpretedAttemptPath}), single-file merge, or {@code
    * writeMetrics} call. This test does, so it's the one place proving those pieces agree with each
    * other for a package with no physical {@code occurrence} table — only {@code event} + {@code
-   * material} — where the only occurrence rows that exist are the virtual ones {@link
-   * the declarative material mapping} synthesises.
+   * material} — where the only occurrence rows that exist are the virtual ones {@link the
+   * declarative material mapping} synthesises.
    */
   @Disabled(
       "Material -> virtual occurrence synthesis is paused; see "
@@ -1478,7 +1478,6 @@ class DwcDpVerbatimConverterTest {
   }
 
   // ---- helpers ----
-
 
   private static String readTextFile(FileSystem fs, String path) throws Exception {
     try (var reader =

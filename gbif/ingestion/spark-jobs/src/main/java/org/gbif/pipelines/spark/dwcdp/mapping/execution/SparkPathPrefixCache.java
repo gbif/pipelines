@@ -1,15 +1,13 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.apache.spark.storage.StorageLevel;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
 
 /**
  * Execution-local cache for deterministic, unfiltered mapping-path prefixes.
@@ -64,8 +62,7 @@ public final class SparkPathPrefixCache implements AutoCloseable {
       return;
     }
     entries.putIfAbsent(
-        PrefixKey.of(sourceResource, prefix),
-        new Entry(result, List.copyOf(metrics)));
+        PrefixKey.of(sourceResource, prefix), new Entry(result, List.copyOf(metrics)));
   }
 
   private static boolean cacheable(List<RelationStep> relations) {

@@ -32,16 +32,16 @@ public final class OfficialSchemaGraph implements SchemaGraph {
 
   @Override
   public List<SchemaRelation> relationsFrom(String sourceResource) {
-    return relations.stream()
-        .filter(r -> r.sourceResource().equals(sourceResource))
-        .toList();
+    return relations.stream().filter(r -> r.sourceResource().equals(sourceResource)).toList();
   }
 
   @Override
   public List<SchemaRelation> relations(String sourceResource, String targetResource) {
     return relations.stream()
-        .filter(r -> r.sourceResource().equals(sourceResource)
-            && r.targetResource().equals(targetResource))
+        .filter(
+            r ->
+                r.sourceResource().equals(sourceResource)
+                    && r.targetResource().equals(targetResource))
         .toList();
   }
 }

@@ -171,13 +171,13 @@ public final class AssertionMapping {
     SchemaPath current = SchemaPath.root(spec.sourceResource());
     ExtensionFragmentBuilder builder =
         extensionFragment(
-                spec.fragmentName(),
-                ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT,
-                spec.sourceResource())
+                spec.fragmentName(), ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT, spec.sourceResource())
             .scopeKey(spec.scopeKeyColumn());
 
     for (OwnershipStep step : spec.ownershipPath()) {
-      current = current.append(graph.resolve(current.currentResource(), step.resource(), step.viaColumn(), null));
+      current =
+          current.append(
+              graph.resolve(current.currentResource(), step.resource(), step.viaColumn(), null));
       addOwnershipStep(builder, step);
     }
 
@@ -204,19 +204,15 @@ public final class AssertionMapping {
     SchemaPath protocol =
         assertion.append(
             graph.resolve(spec.assertionResource(), "protocol", "assertionProtocol_fk", null));
-    builder
-        .join("protocol")
-        .via("assertionProtocol_fk")
-        .optional()
-        .exactlyOne()
-        .endJoin();
+    builder.join("protocol").via("assertionProtocol_fk").optional().exactlyOne().endJoin();
 
     addAssertionFields(builder, assertion, protocol);
     return builder.build();
   }
 
   private static void addOwnershipStep(ExtensionFragmentBuilder builder, OwnershipStep step) {
-    ExtensionFragmentBuilder.RelationBuilder relation = builder.join(step.resource()).via(step.viaColumn());
+    ExtensionFragmentBuilder.RelationBuilder relation =
+        builder.join(step.resource()).via(step.viaColumn());
     step.filter().ifPresent(relation::filter);
 
     if (step.requirement() == RelationRequirement.OPTIONAL) {
@@ -315,7 +311,8 @@ public final class AssertionMapping {
     }
 
     private OwnershipStep filter(FilterExpression expression) {
-      return new OwnershipStep(resource, viaColumn, requirement, cardinality, Optional.of(expression));
+      return new OwnershipStep(
+          resource, viaColumn, requirement, cardinality, Optional.of(expression));
     }
   }
 

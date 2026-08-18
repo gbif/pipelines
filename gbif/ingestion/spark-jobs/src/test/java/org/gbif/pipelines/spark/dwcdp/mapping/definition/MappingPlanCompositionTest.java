@@ -1,14 +1,9 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.definition;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.junit.jupiter.api.Test;
 
 class MappingPlanCompositionTest {

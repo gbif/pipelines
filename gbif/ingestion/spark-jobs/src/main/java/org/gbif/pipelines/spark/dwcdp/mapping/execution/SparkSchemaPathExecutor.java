@@ -1,17 +1,19 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.util.TableLoader;
 
-/** Executes a validated {@link SchemaPath} using schema-declared keys and path-qualified aliases. */
+/**
+ * Executes a validated {@link SchemaPath} using schema-declared keys and path-qualified aliases.
+ */
 public final class SparkSchemaPathExecutor {
   private final SchemaGraph graph;
 
@@ -31,7 +33,8 @@ public final class SparkSchemaPathExecutor {
       }
       if (!graph.hasColumn(relation.sourceResource(), relation.sourceColumn())
           || !graph.hasColumn(relation.targetResource(), relation.targetColumn())) {
-        throw new IllegalArgumentException("Schema relation references unavailable columns: " + relation);
+        throw new IllegalArgumentException(
+            "Schema relation references unavailable columns: " + relation);
       }
 
       Dataset<Row> targetRaw = loadRequired(loader, relation.targetResource());
@@ -43,14 +46,22 @@ public final class SparkSchemaPathExecutor {
       String targetAlias = targetAliases.get(targetPath.field(relation.targetColumn()));
       if (sourceAlias == null) {
         throw new IllegalArgumentException(
-            "Loaded dataset " + relation.sourceResource() + " is missing join column " + relation.sourceColumn());
+            "Loaded dataset "
+                + relation.sourceResource()
+                + " is missing join column "
+                + relation.sourceColumn());
       }
       if (targetAlias == null) {
         throw new IllegalArgumentException(
-            "Loaded dataset " + relation.targetResource() + " is missing join column " + relation.targetColumn());
+            "Loaded dataset "
+                + relation.targetResource()
+                + " is missing join column "
+                + relation.targetColumn());
       }
 
-      current = current.join(target, current.col(sourceAlias).equalTo(target.col(targetAlias)), "left_outer");
+      current =
+          current.join(
+              target, current.col(sourceAlias).equalTo(target.col(targetAlias)), "left_outer");
       aliases.putAll(targetAliases);
       currentPath = targetPath;
     }
@@ -72,12 +83,17 @@ public final class SparkSchemaPathExecutor {
 
   static String physicalAlias(FieldRef ref) {
     String readable = ref.qualifiedName().replaceAll("[^A-Za-z0-9]+", "_");
-    return "__dwcdp__" + readable + "__" + Integer.toUnsignedString(ref.qualifiedName().hashCode(), 36);
+    return "__dwcdp__"
+        + readable
+        + "__"
+        + Integer.toUnsignedString(ref.qualifiedName().hashCode(), 36);
   }
 
   private static Dataset<Row> loadRequired(TableLoader loader, String resource) {
-    return loader.load(resource)
-        .orElseThrow(() -> new IllegalArgumentException("Required path resource is absent: " + resource));
+    return loader
+        .load(resource)
+        .orElseThrow(
+            () -> new IllegalArgumentException("Required path resource is absent: " + resource));
   }
 
   private static String quote(String column) {

@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Objects;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 
-/** Schema-resolved, ambiguity-checked, engine-neutral mapping between configuration and execution. */
+/**
+ * Schema-resolved, ambiguity-checked, engine-neutral mapping between configuration and execution.
+ */
 public record CompiledMapping(
     String name,
     CoreType coreType,

@@ -21,7 +21,11 @@ public record MaterializedTarget(
   public String describe() {
     StringBuilder out = new StringBuilder();
     out.append("fragment: ").append(producer.owner()).append('\n');
-    out.append("strategy: ").append(producer.sourceMode()).append(" / ").append(producer.aggregation()).append('\n');
+    out.append("strategy: ")
+        .append(producer.sourceMode())
+        .append(" / ")
+        .append(producer.aggregation())
+        .append('\n');
     out.append("target spark column: ").append(physicalColumn).append('\n');
     out.append("sources:");
     for (MaterializedSourceField source : sources) {

@@ -74,7 +74,6 @@ class AgentMappingTest {
         "Publisher name",
         rows.get(0).getAs(result.columnName(EcoTerm.identifiedBy.qualifiedName())));
     assertEquals(
-        "Resolved two",
-        rows.get(1).getAs(result.columnName(EcoTerm.identifiedBy.qualifiedName())));
+        "Resolved two", rows.get(1).getAs(result.columnName(EcoTerm.identifiedBy.qualifiedName())));
   }
 }

@@ -1,14 +1,13 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.junit.jupiter.api.Test;
 
 class DirectFieldMappingsTest {

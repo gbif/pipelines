@@ -310,5 +310,3 @@ class DwcDpVerbatimConverterIntegrationTest {
     return DataTypes.createStructType(fields);
   }
 }
-
-

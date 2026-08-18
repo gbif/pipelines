@@ -9,8 +9,8 @@ import java.util.Set;
 /**
  * Physical DwC-DP input dependencies derived from one compiled mapping plan.
  *
- * <p>These requirements are intentionally expressed per resource rather than per fragment because
- * a {@code TableLoader} is shared across all branches. The union is therefore the smallest safe
+ * <p>These requirements are intentionally expressed per resource rather than per fragment because a
+ * {@code TableLoader} is shared across all branches. The union is therefore the smallest safe
  * projection for the complete compiled plan.
  */
 public record MappingInputRequirements(Map<String, ResourceRequirement> resources) {

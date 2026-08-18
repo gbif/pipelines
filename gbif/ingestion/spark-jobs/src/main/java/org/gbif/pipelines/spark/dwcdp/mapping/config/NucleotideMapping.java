@@ -5,15 +5,15 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmen
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.dwc.terms.MixsTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Declarative mappings for the GBIF DNA Derived Data extension. */
 public final class NucleotideMapping {
@@ -21,7 +21,6 @@ public final class NucleotideMapping {
   public static final String ROW_TYPE_DNA_DERIVED_DATA = Extension.DNA_DERIVED_DATA.getRowType();
 
   private NucleotideMapping() {}
-
 
   /**
    * DNA-analysis rows owned directly by an Event (eDNA/metabarcoding path). Analyses that also
@@ -31,10 +30,7 @@ public final class NucleotideMapping {
   public static ExtensionFragment eventAnalyses(SchemaGraph graph) {
     EventPaths paths = eventAnalysisPaths(graph);
     ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "event-nucleotide-analysis",
-                ROW_TYPE_DNA_DERIVED_DATA,
-                "event")
+        extensionFragment("event-nucleotide-analysis", ROW_TYPE_DNA_DERIVED_DATA, "event")
             .scopeKey("event_pk")
             .join("nucleotide-analysis")
             .via("event_fk")
@@ -51,15 +47,14 @@ public final class NucleotideMapping {
   public static ExtensionFragment eventAnalysisSequence(SchemaGraph graph) {
     EventPaths paths = eventAnalysisPaths(graph);
     SchemaPath sequence =
-        paths.analysis().append(
-            graph.resolve(
-                "nucleotide-analysis", "nucleotide-sequence", "nucleotideSequence_fk", null));
+        paths
+            .analysis()
+            .append(
+                graph.resolve(
+                    "nucleotide-analysis", "nucleotide-sequence", "nucleotideSequence_fk", null));
 
     ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "event-nucleotide-sequence",
-                ROW_TYPE_DNA_DERIVED_DATA,
-                "event")
+        extensionFragment("event-nucleotide-sequence", ROW_TYPE_DNA_DERIVED_DATA, "event")
             .scopeKey("event_pk")
             .join("nucleotide-analysis")
             .via("event_fk")
@@ -80,15 +75,14 @@ public final class NucleotideMapping {
   public static ExtensionFragment eventAnalysisProtocol(SchemaGraph graph) {
     EventPaths paths = eventAnalysisPaths(graph);
     SchemaPath protocol =
-        paths.analysis().append(
-            graph.resolve(
-                "nucleotide-analysis", "molecular-protocol", "molecularProtocol_fk", null));
+        paths
+            .analysis()
+            .append(
+                graph.resolve(
+                    "nucleotide-analysis", "molecular-protocol", "molecularProtocol_fk", null));
 
     ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "event-molecular-protocol",
-                ROW_TYPE_DNA_DERIVED_DATA,
-                "event")
+        extensionFragment("event-molecular-protocol", ROW_TYPE_DNA_DERIVED_DATA, "event")
             .scopeKey("event_pk")
             .join("nucleotide-analysis")
             .via("event_fk")
@@ -135,9 +129,11 @@ public final class NucleotideMapping {
   public static ExtensionFragment materialAnalysisSequenceForOccurrence(SchemaGraph graph) {
     Paths paths = occurrenceAnalysisPaths(graph);
     SchemaPath sequence =
-        paths.analysis().append(
-            graph.resolve(
-                "nucleotide-analysis", "nucleotide-sequence", "nucleotideSequence_fk", null));
+        paths
+            .analysis()
+            .append(
+                graph.resolve(
+                    "nucleotide-analysis", "nucleotide-sequence", "nucleotideSequence_fk", null));
 
     ExtensionFragmentBuilder builder =
         extensionFragment(
@@ -167,9 +163,11 @@ public final class NucleotideMapping {
   public static ExtensionFragment materialAnalysisProtocolForOccurrence(SchemaGraph graph) {
     Paths paths = occurrenceAnalysisPaths(graph);
     SchemaPath protocol =
-        paths.analysis().append(
-            graph.resolve(
-                "nucleotide-analysis", "molecular-protocol", "molecularProtocol_fk", null));
+        paths
+            .analysis()
+            .append(
+                graph.resolve(
+                    "nucleotide-analysis", "molecular-protocol", "molecularProtocol_fk", null));
 
     ExtensionFragmentBuilder builder =
         extensionFragment(
@@ -195,7 +193,6 @@ public final class NucleotideMapping {
     return builder.build();
   }
 
-
   private static EventPaths eventAnalysisPaths(SchemaGraph graph) {
     SchemaPath event = SchemaPath.root("event");
     SchemaPath analysis =
@@ -208,7 +205,8 @@ public final class NucleotideMapping {
     SchemaPath material =
         occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID", null));
     SchemaPath analysis =
-        material.append(graph.resolve("material", "nucleotide-analysis", "materialEntity_fk", null));
+        material.append(
+            graph.resolve("material", "nucleotide-analysis", "materialEntity_fk", null));
     return new Paths(material, analysis);
   }
 
@@ -241,7 +239,8 @@ public final class NucleotideMapping {
   }
 
   private static SchemaResource requiredResource(SchemaGraph graph, String resource) {
-    return graph.resource(resource)
+    return graph
+        .resource(resource)
         .orElseThrow(
             () -> new IllegalArgumentException("DwC-DP schema has no resource " + resource));
   }

@@ -5,11 +5,11 @@ import java.util.Set;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /**
  * Adds ordinary source fields as inferred target producers. The compiler, not this helper, resolves
@@ -35,27 +35,32 @@ final class DirectFieldMappings {
 
   static DirectFieldMappings from(SchemaGraph graph, String resourceName, SchemaPath path) {
     SchemaResource resource =
-        graph.resource(resourceName)
+        graph
+            .resource(resourceName)
             .orElseThrow(
-                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+                () ->
+                    new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     return new DirectFieldMappings(resource, path, Set.of(), false);
   }
 
   static DirectFieldMappings from(
       SchemaGraph graph, String resourceName, SchemaPath path, Set<String> retainedRawOutputs) {
     SchemaResource resource =
-        graph.resource(resourceName)
+        graph
+            .resource(resourceName)
             .orElseThrow(
-                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+                () ->
+                    new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     return new DirectFieldMappings(resource, path, Set.copyOf(retainedRawOutputs), false);
   }
 
-  static DirectFieldMappings humboldt(
-      SchemaGraph graph, String resourceName, SchemaPath path) {
+  static DirectFieldMappings humboldt(SchemaGraph graph, String resourceName, SchemaPath path) {
     SchemaResource resource =
-        graph.resource(resourceName)
+        graph
+            .resource(resourceName)
             .orElseThrow(
-                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+                () ->
+                    new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     return new DirectFieldMappings(resource, path, Set.of(), true);
   }
 

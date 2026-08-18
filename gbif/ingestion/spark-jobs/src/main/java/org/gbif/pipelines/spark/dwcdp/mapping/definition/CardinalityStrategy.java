@@ -3,11 +3,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.definition;
 import java.util.Objects;
 
 /** Explicit policy for a relation that may yield more than one target row. */
-public sealed interface CardinalityStrategy
-    permits CardinalityStrategy.FanOut,
-        CardinalityStrategy.ExactlyOne,
-        CardinalityStrategy.Select,
-        CardinalityStrategy.Combine {
+public interface CardinalityStrategy {
 
   record FanOut() implements CardinalityStrategy {}
 

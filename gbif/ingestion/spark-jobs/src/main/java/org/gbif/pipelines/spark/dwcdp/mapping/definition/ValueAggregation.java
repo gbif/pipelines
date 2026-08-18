@@ -3,13 +3,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.definition;
 import java.util.Objects;
 
 /** How several candidate values are reduced when populating one target field. */
-public sealed interface ValueAggregation
-    permits ValueAggregation.FirstNonNull,
-        ValueAggregation.ExactlyOne,
-        ValueAggregation.Delimited,
-        ValueAggregation.LabeledOrFallback,
-        ValueAggregation.PreferredLabeledOrFallback,
-        ValueAggregation.Named {
+public interface ValueAggregation {
 
   record FirstNonNull() implements ValueAggregation {}
 

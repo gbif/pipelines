@@ -24,7 +24,6 @@ final class TargetTerms {
           "accessURI", DcTerm.identifier.qualifiedName(),
           "mediaType", DcTerm.type.qualifiedName());
 
-
   /** Humboldt fields whose simple names overlap terms in other namespaces. */
   private static final Map<String, String> HUMBOLDT_RENAMES =
       Map.of(
@@ -71,7 +70,10 @@ final class TargetTerms {
     return Optional.empty();
   }
 
-  /** Humboldt resource fields form an extension contract; known terms are qualified, others retained. */
+  /**
+   * Humboldt resource fields form an extension contract; known terms are qualified, others
+   * retained.
+   */
   static Optional<String> resolveHumboldtOutput(String column) {
     String renamed = HUMBOLDT_RENAMES.get(column);
     return Optional.of(renamed != null ? renamed : resolveKnown(column).orElse(column));

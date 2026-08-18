@@ -6,44 +6,50 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
 /** Event-core mapping configurations assembled from reusable domain fragments. */
 public final class EventDwcaMapping {
 
   private EventDwcaMapping() {}
 
-
   /** Canonical currently migrated Event-core mapping used for inspection and replacement wiring. */
   public static MappingPlan current(SchemaGraph graph) {
-    MappingPlanBuilder builder = eventDirectBase(graph, "event-core:current")
-        .mergeCoreTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
-        .mergeCoreTarget(DwcTerm.georeferenceProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
-        .mergeCoreTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
-        .mergeCoreTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
-        .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
-        .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
-        .importCoreFragment(EventCoreMapping.parentEvent(graph))
-        .importCoreFragment(EventCoreMapping.geologicalContext(graph))
-        .importCoreFragment(EventCoreMapping.eventConductedBy(graph))
-        .importCoreFragment(EventCoreMapping.georeferencedBy(graph))
-        .importCoreFragment(EventCoreMapping.directSamplingProtocol(graph))
-        .importCoreFragment(EventCoreMapping.directGeoreferenceProtocol(graph))
-        .importCoreFragment(EventCoreMapping.eventProtocols(graph))
-        .importCoreFragment(EventCoreMapping.surveyProtocols(graph))
-        .importCoreFragment(EventCoreMapping.eventGeoreferenceProtocols(graph))
-        .importCoreFragment(EventCoreMapping.surveyGeoreferenceProtocols(graph))
-        .importCoreFragment(EventCoreMapping.directProvenance(graph))
-        .importCoreFragment(EventCoreMapping.eventProvenance(graph));
+    MappingPlanBuilder builder =
+        eventDirectBase(graph, "event-core:current")
+            .mergeCoreTarget(
+                DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+            .mergeCoreTarget(
+                DwcTerm.georeferenceProtocol.qualifiedName(),
+                ValueAggregation.pipeDelimitedDistinct())
+            .mergeCoreTarget(
+                TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
+            .mergeCoreTarget(
+                TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
+            .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
+            .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
+            .importCoreFragment(EventCoreMapping.parentEvent(graph))
+            .importCoreFragment(EventCoreMapping.geologicalContext(graph))
+            .importCoreFragment(EventCoreMapping.eventConductedBy(graph))
+            .importCoreFragment(EventCoreMapping.georeferencedBy(graph))
+            .importCoreFragment(EventCoreMapping.directSamplingProtocol(graph))
+            .importCoreFragment(EventCoreMapping.directGeoreferenceProtocol(graph))
+            .importCoreFragment(EventCoreMapping.eventProtocols(graph))
+            .importCoreFragment(EventCoreMapping.surveyProtocols(graph))
+            .importCoreFragment(EventCoreMapping.eventGeoreferenceProtocols(graph))
+            .importCoreFragment(EventCoreMapping.surveyGeoreferenceProtocols(graph))
+            .importCoreFragment(EventCoreMapping.directProvenance(graph))
+            .importCoreFragment(EventCoreMapping.eventProvenance(graph));
 
     builder
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
         .mergeTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
-        .mergeTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeTarget(
+            DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
@@ -145,8 +151,8 @@ public final class EventDwcaMapping {
   }
 
   /**
-   * Event-level Multimedia behaviour: direct event media plus occurrence and unambiguous
-   * material media promoted to the event.
+   * Event-level Multimedia behaviour: direct event media plus occurrence and unambiguous material
+   * media promoted to the event.
    */
   public static MappingPlan withMultimedia(SchemaGraph graph) {
     return eventBase("event-core:multimedia")
@@ -210,7 +216,8 @@ public final class EventDwcaMapping {
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
         .mergeTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
-        .mergeTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeTarget(
+            DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
@@ -236,10 +243,14 @@ public final class EventDwcaMapping {
   public static MappingPlan withCoreEnrichments(SchemaGraph graph) {
     MappingPlanBuilder builder = eventDirectBase(graph, "event-core:core-enrichments");
     return builder
-        .mergeCoreTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
-        .mergeCoreTarget(DwcTerm.georeferenceProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
-        .mergeCoreTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
-        .mergeCoreTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(
+            DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeCoreTarget(
+            DwcTerm.georeferenceProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeCoreTarget(
+            TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(
+            TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
         .importCoreFragment(EventCoreMapping.parentEvent(graph))

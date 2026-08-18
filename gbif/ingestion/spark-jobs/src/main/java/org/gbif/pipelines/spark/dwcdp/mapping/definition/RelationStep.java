@@ -65,7 +65,9 @@ public record RelationStep(
         requirement);
   }
 
-  /** Declares a mapping-defined relation not present as a schema FK, e.g. a weak/natural-key link. */
+  /**
+   * Declares a mapping-defined relation not present as a schema FK, e.g. a weak/natural-key link.
+   */
   public RelationStep on(String fromColumn, String toColumn) {
     return new RelationStep(
         targetResource,

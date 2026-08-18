@@ -1,7 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import java.util.List;
 
 /** Raised when the governing mapping contains one or more problems that prevent compilation. */
@@ -26,9 +24,14 @@ public final class MappingCompilationException extends IllegalArgumentException 
       out.append("Reason: ").append(problem.explanation()).append('\n');
       out.append("Candidates:\n");
       for (CompiledTargetProducer candidate : problem.candidates()) {
-        out.append("  - ").append(candidate.owner())
-            .append(" [").append(candidate.origin()).append("]");
-        if (candidate.origin() == org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping.Origin.INFERRED) {
+        out.append("  - ")
+            .append(candidate.owner())
+            .append(" [")
+            .append(candidate.origin())
+            .append("]");
+        if (candidate.origin()
+            == org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping.Origin
+                .INFERRED) {
           out.append(" depth=").append(candidate.pathDepth());
         }
         out.append('\n');

@@ -6,10 +6,10 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmen
 import java.util.Objects;
 import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
@@ -69,7 +69,6 @@ public final class AgentRoleMapping {
           ValueAggregation.pipeDelimitedDistinct());
     }
   }
-
 
   public record LinkedSpec(
       String fragmentName,
@@ -160,7 +159,6 @@ public final class AgentRoleMapping {
         .build();
   }
 
-
   public static CoreFragment linkedCore(SchemaGraph graph, LinkedSpec spec) {
     LinkedPaths paths = resolveLinkedPaths(graph, spec);
     return coreFragment(spec.fragmentName(), spec.sourceResource())
@@ -230,7 +228,10 @@ public final class AgentRoleMapping {
     SchemaPath parent =
         source.append(
             graph.resolve(
-                spec.sourceResource(), spec.parentResource(), spec.sourceToParentViaColumn(), null));
+                spec.sourceResource(),
+                spec.parentResource(),
+                spec.sourceToParentViaColumn(),
+                null));
     SchemaPath role =
         parent.append(
             graph.resolve(

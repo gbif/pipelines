@@ -1,5 +1,9 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldSource;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
@@ -7,10 +11,6 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /** Static validation of a mapping against the schema graph, with no Spark execution required. */
 public final class MappingValidator {
@@ -86,15 +86,22 @@ public final class MappingValidator {
       String sourceColumn = step.sourceColumn().orElseThrow();
       String targetColumn = step.targetColumn().orElseThrow();
       if (!graph.hasResource(step.targetResource())) {
-        throw new IllegalArgumentException("Unknown relation target resource: " + step.targetResource());
+        throw new IllegalArgumentException(
+            "Unknown relation target resource: " + step.targetResource());
       }
       if (!graph.hasColumn(sourceResource, sourceColumn)) {
         throw new IllegalArgumentException(
-            "Explicit relation references unknown source field: " + sourceResource + "." + sourceColumn);
+            "Explicit relation references unknown source field: "
+                + sourceResource
+                + "."
+                + sourceColumn);
       }
       if (!graph.hasColumn(step.targetResource(), targetColumn)) {
         throw new IllegalArgumentException(
-            "Explicit relation references unknown target field: " + step.targetResource() + "." + targetColumn);
+            "Explicit relation references unknown target field: "
+                + step.targetResource()
+                + "."
+                + targetColumn);
       }
       return SchemaRelation.relation(
           sourceResource,

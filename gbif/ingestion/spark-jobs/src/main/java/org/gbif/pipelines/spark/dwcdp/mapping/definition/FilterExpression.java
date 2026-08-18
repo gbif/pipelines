@@ -1,6 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.definition;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.FieldColumns;
 import static org.apache.spark.sql.functions.lit;
 
 import java.io.Serializable;
@@ -9,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import org.apache.spark.sql.Column;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.FieldColumns;
 
 /**
  * Spark SQL predicate used by a mapping relation.

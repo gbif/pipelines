@@ -4,22 +4,21 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 import org.apache.spark.storage.StorageLevel;
 import org.gbif.dwc.terms.DwcTerm;
@@ -31,16 +30,16 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingExecutionOutput;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingBranchExecutionMetrics;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.RelationExecutionMetrics;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.AssertionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.MultimediaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceDwcaMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingBranchExecutionMetrics;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingExecutionOutput;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.RelationExecutionMetrics;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageResource;
 import org.gbif.pipelines.spark.util.PathUtil;
@@ -229,9 +228,11 @@ public class DwcDpVerbatimConverter {
   }
 
   /** Executes the canonical Occurrence mapping plan using an already constructed table loader. */
-  static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(SparkSession spark, TableLoader loader) {
+  static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(
+      SparkSession spark, TableLoader loader) {
     DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
-    return mappingEngine.execute(loader, OccurrenceDwcaMapping.current(mappingEngine.schemaGraph()));
+    return mappingEngine.execute(
+        loader, OccurrenceDwcaMapping.current(mappingEngine.schemaGraph()));
   }
 
   private static TableLoader parquetTableLoader(
@@ -262,8 +263,7 @@ public class DwcDpVerbatimConverter {
     org.apache.hadoop.fs.Path outputPath = new org.apache.hadoop.fs.Path(path);
     try (BufferedWriter writer =
         new BufferedWriter(
-            new OutputStreamWriter(
-                fileSystem.create(outputPath, true), StandardCharsets.UTF_8))) {
+            new OutputStreamWriter(fileSystem.create(outputPath, true), StandardCharsets.UTF_8))) {
       writer.write(content);
       if (!content.endsWith("\n")) {
         writer.newLine();
@@ -280,13 +280,7 @@ public class DwcDpVerbatimConverter {
       FileSystem fileSystem,
       String datasetId) {
     return writeMetrics(
-        spark,
-        dataPackage,
-        datasetBasePath,
-        fileSystem,
-        datasetId,
-        Optional.empty(),
-        List.of());
+        spark, dataPackage, datasetBasePath, fileSystem, datasetId, Optional.empty(), List.of());
   }
 
   static VerbatimConversionMetrics writeMetrics(
@@ -297,13 +291,7 @@ public class DwcDpVerbatimConverter {
       String datasetId,
       Optional<Dataset<ExtendedRecord>> verbatimDataset) {
     return writeMetrics(
-        spark,
-        dataPackage,
-        datasetBasePath,
-        fileSystem,
-        datasetId,
-        verbatimDataset,
-        List.of());
+        spark, dataPackage, datasetBasePath, fileSystem, datasetId, verbatimDataset, List.of());
   }
 
   static VerbatimConversionMetrics writeMetrics(
@@ -318,7 +306,8 @@ public class DwcDpVerbatimConverter {
     Map<String, Long> sourceCounts = sourceCounts(spark, dataPackage, datasetBasePath);
     long occurrenceCount = sourceCounts.getOrDefault("occurrence", 0L);
     long eventCount = sourceCounts.getOrDefault("event", 0L);
-    long largestFileCount = sourceCounts.values().stream().mapToLong(Long::longValue).max().orElse(0L);
+    long largestFileCount =
+        sourceCounts.values().stream().mapToLong(Long::longValue).max().orElse(0L);
 
     Map<String, Long> metrics =
         Map.of(
@@ -348,7 +337,8 @@ public class DwcDpVerbatimConverter {
     dataPackage.getResources().stream()
         .sorted(Comparator.comparing(DataPackageResource::getName))
         .forEach(
-            resource -> counts.put(resource.getName(), countRows(spark, datasetBasePath, resource)));
+            resource ->
+                counts.put(resource.getName(), countRows(spark, datasetBasePath, resource)));
     return counts;
   }
 

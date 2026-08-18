@@ -40,12 +40,10 @@ public final class MultimediaMapping {
     return builder.build();
   }
 
-
   /** Direct occurrence-media rows attached to Occurrence core. */
   public static ExtensionFragment occurrenceMedia(SchemaGraph graph) {
     SchemaPath link = SchemaPath.root("occurrence-media");
-    SchemaPath media =
-        link.append(graph.resolve("occurrence-media", "media", "media_fk", null));
+    SchemaPath media = link.append(graph.resolve("occurrence-media", "media", "media_fk", null));
     SchemaPath usagePolicy =
         media.append(graph.resolve("media", "usage-policy", "usagePolicy_fk", null));
 
@@ -77,8 +75,7 @@ public final class MultimediaMapping {
         occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID", null));
     SchemaPath link =
         material.append(graph.resolve("material", "material-media", "materialEntity_fk", null));
-    SchemaPath media =
-        link.append(graph.resolve("material-media", "media", "media_fk", null));
+    SchemaPath media = link.append(graph.resolve("material-media", "media", "media_fk", null));
     SchemaPath usagePolicy =
         media.append(graph.resolve("media", "usage-policy", "usagePolicy_fk", null));
 
@@ -112,10 +109,8 @@ public final class MultimediaMapping {
   public static ExtensionFragment occurrenceMediaForEvent(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
     SchemaPath link =
-        occurrence.append(
-            graph.resolve("occurrence", "occurrence-media", "occurrence_fk", null));
-    SchemaPath media =
-        link.append(graph.resolve("occurrence-media", "media", "media_fk", null));
+        occurrence.append(graph.resolve("occurrence", "occurrence-media", "occurrence_fk", null));
+    SchemaPath media = link.append(graph.resolve("occurrence-media", "media", "media_fk", null));
     SchemaPath usagePolicy =
         media.append(graph.resolve("media", "usage-policy", "usagePolicy_fk", null));
 
@@ -152,8 +147,7 @@ public final class MultimediaMapping {
         occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID", null));
     SchemaPath link =
         material.append(graph.resolve("material", "material-media", "materialEntity_fk", null));
-    SchemaPath media =
-        link.append(graph.resolve("material-media", "media", "media_fk", null));
+    SchemaPath media = link.append(graph.resolve("material-media", "media", "media_fk", null));
     SchemaPath usagePolicy =
         media.append(graph.resolve("media", "usage-policy", "usagePolicy_fk", null));
 
@@ -220,10 +214,8 @@ public final class MultimediaMapping {
   /** Chronometric Age media promoted from the Occurrence's owning Event. */
   public static ExtensionFragment chronometricAgeMediaForOccurrence(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath event =
-        occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
-    SchemaPath age =
-        event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
+    SchemaPath event = occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
+    SchemaPath age = event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
     SchemaPath link =
         age.append(
             graph.resolve(
@@ -263,5 +255,4 @@ public final class MultimediaMapping {
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
     return builder.build();
   }
-
 }

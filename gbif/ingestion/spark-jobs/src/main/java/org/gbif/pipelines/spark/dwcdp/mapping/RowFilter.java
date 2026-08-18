@@ -2,7 +2,9 @@ package org.gbif.pipelines.spark.dwcdp.mapping;
 
 import java.util.Objects;
 
-/** Row-level filter attached to a mapping relation. Kept separate from schema relation predicates. */
+/**
+ * Row-level filter attached to a mapping relation. Kept separate from schema relation predicates.
+ */
 public record RowFilter(String expression) {
   private static final RowFilter NONE = new RowFilter("");
 

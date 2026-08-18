@@ -1,6 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /**
@@ -17,8 +15,8 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
  *
  * <p>Compilation still happens against the complete official schema first. This class deliberately
  * does not re-run producer precedence after pruning: a producer that lost during canonical
- * compilation is never resurrected just because the canonical winner is unavailable in one
- * dataset. Dataset pruning is therefore an execution optimization, not a second mapping compiler.
+ * compilation is never resurrected just because the canonical winner is unavailable in one dataset.
+ * Dataset pruning is therefore an execution optimization, not a second mapping compiler.
  */
 public final class CompiledMappingDatasetPruner {
 
@@ -33,7 +31,10 @@ public final class CompiledMappingDatasetPruner {
     List<CompiledCoreFragment> coreFragments =
         mapping.coreFragments().stream()
             .filter(fragment -> supportsCoreFragmentStructure(fragment, scope))
-            .map(fragment -> pruneCoreFragment(fragment, scope, mergeFieldsForOwner(coreMerges, fragment.name())))
+            .map(
+                fragment ->
+                    pruneCoreFragment(
+                        fragment, scope, mergeFieldsForOwner(coreMerges, fragment.name())))
             .filter(
                 fragment ->
                     !fragment.targets().isEmpty() || coreMergeOwners.contains(fragment.name()))
@@ -70,7 +71,10 @@ public final class CompiledMappingDatasetPruner {
     List<CompiledFragment> structurallyAvailable =
         extension.fragments().stream()
             .filter(fragment -> supportsExtensionFragmentStructure(fragment, scope))
-            .map(fragment -> pruneFragmentTargets(fragment, scope, mergeFieldsForOwner(merges, fragment.name())))
+            .map(
+                fragment ->
+                    pruneFragmentTargets(
+                        fragment, scope, mergeFieldsForOwner(merges, fragment.name())))
             .toList();
 
     boolean anyTarget =
@@ -109,11 +113,13 @@ public final class CompiledMappingDatasetPruner {
           // ENRICH must have exactly one row-defining fragment. Alternative rowIdentity fragments
           // are dataset fallbacks for the base, not additional enrichment fragments.
           .filter(fragment -> fragment.rowIdentity().isEmpty())
-          .filter(fragment -> !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
+          .filter(
+              fragment -> !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
           .forEach(fragments::add);
     } else {
       structurallyAvailable.stream()
-          .filter(fragment -> !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
+          .filter(
+              fragment -> !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
           .forEach(fragments::add);
     }
 
@@ -123,7 +129,8 @@ public final class CompiledMappingDatasetPruner {
 
     Set<String> visibleTargets = new LinkedHashSet<>();
     fragments.forEach(
-        fragment -> fragment.targets().forEach(producer -> visibleTargets.add(producer.targetTerm())));
+        fragment ->
+            fragment.targets().forEach(producer -> visibleTargets.add(producer.targetTerm())));
     merges.forEach(merge -> visibleTargets.add(merge.targetTerm()));
 
     return Optional.of(
@@ -181,8 +188,8 @@ public final class CompiledMappingDatasetPruner {
         targets);
   }
 
-  private static Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> mergeFieldsForOwner(
-      List<CompiledTargetMerge> merges, String owner) {
+  private static Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef>
+      mergeFieldsForOwner(List<CompiledTargetMerge> merges, String owner) {
     List<CompiledTargetProducer> owned =
         merges.stream()
             .flatMap(merge -> merge.producers().stream())
@@ -192,8 +199,10 @@ public final class CompiledMappingDatasetPruner {
   }
 
   private static Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> supportedFields(
-      Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> fields, MappingDatasetScope scope) {
-    Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> supported = new LinkedHashSet<>();
+      Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> fields,
+      MappingDatasetScope scope) {
+    Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> supported =
+        new LinkedHashSet<>();
     fields.stream().filter(scope::supports).forEach(supported::add);
     return supported;
   }
@@ -272,7 +281,6 @@ public final class CompiledMappingDatasetPruner {
             producer.contributionIdentity(),
             producer.orderBy()));
   }
-
 
   /**
    * Prunes source alternatives without violating aggregation source-position contracts.

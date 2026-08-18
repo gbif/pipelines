@@ -37,7 +37,6 @@ class TargetTermsTest {
         TargetTerms.resolveHumboldtOutput("surveyTargetDescription").orElseThrow());
   }
 
-
   @Test
   void humboldtOverlappingAgentTermsUseEcoNamespace() {
     assertEquals(

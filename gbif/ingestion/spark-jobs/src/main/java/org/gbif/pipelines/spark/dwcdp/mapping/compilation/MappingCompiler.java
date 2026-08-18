@@ -1,6 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -9,17 +8,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 
 /**
  * Resolves declarative mapping navigation and target ownership against a DwC-DP schema graph.
@@ -49,11 +48,12 @@ public final class MappingCompiler {
 
     Map<String, TargetMerge> mergeDeclarations =
         plan.coreTargetMerges().stream()
-            .collect(Collectors.toMap(
-                TargetMerge::targetTerm,
-                merge -> merge,
-                (left, right) -> left,
-                LinkedHashMap::new));
+            .collect(
+                Collectors.toMap(
+                    TargetMerge::targetTerm,
+                    merge -> merge,
+                    (left, right) -> left,
+                    LinkedHashMap::new));
     List<CompiledTargetMerge> coreTargetMerges = new ArrayList<>();
     List<MappingDecision> mergeDecisions = new ArrayList<>();
     for (TargetMerge merge : mergeDeclarations.values()) {
@@ -103,8 +103,9 @@ public final class MappingCompiler {
     problems.addAll(core.decisions().stream().filter(MappingDecision::problem).toList());
     problems.addAll(mergeDecisions.stream().filter(MappingDecision::problem).toList());
     extensions.forEach(
-        extension -> problems.addAll(
-            extension.decisions().stream().filter(MappingDecision::problem).toList()));
+        extension ->
+            problems.addAll(
+                extension.decisions().stream().filter(MappingDecision::problem).toList()));
     if (!problems.isEmpty()) {
       throw new MappingCompilationException(problems);
     }
@@ -117,7 +118,8 @@ public final class MappingCompiler {
         coreFragments,
         coreTargetMerges,
         extensions,
-        java.util.stream.Stream.concat(core.decisions().stream(), mergeDecisions.stream()).toList());
+        java.util.stream.Stream.concat(core.decisions().stream(), mergeDecisions.stream())
+            .toList());
   }
 
   public CompiledExtension compile(ExtensionMapping extension) {
@@ -127,9 +129,8 @@ public final class MappingCompiler {
       throw new MappingCompilationException(structuralProblems);
     }
     CompiledExtension compiled = compileExtensionInternal(extension);
-    List<MappingDecision> problems = compiled.decisions().stream()
-        .filter(MappingDecision::problem)
-        .toList();
+    List<MappingDecision> problems =
+        compiled.decisions().stream().filter(MappingDecision::problem).toList();
     if (!problems.isEmpty()) {
       throw new MappingCompilationException(problems);
     }
@@ -143,11 +144,12 @@ public final class MappingCompiler {
 
     Map<String, TargetMerge> mergeDeclarations =
         extension.targetMerges().stream()
-            .collect(Collectors.toMap(
-                TargetMerge::targetTerm,
-                merge -> merge,
-                (left, right) -> left,
-                LinkedHashMap::new));
+            .collect(
+                Collectors.toMap(
+                    TargetMerge::targetTerm,
+                    merge -> merge,
+                    (left, right) -> left,
+                    LinkedHashMap::new));
 
     if (extension.rowComposition()
         == org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition.UNION) {
@@ -190,7 +192,8 @@ public final class MappingCompiler {
               .filter(candidate -> candidate.targetTerm().equals(merge.targetTerm()))
               .toList();
       if (!producers.isEmpty()) {
-        targetMerges.add(new CompiledTargetMerge(merge.targetTerm(), merge.aggregation(), producers));
+        targetMerges.add(
+            new CompiledTargetMerge(merge.targetTerm(), merge.aggregation(), producers));
         mergeDecisions.add(
             new MappingDecision(
                 "extension:" + extension.rowType(),
@@ -210,18 +213,21 @@ public final class MappingCompiler {
     Resolution resolution = resolveTargets("extension:" + extension.rowType(), nonMergeCandidates);
     List<CompiledTargetProducer> selected = new ArrayList<>(resolution.selected());
     targetMerges.forEach(merge -> selected.addAll(merge.producers()));
-    List<CompiledFragment> resolvedFragments = rawFragments.stream()
-        .map(fragment -> new CompiledFragment(
-            fragment.name(),
-            fragment.rowType(),
-            fragment.sourceResource(),
-            fragment.path(),
-            fragment.relations(),
-            fragment.scopeKey(),
-            fragment.rowIdentity(),
-            fragment.rowMatch(),
-            fragment.targets().stream().filter(selected::contains).toList()))
-        .toList();
+    List<CompiledFragment> resolvedFragments =
+        rawFragments.stream()
+            .map(
+                fragment ->
+                    new CompiledFragment(
+                        fragment.name(),
+                        fragment.rowType(),
+                        fragment.sourceResource(),
+                        fragment.path(),
+                        fragment.relations(),
+                        fragment.scopeKey(),
+                        fragment.rowIdentity(),
+                        fragment.rowMatch(),
+                        fragment.targets().stream().filter(selected::contains).toList()))
+            .toList();
 
     return new CompiledExtension(
         extension.rowType(),
@@ -229,7 +235,8 @@ public final class MappingCompiler {
         extension.maxRowsPerParent(),
         targetMerges,
         resolvedFragments,
-        java.util.stream.Stream.concat(resolution.decisions().stream(), mergeDecisions.stream()).toList());
+        java.util.stream.Stream.concat(resolution.decisions().stream(), mergeDecisions.stream())
+            .toList());
   }
 
   private List<MappingDecision> validateFragmentScopes(List<ExtensionMapping> extensions) {
@@ -240,7 +247,10 @@ public final class MappingCompiler {
           continue;
         }
         boolean hasPrimaryKey =
-            graph.resource(fragment.sourceResource()).flatMap(resource -> resource.primaryKey()).isPresent();
+            graph
+                .resource(fragment.sourceResource())
+                .flatMap(resource -> resource.primaryKey())
+                .isPresent();
         if (!hasPrimaryKey) {
           problems.add(
               new MappingDecision(
@@ -263,7 +273,8 @@ public final class MappingCompiler {
     SchemaPath path = SchemaPath.root(fragment.sourceResource());
     List<CompiledRelationStep> relations = new ArrayList<>();
     for (RelationStep step : fragment.relations()) {
-      SchemaRelation relation = resolveRelation("core-fragment:" + fragment.name(), path.currentResource(), step);
+      SchemaRelation relation =
+          resolveRelation("core-fragment:" + fragment.name(), path.currentResource(), step);
       relations.add(
           new CompiledRelationStep(
               relation,
@@ -284,7 +295,8 @@ public final class MappingCompiler {
     SchemaPath path = SchemaPath.root(fragment.sourceResource());
     List<CompiledRelationStep> relations = new ArrayList<>();
     for (RelationStep step : fragment.relations()) {
-      SchemaRelation relation = resolveRelation("extension-fragment:" + fragment.name(), path.currentResource(), step);
+      SchemaRelation relation =
+          resolveRelation("extension-fragment:" + fragment.name(), path.currentResource(), step);
       relations.add(
           new CompiledRelationStep(
               relation,
@@ -341,11 +353,11 @@ public final class MappingCompiler {
   }
 
   private static Resolution resolveTargets(String scope, List<CompiledTargetProducer> candidates) {
-    Map<String, List<CompiledTargetProducer>> byTarget = candidates.stream()
-        .collect(Collectors.groupingBy(
-            CompiledTargetProducer::targetTerm,
-            LinkedHashMap::new,
-            Collectors.toList()));
+    Map<String, List<CompiledTargetProducer>> byTarget =
+        candidates.stream()
+            .collect(
+                Collectors.groupingBy(
+                    CompiledTargetProducer::targetTerm, LinkedHashMap::new, Collectors.toList()));
 
     List<CompiledTargetProducer> selected = new ArrayList<>();
     List<MappingDecision> decisions = new ArrayList<>();
@@ -372,9 +384,10 @@ public final class MappingCompiler {
           "Only one producer declares this target.");
     }
 
-    List<CompiledTargetProducer> explicit = candidates.stream()
-        .filter(candidate -> candidate.origin() == TargetFieldMapping.Origin.EXPLICIT)
-        .toList();
+    List<CompiledTargetProducer> explicit =
+        candidates.stream()
+            .filter(candidate -> candidate.origin() == TargetFieldMapping.Origin.EXPLICIT)
+            .toList();
     if (explicit.size() == 1) {
       CompiledTargetProducer winner = explicit.get(0);
       return new MappingDecision(
@@ -395,13 +408,10 @@ public final class MappingCompiler {
           "Multiple explicit producers claim the same target and no merge semantics were declared.");
     }
 
-    int minimumDepth = candidates.stream()
-        .mapToInt(CompiledTargetProducer::pathDepth)
-        .min()
-        .orElseThrow();
-    List<CompiledTargetProducer> closest = candidates.stream()
-        .filter(candidate -> candidate.pathDepth() == minimumDepth)
-        .toList();
+    int minimumDepth =
+        candidates.stream().mapToInt(CompiledTargetProducer::pathDepth).min().orElseThrow();
+    List<CompiledTargetProducer> closest =
+        candidates.stream().filter(candidate -> candidate.pathDepth() == minimumDepth).toList();
     if (closest.size() == 1) {
       CompiledTargetProducer winner = closest.get(0);
       return new MappingDecision(
@@ -419,7 +429,8 @@ public final class MappingCompiler {
         MappingDecisionType.AMBIGUOUS_EQUAL_DEPTH,
         Optional.empty(),
         candidates,
-        "Multiple inferred producers have the same closest path depth (" + minimumDepth
+        "Multiple inferred producers have the same closest path depth ("
+            + minimumDepth
             + "); an explicit mapping is required.");
   }
 
@@ -470,15 +481,21 @@ public final class MappingCompiler {
     List<SchemaRelation> direct = graph.relationsFrom(sourceResource);
     if (!direct.isEmpty()) {
       explanation.append("\nDirect relations from ").append(sourceResource).append(':');
-      direct.stream().limit(10).forEach(r -> explanation.append("\n  - ").append(describeRelation(r)));
+      direct.stream()
+          .limit(10)
+          .forEach(r -> explanation.append("\n  - ").append(describeRelation(r)));
     }
     List<List<SchemaRelation>> hints =
         graph.nearbyPaths(sourceResource, step.targetResource(), 3, 10);
     if (!hints.isEmpty()) {
       explanation.append("\nNearby schema paths (diagnostic hints only):");
       for (List<SchemaRelation> path : hints) {
-        explanation.append("\n  - ")
-            .append(path.stream().map(MappingCompiler::describeRelation).collect(Collectors.joining(" ; ")));
+        explanation
+            .append("\n  - ")
+            .append(
+                path.stream()
+                    .map(MappingCompiler::describeRelation)
+                    .collect(Collectors.joining(" ; ")));
       }
     }
     MappingDecision problem =

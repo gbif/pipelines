@@ -1,13 +1,8 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.schema;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.InMemorySchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import org.junit.jupiter.api.Test;
 
 class ClasspathSchemaGraphTest {
@@ -39,11 +34,12 @@ class ClasspathSchemaGraphTest {
 
   @Test
   void agentAgentRoleToAgentIsAmbiguousWithoutRelationHint() {
-    IllegalArgumentException ex = assertThrows(
-        IllegalArgumentException.class,
-        () -> graph.resolve("agent-agent-role", "agent"));
+    IllegalArgumentException ex =
+        assertThrows(
+            IllegalArgumentException.class, () -> graph.resolve("agent-agent-role", "agent"));
     assertTrue(ex.getMessage().contains("Ambiguous"));
   }
+
   @Test
   void selfReferenceViaColumnPrefersForwardTraversal() {
     SchemaRelation relation = graph.resolve("event", "event", "parentEvent_fk");
@@ -86,5 +82,4 @@ class ClasspathSchemaGraphTest {
     SchemaRelation relation = candidateGraph.resolve("source", "target", "reference");
     assertFalse(relation.weak());
   }
-
 }

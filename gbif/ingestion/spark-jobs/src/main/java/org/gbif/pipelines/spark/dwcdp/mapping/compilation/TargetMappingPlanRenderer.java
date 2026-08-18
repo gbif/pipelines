@@ -1,6 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,9 +9,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 
 /**
  * Target-first view of a compiled DwC-DP -> DwC-A plan.
@@ -70,7 +69,8 @@ public final class TargetMappingPlanRenderer {
         null);
 
     for (CompiledExtension extension : mapping.extensions()) {
-      Map<String, List<CompiledTargetProducer>> extensionTargets = collectExtensionTargets(extension);
+      Map<String, List<CompiledTargetProducer>> extensionTargets =
+          collectExtensionTargets(extension);
       if (!hasVisibleTargets(extensionTargets, datasetScope)) {
         continue;
       }
@@ -147,14 +147,19 @@ public final class TargetMappingPlanRenderer {
       Optional<MappingDatasetScope> datasetScope,
       Detail detail) {
     out.append("\n  Target: ").append(target).append('\n');
-    merge.ifPresent(value -> out.append("    merge: ").append(formatAggregation(value.aggregation())).append('\n'));
+    merge.ifPresent(
+        value ->
+            out.append("    merge: ").append(formatAggregation(value.aggregation())).append('\n'));
 
     if (detail == Detail.COMPACT) {
       for (CompiledTargetProducer producer : producers) {
         List<CompiledSourceField> visibleSources = visibleSources(producer, datasetScope);
         out.append("    <- ");
         if (visibleSources.size() > 1) {
-          out.append(producer.sourceMode()).append(' ').append(formatAggregation(producer.aggregation())).append(' ');
+          out.append(producer.sourceMode())
+              .append(' ')
+              .append(formatAggregation(producer.aggregation()))
+              .append(' ');
         }
         out.append(
             visibleSources.stream()
@@ -186,12 +191,20 @@ public final class TargetMappingPlanRenderer {
       if (producer.origin() == TargetFieldMapping.Origin.INFERRED) {
         out.append("      inferred depth: ").append(producer.pathDepth()).append('\n');
       }
-      producer.contributionIdentity().ifPresent(
-          source -> out.append("      contribution identity: ").append(source.describe()).append('\n'));
-      producer.orderBy().ifPresent(
-          source -> out.append("      order by: ").append(source.describe()).append('\n'));
+      producer
+          .contributionIdentity()
+          .ifPresent(
+              source ->
+                  out.append("      contribution identity: ")
+                      .append(source.describe())
+                      .append('\n'));
+      producer
+          .orderBy()
+          .ifPresent(
+              source -> out.append("      order by: ").append(source.describe()).append('\n'));
 
-      List<CompiledRelationStep> relations = relationsByOwner.getOrDefault(producer.owner(), List.of());
+      List<CompiledRelationStep> relations =
+          relationsByOwner.getOrDefault(producer.owner(), List.of());
       if (!relations.isEmpty()) {
         out.append("      path:\n");
         for (CompiledRelationStep relation : relations) {
@@ -218,7 +231,9 @@ public final class TargetMappingPlanRenderer {
       }
       CompiledRelationStep relation = relations.get(i);
       out.append(relation.relation().targetResource());
-      relation.cardinalityStrategy().ifPresent(strategy -> out.append(':').append(formatCardinality(strategy)));
+      relation
+          .cardinalityStrategy()
+          .ifPresent(strategy -> out.append(':').append(formatCardinality(strategy)));
       if (relation.filter().isPresent()) {
         out.append(":filter");
       }
@@ -241,8 +256,12 @@ public final class TargetMappingPlanRenderer {
       out.append(" [WEAK]");
     }
     out.append(" [").append(relation.requirement()).append(']');
-    relation.cardinalityStrategy().ifPresent(strategy -> out.append(" [").append(formatCardinality(strategy)).append(']'));
-    schema.predicate().ifPresent(predicate -> out.append(" [predicate=").append(predicate).append(']'));
+    relation
+        .cardinalityStrategy()
+        .ifPresent(strategy -> out.append(" [").append(formatCardinality(strategy)).append(']'));
+    schema
+        .predicate()
+        .ifPresent(predicate -> out.append(" [predicate=").append(predicate).append(']'));
     if (relation.filter().isPresent()) {
       out.append(" [filter=Spark expression]");
     }
@@ -272,9 +291,7 @@ public final class TargetMappingPlanRenderer {
   private static Map<String, List<CompiledTargetProducer>> collectExtensionTargets(
       CompiledExtension extension) {
     return groupTargets(
-        extension.fragments().stream()
-            .flatMap(fragment -> fragment.targets().stream())
-            .toList());
+        extension.fragments().stream().flatMap(fragment -> fragment.targets().stream()).toList());
   }
 
   private static Map<String, List<CompiledTargetProducer>> groupTargets(
@@ -282,9 +299,7 @@ public final class TargetMappingPlanRenderer {
     return producers.stream()
         .collect(
             Collectors.groupingBy(
-                CompiledTargetProducer::targetTerm,
-                LinkedHashMap::new,
-                Collectors.toList()));
+                CompiledTargetProducer::targetTerm, LinkedHashMap::new, Collectors.toList()));
   }
 
   private static Map<String, CompiledTargetMerge> mergeIndex(List<CompiledTargetMerge> merges) {
@@ -326,10 +341,12 @@ public final class TargetMappingPlanRenderer {
     }
     return out;
   }
+
   private static boolean hasVisibleTargets(
       Map<String, List<CompiledTargetProducer>> targets,
       Optional<MappingDatasetScope> datasetScope) {
-    return targets.values().stream().anyMatch(producers -> hasVisibleProducer(producers, datasetScope));
+    return targets.values().stream()
+        .anyMatch(producers -> hasVisibleProducer(producers, datasetScope));
   }
 
   private static String formatCardinality(CardinalityStrategy strategy) {
@@ -369,5 +386,4 @@ public final class TargetMappingPlanRenderer {
     }
     return aggregation.toString();
   }
-
 }

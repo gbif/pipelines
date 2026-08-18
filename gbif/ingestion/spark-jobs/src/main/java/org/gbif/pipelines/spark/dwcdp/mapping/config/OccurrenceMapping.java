@@ -10,7 +10,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
@@ -41,8 +40,7 @@ public final class OccurrenceMapping {
   /** Organism fields enrich an existing occurrence row matched by occurrence_pk. */
   public static ExtensionFragment organism(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaRelation organismRelation =
-        graph.resolve("occurrence", "organism", "organismID");
+    SchemaRelation organismRelation = graph.resolve("occurrence", "organism", "organismID");
     SchemaPath organism = occurrence.append(organismRelation);
     ExtensionFragmentBuilder builder =
         extensionFragment("occurrence-organism", ROW_TYPE_OCCURRENCE, "occurrence")
@@ -79,7 +77,8 @@ public final class OccurrenceMapping {
             .endJoin();
 
     SchemaResource resource =
-        graph.resource("identification")
+        graph
+            .resource("identification")
             .orElseThrow(
                 () -> new IllegalArgumentException("DwC-DP schema has no resource identification"));
     Set<String> occurrenceTargets = targetTerms(graph, "occurrence");
@@ -106,8 +105,6 @@ public final class OccurrenceMapping {
     return builder.build();
   }
 
-
-
   /** Resolves the sole accepted identification's identifiedByID before material fallback. */
   public static ExtensionFragment acceptedIdentificationAgent(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
@@ -116,7 +113,8 @@ public final class OccurrenceMapping {
     SchemaPath agent =
         identification.append(graph.resolve("identification", "agent", "identifiedByID"));
 
-    return extensionFragment("occurrence-accepted-identification-agent", ROW_TYPE_OCCURRENCE, "occurrence")
+    return extensionFragment(
+            "occurrence-accepted-identification-agent", ROW_TYPE_OCCURRENCE, "occurrence")
         .scopeKey("event_fk")
         .rowMatch(occurrence.field("occurrence_pk"))
         .join("identification")
@@ -167,7 +165,8 @@ public final class OccurrenceMapping {
             .endJoin();
 
     SchemaResource materialResource =
-        graph.resource("material")
+        graph
+            .resource("material")
             .orElseThrow(
                 () -> new IllegalArgumentException("DwC-DP schema has no resource material"));
     for (String column : materialResource.fields().keySet()) {
@@ -187,7 +186,6 @@ public final class OccurrenceMapping {
     return builder.build();
   }
 
-
   /** Direct material.provenance_fk contributions for an unambiguous evidence material. */
   public static ExtensionFragment materialDirectProvenance(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
@@ -197,7 +195,8 @@ public final class OccurrenceMapping {
         material.append(graph.resolve("material", "provenance", "provenance_fk"));
 
     ExtensionFragmentBuilder builder =
-        extensionFragment("occurrence-material-direct-provenance", ROW_TYPE_OCCURRENCE, "occurrence")
+        extensionFragment(
+                "occurrence-material-direct-provenance", ROW_TYPE_OCCURRENCE, "occurrence")
             .scopeKey("event_fk")
             .rowMatch(occurrence.field("occurrence_pk"))
             .join("material")
@@ -276,8 +275,6 @@ public final class OccurrenceMapping {
         Optional.of(occurrence.field("occurrence_pk")));
   }
 
-
-
   /** Resolves material.collectedByID for one unambiguous evidence material. */
   public static ExtensionFragment materialCollectedBy(SchemaGraph graph) {
     return materialAgent(
@@ -318,7 +315,11 @@ public final class OccurrenceMapping {
   }
 
   private static ExtensionFragment materialAgent(
-      SchemaGraph graph, String fragmentName, String idColumn, String valueColumn, String targetTerm) {
+      SchemaGraph graph,
+      String fragmentName,
+      String idColumn,
+      String valueColumn,
+      String targetTerm) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
     return AgentMapping.linkedExtension(
         graph,
@@ -368,7 +369,8 @@ public final class OccurrenceMapping {
             .endJoin();
 
     SchemaResource resource =
-        graph.resource("geological-context")
+        graph
+            .resource("geological-context")
             .orElseThrow(
                 () ->
                     new IllegalArgumentException(
@@ -384,7 +386,9 @@ public final class OccurrenceMapping {
               target ->
                   builder.field(
                       TargetFieldMapping.inferredOneOf(
-                          target, ValueAggregation.firstNonNull(), geologicalContext.field(column))));
+                          target,
+                          ValueAggregation.firstNonNull(),
+                          geologicalContext.field(column))));
     }
     return builder.build();
   }
@@ -424,8 +428,6 @@ public final class OccurrenceMapping {
         .build();
   }
 
-
-
   private static void addProvenanceTargets(
       ExtensionFragmentBuilder builder, SchemaPath provenance) {
     for (String field :
@@ -446,7 +448,8 @@ public final class OccurrenceMapping {
       SchemaPath occurrence,
       SchemaPath organism) {
     SchemaResource resource =
-        graph.resource("organism")
+        graph
+            .resource("organism")
             .orElseThrow(
                 () -> new IllegalArgumentException("DwC-DP schema has no resource organism"));
     for (String column : resource.fields().keySet()) {
@@ -473,9 +476,11 @@ public final class OccurrenceMapping {
   private static String sourceColumnForTarget(
       SchemaGraph graph, String resourceName, String target) {
     SchemaResource resource =
-        graph.resource(resourceName)
+        graph
+            .resource(resourceName)
             .orElseThrow(
-                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+                () ->
+                    new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     for (String column : resource.fields().keySet()) {
       if (!column.endsWith("_pk") && !column.endsWith("_fk")) {
         String resolved = TargetTerms.resolveOutput(column).orElse(null);
@@ -489,9 +494,11 @@ public final class OccurrenceMapping {
 
   private static Set<String> targetTerms(SchemaGraph graph, String resourceName) {
     SchemaResource resource =
-        graph.resource(resourceName)
+        graph
+            .resource(resourceName)
             .orElseThrow(
-                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+                () ->
+                    new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     Set<String> targets = new HashSet<>();
     for (String column : resource.fields().keySet()) {
       if (!column.endsWith("_pk") && !column.endsWith("_fk")) {
@@ -505,5 +512,4 @@ public final class OccurrenceMapping {
     }
     return targets;
   }
-
 }

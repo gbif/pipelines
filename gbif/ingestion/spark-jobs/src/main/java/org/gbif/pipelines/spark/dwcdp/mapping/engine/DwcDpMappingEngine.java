@@ -1,25 +1,24 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.engine;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.SparkPathPrefixCache;
 import java.util.Objects;
 import org.apache.spark.sql.Dataset;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.ExecutionMetricsCollector;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingExecutionOutput;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.ProjectedTableLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.SparkExtendedRecordExecutor;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMappingDatasetPruner;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingDatasetScope;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingInputRequirements;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingInputRequirementsAnalyzer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingTraceRenderer;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingDatasetScope;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.TargetMappingPlanRenderer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.TargetMappingPlanRenderer.Detail;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.ExecutionMetricsCollector;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingExecutionOutput;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.ProjectedTableLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.SparkExtendedRecordExecutor;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.TableLoader;
 
@@ -60,7 +59,8 @@ public final class DwcDpMappingEngine {
   public CompiledMapping compile(MappingPlan plan, DataPackage dataPackage) {
     CompiledMapping compiled = compile(plan);
     return new CompiledMappingDatasetPruner()
-        .prune(compiled, MappingDatasetScope.from(Objects.requireNonNull(dataPackage, "dataPackage")));
+        .prune(
+            compiled, MappingDatasetScope.from(Objects.requireNonNull(dataPackage, "dataPackage")));
   }
 
   /** Human-readable full mapping trace, including all configured branches and schema paths. */
@@ -114,7 +114,10 @@ public final class DwcDpMappingEngine {
     return executeCompiled(loader, compiled, scope, false).records();
   }
 
-  /** Executes the mapping and exposes the relation-branch diagnostics already gathered by the Spark path executor. */
+  /**
+   * Executes the mapping and exposes the relation-branch diagnostics already gathered by the Spark
+   * path executor.
+   */
   public MappingExecutionOutput executeWithMetrics(TableLoader loader, MappingPlan plan) {
     return executeCompiled(loader, compile(plan));
   }

@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
+
 /** Funnel-style metrics emitted while executing one relation step. */
 public record RelationExecutionMetrics(
     String sourceResource,
@@ -20,10 +21,7 @@ public record RelationExecutionMetrics(
     boolean skipped) {
 
   static RelationExecutionMetrics skipped(
-      String sourceResource,
-      String targetResource,
-      RelationStep step,
-      long inputRows) {
+      String sourceResource, String targetResource, RelationStep step, long inputRows) {
     return new RelationExecutionMetrics(
         sourceResource,
         targetResource,

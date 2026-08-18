@@ -1,20 +1,16 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingValidator;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.ValidationResult;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldSource;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.InMemorySchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldSource.field;
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingBuilder.mapping;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.InMemorySchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.junit.jupiter.api.Test;
 
 class MappingValidatorTest {

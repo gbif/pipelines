@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gbif.dwc.terms.DcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
@@ -34,7 +34,6 @@ class ReferenceMappingTest {
             .collect(Collectors.toList()));
     assertEquals("reference_pk", fragment.rowIdentity().orElseThrow().column());
   }
-
 
   @Test
   void referenceFragmentsCompileThroughTheirJunctionResources() {
@@ -174,7 +173,6 @@ class ReferenceMappingTest {
     assertTrue(eventReferences.fragments().size() > 1);
     assertTrue(occurrenceReferences.fragments().size() > 1);
   }
-
 
   private void assertCompiledPath(ExtensionFragment fragment, List<String> expectedResources) {
     ExtensionMapping extension =

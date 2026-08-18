@@ -9,12 +9,10 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 
 /** Reusable Occurrence-core enrichment fragments. */
@@ -22,11 +20,12 @@ public final class OccurrenceCoreMapping {
 
   private OccurrenceCoreMapping() {}
 
-  /** Organism fields denormalized onto Occurrence via the schema-declared weak organismID relation. */
+  /**
+   * Organism fields denormalized onto Occurrence via the schema-declared weak organismID relation.
+   */
   public static CoreFragment organism(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath organism =
-        occurrence.append(graph.resolve("occurrence", "organism", "organismID"));
+    SchemaPath organism = occurrence.append(graph.resolve("occurrence", "organism", "organismID"));
     CoreFragmentBuilder builder =
         coreFragment("occurrence-core-organism", "occurrence")
             .join("organism")
@@ -39,8 +38,8 @@ public final class OccurrenceCoreMapping {
   }
 
   /**
-   * Exactly one accepted identification enriches Occurrence. The acceptance filter is applied before
-   * exactly-one cardinality, so zero or multiple accepted rows contribute nothing.
+   * Exactly one accepted identification enriches Occurrence. The acceptance filter is applied
+   * before exactly-one cardinality, so zero or multiple accepted rows contribute nothing.
    */
   public static CoreFragment acceptedIdentification(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
@@ -56,7 +55,8 @@ public final class OccurrenceCoreMapping {
             .endJoin();
 
     SchemaResource resource =
-        graph.resource("identification")
+        graph
+            .resource("identification")
             .orElseThrow(
                 () -> new IllegalArgumentException("DwC-DP schema has no resource identification"));
     Set<String> occurrenceTargets = targetTerms(graph, "occurrence");
@@ -82,8 +82,6 @@ public final class OccurrenceCoreMapping {
     }
     return builder.build();
   }
-
-
 
   /** Resolves the sole accepted identification's identifiedByID before material fallback. */
   public static CoreFragment acceptedIdentificationAgent(SchemaGraph graph) {
@@ -137,7 +135,8 @@ public final class OccurrenceCoreMapping {
             .endJoin();
 
     SchemaResource materialResource =
-        graph.resource("material")
+        graph
+            .resource("material")
             .orElseThrow(
                 () -> new IllegalArgumentException("DwC-DP schema has no resource material"));
     for (String column : materialResource.fields().keySet()) {
@@ -156,11 +155,6 @@ public final class OccurrenceCoreMapping {
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
     return builder.build();
   }
-
-
-
-
-
 
   /** Resolves material.collectedByID for one unambiguous evidence material. */
   public static CoreFragment materialCollectedBy(SchemaGraph graph) {
@@ -198,7 +192,11 @@ public final class OccurrenceCoreMapping {
   }
 
   private static CoreFragment materialAgent(
-      SchemaGraph graph, String fragmentName, String idColumn, String valueColumn, String targetTerm) {
+      SchemaGraph graph,
+      String fragmentName,
+      String idColumn,
+      String valueColumn,
+      String targetTerm) {
     return AgentMapping.linkedCore(
         graph,
         new AgentMapping.LinkedSpec(
@@ -241,13 +239,16 @@ public final class OccurrenceCoreMapping {
             .endJoin();
 
     SchemaResource resource =
-        graph.resource("geological-context")
+        graph
+            .resource("geological-context")
             .orElseThrow(
                 () ->
                     new IllegalArgumentException(
                         "DwC-DP schema has no resource geological-context"));
     for (String column : resource.fields().keySet()) {
-      if (column.endsWith("_pk") || column.endsWith("_fk") || column.equals("geologicalContextID")) {
+      if (column.endsWith("_pk")
+          || column.endsWith("_fk")
+          || column.equals("geologicalContextID")) {
         continue;
       }
       TargetTerms.resolveOutput(column)
@@ -255,12 +256,16 @@ public final class OccurrenceCoreMapping {
               target ->
                   builder.field(
                       TargetFieldMapping.inferredOneOf(
-                          target, ValueAggregation.firstNonNull(), geologicalContext.field(column))));
+                          target,
+                          ValueAggregation.firstNonNull(),
+                          geologicalContext.field(column))));
     }
     return builder.build();
   }
 
-  /** Material-linked protocols contribute to occurrence samplingProtocol for one evidence material. */
+  /**
+   * Material-linked protocols contribute to occurrence samplingProtocol for one evidence material.
+   */
   public static CoreFragment materialProtocols(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
     SchemaPath material =
@@ -358,7 +363,6 @@ public final class OccurrenceCoreMapping {
     }
   }
 
-
   /** Resolves recordedByID through agent.agentID while preserving an explicit publisher value. */
   public static CoreFragment recordedBy(SchemaGraph graph) {
     return AgentMapping.core(
@@ -404,15 +408,11 @@ public final class OccurrenceCoreMapping {
         .build();
   }
 
-
-
   private static void addOrganismTargets(
-      SchemaGraph graph,
-      CoreFragmentBuilder builder,
-      SchemaPath occurrence,
-      SchemaPath organism) {
+      SchemaGraph graph, CoreFragmentBuilder builder, SchemaPath occurrence, SchemaPath organism) {
     SchemaResource resource =
-        graph.resource("organism")
+        graph
+            .resource("organism")
             .orElseThrow(
                 () -> new IllegalArgumentException("DwC-DP schema has no resource organism"));
     for (String column : resource.fields().keySet()) {
@@ -439,9 +439,11 @@ public final class OccurrenceCoreMapping {
   private static String sourceColumnForTarget(
       SchemaGraph graph, String resourceName, String target) {
     SchemaResource resource =
-        graph.resource(resourceName)
+        graph
+            .resource(resourceName)
             .orElseThrow(
-                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+                () ->
+                    new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     for (String column : resource.fields().keySet()) {
       if (!column.endsWith("_pk") && !column.endsWith("_fk")) {
         String resolved = TargetTerms.resolveOutput(column).orElse(null);
@@ -455,9 +457,11 @@ public final class OccurrenceCoreMapping {
 
   private static Set<String> targetTerms(SchemaGraph graph, String resourceName) {
     SchemaResource resource =
-        graph.resource(resourceName)
+        graph
+            .resource(resourceName)
             .orElseThrow(
-                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+                () ->
+                    new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     Set<String> targets = new HashSet<>();
     for (String column : resource.fields().keySet()) {
       if (!column.endsWith("_pk") && !column.endsWith("_fk")) {
@@ -471,5 +475,4 @@ public final class OccurrenceCoreMapping {
     }
     return targets;
   }
-
 }

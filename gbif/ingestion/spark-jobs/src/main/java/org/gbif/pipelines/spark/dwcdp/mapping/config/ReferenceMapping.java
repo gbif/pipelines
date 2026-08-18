@@ -77,7 +77,8 @@ public final class ReferenceMapping {
                 OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
-  public static ExtensionFragment surveySamplingEffortProtocolReferencesForEvent(SchemaGraph graph) {
+  public static ExtensionFragment surveySamplingEffortProtocolReferencesForEvent(
+      SchemaGraph graph) {
     return references(
         graph,
         new Spec(
@@ -229,7 +230,8 @@ public final class ReferenceMapping {
                 OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
-  public static ExtensionFragment chronometricAgeProtocolReferencesForOccurrence(SchemaGraph graph) {
+  public static ExtensionFragment chronometricAgeProtocolReferencesForOccurrence(
+      SchemaGraph graph) {
     return references(
         graph,
         new Spec(
@@ -260,7 +262,8 @@ public final class ReferenceMapping {
 
   public static ExtensionFragment occurrenceReferences(SchemaGraph graph) {
     return references(
-        graph, new Spec("occurrence-references", "occurrence-reference", "occurrence_fk", List.of()));
+        graph,
+        new Spec("occurrence-references", "occurrence-reference", "occurrence_fk", List.of()));
   }
 
   public static ExtensionFragment materialReferencesForOccurrence(SchemaGraph graph) {
@@ -368,7 +371,8 @@ public final class ReferenceMapping {
 
     SchemaPath reference =
         current.append(
-            graph.resolve(current.currentResource(), "bibliographic-resource", "reference_fk", null));
+            graph.resolve(
+                current.currentResource(), "bibliographic-resource", "reference_fk", null));
     builder
         .join("bibliographic-resource")
         .via("reference_fk")
@@ -399,7 +403,8 @@ public final class ReferenceMapping {
 
   private static void addReferenceFields(ExtensionFragmentBuilder builder, SchemaPath reference) {
     explicit(builder, reference, "referenceID", DcTerm.identifier.qualifiedName());
-    explicit(builder, reference, "bibliographicCitation", DcTerm.bibliographicCitation.qualifiedName());
+    explicit(
+        builder, reference, "bibliographicCitation", DcTerm.bibliographicCitation.qualifiedName());
     explicit(builder, reference, "title", DcTerm.title.qualifiedName());
     explicit(builder, reference, "author", DcTerm.creator.qualifiedName());
     explicit(builder, reference, "issued", DcTerm.date.qualifiedName());
@@ -410,8 +415,9 @@ public final class ReferenceMapping {
 
   private static void explicit(
       ExtensionFragmentBuilder builder, SchemaPath source, String sourceField, String targetTerm) {
-    builder.field(TargetFieldMapping.oneOf(
-        targetTerm, ValueAggregation.firstNonNull(), source.field(sourceField)));
+    builder.field(
+        TargetFieldMapping.oneOf(
+            targetTerm, ValueAggregation.firstNonNull(), source.field(sourceField)));
   }
 
   private record Spec(
@@ -441,15 +447,18 @@ public final class ReferenceMapping {
     }
 
     static OwnershipStep fanOut(String resource, String viaColumn) {
-      return new OwnershipStep(resource, viaColumn, false, RelationRequirement.OPTIONAL, Optional.empty());
+      return new OwnershipStep(
+          resource, viaColumn, false, RelationRequirement.OPTIONAL, Optional.empty());
     }
 
     static OwnershipStep exactlyOne(String resource, String viaColumn) {
-      return new OwnershipStep(resource, viaColumn, true, RelationRequirement.OPTIONAL, Optional.empty());
+      return new OwnershipStep(
+          resource, viaColumn, true, RelationRequirement.OPTIONAL, Optional.empty());
     }
 
     OwnershipStep filter(FilterExpression expression) {
-      return new OwnershipStep(resource, viaColumn, exactlyOne, requirement, Optional.of(expression));
+      return new OwnershipStep(
+          resource, viaColumn, exactlyOne, requirement, Optional.of(expression));
     }
   }
 }

@@ -1,16 +1,15 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageField;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageResource;
@@ -42,7 +41,8 @@ class MappingPlanOutputTest {
     assertTrue(targetPlan.contains("Target: " + DwcTerm.parentEventID.qualifiedName()));
     assertTrue(targetPlan.contains("EXTENSION " + OccurrenceMapping.ROW_TYPE_OCCURRENCE));
     assertTrue(targetPlan.contains("EXTENSION " + MultimediaMapping.ROW_TYPE_MULTIMEDIA));
-    assertTrue(targetPlan.contains("EXTENSION " + AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT));
+    assertTrue(
+        targetPlan.contains("EXTENSION " + AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT));
     assertTrue(targetPlan.contains("EXTENSION " + IdentifierMapping.ROW_TYPE_IDENTIFIER));
     assertTrue(targetPlan.contains("EXTENSION " + HumboldtMapping.ROW_TYPE_HUMBOLDT));
     assertTrue(targetPlan.contains("EXTENSION " + NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA));
@@ -53,14 +53,16 @@ class MappingPlanOutputTest {
     MappingPlan plan = OccurrenceDwcaMapping.current(graph);
     String targetPlan = engine.targetPlan(plan);
 
-    System.out.println("\n========== OCCURRENCE MASTER TARGET PLAN (COMPACT) ==========\n" + targetPlan);
+    System.out.println(
+        "\n========== OCCURRENCE MASTER TARGET PLAN (COMPACT) ==========\n" + targetPlan);
 
     assertTrue(targetPlan.contains("Mapping: occurrence-core:current"));
     assertTrue(targetPlan.contains("View: master schema / compact"));
     assertTrue(targetPlan.contains("CORE OCCURRENCE"));
     assertTrue(targetPlan.contains("Target: " + DwcTerm.occurrenceID.qualifiedName()));
     assertTrue(targetPlan.contains("EXTENSION " + MultimediaMapping.ROW_TYPE_MULTIMEDIA));
-    assertTrue(targetPlan.contains("EXTENSION " + AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT));
+    assertTrue(
+        targetPlan.contains("EXTENSION " + AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT));
     assertTrue(targetPlan.contains("EXTENSION " + IdentificationMapping.ROW_TYPE_IDENTIFICATION));
     assertTrue(targetPlan.contains("EXTENSION " + IdentifierMapping.ROW_TYPE_IDENTIFIER));
     assertTrue(targetPlan.contains("EXTENSION " + NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA));
@@ -70,7 +72,8 @@ class MappingPlanOutputTest {
   void outputEventCoreDetailedTargetPlan() {
     String targetPlan = engine.targetPlanDetailed(EventDwcaMapping.current(graph));
 
-    System.out.println("\n========== EVENT MASTER TARGET PLAN (DETAILED) ==========\n" + targetPlan);
+    System.out.println(
+        "\n========== EVENT MASTER TARGET PLAN (DETAILED) ==========\n" + targetPlan);
 
     assertTrue(targetPlan.contains("View: master schema / detailed"));
     assertTrue(targetPlan.contains("Producer: event-parent [EXPLICIT]"));
@@ -83,12 +86,12 @@ class MappingPlanOutputTest {
   @Test
   void outputDatasetTargetPlanPrunesUnavailableBranches() {
     DataPackage dataPackage =
-        dataPackage(
-            resource("event", "event_pk", "eventID", "parentEvent_fk", "eventDate"));
+        dataPackage(resource("event", "event_pk", "eventID", "parentEvent_fk", "eventDate"));
 
     String targetPlan = engine.targetPlan(EventDwcaMapping.current(graph), dataPackage);
 
-    System.out.println("\n========== EVENT DATASET TARGET PLAN (COMPACT) ==========\n" + targetPlan);
+    System.out.println(
+        "\n========== EVENT DATASET TARGET PLAN (COMPACT) ==========\n" + targetPlan);
 
     assertTrue(targetPlan.contains("View: dataset / compact"));
     assertTrue(targetPlan.contains("Target: " + DwcTerm.eventID.qualifiedName()));
@@ -103,15 +106,12 @@ class MappingPlanOutputTest {
         dataPackage(
             resource("event", "event_pk", "eventID", "eventProtocol_fk"),
             resource(
-                "protocol",
-                "protocol_pk",
-                "protocolType",
-                "protocolName",
-                "protocolDescription"));
+                "protocol", "protocol_pk", "protocolType", "protocolName", "protocolDescription"));
 
     String targetPlan = engine.targetPlanDetailed(EventDwcaMapping.current(graph), dataPackage);
 
-    System.out.println("\n========== EVENT DATASET TARGET PLAN (DETAILED) ==========\n" + targetPlan);
+    System.out.println(
+        "\n========== EVENT DATASET TARGET PLAN (DETAILED) ==========\n" + targetPlan);
 
     assertTrue(targetPlan.contains("View: dataset / detailed"));
     assertTrue(targetPlan.contains("Target: " + DwcTerm.samplingProtocol.qualifiedName()));

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
 import java.util.Objects;
 import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
@@ -37,15 +36,20 @@ public final class MappingInputRequirementsAnalyzer {
 
     mapping.coreTargets().forEach(target -> addProducer(out, target));
     mapping.coreFragments().forEach(fragment -> addCoreFragment(out, core, fragment));
-    mapping.coreTargetMerges().forEach(
-        merge -> merge.producers().forEach(producer -> addProducer(out, producer)));
+    mapping
+        .coreTargetMerges()
+        .forEach(merge -> merge.producers().forEach(producer -> addProducer(out, producer)));
 
-    mapping.extensions().forEach(
-        extension -> {
-          extension.targetMerges().forEach(
-              merge -> merge.producers().forEach(producer -> addProducer(out, producer)));
-          extension.fragments().forEach(fragment -> addExtensionFragment(out, core, fragment));
-        });
+    mapping
+        .extensions()
+        .forEach(
+            extension -> {
+              extension
+                  .targetMerges()
+                  .forEach(
+                      merge -> merge.producers().forEach(producer -> addProducer(out, producer)));
+              extension.fragments().forEach(fragment -> addExtensionFragment(out, core, fragment));
+            });
 
     return out.build();
   }
@@ -73,7 +77,8 @@ public final class MappingInputRequirementsAnalyzer {
 
     // Extension attachment is an executor-level relation rather than a target producer. Preserve
     // every schema-declared direct core<->root key that attachmentBridge may legally select.
-    graph.relations(core, fragment.sourceResource())
+    graph
+        .relations(core, fragment.sourceResource())
         .forEach(relation -> addSchemaRelation(out, relation));
     addResourceIdentity(out, core);
   }
@@ -101,24 +106,31 @@ public final class MappingInputRequirementsAnalyzer {
       return;
     }
     addSchemaRelation(out, relationStep.relation());
-    relationStep.cardinalityStrategy().ifPresent(
-        strategy -> {
-          if (strategy instanceof org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy.Select select) {
-            column(out, relationStep.relation().targetResource(), select.selector());
-          }
-        });
+    relationStep
+        .cardinalityStrategy()
+        .ifPresent(
+            strategy -> {
+              if (strategy
+                  instanceof
+                  org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy.Select
+                  select) {
+                column(out, relationStep.relation().targetResource(), select.selector());
+              }
+            });
     if (relationStep.filter().isPresent()) {
       String targetResource = relationStep.relation().targetResource();
       if (relationStep.filter().requiresAllColumns()) {
         allColumns(out, targetResource);
       } else {
-        relationStep.filter().requiredColumns().forEach(field -> column(out, targetResource, field));
+        relationStep
+            .filter()
+            .requiredColumns()
+            .forEach(field -> column(out, targetResource, field));
       }
     }
   }
 
-  private void addSchemaRelation(
-      MappingInputRequirements.Builder out, SchemaRelation relation) {
+  private void addSchemaRelation(MappingInputRequirements.Builder out, SchemaRelation relation) {
     if (!hasResource(relation.sourceResource()) || !hasResource(relation.targetResource())) {
       return;
     }
@@ -130,7 +142,8 @@ public final class MappingInputRequirementsAnalyzer {
     if (!hasResource(resourceName)) {
       return;
     }
-    graph.resource(resourceName)
+    graph
+        .resource(resourceName)
         .ifPresent(
             resource -> {
               resource.primaryKey().ifPresent(column -> column(out, resourceName, column));

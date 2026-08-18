@@ -59,7 +59,9 @@ public record CompiledRelationStep(
         .append(relation.targetResource())
         .append('.')
         .append(relation.targetColumn());
-    relation.predicate().ifPresent(predicate -> out.append(" [predicate=").append(predicate).append(']'));
+    relation
+        .predicate()
+        .ifPresent(predicate -> out.append(" [predicate=").append(predicate).append(']'));
     out.append(" [").append(requirement).append(']');
     cardinalityStrategy.ifPresent(strategy -> out.append(" [").append(strategy).append(']'));
     if (filter.isPresent()) {

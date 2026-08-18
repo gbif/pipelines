@@ -1,19 +1,20 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
-import org.gbif.api.vocabulary.Extension;
-
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
 
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
-/** Declarative mapping of the behaviour currently implemented by {@code HumboldtExtensionBuilder}. */
+/**
+ * Declarative mapping of the behaviour currently implemented by {@code HumboldtExtensionBuilder}.
+ */
 public final class HumboldtMapping {
 
   /** DwC-A Humboldt Ecological Inventory extension row type. */
@@ -31,8 +32,7 @@ public final class HumboldtMapping {
         survey.append(graph.resolve("survey", "survey-survey-target", "survey_fk", null));
     SchemaPath target =
         link.append(
-            graph.resolve(
-                "survey-survey-target", "survey-target", "surveyTarget_fk", null));
+            graph.resolve("survey-survey-target", "survey-target", "surveyTarget_fk", null));
 
     ExtensionFragmentBuilder builder =
         extensionFragment("humboldt-survey-targets", ROW_TYPE_HUMBOLDT, "survey")
@@ -81,7 +81,6 @@ public final class HumboldtMapping {
     return builder.build();
   }
 
-
   /** Resolves survey.identifiedByID through agent.agentID while preserving publisher text. */
   public static ExtensionFragment identifiedBy(SchemaGraph graph) {
     return AgentMapping.extension(
@@ -95,7 +94,9 @@ public final class HumboldtMapping {
             EcoTerm.identifiedBy.qualifiedName()));
   }
 
-  /** Resolves survey.samplingPerformedByID through agent.agentID while preserving publisher text. */
+  /**
+   * Resolves survey.samplingPerformedByID through agent.agentID while preserving publisher text.
+   */
   public static ExtensionFragment samplingPerformedBy(SchemaGraph graph) {
     return AgentMapping.extension(
         graph,
@@ -157,7 +158,8 @@ public final class HumboldtMapping {
   }
 
   private static SchemaResource requiredResource(SchemaGraph graph, String name) {
-    return graph.resource(name)
+    return graph
+        .resource(name)
         .orElseThrow(() -> new IllegalArgumentException("DwC-DP schema has no resource " + name));
   }
 }

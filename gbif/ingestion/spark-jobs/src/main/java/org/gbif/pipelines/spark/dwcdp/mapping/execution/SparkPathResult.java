@@ -1,11 +1,12 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import static org.apache.spark.sql.functions.lit;
+
 import java.util.Map;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
-import static org.apache.spark.sql.functions.lit;
 import org.apache.spark.sql.Row;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 
 /** Executed schema path plus the physical aliases for its logical path-qualified fields. */
 public record SparkPathResult(Dataset<Row> dataset, Map<FieldRef, String> aliases) {
@@ -16,7 +17,8 @@ public record SparkPathResult(Dataset<Row> dataset, Map<FieldRef, String> aliase
   public String columnName(FieldRef field) {
     String name = aliases.get(field);
     if (name == null) {
-      throw new IllegalArgumentException("Field is not materialized by this path: " + field.qualifiedName());
+      throw new IllegalArgumentException(
+          "Field is not materialized by this path: " + field.qualifiedName());
     }
     return name;
   }

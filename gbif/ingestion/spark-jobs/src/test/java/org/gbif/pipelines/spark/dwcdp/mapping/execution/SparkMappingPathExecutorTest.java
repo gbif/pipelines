@@ -1,17 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingExecutionResult;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.RelationExecutionMetrics;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.SparkMappingPathExecutor;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,6 +12,13 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
@@ -58,15 +54,17 @@ class SparkMappingPathExecutorTest {
             .build();
 
     MappingExecutionResult result =
-        executor().execute(
-            TestTableLoader.of(
-                "survey", survey(),
-                "survey-agent-role", roles(),
-                "agent", agents()),
-            mapping);
+        executor()
+            .execute(
+                TestTableLoader.of(
+                    "survey", survey(),
+                    "survey-agent-role", roles(),
+                    "agent", agents()),
+                mapping);
 
     assertTrue(result.completePath());
-    assertEquals(2, result.pathResult().dataset().count(), "observer must be filtered before fan-out");
+    assertEquals(
+        2, result.pathResult().dataset().count(), "observer must be filtered before fan-out");
 
     SchemaRelation surveyRoles = graph.resolve("survey", "survey-agent-role", "survey_fk");
     SchemaRelation roleAgent = graph.resolve("survey-agent-role", "agent", "agent_fk");
@@ -74,7 +72,9 @@ class SparkMappingPathExecutorTest {
     SchemaPath agentPath = rolePath.append(roleAgent);
 
     List<String> names =
-        result.pathResult().dataset()
+        result
+            .pathResult()
+            .dataset()
             .select(result.pathResult().column(agentPath.field("preferredAgentName")))
             .collectAsList()
             .stream()
@@ -104,8 +104,8 @@ class SparkMappingPathExecutorTest {
             .build();
 
     MappingExecutionResult result =
-        executor().execute(
-            TestTableLoader.of("survey", survey(), "survey-agent-role", roles()), mapping);
+        executor()
+            .execute(TestTableLoader.of("survey", survey(), "survey-agent-role", roles()), mapping);
 
     assertEquals(1, result.pathResult().dataset().count());
     assertEquals(1, result.metrics().get(0).multipleMatchParentRows());
@@ -113,11 +113,9 @@ class SparkMappingPathExecutorTest {
     SchemaRelation relation = graph.resolve("survey", "survey-agent-role", "survey_fk");
     SchemaPath rolePath = SchemaPath.root("survey").append(relation);
     Row row = result.pathResult().dataset().first();
-    String agentRole =
-        row.getAs(result.pathResult().columnName(rolePath.field("agentRole")));
+    String agentRole = row.getAs(result.pathResult().columnName(rolePath.field("agentRole")));
     assertNull(agentRole);
   }
-
 
   @Test
   void exactlyOneIgnoresDuplicateIdenticalTargetRows() {
@@ -139,8 +137,10 @@ class SparkMappingPathExecutorTest {
                 .add("agentRoleOrder", DataTypes.IntegerType));
 
     MappingExecutionResult result =
-        executor().execute(
-            TestTableLoader.of("survey", survey(), "survey-agent-role", duplicateRoles), mapping);
+        executor()
+            .execute(
+                TestTableLoader.of("survey", survey(), "survey-agent-role", duplicateRoles),
+                mapping);
 
     SchemaRelation relation = graph.resolve("survey", "survey-agent-role", "survey_fk");
     SchemaPath rolePath = SchemaPath.root("survey").append(relation);
@@ -160,8 +160,8 @@ class SparkMappingPathExecutorTest {
             .build();
 
     MappingExecutionResult result =
-        executor().execute(
-            TestTableLoader.of("survey", survey(), "survey-agent-role", roles()), mapping);
+        executor()
+            .execute(TestTableLoader.of("survey", survey(), "survey-agent-role", roles()), mapping);
 
     SchemaRelation relation = graph.resolve("survey", "survey-agent-role", "survey_fk");
     SchemaPath rolePath = SchemaPath.root("survey").append(relation);
@@ -220,8 +220,9 @@ class SparkMappingPathExecutorTest {
     assertThrows(
         UnsupportedOperationException.class,
         () ->
-            executor().execute(
-                TestTableLoader.of("survey", survey(), "survey-agent-role", roles()), mapping));
+            executor()
+                .execute(
+                    TestTableLoader.of("survey", survey(), "survey-agent-role", roles()), mapping));
   }
 
   private SparkMappingPathExecutor executor() {

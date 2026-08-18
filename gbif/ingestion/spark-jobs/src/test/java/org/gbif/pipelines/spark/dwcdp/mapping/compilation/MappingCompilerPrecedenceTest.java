@@ -1,28 +1,20 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompilationException;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingDecision;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingDecisionType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.InMemorySchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.InMemorySchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.junit.jupiter.api.Test;
 
 class MappingCompilerPrecedenceTest {
@@ -32,27 +24,33 @@ class MappingCompilerPrecedenceTest {
 
   @Test
   void explicitProducerOutranksInferredProducer() {
-    InMemorySchemaGraph graph = new InMemorySchemaGraph().resource("survey", "survey_pk", "direct", "explicit");
+    InMemorySchemaGraph graph =
+        new InMemorySchemaGraph().resource("survey", "survey_pk", "direct", "explicit");
     SchemaPath survey = SchemaPath.root("survey");
 
     ExtensionFragment inferred =
         ExtensionFragmentBuilder.extensionFragment("inferred", ROW_TYPE, "survey")
             .scopeKey("survey_pk")
-            .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), survey.field("direct")))
+            .field(
+                TargetFieldMapping.inferredOneOf(
+                    TARGET, ValueAggregation.firstNonNull(), survey.field("direct")))
             .build();
     ExtensionFragment explicit =
         ExtensionFragmentBuilder.extensionFragment("explicit", ROW_TYPE, "survey")
             .scopeKey("survey_pk")
-            .field(TargetFieldMapping.oneOf(TARGET, ValueAggregation.firstNonNull(), survey.field("explicit")))
+            .field(
+                TargetFieldMapping.oneOf(
+                    TARGET, ValueAggregation.firstNonNull(), survey.field("explicit")))
             .build();
 
     CompiledMapping compiled = new MappingCompiler(graph).compile(plan(inferred, explicit));
     CompiledExtension extension = compiled.extensions().get(0);
 
-    MappingDecision decision = extension.decisions().stream()
-        .filter(candidate -> TARGET.equals(candidate.targetTerm()))
-        .findFirst()
-        .orElseThrow();
+    MappingDecision decision =
+        extension.decisions().stream()
+            .filter(candidate -> TARGET.equals(candidate.targetTerm()))
+            .findFirst()
+            .orElseThrow();
     assertEquals(MappingDecisionType.EXPLICIT_OVERRIDE, decision.type());
     assertEquals("explicit", decision.selected().orElseThrow().owner());
     assertEquals(1, extension.fragments().stream().flatMap(f -> f.targets().stream()).count());
@@ -67,7 +65,9 @@ class MappingCompilerPrecedenceTest {
     ExtensionFragment direct =
         ExtensionFragmentBuilder.extensionFragment("direct", ROW_TYPE, "root")
             .scopeKey("root_pk")
-            .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), root.field("value")))
+            .field(
+                TargetFieldMapping.inferredOneOf(
+                    TARGET, ValueAggregation.firstNonNull(), root.field("value")))
             .build();
     ExtensionFragment related =
         ExtensionFragmentBuilder.extensionFragment("related", ROW_TYPE, "root")
@@ -76,14 +76,18 @@ class MappingCompilerPrecedenceTest {
             .via("child_fk")
             .optional()
             .exactlyOne()
-            .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), child.field("value")))
+            .field(
+                TargetFieldMapping.inferredOneOf(
+                    TARGET, ValueAggregation.firstNonNull(), child.field("value")))
             .build();
 
-    CompiledExtension extension = new MappingCompiler(graph).compile(plan(direct, related)).extensions().get(0);
-    MappingDecision decision = extension.decisions().stream()
-        .filter(candidate -> TARGET.equals(candidate.targetTerm()))
-        .findFirst()
-        .orElseThrow();
+    CompiledExtension extension =
+        new MappingCompiler(graph).compile(plan(direct, related)).extensions().get(0);
+    MappingDecision decision =
+        extension.decisions().stream()
+            .filter(candidate -> TARGET.equals(candidate.targetTerm()))
+            .findFirst()
+            .orElseThrow();
 
     assertEquals(MappingDecisionType.INFERRED_CLOSEST, decision.type());
     assertEquals("direct", decision.selected().orElseThrow().owner());
@@ -97,16 +101,22 @@ class MappingCompilerPrecedenceTest {
     ExtensionFragment first =
         ExtensionFragmentBuilder.extensionFragment("first", ROW_TYPE, "root")
             .scopeKey("root_pk")
-            .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), root.field("a")))
+            .field(
+                TargetFieldMapping.inferredOneOf(
+                    TARGET, ValueAggregation.firstNonNull(), root.field("a")))
             .build();
     ExtensionFragment second =
         ExtensionFragmentBuilder.extensionFragment("second", ROW_TYPE, "root")
             .scopeKey("root_pk")
-            .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), root.field("b")))
+            .field(
+                TargetFieldMapping.inferredOneOf(
+                    TARGET, ValueAggregation.firstNonNull(), root.field("b")))
             .build();
 
     MappingCompilationException error =
-        assertThrows(MappingCompilationException.class, () -> new MappingCompiler(graph).compile(plan(first, second)));
+        assertThrows(
+            MappingCompilationException.class,
+            () -> new MappingCompiler(graph).compile(plan(first, second)));
     assertTrue(error.getMessage().contains("AMBIGUOUS_EQUAL_DEPTH"));
     assertTrue(error.getMessage().contains("first"));
     assertTrue(error.getMessage().contains("second"));
@@ -120,19 +130,22 @@ class MappingCompilerPrecedenceTest {
     ExtensionFragment first =
         ExtensionFragmentBuilder.extensionFragment("first", ROW_TYPE, "root")
             .scopeKey("root_pk")
-            .field(TargetFieldMapping.oneOf(TARGET, ValueAggregation.firstNonNull(), root.field("a")))
+            .field(
+                TargetFieldMapping.oneOf(TARGET, ValueAggregation.firstNonNull(), root.field("a")))
             .build();
     ExtensionFragment second =
         ExtensionFragmentBuilder.extensionFragment("second", ROW_TYPE, "root")
             .scopeKey("root_pk")
-            .field(TargetFieldMapping.oneOf(TARGET, ValueAggregation.firstNonNull(), root.field("b")))
+            .field(
+                TargetFieldMapping.oneOf(TARGET, ValueAggregation.firstNonNull(), root.field("b")))
             .build();
 
     MappingCompilationException error =
-        assertThrows(MappingCompilationException.class, () -> new MappingCompiler(graph).compile(plan(first, second)));
+        assertThrows(
+            MappingCompilationException.class,
+            () -> new MappingCompiler(graph).compile(plan(first, second)));
     assertTrue(error.getMessage().contains("AMBIGUOUS_MULTIPLE_EXPLICIT"));
   }
-
 
   @Test
   void missingFragmentScopeIsReportedAsCompilationProblem() {

@@ -6,9 +6,9 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Occurrence-core mapping configurations assembled during parity migration. */
 public final class OccurrenceDwcaMapping {
@@ -26,11 +26,13 @@ public final class OccurrenceDwcaMapping {
         .build();
   }
 
-  /** Direct Occurrence fields plus organism, accepted identification, material/usage-policy, and protocol enrichment. */
+  /**
+   * Direct Occurrence fields plus organism, accepted identification, material/usage-policy, and
+   * protocol enrichment.
+   */
   public static MappingPlan withCurrentCoreEnrichment(SchemaGraph graph) {
     return currentCoreBase(graph, "occurrence-core:current-enrichment").build();
   }
-
 
   /** Current Occurrence-core enrichments plus direct and material-linked Identifier rows. */
   public static MappingPlan withIdentifiers(SchemaGraph graph) {
@@ -42,7 +44,10 @@ public final class OccurrenceDwcaMapping {
         .build();
   }
 
-  /** Canonical currently migrated Occurrence-core mapping used for inspection and replacement wiring. */
+  /**
+   * Canonical currently migrated Occurrence-core mapping used for inspection and replacement
+   * wiring.
+   */
   public static MappingPlan current(SchemaGraph graph) {
     MappingPlanBuilder builder = currentCoreBase(graph, "occurrence-core:current");
     builder
@@ -81,7 +86,8 @@ public final class OccurrenceDwcaMapping {
         .importFragment(ReferenceMapping.identificationReferencesForOccurrence(graph))
         .importFragment(ReferenceMapping.chronometricAgeReferencesForOccurrence(graph))
         .importFragment(ReferenceMapping.chronometricAgeProtocolReferencesForOccurrence(graph))
-        .importFragment(ReferenceMapping.chronometricAgeConversionProtocolReferencesForOccurrence(graph))
+        .importFragment(
+            ReferenceMapping.chronometricAgeConversionProtocolReferencesForOccurrence(graph))
         .importFragment(ReferenceMapping.molecularProtocolReferencesForOccurrence(graph))
         .importFragment(ReferenceMapping.dnaAnalysisIdentificationReferencesForOccurrence(graph))
         .importFragment(ReferenceMapping.dnaSequenceIdentificationReferencesForOccurrence(graph))
@@ -146,8 +152,7 @@ public final class OccurrenceDwcaMapping {
   }
 
   private static MappingPlanBuilder currentCoreBase(SchemaGraph graph, String name) {
-    MappingPlanBuilder builder =
-        mappingPlan(name, CoreType.OCCURRENCE, "occurrence");
+    MappingPlanBuilder builder = mappingPlan(name, CoreType.OCCURRENCE, "occurrence");
     DirectFieldMappings.from(graph, "occurrence", SchemaPath.root("occurrence")).addTo(builder);
     return builder
         .importCoreFragment(OccurrenceCoreMapping.recordedBy(graph))
@@ -166,11 +171,13 @@ public final class OccurrenceDwcaMapping {
         .importCoreFragment(OccurrenceCoreMapping.directSamplingProtocol(graph))
         .mergeCoreTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeCoreTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
-        .mergeCoreTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
-        .mergeCoreTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
-        .mergeCoreTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(
+            DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeCoreTarget(
+            TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(
+            TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited());
   }
 }
-

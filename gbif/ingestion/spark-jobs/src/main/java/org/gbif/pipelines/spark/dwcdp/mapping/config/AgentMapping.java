@@ -39,7 +39,6 @@ public final class AgentMapping {
     }
   }
 
-
   public record LinkedSpec(
       String fragmentName,
       String sourceResource,
@@ -77,7 +76,10 @@ public final class AgentMapping {
         .build();
   }
 
-  /** Resolves an extension resource's weak/natural agent ID while preserving explicit publisher text. */
+  /**
+   * Resolves an extension resource's weak/natural agent ID while preserving explicit publisher
+   * text.
+   */
   public static ExtensionFragment extension(
       SchemaGraph graph,
       String rowType,
@@ -112,12 +114,13 @@ public final class AgentMapping {
     return extension(graph, rowType, spec, Optional.empty(), Optional.empty());
   }
 
-
   public static CoreFragment linkedCore(SchemaGraph graph, LinkedSpec spec) {
     SchemaPath source = SchemaPath.root(spec.sourceResource());
     SchemaPath linked =
-        source.append(graph.resolve(spec.sourceResource(), spec.linkedResource(), spec.linkedViaColumn()));
-    SchemaPath agent = linked.append(graph.resolve(spec.linkedResource(), AGENT_RESOURCE, spec.idColumn()));
+        source.append(
+            graph.resolve(spec.sourceResource(), spec.linkedResource(), spec.linkedViaColumn()));
+    SchemaPath agent =
+        linked.append(graph.resolve(spec.linkedResource(), AGENT_RESOURCE, spec.idColumn()));
 
     return coreFragment(spec.fragmentName(), spec.sourceResource())
         .join(spec.linkedResource())
@@ -140,8 +143,10 @@ public final class AgentMapping {
       Optional<FieldRef> rowMatch) {
     SchemaPath source = SchemaPath.root(spec.sourceResource());
     SchemaPath linked =
-        source.append(graph.resolve(spec.sourceResource(), spec.linkedResource(), spec.linkedViaColumn()));
-    SchemaPath agent = linked.append(graph.resolve(spec.linkedResource(), AGENT_RESOURCE, spec.idColumn()));
+        source.append(
+            graph.resolve(spec.sourceResource(), spec.linkedResource(), spec.linkedViaColumn()));
+    SchemaPath agent =
+        linked.append(graph.resolve(spec.linkedResource(), AGENT_RESOURCE, spec.idColumn()));
 
     ExtensionFragmentBuilder builder =
         extensionFragment(spec.fragmentName(), rowType, spec.sourceResource());
@@ -166,7 +171,6 @@ public final class AgentMapping {
   }
 
   private static TargetFieldMapping target(String targetTerm, FieldRef value, FieldRef agentName) {
-    return TargetFieldMapping.oneOf(
-        targetTerm, ValueAggregation.firstNonNull(), value, agentName);
+    return TargetFieldMapping.oneOf(targetTerm, ValueAggregation.firstNonNull(), value, agentName);
   }
 }

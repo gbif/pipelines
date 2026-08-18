@@ -1,25 +1,12 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 import static org.apache.spark.sql.functions.array_distinct;
 import static org.apache.spark.sql.functions.array_join;
 import static org.apache.spark.sql.functions.coalesce;
-import static org.apache.spark.sql.functions.concat;
-import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
+import static org.apache.spark.sql.functions.concat;
+import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.filter;
 import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.lit;
@@ -44,13 +31,26 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.spark.util.TableLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledCoreFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
+import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
  * First end-to-end compiler from a {@link MappingPlan} to {@link ExtendedRecord}.
@@ -80,7 +80,8 @@ public final class SparkExtendedRecordExecutor {
       ExecutionMetricsCollector metricsCollector,
       SparkPathPrefixCache prefixCache) {
     this.graph = graph;
-    this.extensionMaterializer = new SparkExtensionMaterializer(graph, metricsCollector, prefixCache);
+    this.extensionMaterializer =
+        new SparkExtensionMaterializer(graph, metricsCollector, prefixCache);
     this.pathExecutor = new SparkMappingPathExecutor(graph, metricsCollector, prefixCache);
   }
 
@@ -90,21 +91,28 @@ public final class SparkExtendedRecordExecutor {
 
   public Dataset<ExtendedRecord> execute(TableLoader loader, CompiledMapping plan) {
     SchemaResource coreResource =
-        graph.resource(plan.coreSourceResource())
+        graph
+            .resource(plan.coreSourceResource())
             .orElseThrow(
-                () -> new IllegalArgumentException("Unknown core resource: " + plan.coreSourceResource()));
+                () ->
+                    new IllegalArgumentException(
+                        "Unknown core resource: " + plan.coreSourceResource()));
     String corePk =
         coreResource
             .primaryKey()
             .orElseThrow(
-                () -> new IllegalArgumentException("Core resource has no primary key: " + plan.coreSourceResource()));
+                () ->
+                    new IllegalArgumentException(
+                        "Core resource has no primary key: " + plan.coreSourceResource()));
     String naturalId = coreIdColumn(plan.coreType());
 
     Dataset<Row> rawCore =
         loader
             .load(plan.coreSourceResource())
             .orElseThrow(
-                () -> new IllegalArgumentException("Core resource is absent: " + plan.coreSourceResource()));
+                () ->
+                    new IllegalArgumentException(
+                        "Core resource is absent: " + plan.coreSourceResource()));
     requireColumn(rawCore, naturalId, "core natural id");
     requireColumn(rawCore, corePk, "core primary key");
 
@@ -129,8 +137,7 @@ public final class SparkExtendedRecordExecutor {
       if (materialized.targetColumns().isEmpty()) {
         continue;
       }
-      String attachmentSourceResource =
-          materialized.parentKeySource().path().rootResource();
+      String attachmentSourceResource = materialized.parentKeySource().path().rootResource();
       Dataset<Row> bridge =
           attachmentBridge(
               loader,
@@ -143,7 +150,8 @@ public final class SparkExtendedRecordExecutor {
           bridge
               .join(
                   materialized.dataset(),
-                  bridge.col("__dwca_source_pk")
+                  bridge
+                      .col("__dwca_source_pk")
                       .equalTo(materialized.dataset().col(materialized.parentKeyColumn())),
                   "inner")
               .drop(materialized.dataset().col(materialized.parentKeyColumn()));
@@ -172,60 +180,63 @@ public final class SparkExtendedRecordExecutor {
     String coreRowType = coreRowType(plan.coreType());
     Map<String, String> coreTargetColumns = coreProjection.targetColumns();
 
-    return assembled.map(
-        (MapFunction<Row, ExtendedRecord>)
-            row -> {
-              String id = row.getAs(CORE_ID);
-              if (id == null || id.isBlank()) {
-                return null;
-              }
+    return assembled
+        .map(
+            (MapFunction<Row, ExtendedRecord>)
+                row -> {
+                  String id = row.getAs(CORE_ID);
+                  if (id == null || id.isBlank()) {
+                    return null;
+                  }
 
-              Map<String, String> coreTerms = new HashMap<>();
-              for (Map.Entry<String, String> target : coreTargetColumns.entrySet()) {
-                Object value = row.getAs(target.getValue());
-                if (value != null) {
-                  coreTerms.put(target.getKey(), termValue(value));
-                }
-              }
-
-              Map<String, List<Map<String, String>>> extensions = new HashMap<>();
-              for (Map.Entry<String, ExtensionColumns> extension : extensionColumns.entrySet()) {
-                int index = row.fieldIndex(extension.getValue().arrayColumn());
-                if (row.isNullAt(index)) {
-                  continue;
-                }
-                List<Row> extensionRows = row.getList(index);
-                List<Map<String, String>> mappedRows = new ArrayList<>();
-                for (Row extensionRow : extensionRows) {
-                  Map<String, String> mapped = new HashMap<>();
-                  for (TermColumn target : extension.getValue().terms()) {
-                    Object value = extensionRow.getAs(target.column());
+                  Map<String, String> coreTerms = new HashMap<>();
+                  for (Map.Entry<String, String> target : coreTargetColumns.entrySet()) {
+                    Object value = row.getAs(target.getValue());
                     if (value != null) {
-                      mapped.put(target.term(), termValue(value));
+                      coreTerms.put(target.getKey(), termValue(value));
                     }
                   }
-                  if (!mapped.isEmpty()) {
-                    mappedRows.add(mapped);
-                  }
-                }
-                if (!mappedRows.isEmpty()) {
-                  extensions.put(extension.getKey(), mappedRows);
-                }
-              }
 
-              return ExtendedRecord.newBuilder()
-                  .setId(id)
-                  .setCoreId(null)
-                  .setCoreRowType(coreRowType)
-                  .setCoreTerms(coreTerms)
-                  .setExtensions(extensions)
-                  .build();
-            },
-        Encoders.bean(ExtendedRecord.class))
+                  Map<String, List<Map<String, String>>> extensions = new HashMap<>();
+                  for (Map.Entry<String, ExtensionColumns> extension :
+                      extensionColumns.entrySet()) {
+                    int index = row.fieldIndex(extension.getValue().arrayColumn());
+                    if (row.isNullAt(index)) {
+                      continue;
+                    }
+                    List<Row> extensionRows = row.getList(index);
+                    List<Map<String, String>> mappedRows = new ArrayList<>();
+                    for (Row extensionRow : extensionRows) {
+                      Map<String, String> mapped = new HashMap<>();
+                      for (TermColumn target : extension.getValue().terms()) {
+                        Object value = extensionRow.getAs(target.column());
+                        if (value != null) {
+                          mapped.put(target.term(), termValue(value));
+                        }
+                      }
+                      if (!mapped.isEmpty()) {
+                        mappedRows.add(mapped);
+                      }
+                    }
+                    if (!mappedRows.isEmpty()) {
+                      extensions.put(extension.getKey(), mappedRows);
+                    }
+                  }
+
+                  return ExtendedRecord.newBuilder()
+                      .setId(id)
+                      .setCoreId(null)
+                      .setCoreRowType(coreRowType)
+                      .setCoreTerms(coreTerms)
+                      .setExtensions(extensions)
+                      .build();
+                },
+            Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) record -> record != null);
   }
 
-  private CoreProjection projectCore(TableLoader loader, Dataset<Row> rawCore, CompiledMapping plan) {
+  private CoreProjection projectCore(
+      TableLoader loader, Dataset<Row> rawCore, CompiledMapping plan) {
     SchemaResource coreResource = graph.resource(plan.coreSourceResource()).orElseThrow();
     String corePk = coreResource.primaryKey().orElseThrow();
 
@@ -282,7 +293,8 @@ public final class SparkExtendedRecordExecutor {
           pathResult.columnName(SchemaPath.root(plan.coreSourceResource()).field(corePk));
 
       List<Column> fragmentColumns = new ArrayList<>();
-      fragmentColumns.add(pathResult.dataset().col(corePkAlias).cast("string").as("__dwca_fragment_core_pk"));
+      fragmentColumns.add(
+          pathResult.dataset().col(corePkAlias).cast("string").as("__dwca_fragment_core_pk"));
       for (CompiledTargetProducer target : fragment.targets()) {
         if (mergedTargets.contains(target.targetTerm())) {
           continue;
@@ -293,12 +305,15 @@ public final class SparkExtendedRecordExecutor {
       }
 
       if (fragmentColumns.size() > 1) {
-        Dataset<Row> projected = pathResult.dataset().select(fragmentColumns.toArray(Column[]::new));
+        Dataset<Row> projected =
+            pathResult.dataset().select(fragmentColumns.toArray(Column[]::new));
         assembled =
             assembled
                 .join(
                     projected,
-                    assembled.col("__dwca_core_pk").equalTo(projected.col("__dwca_fragment_core_pk")),
+                    assembled
+                        .col("__dwca_core_pk")
+                        .equalTo(projected.col("__dwca_fragment_core_pk")),
                     "left_outer")
                 .drop(projected.col("__dwca_fragment_core_pk"));
       }
@@ -338,7 +353,10 @@ public final class SparkExtendedRecordExecutor {
         contribution =
             rawCore
                 .groupBy(rawCore.col(corePk).cast("string").as("__dwca_merge_core_pk"))
-                .agg(coreAggregateExpression(producer, rawCore).cast("string").as("__dwca_merge_value"));
+                .agg(
+                    coreAggregateExpression(producer, rawCore)
+                        .cast("string")
+                        .as("__dwca_merge_value"));
       } else {
         CompiledCoreFragment fragment =
             plan.coreFragments().stream()
@@ -347,7 +365,8 @@ public final class SparkExtendedRecordExecutor {
                 .orElseThrow(
                     () ->
                         new IllegalStateException(
-                            "Merged core producer references unknown fragment: " + producer.owner()));
+                            "Merged core producer references unknown fragment: "
+                                + producer.owner()));
         Mapping mapping =
             new Mapping(
                 "core-first-non-null-merge:" + fragment.name(),
@@ -366,8 +385,12 @@ public final class SparkExtendedRecordExecutor {
         contribution =
             pathResult
                 .dataset()
-                .groupBy(pathResult.dataset().col(corePkAlias).cast("string").as("__dwca_merge_core_pk"))
-                .agg(coreAggregateExpression(producer, pathResult).cast("string").as("__dwca_merge_value"));
+                .groupBy(
+                    pathResult.dataset().col(corePkAlias).cast("string").as("__dwca_merge_core_pk"))
+                .agg(
+                    coreAggregateExpression(producer, pathResult)
+                        .cast("string")
+                        .as("__dwca_merge_value"));
       }
       contribution =
           contribution
@@ -400,18 +423,27 @@ public final class SparkExtendedRecordExecutor {
         target.sources().stream()
             .map(source -> columnOrNull(root, source.field()).cast("string"))
             .toList();
-    return coreAggregateExpression(target, sources,
-        target.contributionIdentity().map(source -> columnOrNull(root, source.field()).cast("string")),
+    return coreAggregateExpression(
+        target,
+        sources,
+        target
+            .contributionIdentity()
+            .map(source -> columnOrNull(root, source.field()).cast("string")),
         target.orderBy().map(source -> columnOrNull(root, source.field()).cast("string")));
   }
 
-  private Column coreAggregateExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
+  private Column coreAggregateExpression(
+      CompiledTargetProducer target, SparkPathResult pathResult) {
     List<Column> sources =
         target.sources().stream()
             .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
             .toList();
-    return coreAggregateExpression(target, sources,
-        target.contributionIdentity().map(source -> pathResult.columnOrNull(source.field()).cast("string")),
+    return coreAggregateExpression(
+        target,
+        sources,
+        target
+            .contributionIdentity()
+            .map(source -> pathResult.columnOrNull(source.field()).cast("string")),
         target.orderBy().map(source -> pathResult.columnOrNull(source.field()).cast("string")));
   }
 
@@ -483,11 +515,13 @@ public final class SparkExtendedRecordExecutor {
             rawCore.select(
                 rawCore.col(corePk).cast("string").as("__dwca_merge_core_pk"),
                 coreTargetExpression(producer, rawCore).cast("string").as("__dwca_merge_value"),
-                producer.contributionIdentity()
+                producer
+                    .contributionIdentity()
                     .map(source -> columnOrNull(rawCore, source.field()).cast("string"))
                     .orElse(lit(null).cast("string"))
                     .as("__dwca_merge_identity"),
-                producer.orderBy()
+                producer
+                    .orderBy()
                     .map(source -> columnOrNull(rawCore, source.field()).cast("string"))
                     .orElse(lit(null).cast("string"))
                     .as("__dwca_merge_order"),
@@ -500,7 +534,8 @@ public final class SparkExtendedRecordExecutor {
                 .orElseThrow(
                     () ->
                         new IllegalStateException(
-                            "Merged core producer references unknown fragment: " + producer.owner()));
+                            "Merged core producer references unknown fragment: "
+                                + producer.owner()));
         Mapping mapping =
             new Mapping(
                 "core-merge:" + fragment.name(),
@@ -524,11 +559,13 @@ public final class SparkExtendedRecordExecutor {
                     coreTargetExpression(producer, pathResult)
                         .cast("string")
                         .as("__dwca_merge_value"),
-                    producer.contributionIdentity()
+                    producer
+                        .contributionIdentity()
                         .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
                         .orElse(lit(null).cast("string"))
                         .as("__dwca_merge_identity"),
-                    producer.orderBy()
+                    producer
+                        .orderBy()
                         .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
                         .orElse(lit(null).cast("string"))
                         .as("__dwca_merge_order"),
@@ -596,7 +633,10 @@ public final class SparkExtendedRecordExecutor {
                   .as(targetAlias(merge.targetTerm())));
     }
     throw new UnsupportedOperationException(
-        "Unsupported core target merge aggregation: " + merge.targetTerm() + " / " + merge.aggregation());
+        "Unsupported core target merge aggregation: "
+            + merge.targetTerm()
+            + " / "
+            + merge.aggregation());
   }
 
   private static Column columnOrNull(Dataset<Row> dataset, FieldRef field) {
@@ -634,8 +674,7 @@ public final class SparkExtendedRecordExecutor {
     return false;
   }
 
-  private static Column combineCoreSources(
-      CompiledTargetProducer target, List<Column> sources) {
+  private static Column combineCoreSources(CompiledTargetProducer target, List<Column> sources) {
     if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
         && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
       return coalesce(sources.toArray(Column[]::new));
@@ -646,7 +685,8 @@ public final class SparkExtendedRecordExecutor {
     if (target.aggregation() instanceof ValueAggregation.LabeledOrFallback labeled) {
       if (sources.size() < 3) {
         throw new IllegalArgumentException(
-            "LabeledOrFallback requires [label, name, fallback...] sources for " + target.targetTerm());
+            "LabeledOrFallback requires [label, name, fallback...] sources for "
+                + target.targetTerm());
       }
       Column labeledValue =
           when(
@@ -679,7 +719,10 @@ public final class SparkExtendedRecordExecutor {
       return coalesce(values.toArray(Column[]::new));
     }
     throw new UnsupportedOperationException(
-        "Unsupported core-field aggregation: " + target.targetTerm() + " / " + target.aggregation());
+        "Unsupported core-field aggregation: "
+            + target.targetTerm()
+            + " / "
+            + target.aggregation());
   }
 
   private Dataset<Row> attachmentBridge(
@@ -690,7 +733,8 @@ public final class SparkExtendedRecordExecutor {
       String naturalId,
       String corePk) {
     SchemaResource source =
-        graph.resource(sourceResource)
+        graph
+            .resource(sourceResource)
             .orElseThrow(
                 () -> new IllegalArgumentException("Unknown extension source: " + sourceResource));
 
@@ -728,7 +772,8 @@ public final class SparkExtendedRecordExecutor {
     }
 
     String sourcePk =
-        source.primaryKey()
+        source
+            .primaryKey()
             .orElseThrow(
                 () ->
                     new IllegalArgumentException(
@@ -754,16 +799,27 @@ public final class SparkExtendedRecordExecutor {
     MappingExecutionResult execution = pathExecutor.execute(loader, mapping);
     if (!execution.completePath()) {
       SchemaPath corePath = SchemaPath.root(plan.coreSourceResource());
-      return execution.pathResult().dataset().limit(0).select(
-          execution.pathResult().column(corePath.field(naturalId)).cast("string").as(CORE_ID),
-          lit(null).cast("string").as("__dwca_source_pk"));
+      return execution
+          .pathResult()
+          .dataset()
+          .limit(0)
+          .select(
+              execution.pathResult().column(corePath.field(naturalId)).cast("string").as(CORE_ID),
+              lit(null).cast("string").as("__dwca_source_pk"));
     }
 
     SchemaPath corePath = SchemaPath.root(plan.coreSourceResource());
     SchemaPath sourcePath = corePath.append(attachment);
-    return execution.pathResult().dataset().select(
-        execution.pathResult().column(corePath.field(naturalId)).cast("string").as(CORE_ID),
-        execution.pathResult().column(sourcePath.field(sourcePk)).cast("string").as("__dwca_source_pk"));
+    return execution
+        .pathResult()
+        .dataset()
+        .select(
+            execution.pathResult().column(corePath.field(naturalId)).cast("string").as(CORE_ID),
+            execution
+                .pathResult()
+                .column(sourcePath.field(sourcePk))
+                .cast("string")
+                .as("__dwca_source_pk"));
   }
 
   private static String coreIdColumn(CoreType coreType) {
@@ -799,7 +855,8 @@ public final class SparkExtendedRecordExecutor {
 
   private static String shortHash(String value) {
     try {
-      byte[] digest = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
+      byte[] digest =
+          MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
       StringBuilder out = new StringBuilder();
       for (int i = 0; i < 8; i++) {
         out.append(String.format("%02x", digest[i]));

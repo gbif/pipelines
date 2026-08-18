@@ -1,11 +1,14 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.schema;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 
-/** Logical lineage through DwC-DP resources. Relation identity, not column aliases, defines the path. */
+/**
+ * Logical lineage through DwC-DP resources. Relation identity, not column aliases, defines the
+ * path.
+ */
 public record SchemaPath(String rootResource, List<SchemaRelation> relations) {
   public SchemaPath {
     Objects.requireNonNull(rootResource, "rootResource");
@@ -28,7 +31,9 @@ public record SchemaPath(String rootResource, List<SchemaRelation> relations) {
   }
 
   public String currentResource() {
-    return relations.isEmpty() ? rootResource : relations.get(relations.size() - 1).targetResource();
+    return relations.isEmpty()
+        ? rootResource
+        : relations.get(relations.size() - 1).targetResource();
   }
 
   public FieldRef field(String column) {

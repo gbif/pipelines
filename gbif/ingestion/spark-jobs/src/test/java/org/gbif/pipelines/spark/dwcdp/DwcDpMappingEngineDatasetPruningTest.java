@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingInputRequirements;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.junit.jupiter.api.Test;
@@ -62,8 +62,7 @@ class DwcDpMappingEngineDatasetPruningTest {
   @Test
   void datasetPlanUsesSamePrunedCompiledWinnerSetAsExecution() {
     DwcDpMappingEngine engine = DwcDpMappingEngine.currentSchema();
-    DataPackage dataPackage =
-        DataPackageFixtures.withEvent("event_pk", "eventID", "eventDate");
+    DataPackage dataPackage = DataPackageFixtures.withEvent("event_pk", "eventID", "eventDate");
     var plan = EventDwcaMapping.current(engine.schemaGraph());
 
     String rendered = engine.targetPlanDetailed(plan, dataPackage);
@@ -73,6 +72,7 @@ class DwcDpMappingEngineDatasetPruningTest {
     assertFalse(rendered.contains("protocol.protocolDescription"));
     assertFalse(rendered.contains("agent.preferredAgentName"));
   }
+
   @Test
   void descriptorColumnsDoNotActAsHardNegativeEvidenceForExecutionPruning() {
     DwcDpMappingEngine engine = DwcDpMappingEngine.currentSchema();
@@ -103,9 +103,11 @@ class DwcDpMappingEngineDatasetPruningTest {
         scoped.extensions().stream()
             .anyMatch(
                 extension ->
-                    extension.rowType().equals(
-                        org.gbif.pipelines.spark.dwcdp.mapping.config.AssertionMapping
-                            .ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)));
+                    extension
+                        .rowType()
+                        .equals(
+                            org.gbif.pipelines.spark.dwcdp.mapping.config.AssertionMapping
+                                .ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)));
   }
 
   @Test
@@ -120,9 +122,11 @@ class DwcDpMappingEngineDatasetPruningTest {
         scoped.extensions().stream()
             .filter(
                 extension ->
-                    extension.rowType().equals(
-                        org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping
-                            .ROW_TYPE_HUMBOLDT))
+                    extension
+                        .rowType()
+                        .equals(
+                            org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping
+                                .ROW_TYPE_HUMBOLDT))
             .findFirst()
             .orElseThrow();
     var base =
@@ -144,12 +148,12 @@ class DwcDpMappingEngineDatasetPruningTest {
 
     var georeference =
         scoped.coreTargetMerges().stream()
-            .filter(merge -> merge.targetTerm().equals(DwcTerm.georeferenceProtocol.qualifiedName()))
+            .filter(
+                merge -> merge.targetTerm().equals(DwcTerm.georeferenceProtocol.qualifiedName()))
             .flatMap(merge -> merge.producers().stream())
             .filter(
                 producer ->
-                    producer.aggregation()
-                        instanceof ValueAggregation.PreferredLabeledOrFallback)
+                    producer.aggregation() instanceof ValueAggregation.PreferredLabeledOrFallback)
             .findFirst()
             .orElseThrow();
 
@@ -169,18 +173,21 @@ class DwcDpMappingEngineDatasetPruningTest {
         scoped.extensions().stream()
             .filter(
                 extension ->
-                    extension.rowType().equals(
-                        org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping
-                            .ROW_TYPE_HUMBOLDT))
+                    extension
+                        .rowType()
+                        .equals(
+                            org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping
+                                .ROW_TYPE_HUMBOLDT))
             .findFirst()
             .orElseThrow();
 
     assertEquals(
         1,
-        humboldt.fragments().stream().filter(fragment -> fragment.rowIdentity().isPresent()).count());
+        humboldt.fragments().stream()
+            .filter(fragment -> fragment.rowIdentity().isPresent())
+            .count());
     assertTrue(
         humboldt.fragments().stream()
             .anyMatch(fragment -> fragment.name().equals("humboldt-survey-targets")));
   }
-
 }

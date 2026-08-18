@@ -1,19 +1,18 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 
 /**
  * Materialized extension rows before they are attached to an Event/Occurrence core.
  *
  * <p>Each row has an internal parent/scope key, its logical source {@link FieldRef}, an extension
- * row key, and one
- * physical Spark column per mapped DwC-A term. Consumers use {@link #column(String)} rather than
- * depending on those physical aliases.
+ * row key, and one physical Spark column per mapped DwC-A term. Consumers use {@link
+ * #column(String)} rather than depending on those physical aliases.
  */
 public record ExtensionMaterializationResult(
     Dataset<Row> dataset,

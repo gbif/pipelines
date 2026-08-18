@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Small graph implementation useful for tests and as the target of a future DataPackage adapter.
@@ -50,9 +50,7 @@ public final class InMemorySchemaGraph implements SchemaGraph {
 
   @Override
   public List<SchemaRelation> relationsFrom(String sourceResource) {
-    return relations.stream()
-        .filter(r -> r.sourceResource().equals(sourceResource))
-        .toList();
+    return relations.stream().filter(r -> r.sourceResource().equals(sourceResource)).toList();
   }
 
   @Override

@@ -4,15 +4,15 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuil
 
 import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Reusable Event-core enrichments, including explicit protocol contribution paths. */
 public final class EventCoreMapping {
@@ -60,7 +60,9 @@ public final class EventCoreMapping {
     return builder.build();
   }
 
-  /** Resolves eventConductedByID through agent.agentID while preserving an explicit publisher value. */
+  /**
+   * Resolves eventConductedByID through agent.agentID while preserving an explicit publisher value.
+   */
   public static CoreFragment eventConductedBy(SchemaGraph graph) {
     return AgentMapping.core(
         graph,
@@ -72,7 +74,9 @@ public final class EventCoreMapping {
             TargetTerms.resolve("eventConductedBy")));
   }
 
-  /** Resolves georeferencedByID through agent.agentID while preserving an explicit publisher value. */
+  /**
+   * Resolves georeferencedByID through agent.agentID while preserving an explicit publisher value.
+   */
   public static CoreFragment georeferencedBy(SchemaGraph graph) {
     return AgentMapping.core(
         graph,
@@ -83,7 +87,6 @@ public final class EventCoreMapping {
             "georeferencedBy",
             DwcTerm.georeferencedBy.qualifiedName()));
   }
-
 
   /** Direct eventProtocol_fk -> resolved samplingProtocol when the referenced protocol exists. */
   public static CoreFragment directSamplingProtocol(SchemaGraph graph) {
@@ -129,21 +132,16 @@ public final class EventCoreMapping {
   /** All protocols linked directly through event-protocol contribute to samplingProtocol. */
   public static CoreFragment eventProtocols(SchemaGraph graph) {
     return protocolJunction(
-        graph,
-        "event-protocols",
-        false,
-        false,
-        DwcTerm.samplingProtocol.qualifiedName());
+        graph, "event-protocols", false, false, DwcTerm.samplingProtocol.qualifiedName());
   }
 
-  /** Protocols linked through event -> survey -> survey-protocol also contribute to samplingProtocol. */
+  /**
+   * Protocols linked through event -> survey -> survey-protocol also contribute to
+   * samplingProtocol.
+   */
   public static CoreFragment surveyProtocols(SchemaGraph graph) {
     return protocolJunction(
-        graph,
-        "survey-protocols",
-        true,
-        false,
-        DwcTerm.samplingProtocol.qualifiedName());
+        graph, "survey-protocols", true, false, DwcTerm.samplingProtocol.qualifiedName());
   }
 
   /** Georeferencing-typed event protocols additionally contribute to georeferenceProtocol. */
@@ -191,23 +189,17 @@ public final class EventCoreMapping {
     } else {
       link = event.append(graph.resolve("event", "event-protocol", "event_fk", null));
       relation =
-          coreFragment(name, "event")
-              .join("event-protocol")
-              .via("event_fk")
-              .optional()
-              .fanOut();
+          coreFragment(name, "event").join("event-protocol").via("event_fk").optional().fanOut();
     }
 
     SchemaPath protocol =
-        link.append(
-            graph.resolve(link.currentResource(), "protocol", "protocol_fk", null));
+        link.append(graph.resolve(link.currentResource(), "protocol", "protocol_fk", null));
     CoreFragmentBuilder.RelationBuilder protocolJoin =
         relation.join("protocol").via("protocol_fk").optional().exactlyOne();
     if (georeferenceOnly) {
       protocolJoin =
           protocolJoin.filter(
-              FilterExpression.optionalIn(
-                  "protocolType", "georeferencing", "georeference"));
+              FilterExpression.optionalIn("protocolType", "georeferencing", "georeference"));
     }
 
     return protocolJoin
@@ -220,7 +212,6 @@ public final class EventCoreMapping {
                 protocol.field("protocolDescription")))
         .build();
   }
-
 
   /** Direct event.provenance_fk -> provenance contribution rows. */
   public static CoreFragment directProvenance(SchemaGraph graph) {
@@ -241,8 +232,7 @@ public final class EventCoreMapping {
   /** event -> event-provenance -> provenance contribution rows. */
   public static CoreFragment eventProvenance(SchemaGraph graph) {
     SchemaPath event = SchemaPath.root("event");
-    SchemaPath link =
-        event.append(graph.resolve("event", "event-provenance", "event_fk", null));
+    SchemaPath link = event.append(graph.resolve("event", "event-provenance", "event_fk", null));
     SchemaPath provenance =
         link.append(graph.resolve("event-provenance", "provenance", "provenance_fk", null));
     CoreFragmentBuilder builder =

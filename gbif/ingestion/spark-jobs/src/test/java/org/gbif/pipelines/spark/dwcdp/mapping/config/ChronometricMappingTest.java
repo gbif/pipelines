@@ -27,7 +27,8 @@ class ChronometricMappingTest {
     assertEquals("chronometricAge_pk", fragment.rowIdentity().orElseThrow().column());
     assertTrue(
         fragment.fields().stream()
-            .anyMatch(field -> field.targetTerm().equals(ChronoTerm.chronometricAgeID.qualifiedName())));
+            .anyMatch(
+                field -> field.targetTerm().equals(ChronoTerm.chronometricAgeID.qualifiedName())));
   }
 
   @Test
@@ -39,7 +40,9 @@ class ChronometricMappingTest {
     assertEquals("protocol", protocol.relations().get(0).targetResource());
     assertTrue(
         protocol.fields().stream()
-            .anyMatch(field -> field.targetTerm().equals(ChronoTerm.chronometricAgeProtocol.qualifiedName())));
+            .anyMatch(
+                field ->
+                    field.targetTerm().equals(ChronoTerm.chronometricAgeProtocol.qualifiedName())));
 
     assertEquals("chronometricAge_pk", conversion.rowMatch().orElseThrow().column());
     assertEquals("protocol", conversion.relations().get(0).targetResource());
@@ -47,7 +50,8 @@ class ChronometricMappingTest {
         conversion.fields().stream()
             .anyMatch(
                 field ->
-                    field.targetTerm()
+                    field
+                        .targetTerm()
                         .equals(ChronoTerm.chronometricAgeConversionProtocol.qualifiedName())));
   }
 
@@ -62,7 +66,9 @@ class ChronometricMappingTest {
         fragment.fields().stream()
             .anyMatch(
                 field ->
-                    field.targetTerm().equals(ChronoTerm.chronometricAgeDeterminedBy.qualifiedName())));
+                    field
+                        .targetTerm()
+                        .equals(ChronoTerm.chronometricAgeDeterminedBy.qualifiedName())));
   }
 
   @Test
@@ -70,7 +76,9 @@ class ChronometricMappingTest {
     MappingPlan plan = EventDwcaMapping.current(graph);
     ExtensionMapping chronometric =
         plan.extensions().stream()
-            .filter(extension -> extension.rowType().equals(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE))
+            .filter(
+                extension ->
+                    extension.rowType().equals(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE))
             .findFirst()
             .orElseThrow();
 
@@ -82,6 +90,7 @@ class ChronometricMappingTest {
             "event-chronometric-age-determined-by"),
         chronometric.fragments().stream().map(ExtensionFragment::name).collect(Collectors.toSet()));
   }
+
   @Test
   void occurrenceCorePromotesEventChronometricRowsWithSameIdentity() {
     ExtensionFragment fragment = ChronometricMapping.agesForOccurrence(graph);
@@ -91,7 +100,9 @@ class ChronometricMappingTest {
     assertEquals("chronometricAge_pk", fragment.rowIdentity().orElseThrow().column());
     assertEquals(
         List.of("event", "chronometric-age"),
-        fragment.relations().stream().map(relation -> relation.targetResource()).collect(Collectors.toList()));
+        fragment.relations().stream()
+            .map(relation -> relation.targetResource())
+            .collect(Collectors.toList()));
   }
 
   @Test
@@ -114,7 +125,9 @@ class ChronometricMappingTest {
     MappingPlan plan = OccurrenceDwcaMapping.current(graph);
     ExtensionMapping chronometric =
         plan.extensions().stream()
-            .filter(extension -> extension.rowType().equals(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE))
+            .filter(
+                extension ->
+                    extension.rowType().equals(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE))
             .findFirst()
             .orElseThrow();
 
@@ -126,5 +139,4 @@ class ChronometricMappingTest {
             "event-chronometric-age-determined-by-for-occurrence"),
         chronometric.fragments().stream().map(ExtensionFragment::name).collect(Collectors.toSet()));
   }
-
 }

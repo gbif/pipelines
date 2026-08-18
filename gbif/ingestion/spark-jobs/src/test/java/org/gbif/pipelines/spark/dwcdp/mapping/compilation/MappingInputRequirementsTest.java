@@ -1,14 +1,13 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingInputRequirements;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -73,6 +72,7 @@ class MappingInputRequirementsTest {
 
     assertFalse(requirements.usesResource("organism-interaction"));
   }
+
   @Test
   void declarativeFiltersContributeOnlyTheirReferencedColumns() {
     MappingInputRequirements requirements =
@@ -93,5 +93,4 @@ class MappingInputRequirementsTest {
     assertFalse(protocol.allColumns());
     assertTrue(protocol.columns().contains("protocolType"));
   }
-
 }

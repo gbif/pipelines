@@ -1,8 +1,8 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.schema;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import java.util.Objects;
 import java.util.Optional;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 
 /** A concrete relation discovered from the DwC-DP schema. */
 public record SchemaRelation(

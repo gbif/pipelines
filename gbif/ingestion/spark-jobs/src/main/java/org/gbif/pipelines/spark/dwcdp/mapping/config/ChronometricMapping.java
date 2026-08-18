@@ -30,20 +30,15 @@ public final class ChronometricMapping {
     return builder.build();
   }
 
-
   /** Base Chronometric Age rows promoted from the Occurrence's owning Event. */
   public static ExtensionFragment agesForOccurrence(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath event =
-        occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
-    SchemaPath age =
-        event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
+    SchemaPath event = occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
+    SchemaPath age = event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
 
     ExtensionFragmentBuilder builder =
         extensionFragment(
-                "event-chronometric-age-for-occurrence",
-                ROW_TYPE_CHRONOMETRIC_AGE,
-                "occurrence")
+                "event-chronometric-age-for-occurrence", ROW_TYPE_CHRONOMETRIC_AGE, "occurrence")
             .scopeKey("occurrence_pk")
             .join("event")
             .via("event_fk")
@@ -82,10 +77,8 @@ public final class ChronometricMapping {
   /** Determiner-agent resolution for Chronometric rows promoted to Occurrence core. */
   public static ExtensionFragment determinedByForOccurrence(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath event =
-        occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
-    SchemaPath age =
-        event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
+    SchemaPath event = occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
+    SchemaPath age = event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
     SchemaPath agent =
         age.append(graph.resolve("chronometric-age", "agent", "chronometricAgeDeterminedByID"));
 
@@ -116,7 +109,9 @@ public final class ChronometricMapping {
         .build();
   }
 
-  /** Resolves chronometricAgeProtocol_fk while preserving the publisher's literal protocol value. */
+  /**
+   * Resolves chronometricAgeProtocol_fk while preserving the publisher's literal protocol value.
+   */
   public static ExtensionFragment ageProtocol(SchemaGraph graph) {
     return protocol(
         graph,
@@ -159,10 +154,8 @@ public final class ChronometricMapping {
       String literalField,
       String targetTerm) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath event =
-        occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
-    SchemaPath age =
-        event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
+    SchemaPath event = occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
+    SchemaPath age = event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
     SchemaPath protocol =
         age.append(graph.resolve("chronometric-age", "protocol", protocolFk, null));
 

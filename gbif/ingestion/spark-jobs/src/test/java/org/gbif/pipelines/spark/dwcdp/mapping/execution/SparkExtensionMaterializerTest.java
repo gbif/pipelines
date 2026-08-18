@@ -1,20 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMerge;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.ExtensionMaterializationResult;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.SparkExtensionMaterializer;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,6 +13,17 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompilationException;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingDecisionType;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMerge;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
@@ -47,7 +43,8 @@ class SparkExtensionMaterializerTest {
 
   @BeforeAll
   void setup() {
-    spark = SparkTestSession.createBuilder().appName("SparkExtensionMaterializerTest").getOrCreate();
+    spark =
+        SparkTestSession.createBuilder().appName("SparkExtensionMaterializerTest").getOrCreate();
     graph = new DwcDpSchemaLoader().current();
   }
 
@@ -223,9 +220,7 @@ class SparkExtensionMaterializerTest {
         ExtensionFragmentBuilder.extensionFragment("second-fragment", HUMBOLDT, "survey")
             .field(
                 TargetFieldMapping.oneOf(
-                    TERM_SITE_COUNT,
-                    ValueAggregation.firstNonNull(),
-                    surveyPath.field("event_fk")))
+                    TERM_SITE_COUNT, ValueAggregation.firstNonNull(), surveyPath.field("event_fk")))
             .build();
 
     ExtensionMapping extension = new ExtensionMapping(HUMBOLDT, List.of(first, second));
@@ -241,8 +236,7 @@ class SparkExtensionMaterializerTest {
     MappingCompilationException mappingException = (MappingCompilationException) error;
     assertEquals(1, mappingException.problems().size());
     assertEquals(
-        MappingDecisionType.AMBIGUOUS_MULTIPLE_EXPLICIT,
-        mappingException.problems().get(0).type());
+        MappingDecisionType.AMBIGUOUS_MULTIPLE_EXPLICIT, mappingException.problems().get(0).type());
   }
 
   @Test
@@ -263,9 +257,7 @@ class SparkExtensionMaterializerTest {
         ExtensionFragmentBuilder.extensionFragment("second-fragment", HUMBOLDT, "survey")
             .field(
                 TargetFieldMapping.oneOf(
-                    TERM_SITE_COUNT,
-                    ValueAggregation.firstNonNull(),
-                    surveyPath.field("event_fk")))
+                    TERM_SITE_COUNT, ValueAggregation.firstNonNull(), surveyPath.field("event_fk")))
             .build();
 
     ExtensionMapping extension =
@@ -277,7 +269,8 @@ class SparkExtensionMaterializerTest {
             List.of(first, second));
 
     org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension compiled =
-        new org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler(graph).compile(extension);
+        new org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler(graph)
+            .compile(extension);
     assertEquals(1, compiled.targetMerges().size());
     assertEquals(
         MappingDecisionType.EXPLICIT_MERGE,
@@ -297,7 +290,6 @@ class SparkExtensionMaterializerTest {
     assertEquals("3|E1", merged);
   }
 
-
   @Test
   void firstNonNullTargetMergePreservesProducerPrecedence() {
     SchemaPath surveyPath = SchemaPath.root("survey");
@@ -316,9 +308,7 @@ class SparkExtensionMaterializerTest {
         ExtensionFragmentBuilder.extensionFragment("fallback", HUMBOLDT, "survey")
             .field(
                 TargetFieldMapping.oneOf(
-                    TERM_SITE_COUNT,
-                    ValueAggregation.firstNonNull(),
-                    surveyPath.field("event_fk")))
+                    TERM_SITE_COUNT, ValueAggregation.firstNonNull(), surveyPath.field("event_fk")))
             .build();
 
     ExtensionMapping extension =
@@ -332,8 +322,7 @@ class SparkExtensionMaterializerTest {
     Dataset<Row> surveys =
         spark.createDataFrame(
             List.of(
-                RowFactory.create("S1", "E1", "publisher"),
-                RowFactory.create("S2", "E2", null)),
+                RowFactory.create("S1", "E1", "publisher"), RowFactory.create("S2", "E2", null)),
             new StructType()
                 .add("survey_pk", DataTypes.StringType)
                 .add("event_fk", DataTypes.StringType)

@@ -41,9 +41,11 @@ public final class MappingPlanBuilder {
 
   /** Explicitly allows independent producers to contribute additively to one core target. */
   public MappingPlanBuilder mergeCoreTarget(String targetTerm, ValueAggregation aggregation) {
-    TargetMerge previous = coreTargetMerges.put(targetTerm, new TargetMerge(targetTerm, aggregation));
+    TargetMerge previous =
+        coreTargetMerges.put(targetTerm, new TargetMerge(targetTerm, aggregation));
     if (previous != null && !previous.aggregation().equals(aggregation)) {
-      throw new IllegalArgumentException("Conflicting merge semantics for core target: " + targetTerm);
+      throw new IllegalArgumentException(
+          "Conflicting merge semantics for core target: " + targetTerm);
     }
     return this;
   }
@@ -62,12 +64,18 @@ public final class MappingPlanBuilder {
                         extensionCompositions.getOrDefault(
                             e.getKey(), ExtensionRowComposition.ENRICH),
                         java.util.Optional.ofNullable(extensionRowLimits.get(e.getKey())),
-                        new ArrayList<>(extensionTargetMerges.getOrDefault(e.getKey(), Map.of()).values()),
+                        new ArrayList<>(
+                            extensionTargetMerges.getOrDefault(e.getKey(), Map.of()).values()),
                         e.getValue()))
             .toList();
     return new MappingPlan(
-        name, coreType, coreSourceResource, coreFields, coreFragments,
-        new ArrayList<>(coreTargetMerges.values()), builtExtensions);
+        name,
+        coreType,
+        coreSourceResource,
+        coreFields,
+        coreFragments,
+        new ArrayList<>(coreTargetMerges.values()),
+        builtExtensions);
   }
 
   public static final class ExtensionBuilder {

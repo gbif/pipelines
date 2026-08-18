@@ -29,8 +29,7 @@ public final class IdentifierMapping {
   /** {@code survey-identifier} rows promoted to their owning Event core record. */
   public static ExtensionFragment surveyIdentifiersForEvent(SchemaGraph graph) {
     SchemaPath event = SchemaPath.root("event");
-    SchemaPath survey =
-        event.append(graph.resolve("event", "survey", "event_fk", null));
+    SchemaPath survey = event.append(graph.resolve("event", "survey", "event_fk", null));
     SchemaPath identifiers =
         survey.append(graph.resolve("survey", "survey-identifier", "survey_fk", null));
 
@@ -71,7 +70,8 @@ public final class IdentifierMapping {
     SchemaPath material =
         occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID", null));
     SchemaPath identifiers =
-        material.append(graph.resolve("material", "material-identifier", "materialEntity_fk", null));
+        material.append(
+            graph.resolve("material", "material-identifier", "materialEntity_fk", null));
 
     ExtensionFragmentBuilder builder =
         extensionFragment("material-identifiers-for-occurrence", ROW_TYPE_IDENTIFIER, "occurrence")

@@ -24,9 +24,7 @@ class AssertionMappingTest {
 
     assertEquals("event", fragment.sourceResource());
     assertEquals("event_pk", fragment.scopeKeyColumn().orElseThrow());
-    assertEquals(
-        List.of("survey", "survey-assertion", "protocol"),
-        relationTargets(fragment));
+    assertEquals(List.of("survey", "survey-assertion", "protocol"), relationTargets(fragment));
     assertEquals("assertionID", fragment.rowIdentity().orElseThrow().column());
     assertEquals("survey-assertion", fragment.rowIdentity().orElseThrow().path().currentResource());
   }
@@ -40,8 +38,7 @@ class AssertionMappingTest {
         List.of("nucleotide-analysis", "nucleotide-analysis-assertion", "protocol"),
         relationTargets(analysis));
     assertEquals(
-        Set.of("materialEntity_fk"),
-        analysis.relations().get(0).filter().requiredColumns());
+        Set.of("materialEntity_fk"), analysis.relations().get(0).filter().requiredColumns());
 
     assertEquals(
         List.of(
@@ -51,23 +48,16 @@ class AssertionMappingTest {
             "protocol"),
         relationTargets(protocol));
     assertEquals(
-        Set.of("materialEntity_fk"),
-        protocol.relations().get(0).filter().requiredColumns());
+        Set.of("materialEntity_fk"), protocol.relations().get(0).filter().requiredColumns());
   }
 
   @Test
   void occurrenceDnaAssertionsFollowEvidenceMaterialOwnership() {
-    ExtensionFragment analysis =
-        AssertionMapping.nucleotideAnalysisAssertionsForOccurrence(graph);
-    ExtensionFragment protocol =
-        AssertionMapping.molecularProtocolAssertionsForOccurrence(graph);
+    ExtensionFragment analysis = AssertionMapping.nucleotideAnalysisAssertionsForOccurrence(graph);
+    ExtensionFragment protocol = AssertionMapping.molecularProtocolAssertionsForOccurrence(graph);
 
     assertEquals(
-        List.of(
-            "material",
-            "nucleotide-analysis",
-            "nucleotide-analysis-assertion",
-            "protocol"),
+        List.of("material", "nucleotide-analysis", "nucleotide-analysis-assertion", "protocol"),
         relationTargets(analysis));
     assertEquals(
         List.of(
@@ -121,8 +111,9 @@ class AssertionMappingTest {
         plan.extensions().stream()
             .filter(
                 extension ->
-                    extension.rowType().equals(
-                        AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT))
+                    extension
+                        .rowType()
+                        .equals(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT))
             .findFirst()
             .orElseThrow();
 
@@ -130,8 +121,10 @@ class AssertionMappingTest {
     assertEquals(
         expectedFragments,
         assertions.fragments().stream().map(ExtensionFragment::name).collect(Collectors.toSet()));
-    assertTrue(assertions.fragments().stream().allMatch(fragment -> fragment.rowIdentity().isPresent()));
+    assertTrue(
+        assertions.fragments().stream().allMatch(fragment -> fragment.rowIdentity().isPresent()));
   }
+
   @Test
   void chronometricAssertionsCanBePromotedToOccurrenceThroughEvent() {
     ExtensionFragment fragment = AssertionMapping.chronometricAgeAssertionsForOccurrence(graph);
@@ -144,5 +137,4 @@ class AssertionMappingTest {
             .map(relation -> relation.targetResource())
             .collect(Collectors.toList()));
   }
-
 }

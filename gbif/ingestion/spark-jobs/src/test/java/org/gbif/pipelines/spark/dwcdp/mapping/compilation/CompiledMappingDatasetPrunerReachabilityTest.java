@@ -1,12 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledCoreFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMappingDatasetPruner;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledRelationStep;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledSourceField;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer;
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingDatasetScope;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -16,10 +9,10 @@ import java.util.Set;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.junit.jupiter.api.Test;
 
 class CompiledMappingDatasetPrunerReachabilityTest {
@@ -54,11 +47,7 @@ class CompiledMappingDatasetPrunerReachabilityTest {
             event,
             List.of(
                 new CompiledRelationStep(
-                    unusedProtocol,
-                    false,
-                    RelationRequirement.REQUIRED,
-                    Optional.empty(),
-                    null)),
+                    unusedProtocol, false, RelationRequirement.REQUIRED, Optional.empty(), null)),
             List.of(eventDate));
 
     CompiledMapping mapping =

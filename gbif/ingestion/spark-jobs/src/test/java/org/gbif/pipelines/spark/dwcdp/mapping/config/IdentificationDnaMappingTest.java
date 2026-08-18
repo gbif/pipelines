@@ -30,7 +30,8 @@ class IdentificationDnaMappingTest {
     assertEquals(
         List.of("nucleotide-analysis", "nucleotide-sequence", "identification", "agent"),
         relationTargets(sequence));
-    assertEquals(Set.of("materialEntity_fk"), analysis.relations().get(0).filter().requiredColumns());
+    assertEquals(
+        Set.of("materialEntity_fk"), analysis.relations().get(0).filter().requiredColumns());
     assertEquals(Set.of("occurrence_fk"), analysis.relations().get(1).filter().requiredColumns());
     assertEquals(
         Set.of("occurrence_fk", "nucleotideAnalysis_fk"),
@@ -42,10 +43,8 @@ class IdentificationDnaMappingTest {
 
   @Test
   void occurrenceDnaIdentificationsFollowEvidenceMaterialOwnership() {
-    ExtensionFragment analysis =
-        IdentificationMapping.occurrenceDnaAnalysisIdentifications(graph);
-    ExtensionFragment sequence =
-        IdentificationMapping.occurrenceDnaSequenceIdentifications(graph);
+    ExtensionFragment analysis = IdentificationMapping.occurrenceDnaAnalysisIdentifications(graph);
+    ExtensionFragment sequence = IdentificationMapping.occurrenceDnaSequenceIdentifications(graph);
 
     assertEquals(
         List.of("material", "nucleotide-analysis", "identification", "agent"),
@@ -63,7 +62,8 @@ class IdentificationDnaMappingTest {
 
   @Test
   void canonicalPlansUnionIndependentIdentificationOwners() {
-    ExtensionMapping eventIdentifications = identificationExtension(EventDwcaMapping.current(graph));
+    ExtensionMapping eventIdentifications =
+        identificationExtension(EventDwcaMapping.current(graph));
     assertEquals(ExtensionRowComposition.UNION, eventIdentifications.rowComposition());
     assertEquals(
         Set.of("event-dna-analysis-identifications", "event-dna-sequence-identifications"),
@@ -97,14 +97,13 @@ class IdentificationDnaMappingTest {
 
   private static ExtensionMapping identificationExtension(MappingPlan plan) {
     return plan.extensions().stream()
-        .filter(extension -> extension.rowType().equals(IdentificationMapping.ROW_TYPE_IDENTIFICATION))
+        .filter(
+            extension -> extension.rowType().equals(IdentificationMapping.ROW_TYPE_IDENTIFICATION))
         .findFirst()
         .orElseThrow();
   }
 
   private static Set<String> fragmentNames(ExtensionMapping extension) {
-    return extension.fragments().stream()
-        .map(ExtensionFragment::name)
-        .collect(Collectors.toSet());
+    return extension.fragments().stream().map(ExtensionFragment::name).collect(Collectors.toSet());
   }
 }

@@ -58,7 +58,8 @@ public interface SchemaGraph {
         }
         Set<String> visited = new HashSet<>(candidate.visited());
         visited.add(relation.targetResource());
-        queue.addLast(new Candidate(relation.targetResource(), List.copyOf(nextPath), Set.copyOf(visited)));
+        queue.addLast(
+            new Candidate(relation.targetResource(), List.copyOf(nextPath), Set.copyOf(visited)));
       }
     }
     return List.copyOf(results);
@@ -76,13 +77,17 @@ public interface SchemaGraph {
               : sourceMatches;
     }
     if (predicate != null) {
-      candidates = candidates.stream()
-          .filter(r -> r.predicate().map(predicate::equals).orElse(false))
-          .toList();
+      candidates =
+          candidates.stream()
+              .filter(r -> r.predicate().map(predicate::equals).orElse(false))
+              .toList();
     }
     if (candidates.isEmpty()) {
       throw new IllegalArgumentException(
-          "No schema relation from " + sourceResource + " to " + targetResource
+          "No schema relation from "
+              + sourceResource
+              + " to "
+              + targetResource
               + (viaColumn == null ? "" : " via " + viaColumn)
               + (predicate == null ? "" : " predicate " + predicate));
     }
@@ -95,8 +100,12 @@ public interface SchemaGraph {
         candidates = strongCandidates;
       }
       throw new IllegalArgumentException(
-          "Ambiguous schema relation from " + sourceResource + " to " + targetResource
-              + ": " + candidates);
+          "Ambiguous schema relation from "
+              + sourceResource
+              + " to "
+              + targetResource
+              + ": "
+              + candidates);
     }
     return candidates.get(0);
   }

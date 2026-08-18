@@ -1,14 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import static org.apache.spark.sql.functions.array;
 import static org.apache.spark.sql.functions.array_distinct;
 import static org.apache.spark.sql.functions.coalesce;
@@ -31,12 +22,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.HashSet;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -45,15 +36,23 @@ import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
  * Materializes one DwC-A extension mapping without yet attaching it to an Event/Occurrence core.
  *
- * <p>Logical source identity is retained as {@link FieldRef} all the way through target compilation.
- * Spark aliases are only physical bindings of those logical fields. Duplicate target validation is
- * therefore able to report both producers, their complete path-qualified sources, and their Spark
- * aliases instead of only reporting the target URI.
+ * <p>Logical source identity is retained as {@link FieldRef} all the way through target
+ * compilation. Spark aliases are only physical bindings of those logical fields. Duplicate target
+ * validation is therefore able to report both producers, their complete path-qualified sources, and
+ * their Spark aliases instead of only reporting the target URI.
  */
 public final class SparkExtensionMaterializer {
   static final String COL_PARENT_KEY = "__dwca_parent_key";
@@ -103,7 +102,8 @@ public final class SparkExtensionMaterializer {
         extension.fragments().stream().filter(f -> f.rowIdentity().isPresent()).toList();
     if (rowFragments.size() > 1) {
       throw new IllegalArgumentException(
-          "Extension " + extension.rowType()
+          "Extension "
+              + extension.rowType()
               + " has multiple row-defining fragments; declare UNION row composition when fragments are independent row sets: "
               + rowFragments.stream().map(CompiledFragment::name).toList());
     }
@@ -114,14 +114,24 @@ public final class SparkExtensionMaterializer {
       if (!base.sourceResource().equals(fragment.sourceResource())) {
         throw new IllegalArgumentException(
             "ENRICH fragments need the same source resource: "
-                + base.name() + " starts at " + base.sourceResource()
-                + ", but " + fragment.name() + " starts at " + fragment.sourceResource());
+                + base.name()
+                + " starts at "
+                + base.sourceResource()
+                + ", but "
+                + fragment.name()
+                + " starts at "
+                + fragment.sourceResource());
       }
       if (!base.scopeKey().equals(fragment.scopeKey())) {
         throw new IllegalArgumentException(
             "ENRICH fragments need the same scope key: "
-                + base.name() + " uses " + base.scopeKey().qualifiedName()
-                + ", but " + fragment.name() + " uses " + fragment.scopeKey().qualifiedName());
+                + base.name()
+                + " uses "
+                + base.scopeKey().qualifiedName()
+                + ", but "
+                + fragment.name()
+                + " uses "
+                + fragment.scopeKey().qualifiedName());
       }
     }
 
@@ -141,7 +151,8 @@ public final class SparkExtensionMaterializer {
       }
       if (fragment.rowIdentity().isPresent()) {
         throw new IllegalArgumentException(
-            "Only one row-defining fragment is supported for ENRICH composition: " + fragment.name());
+            "Only one row-defining fragment is supported for ENRICH composition: "
+                + fragment.name());
       }
 
       FragmentResult enrichment = materializeFragment(loader, fragment, false, false, mergeTerms);
@@ -154,28 +165,36 @@ public final class SparkExtensionMaterializer {
         joinCondition =
             joinCondition.and(current.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY)));
       }
-      current = current.join(enrichmentForJoin, joinCondition, "left_outer")
-          .drop(enrichmentForJoin.col(COL_PARENT_KEY))
-          .drop(enrichmentForJoin.col(COL_ROW_KEY));
+      current =
+          current
+              .join(enrichmentForJoin, joinCondition, "left_outer")
+              .drop(enrichmentForJoin.col(COL_PARENT_KEY))
+              .drop(enrichmentForJoin.col(COL_ROW_KEY));
       collectTargets(enrichment.targets(), mergeTerms, targets, mergeContributions);
     }
 
     Map<String, String> targetColumns = new LinkedHashMap<>();
     targets.forEach((term, target) -> targetColumns.put(term, target.physicalColumn()));
-    for (org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge : extension.targetMerges()) {
+    for (org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge :
+        extension.targetMerges()) {
       Dataset<Row> merged = materializeExtensionTargetMerge(loader, extension, merge);
       String alias = targetAlias(merge.targetTerm());
       Column joinCondition =
-          current.col(COL_PARENT_KEY).equalTo(merged.col(COL_PARENT_KEY))
+          current
+              .col(COL_PARENT_KEY)
+              .equalTo(merged.col(COL_PARENT_KEY))
               .and(current.col(COL_ROW_KEY).equalTo(merged.col(COL_ROW_KEY)));
       current =
-          current.join(merged, joinCondition, "left_outer")
+          current
+              .join(merged, joinCondition, "left_outer")
               .drop(merged.col(COL_PARENT_KEY))
               .drop(merged.col(COL_ROW_KEY));
       targetColumns.put(merge.targetTerm(), alias);
     }
     current = filterEmptyPayloadRows(current, targetColumns.values().stream().toList());
-    current = applyRowLimit(current, targetColumns.values().stream().toList(), extension.maxRowsPerParent());
+    current =
+        applyRowLimit(
+            current, targetColumns.values().stream().toList(), extension.maxRowsPerParent());
     return new ExtensionMaterializationResult(
         current, COL_PARENT_KEY, materializedBase.parentKeySource(), COL_ROW_KEY, targetColumns);
   }
@@ -197,13 +216,19 @@ public final class SparkExtensionMaterializer {
     if (rows.isEmpty()) {
       CompiledFragment first = extension.fragments().get(0);
       Dataset<Row> empty =
-          loader.load(first.sourceResource())
-              .map(df -> df.limit(0).select(
-                  lit(null).cast("string").as(COL_PARENT_KEY),
-                  lit(null).cast("string").as(COL_ROW_KEY)))
+          loader
+              .load(first.sourceResource())
+              .map(
+                  df ->
+                      df.limit(0)
+                          .select(
+                              lit(null).cast("string").as(COL_PARENT_KEY),
+                              lit(null).cast("string").as(COL_ROW_KEY)))
               .orElseThrow(
-                  () -> new IllegalArgumentException(
-                      "No UNION fragment source is present for extension " + extension.rowType()));
+                  () ->
+                      new IllegalArgumentException(
+                          "No UNION fragment source is present for extension "
+                              + extension.rowType()));
       return new ExtensionMaterializationResult(
           empty, COL_PARENT_KEY, first.scopeKey(), COL_ROW_KEY, Map.of());
     }
@@ -230,13 +255,8 @@ public final class SparkExtensionMaterializer {
         applyRowLimit(
             combined, targetColumns.values().stream().toList(), extension.maxRowsPerParent());
     return new ExtensionMaterializationResult(
-        combined,
-        COL_PARENT_KEY,
-        rows.get(0).parentKeySource(),
-        COL_ROW_KEY,
-        targetColumns);
+        combined, COL_PARENT_KEY, rows.get(0).parentKeySource(), COL_ROW_KEY, targetColumns);
   }
-
 
   private static Dataset<Row> filterEmptyPayloadRows(
       Dataset<Row> rows, List<String> targetColumns) {
@@ -268,13 +288,18 @@ public final class SparkExtensionMaterializer {
             ? lit("")
             : org.apache.spark.sql.functions.to_json(
                 org.apache.spark.sql.functions.struct(
-                    stableColumns.stream().map(org.apache.spark.sql.functions::col).toArray(Column[]::new)));
+                    stableColumns.stream()
+                        .map(org.apache.spark.sql.functions::col)
+                        .toArray(Column[]::new)));
     Column stableHash = org.apache.spark.sql.functions.sha2(stableRow, 256);
     String rankColumn = "__dwca_parent_row_rank";
 
     return rows.withColumn(
             rankColumn,
-            org.apache.spark.sql.functions
+            org.apache
+                .spark
+                .sql
+                .functions
                 .row_number()
                 .over(Window.partitionBy(COL_PARENT_KEY).orderBy(stableHash, stableRow)))
         .filter(col(rankColumn).leq(maxRowsPerParent.get()))
@@ -287,7 +312,8 @@ public final class SparkExtensionMaterializer {
       boolean rowProducing,
       boolean filterEmptyPayload,
       Set<String> mergeTerms) {
-    graph.resource(fragment.sourceResource())
+    graph
+        .resource(fragment.sourceResource())
         .orElseThrow(
             () ->
                 new IllegalArgumentException(
@@ -303,7 +329,10 @@ public final class SparkExtensionMaterializer {
     MappingExecutionResult execution = pathExecutor.execute(loader, mapping);
     if (!execution.completePath()) {
       Dataset<Row> empty =
-          execution.pathResult().dataset().limit(0)
+          execution
+              .pathResult()
+              .dataset()
+              .limit(0)
               .select(
                   lit(null).cast("string").as(COL_PARENT_KEY),
                   lit(null).cast("string").as(COL_ROW_KEY));
@@ -314,8 +343,7 @@ public final class SparkExtensionMaterializer {
     FieldRef parentKeySource = fragment.scopeKey();
     String parentAlias = pathResult.columnName(parentKeySource);
 
-    Optional<FieldRef> identity =
-        rowProducing ? fragment.rowIdentity() : fragment.rowMatch();
+    Optional<FieldRef> identity = rowProducing ? fragment.rowIdentity() : fragment.rowMatch();
     String identityAlias = identity.map(pathResult::columnName).orElse(parentAlias);
 
     Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
@@ -333,8 +361,7 @@ public final class SparkExtensionMaterializer {
       }
     }
 
-    boolean distinctRowIdentity =
-        identity.isPresent() && !identityAlias.equals(parentAlias);
+    boolean distinctRowIdentity = identity.isPresent() && !identityAlias.equals(parentAlias);
     Dataset<Row> grouped;
     if (rowProducing && identity.isEmpty()) {
       // No declared logical key means each physical source/result row is an extension row. This is
@@ -355,14 +382,16 @@ public final class SparkExtensionMaterializer {
     } else if (aggregates.isEmpty()) {
       if (distinctRowIdentity) {
         grouped =
-            pathResult.dataset()
+            pathResult
+                .dataset()
                 .select(
                     col(parentAlias).cast("string").as(COL_PARENT_KEY),
                     col(identityAlias).cast("string").as(COL_ROW_KEY))
                 .distinct();
       } else {
         grouped =
-            pathResult.dataset()
+            pathResult
+                .dataset()
                 .select(col(parentAlias).cast("string").as(COL_PARENT_KEY))
                 .distinct()
                 .withColumn(COL_ROW_KEY, col(COL_PARENT_KEY));
@@ -371,14 +400,16 @@ public final class SparkExtensionMaterializer {
       Column[] aggArray = aggregates.toArray(Column[]::new);
       if (distinctRowIdentity) {
         grouped =
-            pathResult.dataset()
+            pathResult
+                .dataset()
                 .groupBy(col(parentAlias), col(identityAlias))
                 .agg(aggArray[0], java.util.Arrays.copyOfRange(aggArray, 1, aggArray.length))
                 .withColumnRenamed(parentAlias, COL_PARENT_KEY)
                 .withColumnRenamed(identityAlias, COL_ROW_KEY);
       } else {
         grouped =
-            pathResult.dataset()
+            pathResult
+                .dataset()
                 .groupBy(col(parentAlias))
                 .agg(aggArray[0], java.util.Arrays.copyOfRange(aggArray, 1, aggArray.length))
                 .withColumnRenamed(parentAlias, COL_PARENT_KEY)
@@ -415,8 +446,7 @@ public final class SparkExtensionMaterializer {
     return new MaterializedTarget(target, targetAlias, sources);
   }
 
-  private Column rowExpression(
-      CompiledTargetProducer target, SparkPathResult pathResult) {
+  private Column rowExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
     List<Column> sources =
         target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
 
@@ -471,8 +501,7 @@ public final class SparkExtensionMaterializer {
             + target.aggregation());
   }
 
-  private Column aggregateExpression(
-      CompiledTargetProducer target, SparkPathResult pathResult) {
+  private Column aggregateExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
     List<Column> sources =
         target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
 
@@ -522,15 +551,11 @@ public final class SparkExtensionMaterializer {
       if (delimited.distinct()) {
         values = array_distinct(values);
       }
-      return when(
-          size(values).gt(0), concat_ws(delimited.delimiter(), sort_array(values)));
+      return when(size(values).gt(0), concat_ws(delimited.delimiter(), sort_array(values)));
     }
 
     throw new UnsupportedOperationException(
-        "Unsupported target aggregation for "
-            + target.targetTerm()
-            + ": "
-            + target.aggregation());
+        "Unsupported target aggregation for " + target.targetTerm() + ": " + target.aggregation());
   }
 
   private static void ensureNoDuplicateTargets(
@@ -562,7 +587,6 @@ public final class SparkExtensionMaterializer {
           }
         });
   }
-
 
   /**
    * Materializes an extension target merge from raw contribution rows rather than from each
@@ -606,7 +630,8 @@ public final class SparkExtensionMaterializer {
               .groupBy(
                   pathResult.dataset().col(parentAlias).cast("string").as(COL_PARENT_KEY),
                   pathResult.dataset().col(rowAlias).cast("string").as(COL_ROW_KEY))
-              .agg(aggregateExpression(producer, pathResult).cast("string").as("__dwca_merge_value"))
+              .agg(
+                  aggregateExpression(producer, pathResult).cast("string").as("__dwca_merge_value"))
               .withColumn("__dwca_merge_producer_order", lit(producerOrder))
               .filter(
                   col("__dwca_merge_value")
@@ -672,11 +697,13 @@ public final class SparkExtensionMaterializer {
                   pathResult.columnOrNull(parentKey).cast("string").as(COL_PARENT_KEY),
                   pathResult.columnOrNull(rowKey).cast("string").as(COL_ROW_KEY),
                   rowExpression(producer, pathResult).cast("string").as("__dwca_merge_value"),
-                  producer.contributionIdentity()
+                  producer
+                      .contributionIdentity()
                       .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
                       .orElse(lit(null).cast("string"))
                       .as("__dwca_merge_identity"),
-                  producer.orderBy()
+                  producer
+                      .orderBy()
                       .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
                       .orElse(lit(null).cast("string"))
                       .as("__dwca_merge_order"),
@@ -728,7 +755,8 @@ public final class SparkExtensionMaterializer {
         }
         return contributions
             .groupBy(COL_PARENT_KEY, COL_ROW_KEY)
-            .agg(org.apache.spark.sql.functions.array_join(values, delimited.delimiter()).as(alias));
+            .agg(
+                org.apache.spark.sql.functions.array_join(values, delimited.delimiter()).as(alias));
       }
 
       Column values = collect_list(col("__dwca_merge_value"));
@@ -756,10 +784,11 @@ public final class SparkExtensionMaterializer {
               .toArray(Column[]::new));
     }
     if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
-      Column values = array(
-          contributions.stream()
-              .map(target -> col(target.physicalColumn()).cast("string"))
-              .toArray(Column[]::new));
+      Column values =
+          array(
+              contributions.stream()
+                  .map(target -> col(target.physicalColumn()).cast("string"))
+                  .toArray(Column[]::new));
       if (delimited.distinct()) {
         values = array_distinct(values);
       }
@@ -783,9 +812,15 @@ public final class SparkExtensionMaterializer {
       String target, MaterializedTarget existing, MaterializedTarget incoming) {
     return new IllegalStateException(
         "Compiler invariant violated: duplicate target producer reached Spark materialization\n\n"
-            + "Target:\n  " + target + "\n\n"
-            + "Existing producer:\n" + indent(existing.describe(), "  ") + "\n\n"
-            + "Incoming producer:\n" + indent(incoming.describe(), "  ") + "\n\n"
+            + "Target:\n  "
+            + target
+            + "\n\n"
+            + "Existing producer:\n"
+            + indent(existing.describe(), "  ")
+            + "\n\n"
+            + "Incoming producer:\n"
+            + indent(incoming.describe(), "  ")
+            + "\n\n"
             + "Target ownership must be resolved by MappingCompiler before Spark execution.");
   }
 

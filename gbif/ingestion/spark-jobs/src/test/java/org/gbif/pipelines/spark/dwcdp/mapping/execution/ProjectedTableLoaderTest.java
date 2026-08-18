@@ -1,6 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.ProjectedTableLoader;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -79,18 +78,13 @@ class ProjectedTableLoaderTest {
                 .add("agentRoleOrder", DataTypes.IntegerType));
 
     TableLoader delegate =
-        resource ->
-            resource.equals("survey-agent-role") ? Optional.of(roles) : Optional.empty();
+        resource -> resource.equals("survey-agent-role") ? Optional.of(roles) : Optional.empty();
     MappingInputRequirements requirements =
         new MappingInputRequirements(
-            Map.of(
-                "survey-agent-role",
-                new ResourceRequirement(Set.of("survey_fk"), true)));
+            Map.of("survey-agent-role", new ResourceRequirement(Set.of("survey_fk"), true)));
 
     Dataset<Row> loaded =
-        ProjectedTableLoader.wrap(delegate, requirements)
-            .load("survey-agent-role")
-            .orElseThrow();
+        ProjectedTableLoader.wrap(delegate, requirements).load("survey-agent-role").orElseThrow();
 
     assertArrayEquals(roles.columns(), loaded.columns());
   }

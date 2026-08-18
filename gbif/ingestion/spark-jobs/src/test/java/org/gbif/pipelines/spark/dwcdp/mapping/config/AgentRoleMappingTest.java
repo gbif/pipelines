@@ -133,16 +133,13 @@ class AgentRoleMappingTest {
     SchemaPath survey = SchemaPath.root("survey");
     SchemaPath role =
         survey.append(graph.resolve("survey", "survey-agent-role", "survey_fk", null));
-    SchemaPath agent =
-        role.append(graph.resolve("survey-agent-role", "agent", "agent_fk", null));
+    SchemaPath agent = role.append(graph.resolve("survey-agent-role", "agent", "agent_fk", null));
 
     TargetFieldMapping target = fragment.fields().get(0);
     assertEquals(List.of(agent.field("preferredAgentName")), target.sources());
     assertEquals(role.field("agent_fk"), target.contributionIdentity().orElseThrow());
     assertEquals(role.field("agentRoleOrder"), target.orderBy().orElseThrow());
-    assertEquals(
-        Set.of("agentRole"),
-        fragment.relations().get(0).filter().requiredColumns());
+    assertEquals(Set.of("agentRole"), fragment.relations().get(0).filter().requiredColumns());
 
     MappingPlan plan =
         org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder.mappingPlan(
@@ -158,11 +155,12 @@ class AgentRoleMappingTest {
     CompiledMapping compiled = new MappingCompiler(graph).compile(plan);
     CompiledFragment compiledFragment = compiled.extensions().get(0).fragments().get(0);
 
-    assertEquals("survey-agent-role", compiledFragment.relations().get(0).relation().targetResource());
+    assertEquals(
+        "survey-agent-role", compiledFragment.relations().get(0).relation().targetResource());
     assertEquals("agent", compiledFragment.relations().get(1).relation().targetResource());
-    assertTrue(compiledFragment.relations().get(0).filter().requiredColumns().contains("agentRole"));
+    assertTrue(
+        compiledFragment.relations().get(0).filter().requiredColumns().contains("agentRole"));
   }
-
 
   @Test
   void coreVariantUsesTheSameAgentRolePolicy() {
@@ -180,8 +178,7 @@ class AgentRoleMappingTest {
     SchemaPath survey = SchemaPath.root("survey");
     SchemaPath role =
         survey.append(graph.resolve("survey", "survey-agent-role", "survey_fk", null));
-    SchemaPath agent =
-        role.append(graph.resolve("survey-agent-role", "agent", "agent_fk", null));
+    SchemaPath agent = role.append(graph.resolve("survey-agent-role", "agent", "agent_fk", null));
     TargetFieldMapping target = fragment.fields().get(0);
 
     assertEquals(List.of(agent.field("preferredAgentName")), target.sources());
@@ -194,14 +191,8 @@ class AgentRoleMappingTest {
         graph,
         ROW_TYPE,
         AgentRoleMapping.Spec.orderedDistinctNames(
-            "survey-collectors",
-            "survey",
-            "survey-agent-role",
-            "survey_fk",
-            "collector",
-            TARGET));
+            "survey-collectors", "survey", "survey-agent-role", "survey_fk", "collector", TARGET));
   }
-
 
   private ExtensionFragment surveyRows() {
     SchemaPath survey = SchemaPath.root("survey");
@@ -209,9 +200,7 @@ class AgentRoleMappingTest {
         .rowIdentity(survey.field("survey_pk"))
         .field(
             TargetFieldMapping.oneOf(
-                SURVEY_ID_TARGET,
-                ValueAggregation.firstNonNull(),
-                survey.field("survey_pk")))
+                SURVEY_ID_TARGET, ValueAggregation.firstNonNull(), survey.field("survey_pk")))
         .build();
   }
 

@@ -14,10 +14,16 @@ public record TargetFieldMapping(
     Optional<FieldRef> contributionIdentity,
     Optional<FieldRef> orderBy) {
 
-  public enum SourceMode { ONE_OF, ALL_OF }
+  public enum SourceMode {
+    ONE_OF,
+    ALL_OF
+  }
 
   /** Whether the producer was deliberately declared or inferred by generic direct-field mapping. */
-  public enum Origin { EXPLICIT, INFERRED }
+  public enum Origin {
+    EXPLICIT,
+    INFERRED
+  }
 
   public TargetFieldMapping {
     Objects.requireNonNull(targetTerm, "targetTerm");
@@ -35,33 +41,58 @@ public record TargetFieldMapping(
   public static TargetFieldMapping oneOf(
       String targetTerm, ValueAggregation aggregation, FieldRef... sources) {
     return new TargetFieldMapping(
-        targetTerm, SourceMode.ONE_OF, List.of(sources), aggregation, Origin.EXPLICIT,
-        Optional.empty(), Optional.empty());
+        targetTerm,
+        SourceMode.ONE_OF,
+        List.of(sources),
+        aggregation,
+        Origin.EXPLICIT,
+        Optional.empty(),
+        Optional.empty());
   }
 
   public static TargetFieldMapping inferredOneOf(
       String targetTerm, ValueAggregation aggregation, FieldRef... sources) {
     return new TargetFieldMapping(
-        targetTerm, SourceMode.ONE_OF, List.of(sources), aggregation, Origin.INFERRED,
-        Optional.empty(), Optional.empty());
+        targetTerm,
+        SourceMode.ONE_OF,
+        List.of(sources),
+        aggregation,
+        Origin.INFERRED,
+        Optional.empty(),
+        Optional.empty());
   }
 
   public static TargetFieldMapping allOf(
       String targetTerm, ValueAggregation aggregation, FieldRef... sources) {
     return new TargetFieldMapping(
-        targetTerm, SourceMode.ALL_OF, List.of(sources), aggregation, Origin.EXPLICIT,
-        Optional.empty(), Optional.empty());
+        targetTerm,
+        SourceMode.ALL_OF,
+        List.of(sources),
+        aggregation,
+        Origin.EXPLICIT,
+        Optional.empty(),
+        Optional.empty());
   }
 
-  /** Identity of the logical contribution, used to deduplicate the same linked record across paths. */
+  /**
+   * Identity of the logical contribution, used to deduplicate the same linked record across paths.
+   */
   public TargetFieldMapping contributionIdentity(FieldRef field) {
     return new TargetFieldMapping(
         targetTerm, sourceMode, sources, aggregation, origin, Optional.of(field), orderBy);
   }
 
-  /** Field used to deterministically order this producer's contributions before target aggregation. */
+  /**
+   * Field used to deterministically order this producer's contributions before target aggregation.
+   */
   public TargetFieldMapping orderBy(FieldRef field) {
     return new TargetFieldMapping(
-        targetTerm, sourceMode, sources, aggregation, origin, contributionIdentity, Optional.of(field));
+        targetTerm,
+        sourceMode,
+        sources,
+        aggregation,
+        origin,
+        contributionIdentity,
+        Optional.of(field));
   }
 }
