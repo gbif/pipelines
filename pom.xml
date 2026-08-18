@@ -194,6 +194,7 @@
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
     <maven-plugin-plugin.version>3.9.0</maven-plugin-plugin.version>
+    <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <build-helper-maven.version>3.6.0</build-helper-maven.version>
 
     <!-- Plugins -->
@@ -256,6 +257,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-plugin-plugin</artifactId>
           <version>${maven-plugin-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
