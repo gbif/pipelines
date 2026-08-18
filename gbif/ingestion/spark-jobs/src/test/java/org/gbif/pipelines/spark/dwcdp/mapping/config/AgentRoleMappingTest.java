@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -140,7 +141,7 @@ class AgentRoleMappingTest {
     assertEquals(role.field("agent_fk"), target.contributionIdentity().orElseThrow());
     assertEquals(role.field("agentRoleOrder"), target.orderBy().orElseThrow());
     assertEquals(
-        java.util.Set.of("agentRole"),
+        Set.of("agentRole"),
         fragment.relations().get(0).filter().requiredColumns());
 
     MappingPlan plan =

@@ -56,6 +56,8 @@ public final class OccurrenceDwcaMapping {
         .unionRows()
         .importFragment(AssertionMapping.occurrenceAssertions(graph))
         .importFragment(AssertionMapping.materialAssertionsForOccurrence(graph))
+        .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForOccurrence(graph))
+        .importFragment(AssertionMapping.molecularProtocolAssertionsForOccurrence(graph))
         .endExtension()
         .extension(IdentificationMapping.ROW_TYPE_IDENTIFICATION)
         .importFragment(IdentificationMapping.occurrenceHistory(graph))
@@ -90,6 +92,8 @@ public final class OccurrenceDwcaMapping {
         .unionRows()
         .importFragment(AssertionMapping.occurrenceAssertions(graph))
         .importFragment(AssertionMapping.materialAssertionsForOccurrence(graph))
+        .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForOccurrence(graph))
+        .importFragment(AssertionMapping.molecularProtocolAssertionsForOccurrence(graph))
         .build();
   }
 

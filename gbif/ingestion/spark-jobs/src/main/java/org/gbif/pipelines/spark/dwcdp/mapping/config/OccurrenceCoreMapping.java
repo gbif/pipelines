@@ -2,19 +2,20 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder.coreFragment;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import java.util.HashSet;
-import java.util.Set;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 
 /** Reusable Occurrence-core enrichment fragments. */
 public final class OccurrenceCoreMapping {
@@ -346,7 +347,7 @@ public final class OccurrenceCoreMapping {
 
   private static void addProvenanceTargets(CoreFragmentBuilder builder, SchemaPath provenance) {
     for (String field :
-        java.util.List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
+        List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
       builder.field(
           TargetFieldMapping.oneOf(
                   TargetTerms.resolve(field),
@@ -462,9 +463,9 @@ public final class OccurrenceCoreMapping {
       if (!column.endsWith("_pk") && !column.endsWith("_fk")) {
         TargetTerms.resolveOutput(
                 column,
-                java.util.Set.of("occurrence", "identification", "material").contains(resourceName)
+                Set.of("occurrence", "identification", "material").contains(resourceName)
                     ? TargetTerms.OCCURRENCE_ENRICHMENT_RAW_OUTPUTS
-                    : java.util.Set.of())
+                    : Set.of())
             .ifPresent(targets::add);
       }
     }

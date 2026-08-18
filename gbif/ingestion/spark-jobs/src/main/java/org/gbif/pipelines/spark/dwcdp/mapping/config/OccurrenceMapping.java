@@ -3,19 +3,20 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Reusable occurrence-row mappings shared by Occurrence core and Event -> Occurrence extension. */
 public final class OccurrenceMapping {
@@ -428,7 +429,7 @@ public final class OccurrenceMapping {
   private static void addProvenanceTargets(
       ExtensionFragmentBuilder builder, SchemaPath provenance) {
     for (String field :
-        java.util.List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
+        List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
       builder.field(
           TargetFieldMapping.oneOf(
                   TargetTerms.resolve(field),
@@ -496,9 +497,9 @@ public final class OccurrenceMapping {
       if (!column.endsWith("_pk") && !column.endsWith("_fk")) {
         TargetTerms.resolveOutput(
                 column,
-                java.util.Set.of("occurrence", "identification", "material").contains(resourceName)
+                Set.of("occurrence", "identification", "material").contains(resourceName)
                     ? TargetTerms.OCCURRENCE_ENRICHMENT_RAW_OUTPUTS
-                    : java.util.Set.of())
+                    : Set.of())
             .ifPresent(targets::add);
       }
     }

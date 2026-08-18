@@ -71,7 +71,11 @@ public final class EventDwcaMapping {
         .importFragment(MultimediaMapping.materialMediaForEvent(graph))
         .endExtension()
         .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
+        .unionRows()
         .importFragment(AssertionMapping.eventAssertions(graph))
+        .importFragment(AssertionMapping.surveyAssertionsForEvent(graph))
+        .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForEvent(graph))
+        .importFragment(AssertionMapping.molecularProtocolAssertionsForEvent(graph))
         .endExtension()
         .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
         .importFragment(IdentifierMapping.eventIdentifiers(graph))
@@ -127,7 +131,11 @@ public final class EventDwcaMapping {
   public static MappingPlan withAssertions(SchemaGraph graph) {
     return eventBase("event-core:assertions")
         .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
+        .unionRows()
         .importFragment(AssertionMapping.eventAssertions(graph))
+        .importFragment(AssertionMapping.surveyAssertionsForEvent(graph))
+        .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForEvent(graph))
+        .importFragment(AssertionMapping.molecularProtocolAssertionsForEvent(graph))
         .build();
   }
 
