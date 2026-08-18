@@ -27,6 +27,110 @@ public final class ReferenceMapping {
         graph, new Spec("event-references", "event-reference", "event_fk", List.of()));
   }
 
+  public static ExtensionFragment eventSamplingProtocolReferences(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "event-sampling-protocol-references",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.exactlyOne("protocol", "eventProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment eventGeoreferenceProtocolReferences(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "event-georeference-protocol-references",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.exactlyOne("protocol", "georeferenceProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment eventProtocolReferences(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "event-protocol-references",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.fanOut("event-protocol", "event_fk"),
+                OwnershipStep.exactlyOne("protocol", "protocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment surveySamplingProtocolReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "survey-sampling-protocol-references-for-event",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.fanOut("survey", "event_fk"),
+                OwnershipStep.exactlyOne("protocol", "samplingProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment surveySamplingEffortProtocolReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "survey-sampling-effort-protocol-references-for-event",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.fanOut("survey", "event_fk"),
+                OwnershipStep.exactlyOne("protocol", "samplingEffortProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment surveyProtocolReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "survey-protocol-references-for-event",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.fanOut("survey", "event_fk"),
+                OwnershipStep.fanOut("survey-protocol", "survey_fk"),
+                OwnershipStep.exactlyOne("protocol", "protocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment chronometricAgeProtocolReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "chronometric-age-protocol-references-for-event",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipStep.exactlyOne("protocol", "chronometricAgeProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment chronometricAgeConversionProtocolReferencesForEvent(
+      SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "chronometric-age-conversion-protocol-references-for-event",
+            "event",
+            "event_pk",
+            List.of(
+                OwnershipStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipStep.exactlyOne("protocol", "chronometricAgeConversionProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
   public static ExtensionFragment surveyReferencesForEvent(SchemaGraph graph) {
     return references(
         graph,
@@ -97,6 +201,61 @@ public final class ReferenceMapping {
                             FilterExpression.isNull("occurrence_fk"),
                             FilterExpression.isNull("nucleotideAnalysis_fk"))),
                 OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+  }
+
+  public static ExtensionFragment occurrenceProtocolReferences(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "occurrence-protocol-references",
+            "occurrence",
+            "occurrence_pk",
+            List.of(
+                OwnershipStep.exactlyOne("protocol", "occurrenceProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment materialProtocolReferencesForOccurrence(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "material-protocol-references-for-occurrence",
+            "occurrence",
+            "occurrence_pk",
+            List.of(
+                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipStep.fanOut("material-protocol", "materialEntity_fk"),
+                OwnershipStep.exactlyOne("protocol", "protocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment chronometricAgeProtocolReferencesForOccurrence(SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "chronometric-age-protocol-references-for-occurrence",
+            "occurrence",
+            "occurrence_pk",
+            List.of(
+                OwnershipStep.exactlyOne("event", "event_fk"),
+                OwnershipStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipStep.exactlyOne("protocol", "chronometricAgeProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment chronometricAgeConversionProtocolReferencesForOccurrence(
+      SchemaGraph graph) {
+    return references(
+        graph,
+        new Spec(
+            "chronometric-age-conversion-protocol-references-for-occurrence",
+            "occurrence",
+            "occurrence_pk",
+            List.of(
+                OwnershipStep.exactlyOne("event", "event_fk"),
+                OwnershipStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipStep.exactlyOne("protocol", "chronometricAgeConversionProtocol_fk"),
+                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment occurrenceReferences(SchemaGraph graph) {

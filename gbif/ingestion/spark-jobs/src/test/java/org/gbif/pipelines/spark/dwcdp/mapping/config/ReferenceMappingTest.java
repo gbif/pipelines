@@ -42,11 +42,44 @@ class ReferenceMappingTest {
         ReferenceMapping.surveyReferencesForEvent(graph),
         List.of("survey", "survey-reference", "bibliographic-resource"));
     assertCompiledPath(
+        ReferenceMapping.eventSamplingProtocolReferences(graph),
+        List.of("protocol", "protocol-reference", "bibliographic-resource"));
+    assertCompiledPath(
+        ReferenceMapping.eventProtocolReferences(graph),
+        List.of("event-protocol", "protocol", "protocol-reference", "bibliographic-resource"));
+    assertCompiledPath(
+        ReferenceMapping.surveySamplingProtocolReferencesForEvent(graph),
+        List.of("survey", "protocol", "protocol-reference", "bibliographic-resource"));
+    assertCompiledPath(
+        ReferenceMapping.surveyProtocolReferencesForEvent(graph),
+        List.of(
+            "survey",
+            "survey-protocol",
+            "protocol",
+            "protocol-reference",
+            "bibliographic-resource"));
+    assertCompiledPath(
         ReferenceMapping.chronometricAgeReferencesForEvent(graph),
         List.of("chronometric-age", "chronometric-age-reference", "bibliographic-resource"));
     assertCompiledPath(
         ReferenceMapping.materialReferencesForOccurrence(graph),
         List.of("material", "material-reference", "bibliographic-resource"));
+    assertCompiledPath(
+        ReferenceMapping.materialProtocolReferencesForOccurrence(graph),
+        List.of(
+            "material",
+            "material-protocol",
+            "protocol",
+            "protocol-reference",
+            "bibliographic-resource"));
+    assertCompiledPath(
+        ReferenceMapping.chronometricAgeConversionProtocolReferencesForOccurrence(graph),
+        List.of(
+            "event",
+            "chronometric-age",
+            "protocol",
+            "protocol-reference",
+            "bibliographic-resource"));
     assertCompiledPath(
         ReferenceMapping.identificationReferencesForOccurrence(graph),
         List.of("identification", "identification-reference", "bibliographic-resource"));
@@ -102,8 +135,16 @@ class ReferenceMappingTest {
     assertEquals(
         Set.of(
             "event-references",
+            "event-sampling-protocol-references",
+            "event-georeference-protocol-references",
+            "event-protocol-references",
             "survey-references-for-event",
+            "survey-sampling-protocol-references-for-event",
+            "survey-sampling-effort-protocol-references-for-event",
+            "survey-protocol-references-for-event",
             "chronometric-age-references-for-event",
+            "chronometric-age-protocol-references-for-event",
+            "chronometric-age-conversion-protocol-references-for-event",
             "event-molecular-protocol-references",
             "event-dna-analysis-identification-references",
             "event-dna-sequence-identification-references"),
@@ -116,9 +157,13 @@ class ReferenceMappingTest {
     assertEquals(
         Set.of(
             "occurrence-references",
+            "occurrence-protocol-references",
             "material-references-for-occurrence",
+            "material-protocol-references-for-occurrence",
             "identification-references-for-occurrence",
             "chronometric-age-references-for-occurrence",
+            "chronometric-age-protocol-references-for-occurrence",
+            "chronometric-age-conversion-protocol-references-for-occurrence",
             "material-molecular-protocol-references-for-occurrence",
             "material-dna-analysis-identification-references-for-occurrence",
             "material-dna-sequence-identification-references-for-occurrence"),
