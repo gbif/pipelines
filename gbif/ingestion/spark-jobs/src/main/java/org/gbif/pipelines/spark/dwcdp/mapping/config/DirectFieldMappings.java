@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
+import java.util.Optional;
 import java.util.Set;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
@@ -100,7 +101,7 @@ final class DirectFieldMappings {
     }
   }
 
-  private java.util.Optional<String> resolveOutput(String column) {
+  private Optional<String> resolveOutput(String column) {
     return humboldtRawContract
         ? TargetTerms.resolveHumboldtOutput(column)
         : TargetTerms.resolveOutput(column, retainedRawOutputs);

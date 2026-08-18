@@ -80,6 +80,18 @@ class AssertionMappingTest {
   }
 
   @Test
+  void chronometricAssertionsUseEventOwnershipPath() {
+    ExtensionFragment fragment = AssertionMapping.chronometricAgeAssertionsForEvent(graph);
+
+    assertEquals("event", fragment.sourceResource());
+    assertEquals("event_pk", fragment.scopeKeyColumn().orElseThrow());
+    assertEquals(
+        List.of("chronometric-age", "chronometric-age-assertion", "protocol"),
+        relationTargets(fragment));
+    assertEquals("assertionID", fragment.rowIdentity().orElseThrow().column());
+  }
+
+  @Test
   void canonicalAssertionPlansUnionIndependentAssertionOwners() {
     assertUnionFragments(
         EventDwcaMapping.withAssertions(graph),
@@ -87,12 +99,14 @@ class AssertionMappingTest {
             "event-assertions",
             "survey-assertions-for-event",
             "event-nucleotide-analysis-assertions",
-            "event-molecular-protocol-assertions"));
+            "event-molecular-protocol-assertions",
+            "chronometric-age-assertions-for-event"));
 
     assertUnionFragments(
         OccurrenceDwcaMapping.withAssertions(graph),
         Set.of(
             "occurrence-assertions",
+            "chronometric-age-assertions-for-occurrence",
             "material-assertions-for-occurrence",
             "material-nucleotide-analysis-assertions-for-occurrence",
             "material-molecular-protocol-assertions-for-occurrence"));
@@ -118,4 +132,17 @@ class AssertionMappingTest {
         assertions.fragments().stream().map(ExtensionFragment::name).collect(Collectors.toSet()));
     assertTrue(assertions.fragments().stream().allMatch(fragment -> fragment.rowIdentity().isPresent()));
   }
+  @Test
+  void chronometricAssertionsCanBePromotedToOccurrenceThroughEvent() {
+    ExtensionFragment fragment = AssertionMapping.chronometricAgeAssertionsForOccurrence(graph);
+
+    assertEquals("occurrence", fragment.sourceResource());
+    assertEquals("occurrence_pk", fragment.scopeKeyColumn().orElseThrow());
+    assertEquals(
+        List.of("event", "chronometric-age", "chronometric-age-assertion", "protocol"),
+        fragment.relations().stream()
+            .map(relation -> relation.targetResource())
+            .collect(Collectors.toList()));
+  }
+
 }

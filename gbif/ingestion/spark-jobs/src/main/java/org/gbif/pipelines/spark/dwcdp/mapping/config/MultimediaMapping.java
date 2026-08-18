@@ -182,4 +182,86 @@ public final class MultimediaMapping {
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
     return builder.build();
   }
+  /** Media explicitly attached to an Event-owned Chronometric Age row. */
+  public static ExtensionFragment chronometricAgeMediaForEvent(SchemaGraph graph) {
+    SchemaPath age = SchemaPath.root("chronometric-age");
+    SchemaPath link =
+        age.append(
+            graph.resolve(
+                "chronometric-age", "chronometric-age-media", "chronometricAge_fk", null));
+    SchemaPath media =
+        link.append(graph.resolve("chronometric-age-media", "media", "media_fk", null));
+    SchemaPath usagePolicy =
+        media.append(graph.resolve("media", "usage-policy", "usagePolicy_fk", null));
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "chronometric-age-media-for-event", ROW_TYPE_MULTIMEDIA, "chronometric-age")
+            .scopeKey("event_fk")
+            .join("chronometric-age-media")
+            .via("chronometricAge_fk")
+            .optional()
+            .fanOut()
+            .join("media")
+            .via("media_fk")
+            .optional()
+            .exactlyOne()
+            .join("usage-policy")
+            .via("usagePolicy_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    DirectFieldMappings.from(graph, "media", media).addTo(builder);
+    DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
+    return builder.build();
+  }
+
+  /** Chronometric Age media promoted from the Occurrence's owning Event. */
+  public static ExtensionFragment chronometricAgeMediaForOccurrence(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath event =
+        occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
+    SchemaPath age =
+        event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
+    SchemaPath link =
+        age.append(
+            graph.resolve(
+                "chronometric-age", "chronometric-age-media", "chronometricAge_fk", null));
+    SchemaPath media =
+        link.append(graph.resolve("chronometric-age-media", "media", "media_fk", null));
+    SchemaPath usagePolicy =
+        media.append(graph.resolve("media", "usage-policy", "usagePolicy_fk", null));
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "chronometric-age-media-for-occurrence", ROW_TYPE_MULTIMEDIA, "occurrence")
+            .scopeKey("occurrence_pk")
+            .join("event")
+            .via("event_fk")
+            .optional()
+            .exactlyOne()
+            .join("chronometric-age")
+            .via("event_fk")
+            .optional()
+            .fanOut()
+            .join("chronometric-age-media")
+            .via("chronometricAge_fk")
+            .optional()
+            .fanOut()
+            .join("media")
+            .via("media_fk")
+            .optional()
+            .exactlyOne()
+            .join("usage-policy")
+            .via("usagePolicy_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    DirectFieldMappings.from(graph, "media", media).addTo(builder);
+    DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
+    return builder.build();
+  }
+
 }

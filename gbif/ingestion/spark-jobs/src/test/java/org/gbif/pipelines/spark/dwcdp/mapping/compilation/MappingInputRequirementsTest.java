@@ -55,11 +55,23 @@ class MappingInputRequirementsTest {
   }
 
   @Test
+  void canonicalEventPlanIncludesChronometricRequirements() {
+    MappingInputRequirements requirements =
+        engine.inputRequirements(EventDwcaMapping.current(engine.schemaGraph()));
+
+    assertTrue(requirements.usesResource("chronometric-age"));
+    MappingInputRequirements.ResourceRequirement chronometricAge =
+        requirements.resource("chronometric-age");
+    assertTrue(chronometricAge.columns().contains("chronometricAge_pk"));
+    assertTrue(chronometricAge.columns().contains("event_fk"));
+  }
+
+  @Test
   void resourcesOutsideCanonicalPlanAreNotRequired() {
     MappingInputRequirements requirements =
         engine.inputRequirements(EventDwcaMapping.current(engine.schemaGraph()));
 
-    assertFalse(requirements.usesResource("chronometric-age"));
+    assertFalse(requirements.usesResource("organism-interaction"));
   }
   @Test
   void declarativeFiltersContributeOnlyTheirReferencedColumns() {

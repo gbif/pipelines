@@ -69,6 +69,7 @@ public final class EventDwcaMapping {
         .importFragment(MultimediaMapping.eventMedia(graph))
         .importFragment(MultimediaMapping.occurrenceMediaForEvent(graph))
         .importFragment(MultimediaMapping.materialMediaForEvent(graph))
+        .importFragment(MultimediaMapping.chronometricAgeMediaForEvent(graph))
         .endExtension()
         .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
         .unionRows()
@@ -76,6 +77,7 @@ public final class EventDwcaMapping {
         .importFragment(AssertionMapping.surveyAssertionsForEvent(graph))
         .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForEvent(graph))
         .importFragment(AssertionMapping.molecularProtocolAssertionsForEvent(graph))
+        .importFragment(AssertionMapping.chronometricAgeAssertionsForEvent(graph))
         .endExtension()
         .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
         .unionRows()
@@ -93,7 +95,13 @@ public final class EventDwcaMapping {
         .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
         .importFragment(NucleotideMapping.eventAnalyses(graph))
         .importFragment(NucleotideMapping.eventAnalysisSequence(graph))
-        .importFragment(NucleotideMapping.eventAnalysisProtocol(graph));
+        .importFragment(NucleotideMapping.eventAnalysisProtocol(graph))
+        .endExtension()
+        .extension(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE)
+        .importFragment(ChronometricMapping.eventAges(graph))
+        .importFragment(ChronometricMapping.ageProtocol(graph))
+        .importFragment(ChronometricMapping.conversionProtocol(graph))
+        .importFragment(ChronometricMapping.determinedBy(graph));
     return builder.build();
   }
 
@@ -126,6 +134,7 @@ public final class EventDwcaMapping {
         .importFragment(MultimediaMapping.eventMedia(graph))
         .importFragment(MultimediaMapping.occurrenceMediaForEvent(graph))
         .importFragment(MultimediaMapping.materialMediaForEvent(graph))
+        .importFragment(MultimediaMapping.chronometricAgeMediaForEvent(graph))
         .build();
   }
 
@@ -138,6 +147,7 @@ public final class EventDwcaMapping {
         .importFragment(AssertionMapping.surveyAssertionsForEvent(graph))
         .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForEvent(graph))
         .importFragment(AssertionMapping.molecularProtocolAssertionsForEvent(graph))
+        .importFragment(AssertionMapping.chronometricAgeAssertionsForEvent(graph))
         .build();
   }
 
@@ -148,6 +158,17 @@ public final class EventDwcaMapping {
         .importFragment(NucleotideMapping.eventAnalyses(graph))
         .importFragment(NucleotideMapping.eventAnalysisSequence(graph))
         .importFragment(NucleotideMapping.eventAnalysisProtocol(graph))
+        .build();
+  }
+
+  /** Event-owned Chronometric Age rows with protocol and determiner-agent enrichment. */
+  public static MappingPlan withChronometric(SchemaGraph graph) {
+    return eventBase("event-core:chronometric")
+        .extension(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE)
+        .importFragment(ChronometricMapping.eventAges(graph))
+        .importFragment(ChronometricMapping.ageProtocol(graph))
+        .importFragment(ChronometricMapping.conversionProtocol(graph))
+        .importFragment(ChronometricMapping.determinedBy(graph))
         .build();
   }
 

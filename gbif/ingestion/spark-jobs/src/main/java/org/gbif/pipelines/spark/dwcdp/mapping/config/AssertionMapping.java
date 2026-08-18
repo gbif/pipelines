@@ -92,6 +92,34 @@ public final class AssertionMapping {
                 OwnershipStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"))));
   }
 
+  /** Chronometric-age assertions promoted to their owning Event. */
+  public static ExtensionFragment chronometricAgeAssertionsForEvent(SchemaGraph graph) {
+    return assertions(
+        graph,
+        new Spec(
+            "chronometric-age-assertions-for-event",
+            "event",
+            "event_pk",
+            "chronometric-age-assertion",
+            "chronometricAge_fk",
+            List.of(OwnershipStep.fanOut("chronometric-age", "event_fk"))));
+  }
+
+  /** Chronometric-age assertions promoted from the Occurrence's owning Event. */
+  public static ExtensionFragment chronometricAgeAssertionsForOccurrence(SchemaGraph graph) {
+    return assertions(
+        graph,
+        new Spec(
+            "chronometric-age-assertions-for-occurrence",
+            "occurrence",
+            "occurrence_pk",
+            "chronometric-age-assertion",
+            "chronometricAge_fk",
+            List.of(
+                OwnershipStep.exactlyOne("event", "event_fk"),
+                OwnershipStep.fanOut("chronometric-age", "event_fk"))));
+  }
+
   /** Material assertions promoted to an Occurrence through its single evidence material. */
   public static ExtensionFragment materialAssertionsForOccurrence(SchemaGraph graph) {
     return assertions(

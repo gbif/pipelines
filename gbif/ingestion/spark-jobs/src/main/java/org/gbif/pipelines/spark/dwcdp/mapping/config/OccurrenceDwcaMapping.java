@@ -52,6 +52,7 @@ public final class OccurrenceDwcaMapping {
         .limitRowsPerParent(50)
         .importFragment(MultimediaMapping.occurrenceMedia(graph))
         .importFragment(MultimediaMapping.materialMediaForOccurrence(graph))
+        .importFragment(MultimediaMapping.chronometricAgeMediaForOccurrence(graph))
         .endExtension()
         .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
         .unionRows()
@@ -59,6 +60,7 @@ public final class OccurrenceDwcaMapping {
         .importFragment(AssertionMapping.materialAssertionsForOccurrence(graph))
         .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForOccurrence(graph))
         .importFragment(AssertionMapping.molecularProtocolAssertionsForOccurrence(graph))
+        .importFragment(AssertionMapping.chronometricAgeAssertionsForOccurrence(graph))
         .endExtension()
         .extension(IdentificationMapping.ROW_TYPE_IDENTIFICATION)
         .importFragment(IdentificationMapping.occurrenceHistory(graph))
@@ -72,7 +74,13 @@ public final class OccurrenceDwcaMapping {
         .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
         .importFragment(NucleotideMapping.materialAnalysesForOccurrence(graph))
         .importFragment(NucleotideMapping.materialAnalysisSequenceForOccurrence(graph))
-        .importFragment(NucleotideMapping.materialAnalysisProtocolForOccurrence(graph));
+        .importFragment(NucleotideMapping.materialAnalysisProtocolForOccurrence(graph))
+        .endExtension()
+        .extension(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE)
+        .importFragment(ChronometricMapping.agesForOccurrence(graph))
+        .importFragment(ChronometricMapping.ageProtocolForOccurrence(graph))
+        .importFragment(ChronometricMapping.conversionProtocolForOccurrence(graph))
+        .importFragment(ChronometricMapping.determinedByForOccurrence(graph));
     return builder.build();
   }
 
@@ -86,6 +94,17 @@ public final class OccurrenceDwcaMapping {
         .build();
   }
 
+  /** Event-owned Chronometric Age rows promoted through the Occurrence's owning Event. */
+  public static MappingPlan withChronometric(SchemaGraph graph) {
+    return currentCoreBase(graph, "occurrence-core:chronometric")
+        .extension(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE)
+        .importFragment(ChronometricMapping.agesForOccurrence(graph))
+        .importFragment(ChronometricMapping.ageProtocolForOccurrence(graph))
+        .importFragment(ChronometricMapping.conversionProtocolForOccurrence(graph))
+        .importFragment(ChronometricMapping.determinedByForOccurrence(graph))
+        .build();
+  }
+
   /** Current Occurrence-core enrichments plus direct and material-linked eMoF assertion rows. */
   public static MappingPlan withAssertions(SchemaGraph graph) {
     return currentCoreBase(graph, "occurrence-core:assertions")
@@ -95,6 +114,7 @@ public final class OccurrenceDwcaMapping {
         .importFragment(AssertionMapping.materialAssertionsForOccurrence(graph))
         .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForOccurrence(graph))
         .importFragment(AssertionMapping.molecularProtocolAssertionsForOccurrence(graph))
+        .importFragment(AssertionMapping.chronometricAgeAssertionsForOccurrence(graph))
         .build();
   }
 
@@ -106,6 +126,7 @@ public final class OccurrenceDwcaMapping {
         .limitRowsPerParent(50)
         .importFragment(MultimediaMapping.occurrenceMedia(graph))
         .importFragment(MultimediaMapping.materialMediaForOccurrence(graph))
+        .importFragment(MultimediaMapping.chronometricAgeMediaForOccurrence(graph))
         .build();
   }
 
