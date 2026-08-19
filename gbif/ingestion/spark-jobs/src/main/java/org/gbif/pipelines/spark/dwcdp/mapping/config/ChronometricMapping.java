@@ -6,10 +6,10 @@ import java.util.Optional;
 import org.gbif.dwc.terms.ChronoTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
 /** Declarative mappings for the Chronometric Age extension. */
 public final class ChronometricMapping {
@@ -20,7 +20,7 @@ public final class ChronometricMapping {
 
   /** Base Chronometric Age rows owned directly by an Event. */
   public static ExtensionFragment eventAges(SchemaGraph graph) {
-    SchemaPath age = SchemaPath.root("chronometric-age");
+    MappingPath age = MappingPath.root(graph, "chronometric-age");
     ExtensionFragmentBuilder builder =
         extensionFragment("event-chronometric-age", ROW_TYPE_CHRONOMETRIC_AGE, "chronometric-age")
             .scopeKey("event_fk")
@@ -32,22 +32,13 @@ public final class ChronometricMapping {
 
   /** Base Chronometric Age rows promoted from the Occurrence's owning Event. */
   public static ExtensionFragment agesForOccurrence(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath event = occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
-    SchemaPath age = event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath event = occurrence.join("event").via("event_fk").optional().exactlyOne();
+    MappingPath age = event.join("chronometric-age").via("event_fk").optional().fanOut();
 
     ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "event-chronometric-age-for-occurrence", ROW_TYPE_CHRONOMETRIC_AGE, "occurrence")
+        extensionFragment("event-chronometric-age-for-occurrence", ROW_TYPE_CHRONOMETRIC_AGE, age)
             .scopeKey("occurrence_pk")
-            .join("event")
-            .via("event_fk")
-            .optional()
-            .exactlyOne()
-            .join("chronometric-age")
-            .via("event_fk")
-            .optional()
-            .fanOut()
             .rowIdentity(age.field("chronometricAge_pk"));
 
     DirectFieldMappings.from(graph, "chronometric-age", age).addTo(builder);
@@ -76,29 +67,14 @@ public final class ChronometricMapping {
 
   /** Determiner-agent resolution for Chronometric rows promoted to Occurrence core. */
   public static ExtensionFragment determinedByForOccurrence(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath event = occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
-    SchemaPath age = event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
-    SchemaPath agent =
-        age.append(graph.resolve("chronometric-age", "agent", "chronometricAgeDeterminedByID"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath event = occurrence.join("event").via("event_fk").optional().exactlyOne();
+    MappingPath age = event.join("chronometric-age").via("event_fk").optional().fanOut();
+    MappingPath agent = age.join("agent").via("chronometricAgeDeterminedByID").optional().fanOut();
 
     return extensionFragment(
-            "event-chronometric-age-determined-by-for-occurrence",
-            ROW_TYPE_CHRONOMETRIC_AGE,
-            "occurrence")
+            "event-chronometric-age-determined-by-for-occurrence", ROW_TYPE_CHRONOMETRIC_AGE, agent)
         .scopeKey("occurrence_pk")
-        .join("event")
-        .via("event_fk")
-        .optional()
-        .exactlyOne()
-        .join("chronometric-age")
-        .via("event_fk")
-        .optional()
-        .fanOut()
-        .join("agent")
-        .via("chronometricAgeDeterminedByID")
-        .optional()
-        .fanOut()
         .rowMatch(age.field("chronometricAge_pk"))
         .field(
             TargetFieldMapping.oneOf(
@@ -133,7 +109,7 @@ public final class ChronometricMapping {
 
   /** Resolves chronometricAgeDeterminedByID through agent.agentID. */
   public static ExtensionFragment determinedBy(SchemaGraph graph) {
-    SchemaPath age = SchemaPath.root("chronometric-age");
+    MappingPath age = MappingPath.root(graph, "chronometric-age");
     return AgentMapping.extension(
         graph,
         ROW_TYPE_CHRONOMETRIC_AGE,
@@ -153,26 +129,13 @@ public final class ChronometricMapping {
       String protocolFk,
       String literalField,
       String targetTerm) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath event = occurrence.append(graph.resolve("occurrence", "event", "event_fk", null));
-    SchemaPath age = event.append(graph.resolve("event", "chronometric-age", "event_fk", null));
-    SchemaPath protocol =
-        age.append(graph.resolve("chronometric-age", "protocol", protocolFk, null));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath event = occurrence.join("event").via("event_fk").optional().exactlyOne();
+    MappingPath age = event.join("chronometric-age").via("event_fk").optional().fanOut();
+    MappingPath protocol = age.join("protocol").via(protocolFk).optional().exactlyOne();
 
-    return extensionFragment(fragmentName, ROW_TYPE_CHRONOMETRIC_AGE, "occurrence")
+    return extensionFragment(fragmentName, ROW_TYPE_CHRONOMETRIC_AGE, protocol)
         .scopeKey("occurrence_pk")
-        .join("event")
-        .via("event_fk")
-        .optional()
-        .exactlyOne()
-        .join("chronometric-age")
-        .via("event_fk")
-        .optional()
-        .fanOut()
-        .join("protocol")
-        .via(protocolFk)
-        .optional()
-        .exactlyOne()
         .rowMatch(age.field("chronometricAge_pk"))
         .field(
             TargetFieldMapping.oneOf(
@@ -189,17 +152,12 @@ public final class ChronometricMapping {
       String protocolFk,
       String literalField,
       String targetTerm) {
-    SchemaPath age = SchemaPath.root("chronometric-age");
-    SchemaPath protocol =
-        age.append(graph.resolve("chronometric-age", "protocol", protocolFk, null));
+    MappingPath age = MappingPath.root(graph, "chronometric-age");
+    MappingPath protocol = age.join("protocol").via(protocolFk).optional().exactlyOne();
 
-    return extensionFragment(fragmentName, ROW_TYPE_CHRONOMETRIC_AGE, "chronometric-age")
+    return extensionFragment(fragmentName, ROW_TYPE_CHRONOMETRIC_AGE, protocol)
         .scopeKey("event_fk")
         .rowMatch(age.field("chronometricAge_pk"))
-        .join("protocol")
-        .via(protocolFk)
-        .optional()
-        .exactlyOne()
         .field(
             TargetFieldMapping.oneOf(
                 targetTerm,

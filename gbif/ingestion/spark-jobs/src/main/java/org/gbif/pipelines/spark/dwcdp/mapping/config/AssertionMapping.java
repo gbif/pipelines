@@ -8,11 +8,11 @@ import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
 /** Declarative mappings for the Extended Measurement or Fact (eMoF) extension. */
 public final class AssertionMapping {
@@ -168,69 +168,45 @@ public final class AssertionMapping {
     Objects.requireNonNull(graph, "graph");
     Objects.requireNonNull(spec, "spec");
 
-    SchemaPath current = SchemaPath.root(spec.sourceResource());
-    ExtensionFragmentBuilder builder =
-        extensionFragment(
-                spec.fragmentName(), ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT, spec.sourceResource())
-            .scopeKey(spec.scopeKeyColumn());
-
+    MappingPath current = MappingPath.root(graph, spec.sourceResource());
     for (OwnershipStep step : spec.ownershipPath()) {
-      current =
-          current.append(
-              graph.resolve(current.currentResource(), step.resource(), step.viaColumn(), null));
-      addOwnershipStep(builder, step);
+      current = append(current, step);
     }
 
-    SchemaPath assertion;
-    if (current.currentResource().equals(spec.assertionResource())) {
-      assertion = current;
-      builder.rowIdentity(assertion.field("assertionID"));
-    } else {
-      assertion =
-          current.append(
-              graph.resolve(
-                  current.currentResource(),
-                  spec.assertionResource(),
-                  spec.assertionViaColumn(),
-                  null));
-      builder
-          .join(spec.assertionResource())
-          .via(spec.assertionViaColumn())
-          .optional()
-          .fanOut()
-          .rowIdentity(assertion.field("assertionID"));
-    }
+    MappingPath assertion =
+        current.currentResource().equals(spec.assertionResource())
+            ? current
+            : current
+                .join(spec.assertionResource())
+                .via(spec.assertionViaColumn())
+                .optional()
+                .fanOut();
+    MappingPath protocol =
+        assertion.join("protocol").via("assertionProtocol_fk").optional().exactlyOne();
 
-    SchemaPath protocol =
-        assertion.append(
-            graph.resolve(spec.assertionResource(), "protocol", "assertionProtocol_fk", null));
-    builder.join("protocol").via("assertionProtocol_fk").optional().exactlyOne().endJoin();
-
+    ExtensionFragmentBuilder builder =
+        extensionFragment(spec.fragmentName(), ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT, protocol)
+            .scopeKey(spec.scopeKeyColumn())
+            .rowIdentity(assertion.field("assertionID"));
     addAssertionFields(builder, assertion, protocol);
     return builder.build();
   }
 
-  private static void addOwnershipStep(ExtensionFragmentBuilder builder, OwnershipStep step) {
-    ExtensionFragmentBuilder.RelationBuilder relation =
-        builder.join(step.resource()).via(step.viaColumn());
+  private static MappingPath append(MappingPath current, OwnershipStep step) {
+    MappingPath.JoinBuilder relation = current.join(step.resource()).via(step.viaColumn());
     step.filter().ifPresent(relation::filter);
-
     if (step.requirement() == RelationRequirement.OPTIONAL) {
       relation.optional();
     } else {
       relation.required();
     }
-
-    if (step.cardinality() == OwnershipCardinality.EXACTLY_ONE) {
-      relation.exactlyOne();
-    } else {
-      relation.fanOut();
-    }
-    relation.endJoin();
+    return step.cardinality() == OwnershipCardinality.EXACTLY_ONE
+        ? relation.exactlyOne()
+        : relation.fanOut();
   }
 
   private static void addAssertionFields(
-      ExtensionFragmentBuilder builder, SchemaPath assertion, SchemaPath protocol) {
+      ExtensionFragmentBuilder builder, MappingPath assertion, MappingPath protocol) {
     explicit(builder, assertion, "assertionID", "measurementID");
     explicit(builder, assertion, "assertionType", "measurementType");
     explicit(builder, assertion, "assertionTypeIRI", "measurementTypeID");
@@ -251,7 +227,10 @@ public final class AssertionMapping {
   }
 
   private static void explicit(
-      ExtensionFragmentBuilder builder, SchemaPath source, String sourceField, String targetField) {
+      ExtensionFragmentBuilder builder,
+      MappingPath source,
+      String sourceField,
+      String targetField) {
     builder.field(
         TargetFieldMapping.oneOf(
             TargetTerms.resolve(targetField),

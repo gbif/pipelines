@@ -9,11 +9,11 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
 /** Declarative mappings for DwC Identification extension rows. */
 public final class IdentificationMapping {
@@ -32,17 +32,11 @@ public final class IdentificationMapping {
    * rows are all preserved; the sole-accepted flattening is a separate core enrichment.
    */
   public static ExtensionFragment occurrenceHistory(SchemaGraph graph) {
-    SchemaPath identification = SchemaPath.root(IDENTIFICATION);
-    SchemaPath agent =
-        identification.append(graph.resolve(IDENTIFICATION, AGENT, "identifiedByID", null));
+    MappingPath identification = MappingPath.root(graph, IDENTIFICATION);
+    MappingPath agent = identification.join(AGENT).via("identifiedByID").optional().fanOut();
     ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "occurrence-identification-history", ROW_TYPE_IDENTIFICATION, IDENTIFICATION)
+        extensionFragment("occurrence-identification-history", ROW_TYPE_IDENTIFICATION, agent)
             .scopeKey("occurrence_fk")
-            .join(AGENT)
-            .via("identifiedByID")
-            .optional()
-            .fanOut()
             .rowIdentity(identification.field("identification_pk"));
     addIdentificationFields(graph, builder, identification, agent);
     return builder.build();
@@ -129,43 +123,42 @@ public final class IdentificationMapping {
     Objects.requireNonNull(graph, "graph");
     Objects.requireNonNull(spec, "spec");
 
-    SchemaPath current = SchemaPath.root(spec.sourceResource());
-    ExtensionFragmentBuilder builder =
-        extensionFragment(spec.fragmentName(), ROW_TYPE_IDENTIFICATION, spec.sourceResource())
-            .scopeKey(spec.scopeKeyColumn());
-
+    MappingPath current = MappingPath.root(graph, spec.sourceResource());
     for (OwnershipStep step : spec.ownershipPath()) {
-      current =
-          current.append(
-              graph.resolve(current.currentResource(), step.resource(), step.viaColumn(), null));
-      addOwnershipStep(builder, step);
+      current = append(current, step);
     }
-
     if (!current.currentResource().equals(IDENTIFICATION)) {
       throw new IllegalArgumentException(
           "DNA identification ownership path must end at " + IDENTIFICATION);
     }
 
-    SchemaPath identification = current;
-    SchemaPath agent =
-        identification.append(graph.resolve(IDENTIFICATION, AGENT, "identifiedByID", null));
-
-    builder
-        .join(AGENT)
-        .via("identifiedByID")
-        .optional()
-        .fanOut()
-        .rowIdentity(identification.field("identification_pk"));
+    MappingPath identification = current;
+    MappingPath agent = identification.join(AGENT).via("identifiedByID").optional().fanOut();
+    ExtensionFragmentBuilder builder =
+        extensionFragment(spec.fragmentName(), ROW_TYPE_IDENTIFICATION, agent)
+            .scopeKey(spec.scopeKeyColumn())
+            .rowIdentity(identification.field("identification_pk"));
 
     addIdentificationFields(graph, builder, identification, agent);
     return builder.build();
   }
 
+  private static MappingPath append(MappingPath current, OwnershipStep step) {
+    MappingPath.JoinBuilder relation = current.join(step.resource()).via(step.viaColumn());
+    step.filter().ifPresent(relation::filter);
+    if (step.requirement() == RelationRequirement.OPTIONAL) {
+      relation.optional();
+    } else {
+      relation.required();
+    }
+    return step.exactlyOne() ? relation.exactlyOne() : relation.fanOut();
+  }
+
   private static void addIdentificationFields(
       SchemaGraph graph,
       ExtensionFragmentBuilder builder,
-      SchemaPath identification,
-      SchemaPath agent) {
+      MappingPath identification,
+      MappingPath agent) {
     DirectFieldMappings.from(graph, IDENTIFICATION, identification).addTo(builder);
     builder.field(
         TargetFieldMapping.oneOf(
@@ -173,23 +166,6 @@ public final class IdentificationMapping {
             ValueAggregation.firstNonNull(),
             identification.field("identifiedBy"),
             agent.field("preferredAgentName")));
-  }
-
-  private static void addOwnershipStep(ExtensionFragmentBuilder builder, OwnershipStep step) {
-    ExtensionFragmentBuilder.RelationBuilder relation =
-        builder.join(step.resource()).via(step.viaColumn());
-    step.filter().ifPresent(relation::filter);
-    if (step.requirement() == RelationRequirement.OPTIONAL) {
-      relation.optional();
-    } else {
-      relation.required();
-    }
-    if (step.exactlyOne()) {
-      relation.exactlyOne();
-    } else {
-      relation.fanOut();
-    }
-    relation.endJoin();
   }
 
   private record DnaSpec(

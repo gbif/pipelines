@@ -26,6 +26,15 @@ public final class ExtensionFragmentBuilder {
     return new ExtensionFragmentBuilder(name, rowType, sourceResource);
   }
 
+  /** Creates a fragment using the root and relation steps already captured by {@code path}. */
+  public static ExtensionFragmentBuilder extensionFragment(
+      String name, String rowType, MappingPath path) {
+    ExtensionFragmentBuilder builder =
+        new ExtensionFragmentBuilder(name, rowType, path.rootResource());
+    builder.relations.addAll(path.relations());
+    return builder;
+  }
+
   public RelationBuilder join(String targetResource) {
     return new RelationBuilder(this, RelationStep.inferred(targetResource));
   }

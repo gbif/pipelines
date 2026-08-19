@@ -9,11 +9,11 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
 /** Declarative mappings for the GBIF Literature Reference extension. */
 public final class ReferenceMapping {
@@ -357,51 +357,33 @@ public final class ReferenceMapping {
     Objects.requireNonNull(graph, "graph");
     Objects.requireNonNull(spec, "spec");
 
-    SchemaPath current = SchemaPath.root(spec.sourceResource());
-    ExtensionFragmentBuilder builder =
-        extensionFragment(spec.fragmentName(), ROW_TYPE_REFERENCE, spec.sourceResource())
-            .scopeKey(spec.scopeKeyColumn());
-
+    MappingPath current = MappingPath.root(graph, spec.sourceResource());
     for (OwnershipStep step : spec.ownershipPath()) {
-      current =
-          current.append(
-              graph.resolve(current.currentResource(), step.resource(), step.viaColumn(), null));
-      addOwnershipStep(builder, step);
+      current = append(current, step);
     }
+    MappingPath reference =
+        current.join("bibliographic-resource").via("reference_fk").optional().exactlyOne();
 
-    SchemaPath reference =
-        current.append(
-            graph.resolve(
-                current.currentResource(), "bibliographic-resource", "reference_fk", null));
-    builder
-        .join("bibliographic-resource")
-        .via("reference_fk")
-        .optional()
-        .exactlyOne()
-        .rowIdentity(reference.field("reference_pk"));
-
+    ExtensionFragmentBuilder builder =
+        extensionFragment(spec.fragmentName(), ROW_TYPE_REFERENCE, reference)
+            .scopeKey(spec.scopeKeyColumn())
+            .rowIdentity(reference.field("reference_pk"));
     addReferenceFields(builder, reference);
     return builder.build();
   }
 
-  private static void addOwnershipStep(ExtensionFragmentBuilder builder, OwnershipStep step) {
-    ExtensionFragmentBuilder.RelationBuilder relation =
-        builder.join(step.resource()).via(step.viaColumn());
+  private static MappingPath append(MappingPath current, OwnershipStep step) {
+    MappingPath.JoinBuilder relation = current.join(step.resource()).via(step.viaColumn());
     step.filter().ifPresent(relation::filter);
     if (step.requirement() == RelationRequirement.OPTIONAL) {
       relation.optional();
     } else {
       relation.required();
     }
-    if (step.exactlyOne()) {
-      relation.exactlyOne();
-    } else {
-      relation.fanOut();
-    }
-    relation.endJoin();
+    return step.exactlyOne() ? relation.exactlyOne() : relation.fanOut();
   }
 
-  private static void addReferenceFields(ExtensionFragmentBuilder builder, SchemaPath reference) {
+  private static void addReferenceFields(ExtensionFragmentBuilder builder, MappingPath reference) {
     explicit(builder, reference, "referenceID", DcTerm.identifier.qualifiedName());
     explicit(
         builder, reference, "bibliographicCitation", DcTerm.bibliographicCitation.qualifiedName());
@@ -414,7 +396,7 @@ public final class ReferenceMapping {
   }
 
   private static void explicit(
-      ExtensionFragmentBuilder builder, SchemaPath source, String sourceField, String targetTerm) {
+      ExtensionFragmentBuilder builder, MappingPath source, String sourceField, String targetTerm) {
     builder.field(
         TargetFieldMapping.oneOf(
             targetTerm, ValueAggregation.firstNonNull(), source.field(sourceField)));

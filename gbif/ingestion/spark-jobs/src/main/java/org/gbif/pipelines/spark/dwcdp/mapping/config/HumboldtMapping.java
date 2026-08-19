@@ -6,6 +6,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
@@ -27,21 +28,12 @@ public final class HumboldtMapping {
    * the same term resolution as the legacy mapper.
    */
   public static ExtensionFragment surveyTargets(SchemaGraph graph) {
-    SchemaPath survey = SchemaPath.root("survey");
-    SchemaPath link =
-        survey.append(graph.resolve("survey", "survey-survey-target", "survey_fk", null));
-    SchemaPath target =
-        link.append(
-            graph.resolve("survey-survey-target", "survey-target", "surveyTarget_fk", null));
+    MappingPath survey = MappingPath.root(graph, "survey");
+    MappingPath link = survey.join("survey-survey-target").via("survey_fk").fanOut();
+    MappingPath target = link.join("survey-target").via("surveyTarget_fk").exactlyOne();
 
     ExtensionFragmentBuilder builder =
-        extensionFragment("humboldt-survey-targets", ROW_TYPE_HUMBOLDT, "survey")
-            .join("survey-survey-target")
-            .via("survey_fk")
-            .fanOut()
-            .join("survey-target")
-            .via("surveyTarget_fk")
-            .exactlyOne()
+        extensionFragment("humboldt-survey-targets", ROW_TYPE_HUMBOLDT, target)
             .rowIdentity(target.field("surveyTarget_pk"));
 
     SchemaResource targetResource = requiredResource(graph, "survey-target");
@@ -73,7 +65,7 @@ public final class HumboldtMapping {
    * hidden here with source-name exclusions.
    */
   public static ExtensionFragment surveyFields(SchemaGraph graph) {
-    SchemaPath survey = SchemaPath.root("survey");
+    MappingPath survey = MappingPath.root(graph, "survey");
     ExtensionFragmentBuilder builder =
         extensionFragment("humboldt-survey-fields", ROW_TYPE_HUMBOLDT, "survey");
 
@@ -115,15 +107,11 @@ public final class HumboldtMapping {
    * {@code protocol.protocolDescription}.
    */
   public static ExtensionFragment samplingProtocol(SchemaGraph graph) {
-    SchemaPath survey = SchemaPath.root("survey");
-    SchemaPath protocol =
-        survey.append(graph.resolve("survey", "protocol", "samplingProtocol_fk", null));
+    MappingPath survey = MappingPath.root(graph, "survey");
+    MappingPath protocol =
+        survey.join("protocol").via("samplingProtocol_fk").optional().exactlyOne();
 
-    return extensionFragment("humboldt-sampling-protocol", ROW_TYPE_HUMBOLDT, "survey")
-        .join("protocol")
-        .via("samplingProtocol_fk")
-        .optional()
-        .exactlyOne()
+    return extensionFragment("humboldt-sampling-protocol", ROW_TYPE_HUMBOLDT, protocol)
         .field(
             TargetFieldMapping.oneOf(
                 EcoTerm.protocolDescriptions.qualifiedName(),
@@ -135,15 +123,11 @@ public final class HumboldtMapping {
 
   /** Publisher value wins; otherwise resolve {@code samplingEffortProtocol_fk} through protocol. */
   public static ExtensionFragment samplingEffortProtocol(SchemaGraph graph) {
-    SchemaPath survey = SchemaPath.root("survey");
-    SchemaPath protocol =
-        survey.append(graph.resolve("survey", "protocol", "samplingEffortProtocol_fk", null));
+    MappingPath survey = MappingPath.root(graph, "survey");
+    MappingPath protocol =
+        survey.join("protocol").via("samplingEffortProtocol_fk").optional().exactlyOne();
 
-    return extensionFragment("humboldt-sampling-effort-protocol", ROW_TYPE_HUMBOLDT, "survey")
-        .join("protocol")
-        .via("samplingEffortProtocol_fk")
-        .optional()
-        .exactlyOne()
+    return extensionFragment("humboldt-sampling-effort-protocol", ROW_TYPE_HUMBOLDT, protocol)
         .field(
             TargetFieldMapping.oneOf(
                 EcoTerm.samplingEffortProtocol.qualifiedName(),

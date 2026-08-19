@@ -9,10 +9,10 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 
 /** Reusable Occurrence-core enrichment fragments. */
@@ -24,15 +24,9 @@ public final class OccurrenceCoreMapping {
    * Organism fields denormalized onto Occurrence via the schema-declared weak organismID relation.
    */
   public static CoreFragment organism(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath organism = occurrence.append(graph.resolve("occurrence", "organism", "organismID"));
-    CoreFragmentBuilder builder =
-        coreFragment("occurrence-core-organism", "occurrence")
-            .join("organism")
-            .via("organismID")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath organism = occurrence.join("organism").via("organismID").optional().exactlyOne();
+    CoreFragmentBuilder builder = coreFragment("occurrence-core-organism", organism);
     addOrganismTargets(graph, builder, occurrence, organism);
     return builder.build();
   }
@@ -42,17 +36,10 @@ public final class OccurrenceCoreMapping {
    * before exactly-one cardinality, so zero or multiple accepted rows contribute nothing.
    */
   public static CoreFragment acceptedIdentification(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath identification =
-        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification = acceptedIdentificationPath(occurrence);
     CoreFragmentBuilder builder =
-        coreFragment("occurrence-core-accepted-identification", "occurrence")
-            .join("identification")
-            .via("occurrence_fk")
-            .filter(FilterExpression.eq("isAcceptedIdentification", true))
-            .optional()
-            .exactlyOne()
-            .endJoin();
+        coreFragment("occurrence-core-accepted-identification", identification);
 
     SchemaResource resource =
         graph
@@ -89,25 +76,17 @@ public final class OccurrenceCoreMapping {
    * Occurrence value.
    */
   public static CoreFragment acceptedIdentificationTaxon(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath identification =
-        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
-    SchemaPath taxon =
-        identification.append(
-            graph.resolve("identification", "identification-taxon", "identification_fk"));
-
-    CoreFragmentBuilder builder =
-        coreFragment("occurrence-core-accepted-identification-taxon", "occurrence")
-            .join("identification")
-            .via("occurrence_fk")
-            .filter(FilterExpression.eq("isAcceptedIdentification", true))
-            .optional()
-            .exactlyOne()
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification = acceptedIdentificationPath(occurrence);
+    MappingPath taxon =
+        identification
             .join("identification-taxon")
             .via("identification_fk")
             .optional()
-            .exactlyOne()
-            .endJoin();
+            .exactlyOne();
+
+    CoreFragmentBuilder builder =
+        coreFragment("occurrence-core-accepted-identification-taxon", taxon);
 
     for (String column :
         List.of(
@@ -128,28 +107,17 @@ public final class OccurrenceCoreMapping {
 
   /** All agents attached to the accepted Identification are a final identifiedBy fallback. */
   public static CoreFragment acceptedIdentificationAgentRoles(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath identification =
-        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
-    SchemaPath role =
-        identification.append(
-            graph.resolve("identification", "identification-agent-role", "identification_fk"));
-    SchemaPath agent = role.append(graph.resolve("identification-agent-role", "agent", "agent_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification = acceptedIdentificationPath(occurrence);
+    MappingPath role =
+        identification
+            .join("identification-agent-role")
+            .via("identification_fk")
+            .optional()
+            .fanOut();
+    MappingPath agent = role.join("agent").via("agent_fk").optional().exactlyOne();
 
-    return coreFragment("occurrence-core-accepted-identification-agent-roles", "occurrence")
-        .join("identification")
-        .via("occurrence_fk")
-        .filter(FilterExpression.eq("isAcceptedIdentification", true))
-        .optional()
-        .exactlyOne()
-        .join("identification-agent-role")
-        .via("identification_fk")
-        .optional()
-        .fanOut()
-        .join("agent")
-        .via("agent_fk")
-        .optional()
-        .exactlyOne()
+    return coreFragment("occurrence-core-accepted-identification-agent-roles", agent)
         .field(
             TargetFieldMapping.allOf(
                     DwcTerm.identifiedBy.qualifiedName(),
@@ -169,22 +137,11 @@ public final class OccurrenceCoreMapping {
 
   /** Resolves the sole accepted identification's identifiedByID before material fallback. */
   public static CoreFragment acceptedIdentificationAgent(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath identification =
-        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
-    SchemaPath agent =
-        identification.append(graph.resolve("identification", "agent", "identifiedByID"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification = acceptedIdentificationPath(occurrence);
+    MappingPath agent = identification.join("agent").via("identifiedByID").optional().fanOut();
 
-    return coreFragment("occurrence-core-accepted-identification-agent", "occurrence")
-        .join("identification")
-        .via("occurrence_fk")
-        .filter(FilterExpression.eq("isAcceptedIdentification", true))
-        .optional()
-        .exactlyOne()
-        .join("agent")
-        .via("identifiedByID")
-        .optional()
-        .fanOut()
+    return coreFragment("occurrence-core-accepted-identification-agent", agent)
         .field(
             TargetFieldMapping.oneOf(
                 DwcTerm.identifiedBy.qualifiedName(),
@@ -206,23 +163,13 @@ public final class OccurrenceCoreMapping {
    * ambiguous.
    */
   public static CoreFragment material(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath usagePolicy =
-        material.append(graph.resolve("material", "usage-policy", "usagePolicy_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath usagePolicy =
+        material.join("usage-policy").via("usagePolicy_fk").optional().exactlyOne();
 
-    CoreFragmentBuilder builder =
-        coreFragment("occurrence-core-material", "occurrence")
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("usage-policy")
-            .via("usagePolicy_fk")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+    CoreFragmentBuilder builder = coreFragment("occurrence-core-material", usagePolicy);
 
     SchemaResource materialResource =
         graph
@@ -301,32 +248,20 @@ public final class OccurrenceCoreMapping {
 
   /** Geological-context fields from one unambiguous context on one evidence material. */
   public static CoreFragment materialGeologicalContext(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath link =
-        material.append(
-            graph.resolve("material", "material-geological-context", "materialEntity_fk"));
-    SchemaPath geologicalContext =
-        link.append(
-            graph.resolve(
-                "material-geological-context", "geological-context", "geologicalContext_fk"));
-
-    CoreFragmentBuilder builder =
-        coreFragment("occurrence-core-material-geological-context", "occurrence")
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath link =
+        material
             .join("material-geological-context")
             .via("materialEntity_fk")
             .optional()
-            .exactlyOne()
-            .join("geological-context")
-            .via("geologicalContext_fk")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+            .exactlyOne();
+    MappingPath geologicalContext =
+        link.join("geological-context").via("geologicalContext_fk").optional().exactlyOne();
+
+    CoreFragmentBuilder builder =
+        coreFragment("occurrence-core-material-geological-context", geologicalContext);
 
     SchemaResource resource =
         graph
@@ -357,27 +292,14 @@ public final class OccurrenceCoreMapping {
    * Material-linked protocols contribute to occurrence samplingProtocol for one evidence material.
    */
   public static CoreFragment materialProtocols(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath link =
-        material.append(graph.resolve("material", "material-protocol", "materialEntity_fk"));
-    SchemaPath protocol =
-        link.append(graph.resolve("material-protocol", "protocol", "protocol_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath link =
+        material.join("material-protocol").via("materialEntity_fk").optional().fanOut();
+    MappingPath protocol = link.join("protocol").via("protocol_fk").optional().exactlyOne();
 
-    return coreFragment("occurrence-core-material-protocols", "occurrence")
-        .join("material")
-        .via("evidenceForOccurrenceID")
-        .optional()
-        .exactlyOne()
-        .join("material-protocol")
-        .via("materialEntity_fk")
-        .optional()
-        .fanOut()
-        .join("protocol")
-        .via("protocol_fk")
-        .optional()
-        .exactlyOne()
+    return coreFragment("occurrence-core-material-protocols", protocol)
         .field(
             TargetFieldMapping.oneOf(
                 DwcTerm.samplingProtocol.qualifiedName(),
@@ -390,57 +312,33 @@ public final class OccurrenceCoreMapping {
 
   /** Direct material.provenance_fk contributions for an unambiguous evidence material. */
   public static CoreFragment materialDirectProvenance(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath provenance =
-        material.append(graph.resolve("material", "provenance", "provenance_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath provenance =
+        material.join("provenance").via("provenance_fk").optional().exactlyOne();
 
     CoreFragmentBuilder builder =
-        coreFragment("occurrence-core-material-direct-provenance", "occurrence")
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("provenance")
-            .via("provenance_fk")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+        coreFragment("occurrence-core-material-direct-provenance", provenance);
     addProvenanceTargets(builder, provenance);
     return builder.build();
   }
 
   /** material -> material-provenance -> provenance contributions for one evidence material. */
   public static CoreFragment materialProvenance(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath link =
-        material.append(graph.resolve("material", "material-provenance", "materialEntity_fk"));
-    SchemaPath provenance =
-        link.append(graph.resolve("material-provenance", "provenance", "provenance_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath link =
+        material.join("material-provenance").via("materialEntity_fk").optional().fanOut();
+    MappingPath provenance = link.join("provenance").via("provenance_fk").optional().exactlyOne();
 
-    CoreFragmentBuilder builder =
-        coreFragment("occurrence-core-material-provenance", "occurrence")
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("material-provenance")
-            .via("materialEntity_fk")
-            .optional()
-            .fanOut()
-            .join("provenance")
-            .via("provenance_fk")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+    CoreFragmentBuilder builder = coreFragment("occurrence-core-material-provenance", provenance);
     addProvenanceTargets(builder, provenance);
     return builder.build();
   }
 
-  private static void addProvenanceTargets(CoreFragmentBuilder builder, SchemaPath provenance) {
+  private static void addProvenanceTargets(CoreFragmentBuilder builder, MappingPath provenance) {
     for (String field :
         List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
       builder.field(
@@ -479,15 +377,11 @@ public final class OccurrenceCoreMapping {
 
   /** Direct occurrenceProtocol_fk -> resolved samplingProtocol when the protocol exists. */
   public static CoreFragment directSamplingProtocol(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath protocol =
-        occurrence.append(graph.resolve("occurrence", "protocol", "occurrenceProtocol_fk", null));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath protocol =
+        occurrence.join("protocol").via("occurrenceProtocol_fk").optional().exactlyOne();
 
-    return coreFragment("occurrence-direct-sampling-protocol", "occurrence")
-        .join("protocol")
-        .via("occurrenceProtocol_fk")
-        .optional()
-        .exactlyOne()
+    return coreFragment("occurrence-direct-sampling-protocol", protocol)
         .field(
             TargetFieldMapping.oneOf(
                 DwcTerm.samplingProtocol.qualifiedName(),
@@ -499,7 +393,10 @@ public final class OccurrenceCoreMapping {
   }
 
   private static void addOrganismTargets(
-      SchemaGraph graph, CoreFragmentBuilder builder, SchemaPath occurrence, SchemaPath organism) {
+      SchemaGraph graph,
+      CoreFragmentBuilder builder,
+      MappingPath occurrence,
+      MappingPath organism) {
     SchemaResource resource =
         graph
             .resource("organism")
@@ -564,5 +461,14 @@ public final class OccurrenceCoreMapping {
       }
     }
     return targets;
+  }
+
+  private static MappingPath acceptedIdentificationPath(MappingPath occurrence) {
+    return occurrence
+        .join("identification")
+        .via("occurrence_fk")
+        .filter(FilterExpression.eq("isAcceptedIdentification", true))
+        .optional()
+        .exactlyOne();
   }
 }

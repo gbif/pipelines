@@ -10,11 +10,10 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 
 /** Reusable occurrence-row mappings shared by Occurrence core and Event -> Occurrence extension. */
@@ -29,7 +28,7 @@ public final class OccurrenceMapping {
    * occurrence_pk keeps individual occurrences distinct inside that scope.
    */
   public static ExtensionFragment directOccurrence(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
     ExtensionFragmentBuilder builder =
         extensionFragment("occurrence-direct", ROW_TYPE_OCCURRENCE, "occurrence")
             .scopeKey("event_fk")
@@ -39,18 +38,12 @@ public final class OccurrenceMapping {
   }
   /** Organism fields enrich an existing occurrence row matched by occurrence_pk. */
   public static ExtensionFragment organism(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaRelation organismRelation = graph.resolve("occurrence", "organism", "organismID");
-    SchemaPath organism = occurrence.append(organismRelation);
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath organism = occurrence.join("organism").via("organismID").optional().exactlyOne();
     ExtensionFragmentBuilder builder =
-        extensionFragment("occurrence-organism", ROW_TYPE_OCCURRENCE, "occurrence")
+        extensionFragment("occurrence-organism", ROW_TYPE_OCCURRENCE, organism)
             .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"))
-            .join("organism")
-            .via("organismID")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+            .rowMatch(occurrence.field("occurrence_pk"));
     addOrganismTargets(graph, builder, occurrence, organism);
     return builder.build();
   }
@@ -61,20 +54,12 @@ public final class OccurrenceMapping {
    * enrichment, matching the legacy current-identification rule.
    */
   public static ExtensionFragment acceptedIdentification(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaRelation identificationRelation =
-        graph.resolve("occurrence", "identification", "occurrence_fk");
-    SchemaPath identification = occurrence.append(identificationRelation);
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification = acceptedIdentificationPath(occurrence);
     ExtensionFragmentBuilder builder =
-        extensionFragment("occurrence-accepted-identification", ROW_TYPE_OCCURRENCE, "occurrence")
+        extensionFragment("occurrence-accepted-identification", ROW_TYPE_OCCURRENCE, identification)
             .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"))
-            .join("identification")
-            .via("occurrence_fk")
-            .filter(FilterExpression.eq("isAcceptedIdentification", true))
-            .optional()
-            .exactlyOne()
-            .endJoin();
+            .rowMatch(occurrence.field("occurrence_pk"));
 
     SchemaResource resource =
         graph
@@ -111,28 +96,19 @@ public final class OccurrenceMapping {
    * Occurrence value.
    */
   public static ExtensionFragment acceptedIdentificationTaxon(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath identification =
-        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
-    SchemaPath taxon =
-        identification.append(
-            graph.resolve("identification", "identification-taxon", "identification_fk"));
-
-    ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "occurrence-accepted-identification-taxon", ROW_TYPE_OCCURRENCE, "occurrence")
-            .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"))
-            .join("identification")
-            .via("occurrence_fk")
-            .filter(FilterExpression.eq("isAcceptedIdentification", true))
-            .optional()
-            .exactlyOne()
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification = acceptedIdentificationPath(occurrence);
+    MappingPath taxon =
+        identification
             .join("identification-taxon")
             .via("identification_fk")
             .optional()
-            .exactlyOne()
-            .endJoin();
+            .exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment("occurrence-accepted-identification-taxon", ROW_TYPE_OCCURRENCE, taxon)
+            .scopeKey("event_fk")
+            .rowMatch(occurrence.field("occurrence_pk"));
 
     for (String column :
         List.of(
@@ -153,31 +129,20 @@ public final class OccurrenceMapping {
 
   /** All agents attached to the accepted Identification are a final identifiedBy fallback. */
   public static ExtensionFragment acceptedIdentificationAgentRoles(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath identification =
-        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
-    SchemaPath role =
-        identification.append(
-            graph.resolve("identification", "identification-agent-role", "identification_fk"));
-    SchemaPath agent = role.append(graph.resolve("identification-agent-role", "agent", "agent_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification = acceptedIdentificationPath(occurrence);
+    MappingPath role =
+        identification
+            .join("identification-agent-role")
+            .via("identification_fk")
+            .optional()
+            .fanOut();
+    MappingPath agent = role.join("agent").via("agent_fk").optional().exactlyOne();
 
     return extensionFragment(
-            "occurrence-accepted-identification-agent-roles", ROW_TYPE_OCCURRENCE, "occurrence")
+            "occurrence-accepted-identification-agent-roles", ROW_TYPE_OCCURRENCE, agent)
         .scopeKey("event_fk")
         .rowMatch(occurrence.field("occurrence_pk"))
-        .join("identification")
-        .via("occurrence_fk")
-        .filter(FilterExpression.eq("isAcceptedIdentification", true))
-        .optional()
-        .exactlyOne()
-        .join("identification-agent-role")
-        .via("identification_fk")
-        .optional()
-        .fanOut()
-        .join("agent")
-        .via("agent_fk")
-        .optional()
-        .exactlyOne()
         .field(
             TargetFieldMapping.allOf(
                     DwcTerm.identifiedBy.qualifiedName(),
@@ -197,25 +162,13 @@ public final class OccurrenceMapping {
 
   /** Resolves the sole accepted identification's identifiedByID before material fallback. */
   public static ExtensionFragment acceptedIdentificationAgent(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath identification =
-        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
-    SchemaPath agent =
-        identification.append(graph.resolve("identification", "agent", "identifiedByID"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification = acceptedIdentificationPath(occurrence);
+    MappingPath agent = identification.join("agent").via("identifiedByID").optional().fanOut();
 
-    return extensionFragment(
-            "occurrence-accepted-identification-agent", ROW_TYPE_OCCURRENCE, "occurrence")
+    return extensionFragment("occurrence-accepted-identification-agent", ROW_TYPE_OCCURRENCE, agent)
         .scopeKey("event_fk")
         .rowMatch(occurrence.field("occurrence_pk"))
-        .join("identification")
-        .via("occurrence_fk")
-        .filter(FilterExpression.eq("isAcceptedIdentification", true))
-        .optional()
-        .exactlyOne()
-        .join("agent")
-        .via("identifiedByID")
-        .optional()
-        .fanOut()
         .field(
             TargetFieldMapping.oneOf(
                 DwcTerm.identifiedBy.qualifiedName(),
@@ -231,6 +184,15 @@ public final class OccurrenceMapping {
         .build();
   }
 
+  private static MappingPath acceptedIdentificationPath(MappingPath occurrence) {
+    return occurrence
+        .join("identification")
+        .via("occurrence_fk")
+        .filter(FilterExpression.eq("isAcceptedIdentification", true))
+        .optional()
+        .exactlyOne();
+  }
+
   /**
    * Exactly one evidence material enriches its existing occurrence row. The relationship is a
    * schema-declared weak FK (material.evidenceForOccurrenceID -> occurrence.occurrenceID), so the
@@ -238,27 +200,16 @@ public final class OccurrenceMapping {
    * its fields are gated by the same exactly-one-material decision.
    */
   public static ExtensionFragment material(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaRelation materialRelation =
-        graph.resolve("occurrence", "material", "evidenceForOccurrenceID");
-    SchemaPath material = occurrence.append(materialRelation);
-    SchemaRelation usagePolicyRelation =
-        graph.resolve("material", "usage-policy", "usagePolicy_fk");
-    SchemaPath usagePolicy = material.append(usagePolicyRelation);
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath usagePolicy =
+        material.join("usage-policy").via("usagePolicy_fk").optional().exactlyOne();
 
     ExtensionFragmentBuilder builder =
-        extensionFragment("occurrence-material", ROW_TYPE_OCCURRENCE, "occurrence")
+        extensionFragment("occurrence-material", ROW_TYPE_OCCURRENCE, usagePolicy)
             .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"))
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("usage-policy")
-            .via("usagePolicy_fk")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+            .rowMatch(occurrence.field("occurrence_pk"));
 
     SchemaResource materialResource =
         graph
@@ -284,64 +235,40 @@ public final class OccurrenceMapping {
 
   /** Direct material.provenance_fk contributions for an unambiguous evidence material. */
   public static ExtensionFragment materialDirectProvenance(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath provenance =
-        material.append(graph.resolve("material", "provenance", "provenance_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath provenance =
+        material.join("provenance").via("provenance_fk").optional().exactlyOne();
 
     ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "occurrence-material-direct-provenance", ROW_TYPE_OCCURRENCE, "occurrence")
+        extensionFragment("occurrence-material-direct-provenance", ROW_TYPE_OCCURRENCE, provenance)
             .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"))
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("provenance")
-            .via("provenance_fk")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+            .rowMatch(occurrence.field("occurrence_pk"));
     addProvenanceTargets(builder, provenance);
     return builder.build();
   }
 
   /** material -> material-provenance -> provenance contributions for one evidence material. */
   public static ExtensionFragment materialProvenance(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath link =
-        material.append(graph.resolve("material", "material-provenance", "materialEntity_fk"));
-    SchemaPath provenance =
-        link.append(graph.resolve("material-provenance", "provenance", "provenance_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath link =
+        material.join("material-provenance").via("materialEntity_fk").optional().fanOut();
+    MappingPath provenance = link.join("provenance").via("provenance_fk").optional().exactlyOne();
 
     ExtensionFragmentBuilder builder =
-        extensionFragment("occurrence-material-provenance", ROW_TYPE_OCCURRENCE, "occurrence")
+        extensionFragment("occurrence-material-provenance", ROW_TYPE_OCCURRENCE, provenance)
             .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"))
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("material-provenance")
-            .via("materialEntity_fk")
-            .optional()
-            .fanOut()
-            .join("provenance")
-            .via("provenance_fk")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+            .rowMatch(occurrence.field("occurrence_pk"));
     addProvenanceTargets(builder, provenance);
     return builder.build();
   }
 
   /** Resolves recordedByID through agent.agentID for an Event-nested Occurrence row. */
   public static ExtensionFragment recordedBy(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
     return AgentMapping.extension(
         graph,
         ROW_TYPE_OCCURRENCE,
@@ -357,7 +284,7 @@ public final class OccurrenceMapping {
 
   /** Resolves identifiedByID through agent.agentID for an Event-nested Occurrence row. */
   public static ExtensionFragment identifiedBy(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
     return AgentMapping.extension(
         graph,
         ROW_TYPE_OCCURRENCE,
@@ -393,7 +320,7 @@ public final class OccurrenceMapping {
 
   /** Ordered collector AgentRoles are the final recordedBy fallback for one evidence material. */
   public static ExtensionFragment materialCollectorRoles(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
     return AgentRoleMapping.linkedExtension(
         graph,
         ROW_TYPE_OCCURRENCE,
@@ -416,7 +343,7 @@ public final class OccurrenceMapping {
       String idColumn,
       String valueColumn,
       String targetTerm) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
     return AgentMapping.linkedExtension(
         graph,
         ROW_TYPE_OCCURRENCE,
@@ -434,35 +361,23 @@ public final class OccurrenceMapping {
 
   /** Geological-context fields from one context on one unambiguous evidence material. */
   public static ExtensionFragment materialGeologicalContext(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath link =
-        material.append(
-            graph.resolve("material", "material-geological-context", "materialEntity_fk"));
-    SchemaPath geologicalContext =
-        link.append(
-            graph.resolve(
-                "material-geological-context", "geological-context", "geologicalContext_fk"));
-
-    ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "occurrence-material-geological-context", ROW_TYPE_OCCURRENCE, "occurrence")
-            .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"))
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath link =
+        material
             .join("material-geological-context")
             .via("materialEntity_fk")
             .optional()
-            .exactlyOne()
-            .join("geological-context")
-            .via("geologicalContext_fk")
-            .optional()
-            .exactlyOne()
-            .endJoin();
+            .exactlyOne();
+    MappingPath geologicalContext =
+        link.join("geological-context").via("geologicalContext_fk").optional().exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "occurrence-material-geological-context", ROW_TYPE_OCCURRENCE, geologicalContext)
+            .scopeKey("event_fk")
+            .rowMatch(occurrence.field("occurrence_pk"));
 
     SchemaResource resource =
         graph
@@ -491,29 +406,16 @@ public final class OccurrenceMapping {
 
   /** Material-linked protocols contribute to samplingProtocol on an Event-nested Occurrence row. */
   public static ExtensionFragment materialProtocols(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
-    SchemaPath link =
-        material.append(graph.resolve("material", "material-protocol", "materialEntity_fk"));
-    SchemaPath protocol =
-        link.append(graph.resolve("material-protocol", "protocol", "protocol_fk"));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath link =
+        material.join("material-protocol").via("materialEntity_fk").optional().fanOut();
+    MappingPath protocol = link.join("protocol").via("protocol_fk").optional().exactlyOne();
 
-    return extensionFragment("occurrence-material-protocols", ROW_TYPE_OCCURRENCE, "occurrence")
+    return extensionFragment("occurrence-material-protocols", ROW_TYPE_OCCURRENCE, protocol)
         .scopeKey("event_fk")
         .rowMatch(occurrence.field("occurrence_pk"))
-        .join("material")
-        .via("evidenceForOccurrenceID")
-        .optional()
-        .exactlyOne()
-        .join("material-protocol")
-        .via("materialEntity_fk")
-        .optional()
-        .fanOut()
-        .join("protocol")
-        .via("protocol_fk")
-        .optional()
-        .exactlyOne()
         .field(
             TargetFieldMapping.oneOf(
                 DwcTerm.samplingProtocol.qualifiedName(),
@@ -525,7 +427,7 @@ public final class OccurrenceMapping {
   }
 
   private static void addProvenanceTargets(
-      ExtensionFragmentBuilder builder, SchemaPath provenance) {
+      ExtensionFragmentBuilder builder, MappingPath provenance) {
     for (String field :
         List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
       builder.field(
@@ -541,8 +443,8 @@ public final class OccurrenceMapping {
   private static void addOrganismTargets(
       SchemaGraph graph,
       ExtensionFragmentBuilder builder,
-      SchemaPath occurrence,
-      SchemaPath organism) {
+      MappingPath occurrence,
+      MappingPath organism) {
     SchemaResource resource =
         graph
             .resource("organism")

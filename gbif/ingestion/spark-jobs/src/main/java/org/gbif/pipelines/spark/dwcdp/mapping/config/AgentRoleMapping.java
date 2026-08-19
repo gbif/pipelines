@@ -10,10 +10,10 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
 /** Reusable mapping of DwC-DP {@code *-agent-role -> agent} relationships to scalar DwC-A terms. */
 public final class AgentRoleMapping {
@@ -124,17 +124,8 @@ public final class AgentRoleMapping {
     Objects.requireNonNull(rowType, "rowType");
     Objects.requireNonNull(spec, "spec");
 
-    Paths paths = resolvePaths(graph, spec);
-    return extensionFragment(spec.fragmentName(), rowType, spec.parentResource())
-        .join(spec.roleResource())
-        .via(spec.parentViaColumn())
-        .optional()
-        .filter(FilterExpression.eq(ROLE_FIELD, spec.role()))
-        .fanOut()
-        .join(AGENT_RESOURCE)
-        .via(AGENT_FK)
-        .optional()
-        .exactlyOne()
+    Paths paths = paths(graph, spec);
+    return extensionFragment(spec.fragmentName(), rowType, paths.agent())
         .field(target(spec, paths))
         .build();
   }
@@ -144,39 +135,13 @@ public final class AgentRoleMapping {
     Objects.requireNonNull(graph, "graph");
     Objects.requireNonNull(spec, "spec");
 
-    Paths paths = resolvePaths(graph, spec);
-    return coreFragment(spec.fragmentName(), spec.parentResource())
-        .join(spec.roleResource())
-        .via(spec.parentViaColumn())
-        .optional()
-        .filter(FilterExpression.eq(ROLE_FIELD, spec.role()))
-        .fanOut()
-        .join(AGENT_RESOURCE)
-        .via(AGENT_FK)
-        .optional()
-        .exactlyOne()
-        .field(target(spec, paths))
-        .build();
+    Paths paths = paths(graph, spec);
+    return coreFragment(spec.fragmentName(), paths.agent()).field(target(spec, paths)).build();
   }
 
   public static CoreFragment linkedCore(SchemaGraph graph, LinkedSpec spec) {
-    LinkedPaths paths = resolveLinkedPaths(graph, spec);
-    return coreFragment(spec.fragmentName(), spec.sourceResource())
-        .join(spec.parentResource())
-        .via(spec.sourceToParentViaColumn())
-        .optional()
-        .exactlyOne()
-        .join(spec.roleResource())
-        .via(spec.parentToRoleViaColumn())
-        .optional()
-        .filter(FilterExpression.eq(ROLE_FIELD, spec.role()))
-        .fanOut()
-        .join(AGENT_RESOURCE)
-        .via(AGENT_FK)
-        .optional()
-        .exactlyOne()
-        .field(target(spec, paths))
-        .build();
+    LinkedPaths paths = linkedPaths(graph, spec);
+    return coreFragment(spec.fragmentName(), paths.agent()).field(target(spec, paths)).build();
   }
 
   public static ExtensionFragment linkedExtension(
@@ -185,28 +150,12 @@ public final class AgentRoleMapping {
       LinkedSpec spec,
       Optional<String> scopeKeyColumn,
       Optional<FieldRef> rowMatch) {
-    LinkedPaths paths = resolveLinkedPaths(graph, spec);
+    LinkedPaths paths = linkedPaths(graph, spec);
     ExtensionFragmentBuilder builder =
-        extensionFragment(spec.fragmentName(), rowType, spec.sourceResource());
+        extensionFragment(spec.fragmentName(), rowType, paths.agent());
     scopeKeyColumn.ifPresent(builder::scopeKey);
     rowMatch.ifPresent(builder::rowMatch);
-
-    return builder
-        .join(spec.parentResource())
-        .via(spec.sourceToParentViaColumn())
-        .optional()
-        .exactlyOne()
-        .join(spec.roleResource())
-        .via(spec.parentToRoleViaColumn())
-        .optional()
-        .filter(FilterExpression.eq(ROLE_FIELD, spec.role()))
-        .fanOut()
-        .join(AGENT_RESOURCE)
-        .via(AGENT_FK)
-        .optional()
-        .exactlyOne()
-        .field(target(spec, paths))
-        .build();
+    return builder.field(target(spec, paths)).build();
   }
 
   private static TargetFieldMapping target(Spec spec, Paths paths) {
@@ -223,36 +172,39 @@ public final class AgentRoleMapping {
         .orderBy(paths.role().field(ROLE_ORDER_FIELD));
   }
 
-  private static LinkedPaths resolveLinkedPaths(SchemaGraph graph, LinkedSpec spec) {
-    SchemaPath source = SchemaPath.root(spec.sourceResource());
-    SchemaPath parent =
-        source.append(
-            graph.resolve(
-                spec.sourceResource(),
-                spec.parentResource(),
-                spec.sourceToParentViaColumn(),
-                null));
-    SchemaPath role =
-        parent.append(
-            graph.resolve(
-                spec.parentResource(), spec.roleResource(), spec.parentToRoleViaColumn(), null));
-    SchemaPath agent =
-        role.append(graph.resolve(spec.roleResource(), AGENT_RESOURCE, AGENT_FK, null));
+  private static LinkedPaths linkedPaths(SchemaGraph graph, LinkedSpec spec) {
+    MappingPath source = MappingPath.root(graph, spec.sourceResource());
+    MappingPath parent =
+        source
+            .join(spec.parentResource())
+            .via(spec.sourceToParentViaColumn())
+            .optional()
+            .exactlyOne();
+    MappingPath role =
+        parent
+            .join(spec.roleResource())
+            .via(spec.parentToRoleViaColumn())
+            .filter(FilterExpression.eq(ROLE_FIELD, spec.role()))
+            .optional()
+            .fanOut();
+    MappingPath agent = role.join(AGENT_RESOURCE).via(AGENT_FK).optional().exactlyOne();
     return new LinkedPaths(role, agent);
   }
 
-  private static Paths resolvePaths(SchemaGraph graph, Spec spec) {
-    SchemaPath parent = SchemaPath.root(spec.parentResource());
-    SchemaPath role =
-        parent.append(
-            graph.resolve(
-                spec.parentResource(), spec.roleResource(), spec.parentViaColumn(), null));
-    SchemaPath agent =
-        role.append(graph.resolve(spec.roleResource(), AGENT_RESOURCE, AGENT_FK, null));
+  private static Paths paths(SchemaGraph graph, Spec spec) {
+    MappingPath parent = MappingPath.root(graph, spec.parentResource());
+    MappingPath role =
+        parent
+            .join(spec.roleResource())
+            .via(spec.parentViaColumn())
+            .filter(FilterExpression.eq(ROLE_FIELD, spec.role()))
+            .optional()
+            .fanOut();
+    MappingPath agent = role.join(AGENT_RESOURCE).via(AGENT_FK).optional().exactlyOne();
     return new Paths(role, agent);
   }
 
-  private record Paths(SchemaPath role, SchemaPath agent) {}
+  private record Paths(MappingPath role, MappingPath agent) {}
 
-  private record LinkedPaths(SchemaPath role, SchemaPath agent) {}
+  private record LinkedPaths(MappingPath role, MappingPath agent) {}
 }

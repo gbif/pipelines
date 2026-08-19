@@ -9,10 +9,10 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
 /** Reusable explicit text + agent-ID resolution for DwC-DP agent-valued fields. */
 public final class AgentMapping {
@@ -63,17 +63,10 @@ public final class AgentMapping {
     Objects.requireNonNull(graph, "graph");
     Objects.requireNonNull(spec, "spec");
 
-    SchemaPath source = SchemaPath.root(spec.sourceResource());
-    SchemaPath agent =
-        source.append(graph.resolve(spec.sourceResource(), AGENT_RESOURCE, spec.idColumn()));
+    MappingPath source = MappingPath.root(graph, spec.sourceResource());
+    MappingPath agent = source.join(AGENT_RESOURCE).via(spec.idColumn()).optional().fanOut();
 
-    return coreFragment(spec.fragmentName(), spec.sourceResource())
-        .join(AGENT_RESOURCE)
-        .via(spec.idColumn())
-        .optional()
-        .fanOut()
-        .field(target(spec, source, agent))
-        .build();
+    return coreFragment(spec.fragmentName(), agent).field(target(spec, source, agent)).build();
   }
 
   /**
@@ -92,22 +85,14 @@ public final class AgentMapping {
     Objects.requireNonNull(scopeKeyColumn, "scopeKeyColumn");
     Objects.requireNonNull(rowMatch, "rowMatch");
 
-    SchemaPath source = SchemaPath.root(spec.sourceResource());
-    SchemaPath agent =
-        source.append(graph.resolve(spec.sourceResource(), AGENT_RESOURCE, spec.idColumn()));
+    MappingPath source = MappingPath.root(graph, spec.sourceResource());
+    MappingPath agent = source.join(AGENT_RESOURCE).via(spec.idColumn()).optional().fanOut();
 
-    ExtensionFragmentBuilder builder =
-        extensionFragment(spec.fragmentName(), rowType, spec.sourceResource());
+    ExtensionFragmentBuilder builder = extensionFragment(spec.fragmentName(), rowType, agent);
     scopeKeyColumn.ifPresent(builder::scopeKey);
     rowMatch.ifPresent(builder::rowMatch);
 
-    return builder
-        .join(AGENT_RESOURCE)
-        .via(spec.idColumn())
-        .optional()
-        .fanOut()
-        .field(target(spec, source, agent))
-        .build();
+    return builder.field(target(spec, source, agent)).build();
   }
 
   public static ExtensionFragment extension(SchemaGraph graph, String rowType, Spec spec) {
@@ -115,22 +100,12 @@ public final class AgentMapping {
   }
 
   public static CoreFragment linkedCore(SchemaGraph graph, LinkedSpec spec) {
-    SchemaPath source = SchemaPath.root(spec.sourceResource());
-    SchemaPath linked =
-        source.append(
-            graph.resolve(spec.sourceResource(), spec.linkedResource(), spec.linkedViaColumn()));
-    SchemaPath agent =
-        linked.append(graph.resolve(spec.linkedResource(), AGENT_RESOURCE, spec.idColumn()));
+    MappingPath source = MappingPath.root(graph, spec.sourceResource());
+    MappingPath linked =
+        source.join(spec.linkedResource()).via(spec.linkedViaColumn()).optional().exactlyOne();
+    MappingPath agent = linked.join(AGENT_RESOURCE).via(spec.idColumn()).optional().fanOut();
 
-    return coreFragment(spec.fragmentName(), spec.sourceResource())
-        .join(spec.linkedResource())
-        .via(spec.linkedViaColumn())
-        .optional()
-        .exactlyOne()
-        .join(AGENT_RESOURCE)
-        .via(spec.idColumn())
-        .optional()
-        .fanOut()
+    return coreFragment(spec.fragmentName(), agent)
         .field(target(spec.targetTerm(), linked.field(spec.valueColumn()), agent.field(AGENT_NAME)))
         .build();
   }
@@ -141,32 +116,21 @@ public final class AgentMapping {
       LinkedSpec spec,
       Optional<String> scopeKeyColumn,
       Optional<FieldRef> rowMatch) {
-    SchemaPath source = SchemaPath.root(spec.sourceResource());
-    SchemaPath linked =
-        source.append(
-            graph.resolve(spec.sourceResource(), spec.linkedResource(), spec.linkedViaColumn()));
-    SchemaPath agent =
-        linked.append(graph.resolve(spec.linkedResource(), AGENT_RESOURCE, spec.idColumn()));
+    MappingPath source = MappingPath.root(graph, spec.sourceResource());
+    MappingPath linked =
+        source.join(spec.linkedResource()).via(spec.linkedViaColumn()).optional().exactlyOne();
+    MappingPath agent = linked.join(AGENT_RESOURCE).via(spec.idColumn()).optional().fanOut();
 
-    ExtensionFragmentBuilder builder =
-        extensionFragment(spec.fragmentName(), rowType, spec.sourceResource());
+    ExtensionFragmentBuilder builder = extensionFragment(spec.fragmentName(), rowType, agent);
     scopeKeyColumn.ifPresent(builder::scopeKey);
     rowMatch.ifPresent(builder::rowMatch);
 
     return builder
-        .join(spec.linkedResource())
-        .via(spec.linkedViaColumn())
-        .optional()
-        .exactlyOne()
-        .join(AGENT_RESOURCE)
-        .via(spec.idColumn())
-        .optional()
-        .fanOut()
         .field(target(spec.targetTerm(), linked.field(spec.valueColumn()), agent.field(AGENT_NAME)))
         .build();
   }
 
-  private static TargetFieldMapping target(Spec spec, SchemaPath source, SchemaPath agent) {
+  private static TargetFieldMapping target(Spec spec, MappingPath source, MappingPath agent) {
     return target(spec.targetTerm(), source.field(spec.valueColumn()), agent.field(AGENT_NAME));
   }
 

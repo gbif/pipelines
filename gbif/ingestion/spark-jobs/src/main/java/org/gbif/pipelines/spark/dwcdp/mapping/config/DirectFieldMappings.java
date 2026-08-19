@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
@@ -62,6 +63,19 @@ final class DirectFieldMappings {
                 () ->
                     new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     return new DirectFieldMappings(resource, path, Set.of(), true);
+  }
+
+  static DirectFieldMappings from(SchemaGraph graph, String resourceName, MappingPath path) {
+    return from(graph, resourceName, path.schemaPath());
+  }
+
+  static DirectFieldMappings from(
+      SchemaGraph graph, String resourceName, MappingPath path, Set<String> retainedRawOutputs) {
+    return from(graph, resourceName, path.schemaPath(), retainedRawOutputs);
+  }
+
+  static DirectFieldMappings humboldt(SchemaGraph graph, String resourceName, MappingPath path) {
+    return humboldt(graph, resourceName, path.schemaPath());
   }
 
   void addTo(ExtensionFragmentBuilder builder) {

@@ -9,10 +9,10 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 
 /** Declarative mappings for the GBIF DNA Derived Data extension. */
@@ -30,13 +30,8 @@ public final class NucleotideMapping {
   public static ExtensionFragment eventAnalyses(SchemaGraph graph) {
     EventPaths paths = eventAnalysisPaths(graph);
     ExtensionFragmentBuilder builder =
-        extensionFragment("event-nucleotide-analysis", ROW_TYPE_DNA_DERIVED_DATA, "event")
+        extensionFragment("event-nucleotide-analysis", ROW_TYPE_DNA_DERIVED_DATA, paths.analysis())
             .scopeKey("event_pk")
-            .join("nucleotide-analysis")
-            .via("event_fk")
-            .filter(FilterExpression.isNull("materialEntity_fk"))
-            .optional()
-            .fanOut()
             .rowIdentity(paths.analysis().field("nucleotideAnalysis_pk"));
 
     DirectFieldMappings.from(graph, "nucleotide-analysis", paths.analysis()).addTo(builder);
@@ -46,25 +41,17 @@ public final class NucleotideMapping {
   /** Nucleotide-sequence fields enriching a directly Event-owned DNA analysis row. */
   public static ExtensionFragment eventAnalysisSequence(SchemaGraph graph) {
     EventPaths paths = eventAnalysisPaths(graph);
-    SchemaPath sequence =
+    MappingPath sequence =
         paths
             .analysis()
-            .append(
-                graph.resolve(
-                    "nucleotide-analysis", "nucleotide-sequence", "nucleotideSequence_fk", null));
-
-    ExtensionFragmentBuilder builder =
-        extensionFragment("event-nucleotide-sequence", ROW_TYPE_DNA_DERIVED_DATA, "event")
-            .scopeKey("event_pk")
-            .join("nucleotide-analysis")
-            .via("event_fk")
-            .filter(FilterExpression.isNull("materialEntity_fk"))
-            .optional()
-            .fanOut()
             .join("nucleotide-sequence")
             .via("nucleotideSequence_fk")
             .optional()
-            .exactlyOne()
+            .exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment("event-nucleotide-sequence", ROW_TYPE_DNA_DERIVED_DATA, sequence)
+            .scopeKey("event_pk")
             .rowMatch(paths.analysis().field("nucleotideAnalysis_pk"));
 
     addSequenceFields(graph, sequence, builder);
@@ -74,25 +61,17 @@ public final class NucleotideMapping {
   /** Molecular-protocol fields enriching a directly Event-owned DNA analysis row. */
   public static ExtensionFragment eventAnalysisProtocol(SchemaGraph graph) {
     EventPaths paths = eventAnalysisPaths(graph);
-    SchemaPath protocol =
+    MappingPath protocol =
         paths
             .analysis()
-            .append(
-                graph.resolve(
-                    "nucleotide-analysis", "molecular-protocol", "molecularProtocol_fk", null));
-
-    ExtensionFragmentBuilder builder =
-        extensionFragment("event-molecular-protocol", ROW_TYPE_DNA_DERIVED_DATA, "event")
-            .scopeKey("event_pk")
-            .join("nucleotide-analysis")
-            .via("event_fk")
-            .filter(FilterExpression.isNull("materialEntity_fk"))
-            .optional()
-            .fanOut()
             .join("molecular-protocol")
             .via("molecularProtocol_fk")
             .optional()
-            .exactlyOne()
+            .exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment("event-molecular-protocol", ROW_TYPE_DNA_DERIVED_DATA, protocol)
+            .scopeKey("event_pk")
             .rowMatch(paths.analysis().field("nucleotideAnalysis_pk"));
 
     addMolecularProtocolFields(graph, protocol, builder);
@@ -109,16 +88,8 @@ public final class NucleotideMapping {
         extensionFragment(
                 "material-nucleotide-analysis-for-occurrence",
                 ROW_TYPE_DNA_DERIVED_DATA,
-                "occurrence")
+                paths.analysis())
             .scopeKey("occurrence_pk")
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("nucleotide-analysis")
-            .via("materialEntity_fk")
-            .optional()
-            .fanOut()
             .rowIdentity(paths.analysis().field("nucleotideAnalysis_pk"));
 
     DirectFieldMappings.from(graph, "nucleotide-analysis", paths.analysis()).addTo(builder);
@@ -128,31 +99,18 @@ public final class NucleotideMapping {
   /** Nucleotide-sequence fields enriching the DNA row identified by nucleotideAnalysis_pk. */
   public static ExtensionFragment materialAnalysisSequenceForOccurrence(SchemaGraph graph) {
     Paths paths = occurrenceAnalysisPaths(graph);
-    SchemaPath sequence =
+    MappingPath sequence =
         paths
             .analysis()
-            .append(
-                graph.resolve(
-                    "nucleotide-analysis", "nucleotide-sequence", "nucleotideSequence_fk", null));
-
-    ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "material-nucleotide-sequence-for-occurrence",
-                ROW_TYPE_DNA_DERIVED_DATA,
-                "occurrence")
-            .scopeKey("occurrence_pk")
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("nucleotide-analysis")
-            .via("materialEntity_fk")
-            .optional()
-            .fanOut()
             .join("nucleotide-sequence")
             .via("nucleotideSequence_fk")
             .optional()
-            .exactlyOne()
+            .exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "material-nucleotide-sequence-for-occurrence", ROW_TYPE_DNA_DERIVED_DATA, sequence)
+            .scopeKey("occurrence_pk")
             .rowMatch(paths.analysis().field("nucleotideAnalysis_pk"));
 
     addSequenceFields(graph, sequence, builder);
@@ -162,31 +120,18 @@ public final class NucleotideMapping {
   /** Molecular-protocol fields enriching the DNA row identified by nucleotideAnalysis_pk. */
   public static ExtensionFragment materialAnalysisProtocolForOccurrence(SchemaGraph graph) {
     Paths paths = occurrenceAnalysisPaths(graph);
-    SchemaPath protocol =
+    MappingPath protocol =
         paths
             .analysis()
-            .append(
-                graph.resolve(
-                    "nucleotide-analysis", "molecular-protocol", "molecularProtocol_fk", null));
-
-    ExtensionFragmentBuilder builder =
-        extensionFragment(
-                "material-molecular-protocol-for-occurrence",
-                ROW_TYPE_DNA_DERIVED_DATA,
-                "occurrence")
-            .scopeKey("occurrence_pk")
-            .join("material")
-            .via("evidenceForOccurrenceID")
-            .optional()
-            .exactlyOne()
-            .join("nucleotide-analysis")
-            .via("materialEntity_fk")
-            .optional()
-            .fanOut()
             .join("molecular-protocol")
             .via("molecularProtocol_fk")
             .optional()
-            .exactlyOne()
+            .exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "material-molecular-protocol-for-occurrence", ROW_TYPE_DNA_DERIVED_DATA, protocol)
+            .scopeKey("occurrence_pk")
             .rowMatch(paths.analysis().field("nucleotideAnalysis_pk"));
 
     addMolecularProtocolFields(graph, protocol, builder);
@@ -194,24 +139,28 @@ public final class NucleotideMapping {
   }
 
   private static EventPaths eventAnalysisPaths(SchemaGraph graph) {
-    SchemaPath event = SchemaPath.root("event");
-    SchemaPath analysis =
-        event.append(graph.resolve("event", "nucleotide-analysis", "event_fk", null));
+    MappingPath event = MappingPath.root(graph, "event");
+    MappingPath analysis =
+        event
+            .join("nucleotide-analysis")
+            .via("event_fk")
+            .filter(FilterExpression.isNull("materialEntity_fk"))
+            .optional()
+            .fanOut();
     return new EventPaths(analysis);
   }
 
   private static Paths occurrenceAnalysisPaths(SchemaGraph graph) {
-    SchemaPath occurrence = SchemaPath.root("occurrence");
-    SchemaPath material =
-        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID", null));
-    SchemaPath analysis =
-        material.append(
-            graph.resolve("material", "nucleotide-analysis", "materialEntity_fk", null));
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath analysis =
+        material.join("nucleotide-analysis").via("materialEntity_fk").optional().fanOut();
     return new Paths(material, analysis);
   }
 
   private static void addSequenceFields(
-      SchemaGraph graph, SchemaPath sequence, ExtensionFragmentBuilder builder) {
+      SchemaGraph graph, MappingPath sequence, ExtensionFragmentBuilder builder) {
     SchemaResource resource = requiredResource(graph, "nucleotide-sequence");
     for (String column : resource.fields().keySet()) {
       if (isStructural(column) || column.equals("sequence")) {
@@ -224,7 +173,7 @@ public final class NucleotideMapping {
   }
 
   private static void addMolecularProtocolFields(
-      SchemaGraph graph, SchemaPath protocol, ExtensionFragmentBuilder builder) {
+      SchemaGraph graph, MappingPath protocol, ExtensionFragmentBuilder builder) {
     SchemaResource resource = requiredResource(graph, "molecular-protocol");
     String dnaSequenceTarget = GbifDnaTerm.dna_sequence.qualifiedName();
     for (String column : resource.fields().keySet()) {
@@ -253,7 +202,7 @@ public final class NucleotideMapping {
     return column.endsWith("_pk") || column.endsWith("_fk");
   }
 
-  private record EventPaths(SchemaPath analysis) {}
+  private record EventPaths(MappingPath analysis) {}
 
-  private record Paths(SchemaPath material, SchemaPath analysis) {}
+  private record Paths(MappingPath material, MappingPath analysis) {}
 }

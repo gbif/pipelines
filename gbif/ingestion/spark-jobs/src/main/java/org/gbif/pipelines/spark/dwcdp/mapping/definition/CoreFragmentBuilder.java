@@ -19,6 +19,13 @@ public final class CoreFragmentBuilder {
     return new CoreFragmentBuilder(name, sourceResource);
   }
 
+  /** Creates a fragment using the root and relation steps already captured by {@code path}. */
+  public static CoreFragmentBuilder coreFragment(String name, MappingPath path) {
+    CoreFragmentBuilder builder = new CoreFragmentBuilder(name, path.rootResource());
+    builder.relations.addAll(path.relations());
+    return builder;
+  }
+
   public RelationBuilder join(String targetResource) {
     return new RelationBuilder(this, RelationStep.inferred(targetResource));
   }
