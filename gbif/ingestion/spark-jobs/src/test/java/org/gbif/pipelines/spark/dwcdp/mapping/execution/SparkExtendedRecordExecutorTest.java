@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.IdentifierMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
@@ -152,6 +154,136 @@ class SparkExtendedRecordExecutorTest {
     List<String> targetDescriptions =
         humboldt.stream().map(row -> row.get(TERM_TARGET)).sorted().toList();
     assertEquals(List.of("All birds", "All mammals"), targetDescriptions);
+  }
+
+  @Test
+  void eventCoreWithoutNaturalIdColumnUsesPrimaryKeyFallbackAndKeepsExtensionsAttached() {
+    List<ExtendedRecord> records =
+        new SparkExtendedRecordExecutor(graph)
+            .execute(
+                TestTableLoader.of(
+                    "event", eventsWithoutNaturalId(),
+                    "event-identifier", eventIdentifiers()),
+                eventIdentityPlan())
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord record = records.get(0);
+    assertEquals("urn:gbif:dwcdp:event:E1", record.getId());
+    assertFalse(record.getCoreTerms().containsKey(DwcTerm.eventID.qualifiedName()));
+    assertEquals(1, record.getExtensions().get(IdentifierMapping.ROW_TYPE_IDENTIFIER).size());
+  }
+
+  @Test
+  void eventCoreWithNullNaturalIdUsesPrimaryKeyFallback() {
+    List<ExtendedRecord> records =
+        new SparkExtendedRecordExecutor(graph)
+            .execute(TestTableLoader.of("event", eventsWithNullNaturalId()), eventIdentityPlan())
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    assertEquals("urn:gbif:dwcdp:event:E1", records.get(0).getId());
+    assertFalse(records.get(0).getCoreTerms().containsKey(DwcTerm.eventID.qualifiedName()));
+  }
+
+  @Test
+  void occurrenceCoreWithoutNaturalIdColumnUsesPrimaryKeyFallbackAndKeepsExtensionsAttached() {
+    List<ExtendedRecord> records =
+        new SparkExtendedRecordExecutor(graph)
+            .execute(
+                TestTableLoader.of(
+                    "occurrence", occurrencesWithoutNaturalId(),
+                    "occurrence-identifier", occurrenceIdentifiers()),
+                occurrenceIdentityPlan())
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord record = records.get(0);
+    assertEquals("urn:gbif:dwcdp:occurrence:O1", record.getId());
+    assertFalse(record.getCoreTerms().containsKey(DwcTerm.occurrenceID.qualifiedName()));
+    assertEquals(1, record.getExtensions().get(IdentifierMapping.ROW_TYPE_IDENTIFIER).size());
+  }
+
+  @Test
+  void occurrenceCoreWithBlankNaturalIdUsesPrimaryKeyFallback() {
+    List<ExtendedRecord> records =
+        new SparkExtendedRecordExecutor(graph)
+            .execute(
+                TestTableLoader.of("occurrence", occurrencesWithBlankNaturalId()),
+                occurrenceIdentityPlan())
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    assertEquals("urn:gbif:dwcdp:occurrence:O1", records.get(0).getId());
+  }
+
+  private MappingPlan eventIdentityPlan() {
+    SchemaPath event = SchemaPath.root("event");
+    return MappingPlanBuilder.mappingPlan("event-identity", CoreType.EVENT, "event")
+        .coreField(
+            TargetFieldMapping.oneOf(
+                DwcTerm.eventID.qualifiedName(),
+                ValueAggregation.firstNonNull(),
+                event.field("eventID")))
+        .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
+        .importFragment(IdentifierMapping.eventIdentifiers(graph))
+        .build();
+  }
+
+  private MappingPlan occurrenceIdentityPlan() {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    return MappingPlanBuilder.mappingPlan("occurrence-identity", CoreType.OCCURRENCE, "occurrence")
+        .coreField(
+            TargetFieldMapping.oneOf(
+                DwcTerm.occurrenceID.qualifiedName(),
+                ValueAggregation.firstNonNull(),
+                occurrence.field("occurrenceID")))
+        .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
+        .importFragment(IdentifierMapping.occurrenceIdentifiers(graph))
+        .build();
+  }
+
+  private Dataset<Row> eventsWithoutNaturalId() {
+    return spark.createDataFrame(
+        List.of(RowFactory.create("E1")), new StructType().add("event_pk", DataTypes.StringType));
+  }
+
+  private Dataset<Row> eventsWithNullNaturalId() {
+    return spark.createDataFrame(
+        List.of(RowFactory.create("E1", null)),
+        new StructType()
+            .add("event_pk", DataTypes.StringType)
+            .add("eventID", DataTypes.StringType));
+  }
+
+  private Dataset<Row> eventIdentifiers() {
+    return spark.createDataFrame(
+        List.of(RowFactory.create("E1", "survey-123")),
+        new StructType()
+            .add("event_fk", DataTypes.StringType)
+            .add("identifier", DataTypes.StringType));
+  }
+
+  private Dataset<Row> occurrencesWithoutNaturalId() {
+    return spark.createDataFrame(
+        List.of(RowFactory.create("O1")),
+        new StructType().add("occurrence_pk", DataTypes.StringType));
+  }
+
+  private Dataset<Row> occurrencesWithBlankNaturalId() {
+    return spark.createDataFrame(
+        List.of(RowFactory.create("O1", "   ")),
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType));
+  }
+
+  private Dataset<Row> occurrenceIdentifiers() {
+    return spark.createDataFrame(
+        List.of(RowFactory.create("O1", "occurrence-123")),
+        new StructType()
+            .add("occurrence_fk", DataTypes.StringType)
+            .add("identifier", DataTypes.StringType));
   }
 
   private Dataset<Row> events() {

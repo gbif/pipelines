@@ -9,12 +9,15 @@ import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.filter;
 import static org.apache.spark.sql.functions.first;
+import static org.apache.spark.sql.functions.length;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.sort_array;
 import static org.apache.spark.sql.functions.struct;
 import static org.apache.spark.sql.functions.transform;
+import static org.apache.spark.sql.functions.trim;
 import static org.apache.spark.sql.functions.when;
 
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -23,6 +26,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Column;
@@ -104,8 +110,6 @@ public final class SparkExtendedRecordExecutor {
                 () ->
                     new IllegalArgumentException(
                         "Core resource has no primary key: " + plan.coreSourceResource()));
-    String naturalId = coreIdColumn(plan.coreType());
-
     Dataset<Row> rawCore =
         loader
             .load(plan.coreSourceResource())
@@ -113,7 +117,6 @@ public final class SparkExtendedRecordExecutor {
                 () ->
                     new IllegalArgumentException(
                         "Core resource is absent: " + plan.coreSourceResource()));
-    requireColumn(rawCore, naturalId, "core natural id");
     requireColumn(rawCore, corePk, "core primary key");
 
     CoreProjection coreProjection = projectCore(loader, rawCore, plan);
@@ -140,12 +143,7 @@ public final class SparkExtendedRecordExecutor {
       String attachmentSourceResource = materialized.parentKeySource().path().rootResource();
       Dataset<Row> bridge =
           attachmentBridge(
-              loader,
-              plan,
-              attachmentSourceResource,
-              materialized.parentKeySource(),
-              naturalId,
-              corePk);
+              loader, plan, attachmentSourceResource, materialized.parentKeySource(), corePk);
       Dataset<Row> attached =
           bridge
               .join(
@@ -241,14 +239,16 @@ public final class SparkExtendedRecordExecutor {
     String corePk = coreResource.primaryKey().orElseThrow();
 
     List<Column> selected = new ArrayList<>();
-    selected.add(rawCore.col(coreIdColumn(plan.coreType())).cast("string").as(CORE_ID));
+    selected.add(
+        coreIdentityColumn(rawCore, plan.coreType(), coreIdColumn(plan.coreType()), corePk)
+            .as(CORE_ID));
     selected.add(rawCore.col(corePk).cast("string").as("__dwca_core_pk"));
     Map<String, String> targetColumns = new LinkedHashMap<>();
 
-    java.util.Set<String> mergedTargets =
+    Set<String> mergedTargets =
         plan.coreTargetMerges().stream()
             .map(CompiledTargetMerge::targetTerm)
-            .collect(java.util.stream.Collectors.toSet());
+            .collect(Collectors.toSet());
 
     for (CompiledTargetProducer field : plan.coreTargets()) {
       if (mergedTargets.contains(field.targetTerm())) {
@@ -286,7 +286,7 @@ public final class SparkExtendedRecordExecutor {
       TableLoader fragmentLoader =
           resource ->
               resource.equals(plan.coreSourceResource())
-                  ? java.util.Optional.of(rawCore)
+                  ? Optional.of(rawCore)
                   : loader.load(resource);
       SparkPathResult pathResult = pathExecutor.execute(fragmentLoader, mapping).pathResult();
       String corePkAlias =
@@ -377,7 +377,7 @@ public final class SparkExtendedRecordExecutor {
         TableLoader fragmentLoader =
             resource ->
                 resource.equals(plan.coreSourceResource())
-                    ? java.util.Optional.of(rawCore)
+                    ? Optional.of(rawCore)
                     : loader.load(resource);
         SparkPathResult pathResult = pathExecutor.execute(fragmentLoader, mapping).pathResult();
         String corePkAlias =
@@ -450,8 +450,8 @@ public final class SparkExtendedRecordExecutor {
   private Column coreAggregateExpression(
       CompiledTargetProducer target,
       List<Column> sources,
-      java.util.Optional<Column> contributionIdentity,
-      java.util.Optional<Column> orderBy) {
+      Optional<Column> contributionIdentity,
+      Optional<Column> orderBy) {
     if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
         && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
       return first(coalesce(sources.toArray(Column[]::new)), true);
@@ -546,7 +546,7 @@ public final class SparkExtendedRecordExecutor {
         TableLoader fragmentLoader =
             resource ->
                 resource.equals(plan.coreSourceResource())
-                    ? java.util.Optional.of(rawCore)
+                    ? Optional.of(rawCore)
                     : loader.load(resource);
         SparkPathResult pathResult = pathExecutor.execute(fragmentLoader, mapping).pathResult();
         String corePkAlias =
@@ -730,8 +730,8 @@ public final class SparkExtendedRecordExecutor {
       CompiledMapping plan,
       String sourceResource,
       FieldRef sourceScopeKey,
-      String naturalId,
       String corePk) {
+    String naturalId = coreIdColumn(plan.coreType());
     SchemaResource source =
         graph
             .resource(sourceResource)
@@ -748,7 +748,7 @@ public final class SparkExtendedRecordExecutor {
     if (sourceResource.equals(plan.coreSourceResource())) {
       Dataset<Row> core = loader.load(sourceResource).orElseThrow();
       return core.select(
-          core.col(naturalId).cast("string").as(CORE_ID),
+          coreIdentityColumn(core, plan.coreType(), naturalId, corePk).as(CORE_ID),
           core.col(sourceScopeKey.column()).cast("string").as("__dwca_source_pk"));
     }
 
@@ -763,7 +763,7 @@ public final class SparkExtendedRecordExecutor {
     if (directScopeRelations.size() == 1) {
       Dataset<Row> core = loader.load(plan.coreSourceResource()).orElseThrow();
       return core.select(
-          core.col(naturalId).cast("string").as(CORE_ID),
+          coreIdentityColumn(core, plan.coreType(), naturalId, corePk).as(CORE_ID),
           core.col(corePk).cast("string").as("__dwca_source_pk"));
     }
     if (directScopeRelations.size() > 1) {
@@ -804,7 +804,9 @@ public final class SparkExtendedRecordExecutor {
           .dataset()
           .limit(0)
           .select(
-              execution.pathResult().column(corePath.field(naturalId)).cast("string").as(CORE_ID),
+              coreIdentityColumn(
+                      execution.pathResult(), corePath, plan.coreType(), naturalId, corePk)
+                  .as(CORE_ID),
               lit(null).cast("string").as("__dwca_source_pk"));
     }
 
@@ -814,12 +816,49 @@ public final class SparkExtendedRecordExecutor {
         .pathResult()
         .dataset()
         .select(
-            execution.pathResult().column(corePath.field(naturalId)).cast("string").as(CORE_ID),
+            coreIdentityColumn(execution.pathResult(), corePath, plan.coreType(), naturalId, corePk)
+                .as(CORE_ID),
             execution
                 .pathResult()
                 .column(sourcePath.field(sourcePk))
                 .cast("string")
                 .as("__dwca_source_pk"));
+  }
+
+  private static Column coreIdentityColumn(
+      Dataset<Row> dataset, CoreType coreType, String naturalId, String corePk) {
+    Column primaryKey = dataset.col(corePk).cast("string");
+    Column fallback = generatedCoreId(coreType, primaryKey);
+    if (!hasColumn(dataset, naturalId)) {
+      return fallback;
+    }
+    return naturalIdOrFallback(dataset.col(naturalId).cast("string"), fallback);
+  }
+
+  private static Column coreIdentityColumn(
+      SparkPathResult pathResult,
+      SchemaPath corePath,
+      CoreType coreType,
+      String naturalId,
+      String corePk) {
+    Column primaryKey = pathResult.column(corePath.field(corePk)).cast("string");
+    Column fallback = generatedCoreId(coreType, primaryKey);
+    Column natural = pathResult.columnOrNull(corePath.field(naturalId)).cast("string");
+    return naturalIdOrFallback(natural, fallback);
+  }
+
+  private static Column naturalIdOrFallback(Column naturalId, Column fallback) {
+    return when(naturalId.isNotNull().and(length(trim(naturalId)).gt(0)), naturalId)
+        .otherwise(fallback);
+  }
+
+  private static Column generatedCoreId(CoreType coreType, Column primaryKey) {
+    String prefix =
+        switch (coreType) {
+          case EVENT -> "urn:gbif:dwcdp:event:";
+          case OCCURRENCE -> "urn:gbif:dwcdp:occurrence:";
+        };
+    return concat(lit(prefix), primaryKey);
   }
 
   private static String coreIdColumn(CoreType coreType) {
@@ -874,8 +913,8 @@ public final class SparkExtendedRecordExecutor {
 
   private record CoreProjection(Dataset<Row> dataset, Map<String, String> targetColumns) {}
 
-  private record TermColumn(String term, String column) implements java.io.Serializable {}
+  private record TermColumn(String term, String column) implements Serializable {}
 
   private record ExtensionColumns(String arrayColumn, List<TermColumn> terms)
-      implements java.io.Serializable {}
+      implements Serializable {}
 }
