@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.io;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
@@ -8,7 +10,6 @@ import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.io.IOException;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
