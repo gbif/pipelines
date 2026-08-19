@@ -103,7 +103,8 @@ public class ContentService {
   }
 
   private static boolean hasHits(SearchResponse<Map> response) {
-    return response.hits().total() != null && response.hits().total().value() > 0;
+    return !response.hits().hits().isEmpty()
+        || (response.hits().total() != null && response.hits().total().value() > 0);
   }
 
   private String getFieldValue(Map<String, Object> source, String... field) {

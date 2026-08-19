@@ -8,6 +8,7 @@ import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.io.IOException;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,7 +65,7 @@ public class ElasticsearchWriter<T> {
                           idx.index(doc.getIndex())
                               .id(doc.getId())
                               .document(JsonData.fromJson(doc.getSource())))));
-      bytes += doc.getSource().length();
+      bytes += doc.getSource().getBytes(UTF_8).length;
     }
 
     private boolean isEmpty() {
@@ -104,7 +105,6 @@ public class ElasticsearchWriter<T> {
               BulkResponse bulk =
                   client.bulk(
                       BulkRequest.of(b -> b.operations(br.operations).timeout(t -> t.time("5m"))));
-              phaser.arrive();
               if (Boolean.TRUE.equals(bulk.errors())) {
                 String failure =
                     bulk.items().stream()
@@ -117,6 +117,8 @@ public class ElasticsearchWriter<T> {
             } catch (IOException ex) {
               log.error(ex.getMessage(), ex);
               throw new IllegalStateException(ex.getMessage(), ex);
+            } finally {
+              phaser.arrive();
             }
           };
 
