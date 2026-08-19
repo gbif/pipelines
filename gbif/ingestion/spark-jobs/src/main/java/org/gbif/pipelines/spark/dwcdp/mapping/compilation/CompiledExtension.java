@@ -16,7 +16,7 @@ public record CompiledExtension(
   public CompiledExtension {
     Objects.requireNonNull(rowType, "rowType");
     Objects.requireNonNull(rowComposition, "rowComposition");
-    maxRowsPerParent = Objects.requireNonNull(maxRowsPerParent, "maxRowsPerParent");
+    Objects.requireNonNull(maxRowsPerParent, "maxRowsPerParent");
     targetMerges = List.copyOf(targetMerges);
     fragments = List.copyOf(fragments);
     decisions = List.copyOf(decisions);

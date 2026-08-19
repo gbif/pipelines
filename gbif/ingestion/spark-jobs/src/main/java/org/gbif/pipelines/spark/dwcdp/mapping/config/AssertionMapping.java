@@ -4,12 +4,10 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmen
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
@@ -58,7 +56,7 @@ public final class AssertionMapping {
             "event_pk",
             "survey-assertion",
             "survey_fk",
-            List.of(OwnershipStep.fanOut("survey", "event_fk"))));
+            List.of(OwnershipPathStep.fanOut("survey", "event_fk"))));
   }
 
   /** Assertions attached directly to Event-owned nucleotide analyses. */
@@ -72,7 +70,7 @@ public final class AssertionMapping {
             "nucleotide-analysis-assertion",
             "nucleotideAnalysis_fk",
             List.of(
-                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                OwnershipPathStep.fanOut("nucleotide-analysis", "event_fk")
                     .filter(FilterExpression.isNull("materialEntity_fk")))));
   }
 
@@ -87,9 +85,9 @@ public final class AssertionMapping {
             "molecular-protocol-assertion",
             "molecularProtocol_fk",
             List.of(
-                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                OwnershipPathStep.fanOut("nucleotide-analysis", "event_fk")
                     .filter(FilterExpression.isNull("materialEntity_fk")),
-                OwnershipStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"))));
+                OwnershipPathStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"))));
   }
 
   /** Chronometric-age assertions promoted to their owning Event. */
@@ -102,7 +100,7 @@ public final class AssertionMapping {
             "event_pk",
             "chronometric-age-assertion",
             "chronometricAge_fk",
-            List.of(OwnershipStep.fanOut("chronometric-age", "event_fk"))));
+            List.of(OwnershipPathStep.fanOut("chronometric-age", "event_fk"))));
   }
 
   /** Chronometric-age assertions promoted from the Occurrence's owning Event. */
@@ -116,8 +114,8 @@ public final class AssertionMapping {
             "chronometric-age-assertion",
             "chronometricAge_fk",
             List.of(
-                OwnershipStep.exactlyOne("event", "event_fk"),
-                OwnershipStep.fanOut("chronometric-age", "event_fk"))));
+                OwnershipPathStep.exactlyOne("event", "event_fk"),
+                OwnershipPathStep.fanOut("chronometric-age", "event_fk"))));
   }
 
   /** Material assertions promoted to an Occurrence through its single evidence material. */
@@ -130,7 +128,7 @@ public final class AssertionMapping {
             "occurrence_pk",
             "material-assertion",
             "materialEntity_fk",
-            List.of(OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"))));
+            List.of(OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"))));
   }
 
   /** Nucleotide-analysis assertions promoted through the Occurrence's evidence material. */
@@ -144,8 +142,8 @@ public final class AssertionMapping {
             "nucleotide-analysis-assertion",
             "nucleotideAnalysis_fk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"))));
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"))));
   }
 
   /** Molecular-protocol assertions promoted through the Occurrence's evidence material analyses. */
@@ -159,9 +157,9 @@ public final class AssertionMapping {
             "molecular-protocol-assertion",
             "molecularProtocol_fk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
-                OwnershipStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"))));
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"))));
   }
 
   private static ExtensionFragment assertions(SchemaGraph graph, Spec spec) {
@@ -169,8 +167,8 @@ public final class AssertionMapping {
     Objects.requireNonNull(spec, "spec");
 
     MappingPath current = MappingPath.root(graph, spec.sourceResource());
-    for (OwnershipStep step : spec.ownershipPath()) {
-      current = append(current, step);
+    for (OwnershipPathStep step : spec.ownershipPath()) {
+      current = step.appendTo(current);
     }
 
     MappingPath assertion =
@@ -190,19 +188,6 @@ public final class AssertionMapping {
             .rowIdentity(assertion.field("assertionID"));
     addAssertionFields(builder, assertion, protocol);
     return builder.build();
-  }
-
-  private static MappingPath append(MappingPath current, OwnershipStep step) {
-    MappingPath.JoinBuilder relation = current.join(step.resource()).via(step.viaColumn());
-    step.filter().ifPresent(relation::filter);
-    if (step.requirement() == RelationRequirement.OPTIONAL) {
-      relation.optional();
-    } else {
-      relation.required();
-    }
-    return step.cardinality() == OwnershipCardinality.EXACTLY_ONE
-        ? relation.exactlyOne()
-        : relation.fanOut();
   }
 
   private static void addAssertionFields(
@@ -244,7 +229,7 @@ public final class AssertionMapping {
       String scopeKeyColumn,
       String assertionResource,
       String assertionViaColumn,
-      List<OwnershipStep> ownershipPath) {
+      List<OwnershipPathStep> ownershipPath) {
 
     private Spec {
       Objects.requireNonNull(fragmentName, "fragmentName");
@@ -254,49 +239,5 @@ public final class AssertionMapping {
       Objects.requireNonNull(assertionViaColumn, "assertionViaColumn");
       ownershipPath = List.copyOf(ownershipPath);
     }
-  }
-
-  private record OwnershipStep(
-      String resource,
-      String viaColumn,
-      RelationRequirement requirement,
-      OwnershipCardinality cardinality,
-      Optional<FilterExpression> filter) {
-
-    private OwnershipStep {
-      Objects.requireNonNull(resource, "resource");
-      Objects.requireNonNull(viaColumn, "viaColumn");
-      Objects.requireNonNull(requirement, "requirement");
-      Objects.requireNonNull(cardinality, "cardinality");
-      Objects.requireNonNull(filter, "filter");
-    }
-
-    private static OwnershipStep fanOut(String resource, String viaColumn) {
-      return new OwnershipStep(
-          resource,
-          viaColumn,
-          RelationRequirement.OPTIONAL,
-          OwnershipCardinality.FAN_OUT,
-          Optional.empty());
-    }
-
-    private static OwnershipStep exactlyOne(String resource, String viaColumn) {
-      return new OwnershipStep(
-          resource,
-          viaColumn,
-          RelationRequirement.OPTIONAL,
-          OwnershipCardinality.EXACTLY_ONE,
-          Optional.empty());
-    }
-
-    private OwnershipStep filter(FilterExpression expression) {
-      return new OwnershipStep(
-          resource, viaColumn, requirement, cardinality, Optional.of(expression));
-    }
-  }
-
-  private enum OwnershipCardinality {
-    FAN_OUT,
-    EXACTLY_ONE
   }
 }

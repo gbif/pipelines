@@ -85,19 +85,6 @@ public final class ExtensionFragmentBuilder {
       return this;
     }
 
-    /**
-     * Declares an explicit source-column -> target-column relation (for weak/natural-key links).
-     */
-    public RelationBuilder on(String sourceColumn, String targetColumn) {
-      step = step.on(sourceColumn, targetColumn);
-      return this;
-    }
-
-    public RelationBuilder predicate(String predicate) {
-      step = step.predicate(predicate);
-      return this;
-    }
-
     public RelationBuilder filter(FilterExpression filter) {
       step = step.filter(filter);
       return this;
@@ -118,45 +105,14 @@ public final class ExtensionFragmentBuilder {
       return this;
     }
 
-    public RelationBuilder required() {
-      step = step.requirement(RelationRequirement.REQUIRED);
-      return this;
-    }
-
-    public RelationBuilder select(String selector) {
-      step = step.with(CardinalityStrategy.select(selector));
-      return this;
-    }
-
-    public RelationBuilder combine(ValueAggregation aggregation) {
-      step = step.with(CardinalityStrategy.combine(aggregation));
-      return this;
-    }
-
-    /** Commits this relation and returns to the fragment builder. */
-    public ExtensionFragmentBuilder endJoin() {
-      commit();
-      return parent;
-    }
-
     public RelationBuilder join(String targetResource) {
       commit();
       return parent.join(targetResource);
     }
 
-    public ExtensionFragmentBuilder scopeKey(String column) {
-      commit();
-      return parent.scopeKey(column);
-    }
-
     public ExtensionFragmentBuilder rowIdentity(FieldRef field) {
       commit();
       return parent.rowIdentity(field);
-    }
-
-    public ExtensionFragmentBuilder rowMatch(FieldRef field) {
-      commit();
-      return parent.rowMatch(field);
     }
 
     public ExtensionFragmentBuilder field(TargetFieldMapping field) {

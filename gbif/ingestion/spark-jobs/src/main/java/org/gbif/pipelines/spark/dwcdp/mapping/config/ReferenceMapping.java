@@ -4,13 +4,11 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmen
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
@@ -35,8 +33,8 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.exactlyOne("protocol", "eventProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.exactlyOne("protocol", "eventProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment eventGeoreferenceProtocolReferences(SchemaGraph graph) {
@@ -47,8 +45,8 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.exactlyOne("protocol", "georeferenceProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.exactlyOne("protocol", "georeferenceProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment eventProtocolReferences(SchemaGraph graph) {
@@ -59,9 +57,9 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("event-protocol", "event_fk"),
-                OwnershipStep.exactlyOne("protocol", "protocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.fanOut("event-protocol", "event_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "protocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment surveySamplingProtocolReferencesForEvent(SchemaGraph graph) {
@@ -72,9 +70,9 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("survey", "event_fk"),
-                OwnershipStep.exactlyOne("protocol", "samplingProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.fanOut("survey", "event_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "samplingProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment surveySamplingEffortProtocolReferencesForEvent(
@@ -86,9 +84,9 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("survey", "event_fk"),
-                OwnershipStep.exactlyOne("protocol", "samplingEffortProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.fanOut("survey", "event_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "samplingEffortProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment surveyProtocolReferencesForEvent(SchemaGraph graph) {
@@ -99,10 +97,10 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("survey", "event_fk"),
-                OwnershipStep.fanOut("survey-protocol", "survey_fk"),
-                OwnershipStep.exactlyOne("protocol", "protocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.fanOut("survey", "event_fk"),
+                OwnershipPathStep.fanOut("survey-protocol", "survey_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "protocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment chronometricAgeProtocolReferencesForEvent(SchemaGraph graph) {
@@ -113,9 +111,9 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("chronometric-age", "event_fk"),
-                OwnershipStep.exactlyOne("protocol", "chronometricAgeProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "chronometricAgeProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment chronometricAgeConversionProtocolReferencesForEvent(
@@ -127,9 +125,9 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("chronometric-age", "event_fk"),
-                OwnershipStep.exactlyOne("protocol", "chronometricAgeConversionProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "chronometricAgeConversionProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment surveyReferencesForEvent(SchemaGraph graph) {
@@ -140,8 +138,8 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("survey", "event_fk"),
-                OwnershipStep.fanOut("survey-reference", "survey_fk"))));
+                OwnershipPathStep.fanOut("survey", "event_fk"),
+                OwnershipPathStep.fanOut("survey-reference", "survey_fk"))));
   }
 
   public static ExtensionFragment chronometricAgeReferencesForEvent(SchemaGraph graph) {
@@ -152,8 +150,8 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("chronometric-age", "event_fk"),
-                OwnershipStep.fanOut("chronometric-age-reference", "chronometricAge_fk"))));
+                OwnershipPathStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipPathStep.fanOut("chronometric-age-reference", "chronometricAge_fk"))));
   }
 
   public static ExtensionFragment molecularProtocolReferencesForEvent(SchemaGraph graph) {
@@ -164,10 +162,10 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                OwnershipPathStep.fanOut("nucleotide-analysis", "event_fk")
                     .filter(FilterExpression.isNull("materialEntity_fk")),
-                OwnershipStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"),
-                OwnershipStep.fanOut("molecular-protocol-reference", "molecularProtocol_fk"))));
+                OwnershipPathStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"),
+                OwnershipPathStep.fanOut("molecular-protocol-reference", "molecularProtocol_fk"))));
   }
 
   public static ExtensionFragment dnaAnalysisIdentificationReferencesForEvent(SchemaGraph graph) {
@@ -178,11 +176,11 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                OwnershipPathStep.fanOut("nucleotide-analysis", "event_fk")
                     .filter(FilterExpression.isNull("materialEntity_fk")),
-                OwnershipStep.fanOut("identification", "nucleotideAnalysis_fk")
+                OwnershipPathStep.fanOut("identification", "nucleotideAnalysis_fk")
                     .filter(FilterExpression.isNull("occurrence_fk")),
-                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+                OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
   }
 
   public static ExtensionFragment dnaSequenceIdentificationReferencesForEvent(SchemaGraph graph) {
@@ -193,15 +191,15 @@ public final class ReferenceMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                OwnershipPathStep.fanOut("nucleotide-analysis", "event_fk")
                     .filter(FilterExpression.isNull("materialEntity_fk")),
-                OwnershipStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
-                OwnershipStep.fanOut("identification", "nucleotideSequence_fk")
+                OwnershipPathStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
+                OwnershipPathStep.fanOut("identification", "nucleotideSequence_fk")
                     .filter(
                         FilterExpression.and(
                             FilterExpression.isNull("occurrence_fk"),
                             FilterExpression.isNull("nucleotideAnalysis_fk"))),
-                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+                OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
   }
 
   public static ExtensionFragment occurrenceProtocolReferences(SchemaGraph graph) {
@@ -212,8 +210,8 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("protocol", "occurrenceProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.exactlyOne("protocol", "occurrenceProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment materialProtocolReferencesForOccurrence(SchemaGraph graph) {
@@ -224,10 +222,10 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("material-protocol", "materialEntity_fk"),
-                OwnershipStep.exactlyOne("protocol", "protocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("material-protocol", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "protocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment chronometricAgeProtocolReferencesForOccurrence(
@@ -239,10 +237,10 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("event", "event_fk"),
-                OwnershipStep.fanOut("chronometric-age", "event_fk"),
-                OwnershipStep.exactlyOne("protocol", "chronometricAgeProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.exactlyOne("event", "event_fk"),
+                OwnershipPathStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "chronometricAgeProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment chronometricAgeConversionProtocolReferencesForOccurrence(
@@ -254,10 +252,10 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("event", "event_fk"),
-                OwnershipStep.fanOut("chronometric-age", "event_fk"),
-                OwnershipStep.exactlyOne("protocol", "chronometricAgeConversionProtocol_fk"),
-                OwnershipStep.fanOut("protocol-reference", "protocol_fk"))));
+                OwnershipPathStep.exactlyOne("event", "event_fk"),
+                OwnershipPathStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "chronometricAgeConversionProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
   }
 
   public static ExtensionFragment occurrenceReferences(SchemaGraph graph) {
@@ -274,8 +272,8 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("material-reference", "materialEntity_fk"))));
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("material-reference", "materialEntity_fk"))));
   }
 
   public static ExtensionFragment identificationReferencesForOccurrence(SchemaGraph graph) {
@@ -286,8 +284,8 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.fanOut("identification", "occurrence_fk"),
-                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+                OwnershipPathStep.fanOut("identification", "occurrence_fk"),
+                OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
   }
 
   public static ExtensionFragment chronometricAgeReferencesForOccurrence(SchemaGraph graph) {
@@ -298,9 +296,9 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("event", "event_fk"),
-                OwnershipStep.fanOut("chronometric-age", "event_fk"),
-                OwnershipStep.fanOut("chronometric-age-reference", "chronometricAge_fk"))));
+                OwnershipPathStep.exactlyOne("event", "event_fk"),
+                OwnershipPathStep.fanOut("chronometric-age", "event_fk"),
+                OwnershipPathStep.fanOut("chronometric-age-reference", "chronometricAge_fk"))));
   }
 
   public static ExtensionFragment molecularProtocolReferencesForOccurrence(SchemaGraph graph) {
@@ -311,10 +309,10 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
-                OwnershipStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"),
-                OwnershipStep.fanOut("molecular-protocol-reference", "molecularProtocol_fk"))));
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"),
+                OwnershipPathStep.fanOut("molecular-protocol-reference", "molecularProtocol_fk"))));
   }
 
   public static ExtensionFragment dnaAnalysisIdentificationReferencesForOccurrence(
@@ -326,11 +324,11 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
-                OwnershipStep.fanOut("identification", "nucleotideAnalysis_fk")
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.fanOut("identification", "nucleotideAnalysis_fk")
                     .filter(FilterExpression.isNull("occurrence_fk")),
-                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+                OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
   }
 
   public static ExtensionFragment dnaSequenceIdentificationReferencesForOccurrence(
@@ -342,15 +340,15 @@ public final class ReferenceMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
-                OwnershipStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
-                OwnershipStep.fanOut("identification", "nucleotideSequence_fk")
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
+                OwnershipPathStep.fanOut("identification", "nucleotideSequence_fk")
                     .filter(
                         FilterExpression.and(
                             FilterExpression.isNull("occurrence_fk"),
                             FilterExpression.isNull("nucleotideAnalysis_fk"))),
-                OwnershipStep.fanOut("identification-reference", "identification_fk"))));
+                OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
   }
 
   private static ExtensionFragment references(SchemaGraph graph, Spec spec) {
@@ -358,8 +356,8 @@ public final class ReferenceMapping {
     Objects.requireNonNull(spec, "spec");
 
     MappingPath current = MappingPath.root(graph, spec.sourceResource());
-    for (OwnershipStep step : spec.ownershipPath()) {
-      current = append(current, step);
+    for (OwnershipPathStep step : spec.ownershipPath()) {
+      current = step.appendTo(current);
     }
     MappingPath reference =
         current.join("bibliographic-resource").via("reference_fk").optional().exactlyOne();
@@ -370,17 +368,6 @@ public final class ReferenceMapping {
             .rowIdentity(reference.field("reference_pk"));
     addReferenceFields(builder, reference);
     return builder.build();
-  }
-
-  private static MappingPath append(MappingPath current, OwnershipStep step) {
-    MappingPath.JoinBuilder relation = current.join(step.resource()).via(step.viaColumn());
-    step.filter().ifPresent(relation::filter);
-    if (step.requirement() == RelationRequirement.OPTIONAL) {
-      relation.optional();
-    } else {
-      relation.required();
-    }
-    return step.exactlyOne() ? relation.exactlyOne() : relation.fanOut();
   }
 
   private static void addReferenceFields(ExtensionFragmentBuilder builder, MappingPath reference) {
@@ -406,41 +393,12 @@ public final class ReferenceMapping {
       String fragmentName,
       String sourceResource,
       String scopeKeyColumn,
-      List<OwnershipStep> ownershipPath) {
+      List<OwnershipPathStep> ownershipPath) {
     private Spec {
       Objects.requireNonNull(fragmentName, "fragmentName");
       Objects.requireNonNull(sourceResource, "sourceResource");
       Objects.requireNonNull(scopeKeyColumn, "scopeKeyColumn");
       ownershipPath = List.copyOf(ownershipPath);
-    }
-  }
-
-  private record OwnershipStep(
-      String resource,
-      String viaColumn,
-      boolean exactlyOne,
-      RelationRequirement requirement,
-      Optional<FilterExpression> filter) {
-    private OwnershipStep {
-      Objects.requireNonNull(resource, "resource");
-      Objects.requireNonNull(viaColumn, "viaColumn");
-      Objects.requireNonNull(requirement, "requirement");
-      Objects.requireNonNull(filter, "filter");
-    }
-
-    static OwnershipStep fanOut(String resource, String viaColumn) {
-      return new OwnershipStep(
-          resource, viaColumn, false, RelationRequirement.OPTIONAL, Optional.empty());
-    }
-
-    static OwnershipStep exactlyOne(String resource, String viaColumn) {
-      return new OwnershipStep(
-          resource, viaColumn, true, RelationRequirement.OPTIONAL, Optional.empty());
-    }
-
-    OwnershipStep filter(FilterExpression expression) {
-      return new OwnershipStep(
-          resource, viaColumn, exactlyOne, requirement, Optional.of(expression));
     }
   }
 }

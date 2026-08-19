@@ -18,7 +18,6 @@ import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 public final class AgentMapping {
 
   private static final String AGENT_RESOURCE = "agent";
-  private static final String AGENT_ID = "agentID";
   private static final String AGENT_NAME = "preferredAgentName";
 
   private AgentMapping() {}

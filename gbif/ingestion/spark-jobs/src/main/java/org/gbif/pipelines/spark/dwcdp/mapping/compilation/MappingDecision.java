@@ -24,6 +24,7 @@ public record MappingDecision(
 
   public boolean problem() {
     return type == MappingDecisionType.MISSING_FRAGMENT_SCOPE
+        || type == MappingDecisionType.MISSING_MERGE_PRODUCERS
         || type == MappingDecisionType.INVALID_RELATION
         || type == MappingDecisionType.AMBIGUOUS_MULTIPLE_EXPLICIT
         || type == MappingDecisionType.AMBIGUOUS_EQUAL_DEPTH;

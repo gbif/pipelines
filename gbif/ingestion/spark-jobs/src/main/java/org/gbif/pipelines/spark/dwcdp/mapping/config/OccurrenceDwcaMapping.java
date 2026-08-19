@@ -15,35 +15,6 @@ public final class OccurrenceDwcaMapping {
 
   private OccurrenceDwcaMapping() {}
 
-  /** Complete Identification History extension for Occurrence core. */
-  public static MappingPlan withIdentificationHistory(SchemaGraph graph) {
-    MappingPlanBuilder builder =
-        mappingPlan("occurrence-core:identification-history", CoreType.OCCURRENCE, "occurrence");
-    DirectFieldMappings.from(graph, "occurrence", SchemaPath.root("occurrence")).addTo(builder);
-    return builder
-        .extension(IdentificationMapping.ROW_TYPE_IDENTIFICATION)
-        .importFragment(IdentificationMapping.occurrenceHistory(graph))
-        .build();
-  }
-
-  /**
-   * Direct Occurrence fields plus organism, accepted identification, material/usage-policy, and
-   * protocol enrichment.
-   */
-  public static MappingPlan withCurrentCoreEnrichment(SchemaGraph graph) {
-    return currentCoreBase(graph, "occurrence-core:current-enrichment").build();
-  }
-
-  /** Current Occurrence-core enrichments plus direct and material-linked Identifier rows. */
-  public static MappingPlan withIdentifiers(SchemaGraph graph) {
-    return currentCoreBase(graph, "occurrence-core:identifiers")
-        .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
-        .unionRows()
-        .importFragment(IdentifierMapping.occurrenceIdentifiers(graph))
-        .importFragment(IdentifierMapping.materialIdentifiersForOccurrence(graph))
-        .build();
-  }
-
   /**
    * Canonical currently migrated Occurrence-core mapping used for inspection and replacement
    * wiring.
@@ -105,27 +76,6 @@ public final class OccurrenceDwcaMapping {
     return builder.build();
   }
 
-  /** Current Occurrence-core enrichments plus DNA analyses linked through the evidence material. */
-  public static MappingPlan withNucleotide(SchemaGraph graph) {
-    return currentCoreBase(graph, "occurrence-core:nucleotide")
-        .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
-        .importFragment(NucleotideMapping.materialAnalysesForOccurrence(graph))
-        .importFragment(NucleotideMapping.materialAnalysisSequenceForOccurrence(graph))
-        .importFragment(NucleotideMapping.materialAnalysisProtocolForOccurrence(graph))
-        .build();
-  }
-
-  /** Event-owned Chronometric Age rows promoted through the Occurrence's owning Event. */
-  public static MappingPlan withChronometric(SchemaGraph graph) {
-    return currentCoreBase(graph, "occurrence-core:chronometric")
-        .extension(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE)
-        .importFragment(ChronometricMapping.agesForOccurrence(graph))
-        .importFragment(ChronometricMapping.ageProtocolForOccurrence(graph))
-        .importFragment(ChronometricMapping.conversionProtocolForOccurrence(graph))
-        .importFragment(ChronometricMapping.determinedByForOccurrence(graph))
-        .build();
-  }
-
   /** Current Occurrence-core enrichments plus direct and material-linked eMoF assertion rows. */
   public static MappingPlan withAssertions(SchemaGraph graph) {
     return currentCoreBase(graph, "occurrence-core:assertions")
@@ -136,18 +86,6 @@ public final class OccurrenceDwcaMapping {
         .importFragment(AssertionMapping.nucleotideAnalysisAssertionsForOccurrence(graph))
         .importFragment(AssertionMapping.molecularProtocolAssertionsForOccurrence(graph))
         .importFragment(AssertionMapping.chronometricAgeAssertionsForOccurrence(graph))
-        .build();
-  }
-
-  /** Current Occurrence-core enrichments plus direct and material-linked Multimedia rows. */
-  public static MappingPlan withMultimedia(SchemaGraph graph) {
-    return currentCoreBase(graph, "occurrence-core:multimedia")
-        .extension(MultimediaMapping.ROW_TYPE_MULTIMEDIA)
-        .unionRows()
-        .limitRowsPerParent(50)
-        .importFragment(MultimediaMapping.occurrenceMedia(graph))
-        .importFragment(MultimediaMapping.materialMediaForOccurrence(graph))
-        .importFragment(MultimediaMapping.chronometricAgeMediaForOccurrence(graph))
         .build();
   }
 

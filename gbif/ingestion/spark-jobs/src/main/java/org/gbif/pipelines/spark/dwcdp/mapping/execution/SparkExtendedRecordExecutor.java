@@ -2,13 +2,11 @@ package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
 import static org.apache.spark.sql.functions.array_distinct;
 import static org.apache.spark.sql.functions.array_join;
-import static org.apache.spark.sql.functions.coalesce;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.filter;
-import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.length;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.sort_array;
@@ -50,7 +48,6 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
@@ -452,47 +449,7 @@ public final class SparkExtendedRecordExecutor {
       List<Column> sources,
       Optional<Column> contributionIdentity,
       Optional<Column> orderBy) {
-    if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
-        && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
-      return first(coalesce(sources.toArray(Column[]::new)), true);
-    }
-    if (target.aggregation() instanceof ValueAggregation.Delimited delimited) {
-      List<Column> entries = new ArrayList<>();
-      for (Column source : sources) {
-        List<Column> fields = new ArrayList<>();
-        orderBy.ifPresent(order -> fields.add(order.as("order")));
-        contributionIdentity.ifPresent(identity -> fields.add(identity.as("identity")));
-        fields.add(source.cast("string").as("value"));
-        entries.add(struct(fields.toArray(Column[]::new)));
-      }
-      Column values;
-      if (contributionIdentity.isPresent() || orderBy.isPresent()) {
-        Column contributions =
-            org.apache.spark.sql.functions.flatten(
-                collect_list(org.apache.spark.sql.functions.array(entries.toArray(Column[]::new))));
-        if (contributionIdentity.isPresent()) {
-          contributions = array_distinct(contributions);
-        }
-        if (orderBy.isPresent()) {
-          contributions = sort_array(contributions);
-        }
-        values = transform(contributions, entry -> entry.getField("value"));
-      } else {
-        values = collect_list(sources.get(0));
-      }
-      values = filter(values, Column::isNotNull);
-      if (delimited.distinct()) {
-        values = array_distinct(values);
-      }
-      return when(
-          org.apache.spark.sql.functions.size(values).gt(0),
-          array_join(values, delimited.delimiter()));
-    }
-    throw new UnsupportedOperationException(
-        "Unsupported producer aggregation inside first-non-null merge: "
-            + target.targetTerm()
-            + " / "
-            + target.aggregation());
+    return SparkTargetExpression.aggregate(target, sources, contributionIdentity, orderBy);
   }
 
   private Dataset<Row> materializeCoreTargetMerge(
@@ -675,54 +632,7 @@ public final class SparkExtendedRecordExecutor {
   }
 
   private static Column combineCoreSources(CompiledTargetProducer target, List<Column> sources) {
-    if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
-        && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
-      return coalesce(sources.toArray(Column[]::new));
-    }
-    if (target.aggregation() instanceof ValueAggregation.ExactlyOne && sources.size() == 1) {
-      return sources.get(0);
-    }
-    if (target.aggregation() instanceof ValueAggregation.LabeledOrFallback labeled) {
-      if (sources.size() < 3) {
-        throw new IllegalArgumentException(
-            "LabeledOrFallback requires [label, name, fallback...] sources for "
-                + target.targetTerm());
-      }
-      Column labeledValue =
-          when(
-                  sources.get(0).isNotNull().and(sources.get(1).isNotNull()),
-                  concat(sources.get(0), lit(labeled.separator()), sources.get(1)))
-              .otherwise(sources.get(2));
-      if (sources.size() == 3) {
-        return labeledValue;
-      }
-      List<Column> fallback = new ArrayList<>();
-      fallback.add(labeledValue);
-      fallback.addAll(sources.subList(3, sources.size()));
-      return coalesce(fallback.toArray(Column[]::new));
-    }
-    if (target.aggregation() instanceof ValueAggregation.PreferredLabeledOrFallback labeled) {
-      if (sources.size() < 4) {
-        throw new IllegalArgumentException(
-            "PreferredLabeledOrFallback requires [preferred, label, name, fallback...] sources for "
-                + target.targetTerm());
-      }
-      Column labeledValue =
-          when(
-                  sources.get(1).isNotNull().and(sources.get(2).isNotNull()),
-                  concat(sources.get(1), lit(labeled.separator()), sources.get(2)))
-              .otherwise(sources.get(3));
-      List<Column> values = new ArrayList<>();
-      values.add(sources.get(0));
-      values.add(labeledValue);
-      values.addAll(sources.subList(4, sources.size()));
-      return coalesce(values.toArray(Column[]::new));
-    }
-    throw new UnsupportedOperationException(
-        "Unsupported core-field aggregation: "
-            + target.targetTerm()
-            + " / "
-            + target.aggregation());
+    return SparkTargetExpression.row(target, sources);
   }
 
   private Dataset<Row> attachmentBridge(

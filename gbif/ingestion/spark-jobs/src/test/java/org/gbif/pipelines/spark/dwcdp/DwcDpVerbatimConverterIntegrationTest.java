@@ -85,7 +85,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String targetPath = "file://" + dir + "/verbatim.avro";
 
-    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -119,7 +119,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     Object coreRowType = record.get("coreRowType");
     assertNotNull(coreRowType);
     assertInstanceOf(org.apache.avro.util.Utf8.class, coreRowType);
-    assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_EVENT, coreRowType.toString());
+    assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT, coreRowType.toString());
 
     @SuppressWarnings("unchecked")
     java.util.Map<Object, Object> coreTerms =
@@ -165,7 +165,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String verbatimPath = "file://" + dir + "/verbatim.avro";
 
-    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -193,7 +193,8 @@ class DwcDpVerbatimConverterIntegrationTest {
     assertNull(first.getCoreId(), "coreId should be null until set by downstream pipeline");
     assertEquals("2024-06-15", first.getCoreTerms().get(DwcTerm.eventDate.qualifiedName()));
 
-    List<Map<String, String>> occExt = first.getExtensions().get(DwcDpRowTypes.ROW_TYPE_OCCURRENCE);
+    List<Map<String, String>> occExt =
+        first.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE);
     assertNotNull(occExt);
     assertEquals(1, occExt.size());
     assertEquals("Quercus robur", occExt.get(0).get(DwcTerm.scientificName.qualifiedName()));
@@ -232,7 +233,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     assertEquals(2, rebuilt.size());
     rebuilt.sort(Comparator.comparing(ExtendedRecord::getId));
     assertEquals("EVT001", rebuilt.get(0).getCoreId());
-    assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_EVENT, rebuilt.get(0).getCoreRowType());
+    assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT, rebuilt.get(0).getCoreRowType());
   }
 
   // ---- OccurrenceExtensionConverter compatibility ----
@@ -261,7 +262,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String verbatimPath = "file://" + dir + "/verbatim.avro";
 
-    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)

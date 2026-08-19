@@ -1,22 +1,13 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
-import static org.apache.spark.sql.functions.array;
 import static org.apache.spark.sql.functions.array_distinct;
-import static org.apache.spark.sql.functions.coalesce;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
-import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.concat_ws;
-import static org.apache.spark.sql.functions.filter;
-import static org.apache.spark.sql.functions.first;
-import static org.apache.spark.sql.functions.flatten;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.monotonically_increasing_id;
-import static org.apache.spark.sql.functions.size;
 import static org.apache.spark.sql.functions.sort_array;
 import static org.apache.spark.sql.functions.struct;
-import static org.apache.spark.sql.functions.transform;
-import static org.apache.spark.sql.functions.when;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -34,6 +25,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.Window;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
@@ -41,7 +33,6 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.util.TableLoader;
@@ -137,7 +128,7 @@ public final class SparkExtensionMaterializer {
 
     Set<String> mergeTerms =
         extension.targetMerges().stream()
-            .map(org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge::targetTerm)
+            .map(CompiledTargetMerge::targetTerm)
             .collect(java.util.stream.Collectors.toCollection(HashSet::new));
     FragmentResult materializedBase = materializeFragment(loader, base, true, false, mergeTerms);
     Dataset<Row> current = materializedBase.dataset();
@@ -175,8 +166,7 @@ public final class SparkExtensionMaterializer {
 
     Map<String, String> targetColumns = new LinkedHashMap<>();
     targets.forEach((term, target) -> targetColumns.put(term, target.physicalColumn()));
-    for (org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge :
-        extension.targetMerges()) {
+    for (CompiledTargetMerge merge : extension.targetMerges()) {
       Dataset<Row> merged = materializeExtensionTargetMerge(loader, extension, merge);
       String alias = targetAlias(merge.targetTerm());
       Column joinCondition =
@@ -449,113 +439,17 @@ public final class SparkExtensionMaterializer {
   private Column rowExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
     List<Column> sources =
         target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
-
-    if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
-        && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
-      return coalesce(sources.toArray(Column[]::new));
-    }
-    if (target.aggregation() instanceof ValueAggregation.ExactlyOne && sources.size() == 1) {
-      return sources.get(0);
-    }
-    if (target.aggregation() instanceof ValueAggregation.LabeledOrFallback labeled) {
-      if (sources.size() < 3) {
-        throw new IllegalArgumentException(
-            "LabeledOrFallback requires [label, name, fallback...] sources for "
-                + target.targetTerm());
-      }
-      Column labeledValue =
-          when(
-                  sources.get(0).isNotNull().and(sources.get(1).isNotNull()),
-                  concat(sources.get(0), lit(labeled.separator()), sources.get(1)))
-              .otherwise(sources.get(2));
-      if (sources.size() == 3) {
-        return labeledValue;
-      }
-      List<Column> fallback = new ArrayList<>();
-      fallback.add(labeledValue);
-      fallback.addAll(sources.subList(3, sources.size()));
-      return coalesce(fallback.toArray(Column[]::new));
-    }
-    if (target.aggregation() instanceof ValueAggregation.PreferredLabeledOrFallback labeled) {
-      if (sources.size() < 4) {
-        throw new IllegalArgumentException(
-            "PreferredLabeledOrFallback requires [preferred, label, name, fallback...] sources for "
-                + target.targetTerm());
-      }
-      Column labeledValue =
-          when(
-                  sources.get(1).isNotNull().and(sources.get(2).isNotNull()),
-                  concat(sources.get(1), lit(labeled.separator()), sources.get(2)))
-              .otherwise(sources.get(3));
-      List<Column> values = new ArrayList<>();
-      values.add(sources.get(0));
-      values.add(labeledValue);
-      values.addAll(sources.subList(4, sources.size()));
-      return coalesce(values.toArray(Column[]::new));
-    }
-
-    throw new UnsupportedOperationException(
-        "Unsupported row-level target aggregation for "
-            + target.targetTerm()
-            + ": "
-            + target.aggregation());
+    return SparkTargetExpression.row(target, sources);
   }
 
   private Column aggregateExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
     List<Column> sources =
         target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
-
-    if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
-        && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
-      return first(coalesce(sources.toArray(Column[]::new)), true);
-    }
-
-    if (target.aggregation() instanceof ValueAggregation.Delimited delimited) {
-      Optional<Column> contributionIdentity =
-          target.contributionIdentity().map(source -> pathResult.columnOrNull(source.field()));
-      Optional<Column> orderBy =
-          target.orderBy().map(source -> pathResult.columnOrNull(source.field()));
-
-      if (contributionIdentity.isPresent() || orderBy.isPresent()) {
-        List<Column> contributionEntries = new ArrayList<>();
-        for (Column source : sources) {
-          List<Column> fields = new ArrayList<>();
-          orderBy.ifPresent(order -> fields.add(order.as("order")));
-          contributionIdentity.ifPresent(identity -> fields.add(identity.as("identity")));
-          fields.add(source.cast("string").as("value"));
-          contributionEntries.add(struct(fields.toArray(Column[]::new)));
-        }
-
-        Column contributions =
-            flatten(collect_list(array(contributionEntries.toArray(Column[]::new))));
-        if (contributionIdentity.isPresent()) {
-          contributions = array_distinct(contributions);
-        }
-        if (orderBy.isPresent()) {
-          contributions = sort_array(contributions);
-        }
-
-        Column values = transform(contributions, entry -> entry.getField("value"));
-        values = filter(values, Column::isNotNull);
-        if (delimited.distinct()) {
-          values = array_distinct(values);
-        }
-        if (orderBy.isEmpty()) {
-          values = sort_array(values);
-        }
-        return when(size(values).gt(0), concat_ws(delimited.delimiter(), values));
-      }
-
-      Column values = flatten(collect_list(array(sources.toArray(Column[]::new))));
-      values = filter(values, Column::isNotNull);
-      if (delimited.distinct()) {
-        values = array_distinct(values);
-      }
-      return when(size(values).gt(0), concat_ws(delimited.delimiter(), sort_array(values)));
-    }
-
-    throw new UnsupportedOperationException(
-        "Unsupported target aggregation for " + target.targetTerm() + ": " + target.aggregation());
+    Optional<Column> contributionIdentity =
+        target.contributionIdentity().map(source -> pathResult.columnOrNull(source.field()));
+    Optional<Column> orderBy =
+        target.orderBy().map(source -> pathResult.columnOrNull(source.field()));
+    return SparkTargetExpression.aggregate(target, sources, contributionIdentity, orderBy);
   }
 
   private static void ensureNoDuplicateTargets(
@@ -594,9 +488,7 @@ public final class SparkExtensionMaterializer {
    * preserves contribution identity and ordering across independent relation paths.
    */
   private Dataset<Row> materializeExtensionFirstNonNullMerge(
-      TableLoader loader,
-      CompiledExtension extension,
-      org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge) {
+      TableLoader loader, CompiledExtension extension, CompiledTargetMerge merge) {
     Dataset<Row> contributions = null;
     int producerOrder = 0;
 
@@ -643,7 +535,7 @@ public final class SparkExtensionMaterializer {
     }
 
     if (contributions == null) {
-      return null;
+      throw emptyMergeInvariant(extension, merge);
     }
     Column ordered =
         sort_array(
@@ -657,9 +549,7 @@ public final class SparkExtensionMaterializer {
   }
 
   private Dataset<Row> materializeExtensionTargetMerge(
-      TableLoader loader,
-      CompiledExtension extension,
-      org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge) {
+      TableLoader loader, CompiledExtension extension, CompiledTargetMerge merge) {
     if (merge.aggregation() instanceof ValueAggregation.FirstNonNull) {
       return materializeExtensionFirstNonNullMerge(loader, extension, merge);
     }
@@ -715,6 +605,10 @@ public final class SparkExtensionMaterializer {
       contributions =
           contributions == null ? contribution : contributions.unionByName(contribution);
       producerOrder++;
+    }
+
+    if (contributions == null) {
+      throw emptyMergeInvariant(extension, merge);
     }
 
     String alias = targetAlias(merge.targetTerm());
@@ -774,38 +668,35 @@ public final class SparkExtensionMaterializer {
             + merge.aggregation());
   }
 
-  private static Column mergeExpression(
-      org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge merge,
-      List<MaterializedTarget> contributions) {
-    if (merge.aggregation() instanceof ValueAggregation.FirstNonNull) {
-      return coalesce(
-          contributions.stream()
-              .map(target -> col(target.physicalColumn()).cast("string"))
-              .toArray(Column[]::new));
-    }
-    if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
-      Column values =
-          array(
-              contributions.stream()
-                  .map(target -> col(target.physicalColumn()).cast("string"))
-                  .toArray(Column[]::new));
-      if (delimited.distinct()) {
-        values = array_distinct(values);
-      }
-      Column hasValue = null;
-      for (MaterializedTarget contribution : contributions) {
-        Column value = col(contribution.physicalColumn()).cast("string");
-        Column present = value.isNotNull().and(value.notEqual(""));
-        hasValue = hasValue == null ? present : hasValue.or(present);
-      }
-      return org.apache.spark.sql.functions.when(
-          hasValue, concat_ws(delimited.delimiter(), sort_array(values)));
-    }
-    throw new UnsupportedOperationException(
-        "Unsupported extension target merge aggregation: "
+  private static IllegalStateException emptyMergeInvariant(
+      CompiledExtension extension, CompiledTargetMerge merge) {
+    String fragments =
+        extension.fragments().stream()
+            .map(
+                fragment ->
+                    fragment.name()
+                        + "[targets="
+                        + fragment.targets().stream()
+                            .map(CompiledTargetProducer::targetTerm)
+                            .distinct()
+                            .sorted()
+                            .toList()
+                        + "]")
+            .toList()
+            .toString();
+    return new IllegalStateException(
+        "Compiler invariant violated while materializing an extension target merge. "
+            + "A compiled merge must contain at least one producer. "
+            + "extensionRowType="
+            + extension.rowType()
+            + ", targetTerm="
             + merge.targetTerm()
-            + " / "
-            + merge.aggregation());
+            + ", aggregation="
+            + merge.aggregation()
+            + ", producerCount="
+            + merge.producers().size()
+            + ", fragments="
+            + fragments);
   }
 
   private static IllegalStateException duplicateTargetException(

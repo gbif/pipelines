@@ -214,7 +214,7 @@ class DwcDpVerbatimConverterTest {
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
-    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .write()
         .mode(SaveMode.Overwrite)
         .format("avro")
@@ -231,7 +231,8 @@ class DwcDpVerbatimConverterTest {
     records.sort(Comparator.comparing(ExtendedRecord::getId));
 
     assertEquals(2, records.size());
-    records.forEach(r -> assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_EVENT, r.getCoreRowType()));
+    records.forEach(
+        r -> assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT, r.getCoreRowType()));
     assertNull(records.get(0).getCoreId(), "coreId must be null at verbatim stage");
 
     ExtendedRecord evt001 = records.get(0);
@@ -250,7 +251,7 @@ class DwcDpVerbatimConverterTest {
         "parentEventID must survive round-trip");
 
     List<Map<String, String>> occExt =
-        evt001.getExtensions().get(DwcDpRowTypes.ROW_TYPE_OCCURRENCE);
+        evt001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE);
     assertNotNull(occExt, "occurrence extension must be present");
     assertEquals(2, occExt.size());
     occExt.sort(Comparator.comparing(m -> m.get(DwcTerm.occurrenceID.qualifiedName())));
@@ -278,7 +279,7 @@ class DwcDpVerbatimConverterTest {
         "associatedOrganisms must be absent when occurrence has no organism link");
 
     List<Map<String, String>> mediaExt =
-        evt001.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA);
+        evt001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA);
     assertNotNull(mediaExt, "media extension must be present");
     assertEquals(2, mediaExt.size());
     List<String> mediaUris =
@@ -306,9 +307,11 @@ class DwcDpVerbatimConverterTest {
     assertEquals("All mammals", surveyTargets.get(1));
 
     assertNull(
-        evt002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_OCCURRENCE), "EVT002 has no occurrences");
+        evt002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE),
+        "EVT002 has no occurrences");
     assertNull(
-        evt002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA), "EVT002 has no media");
+        evt002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA),
+        "EVT002 has no media");
     assertNull(
         evt002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT),
         "EVT002 has no eMoF");
@@ -515,7 +518,7 @@ class DwcDpVerbatimConverterTest {
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
-    DwcDpVerbatimConverter.buildOccurrenceCoreDataset(spark, loader)
+    DwcDpVerbatimConverter.buildOccurrenceCoreDataset(loader)
         .write()
         .mode(SaveMode.Overwrite)
         .format("avro")
@@ -532,7 +535,8 @@ class DwcDpVerbatimConverterTest {
     records.sort(Comparator.comparing(ExtendedRecord::getId));
 
     assertEquals(2, records.size());
-    records.forEach(r -> assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType()));
+    records.forEach(
+        r -> assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType()));
     assertNull(records.get(0).getCoreId(), "coreId must be null at verbatim stage");
 
     ExtendedRecord occ001 = records.get(0);
@@ -564,7 +568,7 @@ class DwcDpVerbatimConverterTest {
     assertEquals("Mass", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
 
     List<Map<String, String>> mediaExt =
-        occ001.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA);
+        occ001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA);
     assertNotNull(mediaExt, "media extension must be present on OCC001");
     assertEquals(2, mediaExt.size());
     List<String> mediaUris =
@@ -583,7 +587,8 @@ class DwcDpVerbatimConverterTest {
         occ002.getCoreTerms().get(DwcTerm.associatedOrganisms.qualifiedName()),
         "associatedOrganisms must be absent when occurrence has no organism link");
     assertNull(
-        occ002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA), "OCC002 has no media");
+        occ002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA),
+        "OCC002 has no media");
     assertNull(
         occ002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT),
         "OCC002 has no eMoF");
@@ -1009,7 +1014,7 @@ class DwcDpVerbatimConverterTest {
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
-    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -1043,7 +1048,7 @@ class DwcDpVerbatimConverterTest {
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String targetPath = "file://" + dir + "/verbatim.avro";
 
-    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)

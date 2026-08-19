@@ -209,7 +209,7 @@ public class DwcDpVerbatimConverter {
   }
 
   /** Executes the canonical Event mapping plan using an already constructed table loader. */
-  static Dataset<ExtendedRecord> buildEventCoreDataset(SparkSession spark, TableLoader loader) {
+  static Dataset<ExtendedRecord> buildEventCoreDataset(TableLoader loader) {
     DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
     return mappingEngine.execute(loader, EventDwcaMapping.current(mappingEngine.schemaGraph()));
   }
@@ -228,8 +228,7 @@ public class DwcDpVerbatimConverter {
   }
 
   /** Executes the canonical Occurrence mapping plan using an already constructed table loader. */
-  static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(
-      SparkSession spark, TableLoader loader) {
+  static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(TableLoader loader) {
     DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
     return mappingEngine.execute(
         loader, OccurrenceDwcaMapping.current(mappingEngine.schemaGraph()));
@@ -320,13 +319,7 @@ public class DwcDpVerbatimConverter {
     log.info("Writing verbatim metrics for dataset {}: {}", datasetId, metrics);
     MetricsUtil.writeMetricsYaml(fileSystem, metrics, metricsPath);
     writeConversionReport(
-        dataPackage,
-        datasetBasePath,
-        fileSystem,
-        datasetId,
-        sourceCounts,
-        verbatimDataset,
-        branchMetrics);
+        datasetBasePath, fileSystem, datasetId, sourceCounts, verbatimDataset, branchMetrics);
 
     return new VerbatimConversionMetrics(0L, occurrenceCount, eventCount, largestFileCount);
   }
@@ -343,7 +336,6 @@ public class DwcDpVerbatimConverter {
   }
 
   private static void writeConversionReport(
-      DataPackage dataPackage,
       String datasetBasePath,
       FileSystem fileSystem,
       String datasetId,

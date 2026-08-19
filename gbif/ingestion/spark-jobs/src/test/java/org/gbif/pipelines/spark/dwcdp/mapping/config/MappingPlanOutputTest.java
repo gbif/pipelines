@@ -29,6 +29,22 @@ class MappingPlanOutputTest {
   }
 
   @Test
+  void outputOccurrenceCoreDetailedMappingPlan() {
+    MappingPlan plan = OccurrenceDwcaMapping.current(graph);
+    String targetPlan = engine.targetPlanDetailed(plan);
+    System.out.println(
+        "\n========== OCCURRENCE MASTER TARGET PLAN (DETAILED) ==========\n" + targetPlan);
+  }
+
+  @Test
+  void outputEventCoreDetailedMappingPlan() {
+    MappingPlan plan = EventDwcaMapping.current(graph);
+    String targetPlan = engine.targetPlanDetailed(plan);
+    System.out.println(
+        "\n========== EVENT MASTER TARGET PLAN (DETAILED) ==========\n" + targetPlan);
+  }
+
+  @Test
   void outputEventCoreMappingPlan() {
     MappingPlan plan = EventDwcaMapping.current(graph);
     String targetPlan = engine.targetPlan(plan);

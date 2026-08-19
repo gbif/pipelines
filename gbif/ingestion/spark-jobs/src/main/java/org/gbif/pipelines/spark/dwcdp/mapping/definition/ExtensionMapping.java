@@ -24,7 +24,7 @@ public record ExtensionMapping(
   public ExtensionMapping {
     Objects.requireNonNull(rowType, "rowType");
     Objects.requireNonNull(rowComposition, "rowComposition");
-    maxRowsPerParent = Objects.requireNonNull(maxRowsPerParent, "maxRowsPerParent");
+    Objects.requireNonNull(maxRowsPerParent, "maxRowsPerParent");
     targetMerges = List.copyOf(targetMerges);
     maxRowsPerParent.ifPresent(
         limit -> {

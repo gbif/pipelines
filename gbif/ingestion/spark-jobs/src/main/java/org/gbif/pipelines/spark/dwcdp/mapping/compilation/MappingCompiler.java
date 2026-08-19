@@ -10,15 +10,16 @@ import java.util.stream.Collectors;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelationResolver;
 
 /**
  * Resolves declarative mapping navigation and target ownership against a DwC-DP schema graph.
@@ -61,7 +62,11 @@ public final class MappingCompiler {
           coreCandidates.stream()
               .filter(candidate -> candidate.targetTerm().equals(merge.targetTerm()))
               .toList();
-      if (!producers.isEmpty()) {
+      if (producers.isEmpty()) {
+        mergeDecisions.add(
+            missingMergeProducerDecision(
+                "core:" + plan.coreSourceResource(), merge, coreCandidates));
+      } else {
         coreTargetMerges.add(
             new CompiledTargetMerge(merge.targetTerm(), merge.aggregation(), producers));
         mergeDecisions.add(
@@ -151,8 +156,7 @@ public final class MappingCompiler {
                     (left, right) -> left,
                     LinkedHashMap::new));
 
-    if (extension.rowComposition()
-        == org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition.UNION) {
+    if (extension.rowComposition() == ExtensionRowComposition.UNION) {
       List<CompiledFragment> resolvedFragments = new ArrayList<>();
       List<MappingDecision> decisions = new ArrayList<>();
       for (CompiledFragment fragment : rawFragments) {
@@ -191,7 +195,10 @@ public final class MappingCompiler {
           candidates.stream()
               .filter(candidate -> candidate.targetTerm().equals(merge.targetTerm()))
               .toList();
-      if (!producers.isEmpty()) {
+      if (producers.isEmpty()) {
+        mergeDecisions.add(
+            missingMergeProducerDecision("extension:" + extension.rowType(), merge, candidates));
+      } else {
         targetMerges.add(
             new CompiledTargetMerge(merge.targetTerm(), merge.aggregation(), producers));
         mergeDecisions.add(
@@ -237,6 +244,35 @@ public final class MappingCompiler {
         resolvedFragments,
         java.util.stream.Stream.concat(resolution.decisions().stream(), mergeDecisions.stream())
             .toList());
+  }
+
+  private static MappingDecision missingMergeProducerDecision(
+      String scope, TargetMerge merge, List<CompiledTargetProducer> availableProducers) {
+    String available =
+        availableProducers.isEmpty()
+            ? "<none>"
+            : availableProducers.stream()
+                .map(
+                    producer ->
+                        producer.owner()
+                            + " -> "
+                            + producer.targetTerm()
+                            + " ["
+                            + producer.origin()
+                            + "]")
+                .distinct()
+                .sorted()
+                .collect(Collectors.joining(", "));
+    return new MappingDecision(
+        scope,
+        merge.targetTerm(),
+        MappingDecisionType.MISSING_MERGE_PRODUCERS,
+        Optional.empty(),
+        List.of(),
+        "Explicit target merge declares aggregation "
+            + merge.aggregation()
+            + " but no producer resolves to the declared target. Available producers in this scope: "
+            + available);
   }
 
   private List<MappingDecision> validateFragmentScopes(List<ExtensionMapping> extensions) {
@@ -436,40 +472,7 @@ public final class MappingCompiler {
 
   private SchemaRelation resolveRelation(String scope, String sourceResource, RelationStep step) {
     try {
-      if (step.explicitColumns()) {
-        String sourceColumn = step.sourceColumn().orElseThrow();
-        String targetColumn = step.targetColumn().orElseThrow();
-        if (!graph.hasResource(step.targetResource())) {
-          throw new IllegalArgumentException(
-              "Unknown relation target resource: " + step.targetResource());
-        }
-        if (!graph.hasColumn(sourceResource, sourceColumn)) {
-          throw new IllegalArgumentException(
-              "Explicit relation references unknown source field: "
-                  + sourceResource
-                  + "."
-                  + sourceColumn);
-        }
-        if (!graph.hasColumn(step.targetResource(), targetColumn)) {
-          throw new IllegalArgumentException(
-              "Explicit relation references unknown target field: "
-                  + step.targetResource()
-                  + "."
-                  + targetColumn);
-        }
-        return SchemaRelation.relation(
-            sourceResource,
-            sourceColumn,
-            step.targetResource(),
-            targetColumn,
-            step.schemaPredicate().orElse(null),
-            RelationCardinality.UNKNOWN);
-      }
-      return graph.resolve(
-          sourceResource,
-          step.targetResource(),
-          step.viaColumn().orElse(null),
-          step.schemaPredicate().orElse(null));
+      return SchemaRelationResolver.resolve(graph, sourceResource, step);
     } catch (IllegalArgumentException error) {
       throw relationCompilationException(scope, sourceResource, step, error);
     }

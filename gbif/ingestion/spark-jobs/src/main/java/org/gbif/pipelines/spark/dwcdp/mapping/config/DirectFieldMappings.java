@@ -69,11 +69,6 @@ final class DirectFieldMappings {
     return from(graph, resourceName, path.schemaPath());
   }
 
-  static DirectFieldMappings from(
-      SchemaGraph graph, String resourceName, MappingPath path, Set<String> retainedRawOutputs) {
-    return from(graph, resourceName, path.schemaPath(), retainedRawOutputs);
-  }
-
   static DirectFieldMappings humboldt(SchemaGraph graph, String resourceName, MappingPath path) {
     return humboldt(graph, resourceName, path.schemaPath());
   }

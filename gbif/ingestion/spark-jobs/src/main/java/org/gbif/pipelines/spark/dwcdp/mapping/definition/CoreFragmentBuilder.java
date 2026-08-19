@@ -54,64 +54,9 @@ public final class CoreFragmentBuilder {
       return this;
     }
 
-    public RelationBuilder on(String sourceColumn, String targetColumn) {
-      step = step.on(sourceColumn, targetColumn);
-      return this;
-    }
-
-    public RelationBuilder predicate(String predicate) {
-      step = step.predicate(predicate);
-      return this;
-    }
-
-    public RelationBuilder filter(FilterExpression filter) {
-      step = step.filter(filter);
-      return this;
-    }
-
-    public RelationBuilder optional() {
-      step = step.requirement(RelationRequirement.OPTIONAL);
-      return this;
-    }
-
-    public RelationBuilder required() {
-      step = step.requirement(RelationRequirement.REQUIRED);
-      return this;
-    }
-
-    public RelationBuilder fanOut() {
-      step = step.with(CardinalityStrategy.fanOut());
-      return this;
-    }
-
-    public RelationBuilder exactlyOne() {
-      step = step.with(CardinalityStrategy.exactlyOne());
-      return this;
-    }
-
-    public RelationBuilder select(String selector) {
-      step = step.with(CardinalityStrategy.select(selector));
-      return this;
-    }
-
     public CoreFragmentBuilder endJoin() {
       commit();
       return parent;
-    }
-
-    public RelationBuilder join(String targetResource) {
-      commit();
-      return parent.join(targetResource);
-    }
-
-    public CoreFragmentBuilder field(TargetFieldMapping field) {
-      commit();
-      return parent.field(field);
-    }
-
-    public CoreFragment build() {
-      commit();
-      return parent.build();
     }
 
     private void commit() {

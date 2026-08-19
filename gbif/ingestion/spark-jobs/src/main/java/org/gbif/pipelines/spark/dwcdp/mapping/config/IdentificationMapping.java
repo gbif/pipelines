@@ -4,13 +4,11 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmen
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
@@ -51,9 +49,9 @@ public final class IdentificationMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                OwnershipPathStep.fanOut("nucleotide-analysis", "event_fk")
                     .filter(FilterExpression.isNull("materialEntity_fk")),
-                OwnershipStep.fanOut(IDENTIFICATION, "nucleotideAnalysis_fk")
+                OwnershipPathStep.fanOut(IDENTIFICATION, "nucleotideAnalysis_fk")
                     .filter(FilterExpression.isNull("occurrence_fk")))));
   }
 
@@ -69,10 +67,10 @@ public final class IdentificationMapping {
             "event",
             "event_pk",
             List.of(
-                OwnershipStep.fanOut("nucleotide-analysis", "event_fk")
+                OwnershipPathStep.fanOut("nucleotide-analysis", "event_fk")
                     .filter(FilterExpression.isNull("materialEntity_fk")),
-                OwnershipStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
-                OwnershipStep.fanOut(IDENTIFICATION, "nucleotideSequence_fk")
+                OwnershipPathStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
+                OwnershipPathStep.fanOut(IDENTIFICATION, "nucleotideSequence_fk")
                     .filter(
                         FilterExpression.and(
                             FilterExpression.isNull("occurrence_fk"),
@@ -91,9 +89,9 @@ public final class IdentificationMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
-                OwnershipStep.fanOut(IDENTIFICATION, "nucleotideAnalysis_fk")
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.fanOut(IDENTIFICATION, "nucleotideAnalysis_fk")
                     .filter(FilterExpression.isNull("occurrence_fk")))));
   }
 
@@ -109,10 +107,10 @@ public final class IdentificationMapping {
             "occurrence",
             "occurrence_pk",
             List.of(
-                OwnershipStep.exactlyOne("material", "evidenceForOccurrenceID"),
-                OwnershipStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
-                OwnershipStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
-                OwnershipStep.fanOut(IDENTIFICATION, "nucleotideSequence_fk")
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
+                OwnershipPathStep.fanOut(IDENTIFICATION, "nucleotideSequence_fk")
                     .filter(
                         FilterExpression.and(
                             FilterExpression.isNull("occurrence_fk"),
@@ -124,8 +122,8 @@ public final class IdentificationMapping {
     Objects.requireNonNull(spec, "spec");
 
     MappingPath current = MappingPath.root(graph, spec.sourceResource());
-    for (OwnershipStep step : spec.ownershipPath()) {
-      current = append(current, step);
+    for (OwnershipPathStep step : spec.ownershipPath()) {
+      current = step.appendTo(current);
     }
     if (!current.currentResource().equals(IDENTIFICATION)) {
       throw new IllegalArgumentException(
@@ -141,17 +139,6 @@ public final class IdentificationMapping {
 
     addIdentificationFields(graph, builder, identification, agent);
     return builder.build();
-  }
-
-  private static MappingPath append(MappingPath current, OwnershipStep step) {
-    MappingPath.JoinBuilder relation = current.join(step.resource()).via(step.viaColumn());
-    step.filter().ifPresent(relation::filter);
-    if (step.requirement() == RelationRequirement.OPTIONAL) {
-      relation.optional();
-    } else {
-      relation.required();
-    }
-    return step.exactlyOne() ? relation.exactlyOne() : relation.fanOut();
   }
 
   private static void addIdentificationFields(
@@ -172,41 +159,12 @@ public final class IdentificationMapping {
       String fragmentName,
       String sourceResource,
       String scopeKeyColumn,
-      List<OwnershipStep> ownershipPath) {
+      List<OwnershipPathStep> ownershipPath) {
     private DnaSpec {
       Objects.requireNonNull(fragmentName, "fragmentName");
       Objects.requireNonNull(sourceResource, "sourceResource");
       Objects.requireNonNull(scopeKeyColumn, "scopeKeyColumn");
       ownershipPath = List.copyOf(ownershipPath);
-    }
-  }
-
-  private record OwnershipStep(
-      String resource,
-      String viaColumn,
-      boolean exactlyOne,
-      RelationRequirement requirement,
-      Optional<FilterExpression> filter) {
-    private OwnershipStep {
-      Objects.requireNonNull(resource, "resource");
-      Objects.requireNonNull(viaColumn, "viaColumn");
-      Objects.requireNonNull(requirement, "requirement");
-      Objects.requireNonNull(filter, "filter");
-    }
-
-    static OwnershipStep fanOut(String resource, String viaColumn) {
-      return new OwnershipStep(
-          resource, viaColumn, false, RelationRequirement.OPTIONAL, Optional.empty());
-    }
-
-    static OwnershipStep exactlyOne(String resource, String viaColumn) {
-      return new OwnershipStep(
-          resource, viaColumn, true, RelationRequirement.OPTIONAL, Optional.empty());
-    }
-
-    OwnershipStep filter(FilterExpression expression) {
-      return new OwnershipStep(
-          resource, viaColumn, exactlyOne, requirement, Optional.of(expression));
     }
   }
 }

@@ -25,12 +25,12 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelationResolver;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 import org.gbif.pipelines.spark.util.TableLoader;
 
@@ -97,7 +97,8 @@ public final class SparkMappingPathExecutor {
         relationIndex < mapping.relations().size();
         relationIndex++) {
       RelationStep step = mapping.relations().get(relationIndex);
-      SchemaRelation relation = resolveRelation(currentPath.currentResource(), step);
+      SchemaRelation relation =
+          SchemaRelationResolver.resolve(graph, currentPath.currentResource(), step);
 
       Optional<Dataset<Row>> targetRawOpt = loader.load(relation.targetResource());
       SchemaPath targetPath = currentPath.append(relation);
@@ -326,26 +327,11 @@ public final class SparkMappingPathExecutor {
       String sourceResource, List<RelationStep> relations, int relationCount) {
     SchemaPath path = SchemaPath.root(sourceResource);
     for (int i = 0; i < relationCount; i++) {
-      path = path.append(resolveRelation(path.currentResource(), relations.get(i)));
+      path =
+          path.append(
+              SchemaRelationResolver.resolve(graph, path.currentResource(), relations.get(i)));
     }
     return path;
-  }
-
-  private SchemaRelation resolveRelation(String sourceResource, RelationStep step) {
-    if (step.explicitColumns()) {
-      return SchemaRelation.relation(
-          sourceResource,
-          step.sourceColumn().orElseThrow(),
-          step.targetResource(),
-          step.targetColumn().orElseThrow(),
-          step.schemaPredicate().orElse(null),
-          RelationCardinality.UNKNOWN);
-    }
-    return graph.resolve(
-        sourceResource,
-        step.targetResource(),
-        step.viaColumn().orElse(null),
-        step.schemaPredicate().orElse(null));
   }
 
   private Dataset<Row> addNullResource(
