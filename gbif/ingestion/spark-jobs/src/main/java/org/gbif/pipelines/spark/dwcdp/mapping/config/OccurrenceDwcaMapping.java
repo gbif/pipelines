@@ -161,6 +161,8 @@ public final class OccurrenceDwcaMapping {
         .importCoreFragment(OccurrenceCoreMapping.acceptedIdentification(graph))
         .importCoreFragment(OccurrenceCoreMapping.acceptedIdentificationAgent(graph))
         .importCoreFragment(OccurrenceCoreMapping.material(graph))
+        .importCoreFragment(OccurrenceCoreMapping.acceptedIdentificationTaxon(graph))
+        .importCoreFragment(OccurrenceCoreMapping.acceptedIdentificationAgentRoles(graph))
         .importCoreFragment(OccurrenceCoreMapping.materialCollectedBy(graph))
         .importCoreFragment(OccurrenceCoreMapping.materialIdentifiedBy(graph))
         .importCoreFragment(OccurrenceCoreMapping.materialCollectorRoles(graph))
@@ -171,6 +173,24 @@ public final class OccurrenceDwcaMapping {
         .importCoreFragment(OccurrenceCoreMapping.directSamplingProtocol(graph))
         .mergeCoreTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeCoreTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(DwcTerm.identifiedByID.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(TargetTerms.resolve("dateIdentified"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(
+            TargetTerms.resolve("identificationReferences"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(
+            TargetTerms.resolve("identificationVerificationStatus"),
+            ValueAggregation.firstNonNull())
+        .mergeCoreTarget(
+            TargetTerms.resolve("identificationRemarks"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(
+            TargetTerms.resolve("verbatimIdentification"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(TargetTerms.resolve("organismScope"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(TargetTerms.resolve("taxonRank"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(TargetTerms.resolve("scientificName"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(TargetTerms.resolve("scientificNameID"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(
+            TargetTerms.resolve("scientificNameAuthorship"), ValueAggregation.firstNonNull())
+        .mergeCoreTarget(TargetTerms.resolve("vernacularName"), ValueAggregation.firstNonNull())
         .mergeCoreTarget(
             DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeCoreTarget(

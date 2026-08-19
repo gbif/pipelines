@@ -83,6 +83,90 @@ public final class OccurrenceCoreMapping {
     return builder.build();
   }
 
+  /**
+   * Uses one unambiguous IdentificationTaxon row as a taxonomic fallback for the accepted
+   * Identification. Multiple taxon-formula components are deliberately not flattened into one
+   * Occurrence value.
+   */
+  public static CoreFragment acceptedIdentificationTaxon(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath identification =
+        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
+    SchemaPath taxon =
+        identification.append(
+            graph.resolve("identification", "identification-taxon", "identification_fk"));
+
+    CoreFragmentBuilder builder =
+        coreFragment("occurrence-core-accepted-identification-taxon", "occurrence")
+            .join("identification")
+            .via("occurrence_fk")
+            .filter(FilterExpression.eq("isAcceptedIdentification", true))
+            .optional()
+            .exactlyOne()
+            .join("identification-taxon")
+            .via("identification_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    for (String column :
+        List.of(
+            "scientificName",
+            "scientificNameID",
+            "scientificNameAuthorship",
+            "vernacularName",
+            "taxonRank")) {
+      TargetTerms.resolveOutput(column)
+          .ifPresent(
+              target ->
+                  builder.field(
+                      TargetFieldMapping.inferredOneOf(
+                          target, ValueAggregation.firstNonNull(), taxon.field(column))));
+    }
+    return builder.build();
+  }
+
+  /** All agents attached to the accepted Identification are a final identifiedBy fallback. */
+  public static CoreFragment acceptedIdentificationAgentRoles(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath identification =
+        occurrence.append(graph.resolve("occurrence", "identification", "occurrence_fk"));
+    SchemaPath role =
+        identification.append(
+            graph.resolve("identification", "identification-agent-role", "identification_fk"));
+    SchemaPath agent = role.append(graph.resolve("identification-agent-role", "agent", "agent_fk"));
+
+    return coreFragment("occurrence-core-accepted-identification-agent-roles", "occurrence")
+        .join("identification")
+        .via("occurrence_fk")
+        .filter(FilterExpression.eq("isAcceptedIdentification", true))
+        .optional()
+        .exactlyOne()
+        .join("identification-agent-role")
+        .via("identification_fk")
+        .optional()
+        .fanOut()
+        .join("agent")
+        .via("agent_fk")
+        .optional()
+        .exactlyOne()
+        .field(
+            TargetFieldMapping.allOf(
+                    DwcTerm.identifiedBy.qualifiedName(),
+                    ValueAggregation.pipeDelimitedDistinct(),
+                    agent.field("preferredAgentName"))
+                .contributionIdentity(role.field("agent_fk"))
+                .orderBy(role.field("agentRoleOrder")))
+        .field(
+            TargetFieldMapping.allOf(
+                    DwcTerm.identifiedByID.qualifiedName(),
+                    ValueAggregation.pipeDelimitedDistinct(),
+                    agent.field("agentID"))
+                .contributionIdentity(role.field("agent_fk"))
+                .orderBy(role.field("agentRoleOrder")))
+        .build();
+  }
+
   /** Resolves the sole accepted identification's identifiedByID before material fallback. */
   public static CoreFragment acceptedIdentificationAgent(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
@@ -107,6 +191,12 @@ public final class OccurrenceCoreMapping {
                 ValueAggregation.firstNonNull(),
                 identification.field("identifiedBy"),
                 agent.field("preferredAgentName")))
+        .field(
+            TargetFieldMapping.oneOf(
+                DwcTerm.identifiedByID.qualifiedName(),
+                ValueAggregation.firstNonNull(),
+                identification.field("identifiedByID"),
+                agent.field("agentID")))
         .build();
   }
 

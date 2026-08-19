@@ -48,6 +48,22 @@ public final class EventDwcaMapping {
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
         .mergeTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeTarget(DwcTerm.identifiedByID.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("dateIdentified"), ValueAggregation.firstNonNull())
+        .mergeTarget(
+            TargetTerms.resolve("identificationReferences"), ValueAggregation.firstNonNull())
+        .mergeTarget(
+            TargetTerms.resolve("identificationVerificationStatus"),
+            ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("identificationRemarks"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("verbatimIdentification"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("organismScope"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("taxonRank"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("scientificName"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("scientificNameID"), ValueAggregation.firstNonNull())
+        .mergeTarget(
+            TargetTerms.resolve("scientificNameAuthorship"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("vernacularName"), ValueAggregation.firstNonNull())
         .mergeTarget(
             DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
@@ -61,6 +77,8 @@ public final class EventDwcaMapping {
         .importFragment(OccurrenceMapping.acceptedIdentification(graph))
         .importFragment(OccurrenceMapping.acceptedIdentificationAgent(graph))
         .importFragment(OccurrenceMapping.material(graph))
+        .importFragment(OccurrenceMapping.acceptedIdentificationTaxon(graph))
+        .importFragment(OccurrenceMapping.acceptedIdentificationAgentRoles(graph))
         .importFragment(OccurrenceMapping.materialCollectedBy(graph))
         .importFragment(OccurrenceMapping.materialIdentifiedBy(graph))
         .importFragment(OccurrenceMapping.materialCollectorRoles(graph))
@@ -216,6 +234,22 @@ public final class EventDwcaMapping {
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
         .mergeTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeTarget(DwcTerm.identifiedByID.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("dateIdentified"), ValueAggregation.firstNonNull())
+        .mergeTarget(
+            TargetTerms.resolve("identificationReferences"), ValueAggregation.firstNonNull())
+        .mergeTarget(
+            TargetTerms.resolve("identificationVerificationStatus"),
+            ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("identificationRemarks"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("verbatimIdentification"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("organismScope"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("taxonRank"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("scientificName"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("scientificNameID"), ValueAggregation.firstNonNull())
+        .mergeTarget(
+            TargetTerms.resolve("scientificNameAuthorship"), ValueAggregation.firstNonNull())
+        .mergeTarget(TargetTerms.resolve("vernacularName"), ValueAggregation.firstNonNull())
         .mergeTarget(
             DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
@@ -229,6 +263,8 @@ public final class EventDwcaMapping {
         .importFragment(OccurrenceMapping.acceptedIdentification(graph))
         .importFragment(OccurrenceMapping.acceptedIdentificationAgent(graph))
         .importFragment(OccurrenceMapping.material(graph))
+        .importFragment(OccurrenceMapping.acceptedIdentificationTaxon(graph))
+        .importFragment(OccurrenceMapping.acceptedIdentificationAgentRoles(graph))
         .importFragment(OccurrenceMapping.materialCollectedBy(graph))
         .importFragment(OccurrenceMapping.materialIdentifiedBy(graph))
         .importFragment(OccurrenceMapping.materialCollectorRoles(graph))
