@@ -69,6 +69,11 @@
             <version>${dwc-dp-analyser.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwc-dp-schemas</artifactId>
+            <version>0.0.3-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.gbif.pipelines</groupId>
             <artifactId>elasticsearch-tools</artifactId>
             <version>${project.version}</version>

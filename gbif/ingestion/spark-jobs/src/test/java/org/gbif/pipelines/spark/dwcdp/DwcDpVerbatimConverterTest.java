@@ -15,28 +15,37 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
-import org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder;
-import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingBranchExecutionMetrics;
+import org.gbif.pipelines.spark.dwcdp.mapping.execution.RelationExecutionMetrics;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
+import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.SparkTest;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TableLoader;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
@@ -54,15 +63,7 @@ import org.junit.jupiter.api.io.TempDir;
  * <p>Unit-level concerns are covered in their respective classes:
  *
  * <ul>
- *   <li>Term resolution: {@link org.gbif.pipelines.spark.dwcdp.builder.TermResolverTest}
- *   <li>Row mapping: {@link org.gbif.pipelines.spark.dwcdp.builder.RowTermMapperTest}
- *   <li>Event-core builder: {@link org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilderTest}
- *   <li>Occurrence-core builder: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilderTest}
- *   <li>Organism join: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilderTest}
- *   <li>coreTerms schema compliance: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreTermsComplianceTest}
+ *   <li>Mapping semantics and execution: tests under {@code dwcdp.mapping}
  * </ul>
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -99,22 +100,24 @@ class DwcDpVerbatimConverterTest {
         schema(
             "event_pk",
             "eventID",
-            "parentEventID",
+            "parentEvent_fk",
             "eventDate",
             "country",
             "decimalLatitude",
             "decimalLongitude"),
         List.of(
             RowFactory.create("EPK-001", "EVT001", null, "2024-06-01", "DK", "55.6", "12.5"),
-            RowFactory.create("EPK-002", "EVT002", "EVT001", "2024-06-02", "DK", "55.7", "12.6")));
+            RowFactory.create("EPK-002", "EVT002", "EPK-001", "2024-06-02", "DK", "55.7", "12.6")));
 
+    // occurrence carries event_fk (surrogate ref to event.event_pk), never a literal eventID.
     // associatedOrganisms is NOT a DwC-DP occurrence field — contributed by organism join only
     writeParquet(
         dir,
         "data/occurrence.parquet",
         schema(
+            "occurrence_pk",
             "occurrenceID",
-            "eventID",
+            "event_fk",
             "organismID",
             "scientificName",
             "organismScope",
@@ -124,17 +127,27 @@ class DwcDpVerbatimConverterTest {
             "sex"),
         List.of(
             RowFactory.create(
+                "OPK-001",
                 "OCC001",
-                "EVT001",
+                "EPK-001",
                 "org-1",
                 "Parus major",
                 "multicellular organism",
-                "Blue tit",
+                null,
                 null,
                 "detected",
                 "female"),
             RowFactory.create(
-                "OCC002", "EVT001", null, "Quercus robur", null, null, null, "detected", null)));
+                "OPK-002",
+                "OCC002",
+                "EPK-001",
+                null,
+                "Quercus robur",
+                null,
+                null,
+                null,
+                "detected",
+                null)));
 
     writeParquet(
         dir,
@@ -149,19 +162,27 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create(
                 "org-1", "Blue tit", "multicellular organism", null, "sibling of:org-2")));
 
+    // media carries media_pk — the surrogate key event-media's media_fk resolves against
     writeParquet(
         dir,
         "data/media.parquet",
-        schema("mediaID", "accessURI", "mediaType"),
+        schema("media_pk", "accessURI", "mediaType"),
         List.of(
-            RowFactory.create("MED001", "https://example.com/img1.jpg", "StillImage"),
-            RowFactory.create("MED002", "https://example.com/img2.jpg", "StillImage")));
+            RowFactory.create("MPK-001", "https://example.com/img1.jpg", "StillImage"),
+            RowFactory.create("MPK-002", "https://example.com/img2.jpg", "StillImage")));
 
+    // event-media carries event_fk + media_fk — surrogate refs, never eventID/mediaID directly
     writeParquet(
         dir,
         "data/event-media.parquet",
-        schema("mediaID", "eventID"),
-        List.of(RowFactory.create("MED001", "EVT001"), RowFactory.create("MED002", "EVT001")));
+        schema("event_fk", "media_fk"),
+        List.of(RowFactory.create("EPK-001", "MPK-001"), RowFactory.create("EPK-001", "MPK-002")));
+
+    writeParquet(
+        dir,
+        "data/occurrence-media.parquet",
+        schema("occurrence_fk", "media_fk"),
+        List.of(RowFactory.create("OPK-001", "MPK-001")));
 
     writeParquet(
         dir,
@@ -193,7 +214,7 @@ class DwcDpVerbatimConverterTest {
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .write()
         .mode(SaveMode.Overwrite)
         .format("avro")
@@ -210,7 +231,8 @@ class DwcDpVerbatimConverterTest {
     records.sort(Comparator.comparing(ExtendedRecord::getId));
 
     assertEquals(2, records.size());
-    records.forEach(r -> assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_EVENT, r.getCoreRowType()));
+    records.forEach(
+        r -> assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT, r.getCoreRowType()));
     assertNull(records.get(0).getCoreId(), "coreId must be null at verbatim stage");
 
     ExtendedRecord evt001 = records.get(0);
@@ -229,7 +251,7 @@ class DwcDpVerbatimConverterTest {
         "parentEventID must survive round-trip");
 
     List<Map<String, String>> occExt =
-        evt001.getExtensions().get(DwcDpRowTypes.ROW_TYPE_OCCURRENCE);
+        evt001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE);
     assertNotNull(occExt, "occurrence extension must be present");
     assertEquals(2, occExt.size());
     occExt.sort(Comparator.comparing(m -> m.get(DwcTerm.occurrenceID.qualifiedName())));
@@ -257,11 +279,11 @@ class DwcDpVerbatimConverterTest {
         "associatedOrganisms must be absent when occurrence has no organism link");
 
     List<Map<String, String>> mediaExt =
-        evt001.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA);
+        evt001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA);
     assertNotNull(mediaExt, "media extension must be present");
     assertEquals(2, mediaExt.size());
     List<String> mediaUris =
-        mediaExt.stream().map(m -> m.get(TermResolver.resolve("accessURI"))).sorted().toList();
+        mediaExt.stream().map(m -> m.get(DcTerm.identifier.qualifiedName())).sorted().toList();
     assertEquals("https://example.com/img1.jpg", mediaUris.get(0));
     assertEquals("https://example.com/img2.jpg", mediaUris.get(1));
 
@@ -285,9 +307,11 @@ class DwcDpVerbatimConverterTest {
     assertEquals("All mammals", surveyTargets.get(1));
 
     assertNull(
-        evt002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_OCCURRENCE), "EVT002 has no occurrences");
+        evt002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE),
+        "EVT002 has no occurrences");
     assertNull(
-        evt002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA), "EVT002 has no media");
+        evt002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA),
+        "EVT002 has no media");
     assertNull(
         evt002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT),
         "EVT002 has no eMoF");
@@ -300,17 +324,19 @@ class DwcDpVerbatimConverterTest {
 
   @Test
   void eventCoreRoundTripAvroWriteAndRead(@TempDir Path dir) throws Exception {
+    // event_pk added — OccurrenceExtensionBuilder resolves occurrence.event_fk against it
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate", "decimalLatitude", "decimalLongitude"),
-        List.of(RowFactory.create("EVT001", "2024-06-15", "51.5", "-0.1")));
+        schema("event_pk", "eventID", "eventDate", "decimalLatitude", "decimalLongitude"),
+        List.of(RowFactory.create("EPK-001", "EVT001", "2024-06-15", "51.5", "-0.1")));
 
+    // event_fk instead of eventID — occurrence never carries the natural key directly
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrenceID", "eventID", "scientificName"),
-        List.of(RowFactory.create("OCC001", "EVT001", "Quercus robur")));
+        schema("occurrence_pk", "occurrenceID", "event_fk", "scientificName"),
+        List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Quercus robur")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
 
@@ -358,8 +384,8 @@ class DwcDpVerbatimConverterTest {
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrence_pk", "occurrenceID", "scientificName", "decimalLatitude"),
-        List.of(RowFactory.create("OPK-001", "OCC001", "Pinus sylvestris", "60.2")));
+        schema("occurrence_pk", "occurrenceID", "scientificName", "sex"),
+        List.of(RowFactory.create("OPK-001", "OCC001", "Pinus sylvestris", "female")));
 
     writeParquet(
         dir,
@@ -391,7 +417,7 @@ class DwcDpVerbatimConverterTest {
     assertNull(r.getCoreId());
     assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType());
     assertEquals("Pinus sylvestris", r.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
-    assertEquals("60.2", r.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("female", r.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
     List<Map<String, String>> emof =
         r.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
     assertNotNull(emof, "eMoF extension must be present");
@@ -410,6 +436,9 @@ class DwcDpVerbatimConverterTest {
    */
   @Test
   void occurrenceCore_fullPackage_roundTripAvroWriteAndRead(@TempDir Path dir) throws Exception {
+    // event_fk here is inert bystander data — occurrence-core never resolves back to event —
+    // kept as event_fk (rather than the old eventID) just for consistency with the rest of
+    // these fixtures.
     // associatedOrganisms is NOT a DwC-DP occurrence field — contributed by organism join only
     writeParquet(
         dir,
@@ -417,43 +446,37 @@ class DwcDpVerbatimConverterTest {
         schema(
             "occurrence_pk",
             "occurrenceID",
-            "eventID",
+            "event_fk",
             "organismID",
             "scientificName",
             "organismScope",
             "organismName",
             "organismRemarks",
             "occurrenceStatus",
-            "sex",
-            "decimalLatitude",
-            "decimalLongitude"),
+            "sex"),
         List.of(
             RowFactory.create(
                 "OPK-001",
                 "OCC001",
-                "EVT001",
+                "EPK-001",
                 "org-1",
                 "Parus major",
                 "multicellular organism",
                 "Blue tit",
                 null,
                 "detected",
-                "female",
-                "55.6",
-                "12.5"),
+                "female"),
             RowFactory.create(
                 "OPK-002",
                 "OCC002",
-                "EVT001",
+                "EPK-001",
                 null,
                 "Quercus robur",
                 null,
                 null,
                 null,
                 "detected",
-                null,
-                "55.7",
-                "12.6")));
+                null)));
 
     writeParquet(
         dir,
@@ -468,19 +491,22 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create(
                 "org-1", "Blue tit", "multicellular organism", null, "sibling of:org-2")));
 
+    // media carries media_pk — the surrogate key occurrence-media's media_fk resolves against
     writeParquet(
         dir,
         "data/media.parquet",
-        schema("mediaID", "accessURI", "mediaType"),
+        schema("media_pk", "accessURI", "mediaType"),
         List.of(
-            RowFactory.create("MED001", "https://example.com/img1.jpg", "StillImage"),
-            RowFactory.create("MED002", "https://example.com/img2.jpg", "StillImage")));
+            RowFactory.create("MPK-001", "https://example.com/img1.jpg", "StillImage"),
+            RowFactory.create("MPK-002", "https://example.com/img2.jpg", "StillImage")));
 
+    // occurrence-media carries occurrence_fk + media_fk — surrogate refs, never
+    // occurrenceID/mediaID directly
     writeParquet(
         dir,
         "data/occurrence-media.parquet",
-        schema("mediaID", "occurrenceID"),
-        List.of(RowFactory.create("MED001", "OCC001"), RowFactory.create("MED002", "OCC001")));
+        schema("occurrence_fk", "media_fk"),
+        List.of(RowFactory.create("OPK-001", "MPK-001"), RowFactory.create("OPK-001", "MPK-002")));
 
     writeParquet(
         dir,
@@ -492,7 +518,7 @@ class DwcDpVerbatimConverterTest {
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
-    OccurrenceCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildOccurrenceCoreDataset(loader)
         .write()
         .mode(SaveMode.Overwrite)
         .format("avro")
@@ -509,13 +535,13 @@ class DwcDpVerbatimConverterTest {
     records.sort(Comparator.comparing(ExtendedRecord::getId));
 
     assertEquals(2, records.size());
-    records.forEach(r -> assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType()));
+    records.forEach(
+        r -> assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType()));
     assertNull(records.get(0).getCoreId(), "coreId must be null at verbatim stage");
 
     ExtendedRecord occ001 = records.get(0);
     assertEquals("OCC001", occ001.getId());
     assertEquals("Parus major", occ001.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
-    assertEquals("55.6", occ001.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
     assertEquals("female", occ001.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
     assertEquals(
         "org-1",
@@ -524,7 +550,7 @@ class DwcDpVerbatimConverterTest {
     assertEquals(
         "Blue tit",
         occ001.getCoreTerms().get(DwcTerm.organismName.qualifiedName()),
-        "occurrence value wins for overlapping organism field");
+        "organism value fills an overlapping occurrence field when the occurrence value is null");
     assertEquals(
         "multicellular organism",
         occ001.getCoreTerms().get(DwcTerm.organismScope.qualifiedName()),
@@ -542,11 +568,11 @@ class DwcDpVerbatimConverterTest {
     assertEquals("Mass", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
 
     List<Map<String, String>> mediaExt =
-        occ001.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA);
+        occ001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA);
     assertNotNull(mediaExt, "media extension must be present on OCC001");
     assertEquals(2, mediaExt.size());
     List<String> mediaUris =
-        mediaExt.stream().map(m -> m.get(TermResolver.resolve("accessURI"))).sorted().toList();
+        mediaExt.stream().map(m -> m.get(DcTerm.identifier.qualifiedName())).sorted().toList();
     assertEquals("https://example.com/img1.jpg", mediaUris.get(0));
     assertEquals("https://example.com/img2.jpg", mediaUris.get(1));
 
@@ -561,7 +587,8 @@ class DwcDpVerbatimConverterTest {
         occ002.getCoreTerms().get(DwcTerm.associatedOrganisms.qualifiedName()),
         "associatedOrganisms must be absent when occurrence has no organism link");
     assertNull(
-        occ002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA), "OCC002 has no media");
+        occ002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA),
+        "OCC002 has no media");
     assertNull(
         occ002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT),
         "OCC002 has no eMoF");
@@ -694,8 +721,7 @@ class DwcDpVerbatimConverterTest {
   }
 
   @Test
-  void assertionProtocolFkUsedAsFallbackMeasurementMethodWhenProtocolTableAbsent(@TempDir Path dir)
-      throws Exception {
+  void assertionProtocolFkDoesNotLeakWhenProtocolTableAbsent(@TempDir Path dir) throws Exception {
     writeParquet(
         dir,
         "data/event.parquet",
@@ -723,8 +749,9 @@ class DwcDpVerbatimConverterTest {
     assertNotNull(emof);
 
     Map<String, String> row = emof.get(0);
-    // raw FK value is kept as measurementMethod when no protocol table is available
-    assertEquals("PROTO-001", row.get(DwcTerm.measurementMethod.qualifiedName()));
+    // Surrogate protocol FKs are transport keys, not DwC-A values.
+    assertFalse(row.containsKey(DwcTerm.measurementMethod.qualifiedName()));
+    assertFalse(row.containsKey("assertionProtocol_fk"));
   }
 
   // ---- Humboldt Ecological Inventory Extension ----
@@ -978,15 +1005,16 @@ class DwcDpVerbatimConverterTest {
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate"),
+        schema("event_pk", "eventID", "eventDate"),
         List.of(
-            RowFactory.create("EVT001", "2024-06-15"), RowFactory.create("EVT002", "2024-06-16")));
+            RowFactory.create("EPK-001", "EVT001", "2024-06-15"),
+            RowFactory.create("EPK-002", "EVT002", "2024-06-16")));
 
-    DataPackage dp = DataPackageFixtures.withEvent("eventID", "eventDate");
+    DataPackage dp = DataPackageFixtures.withEvent("event_pk", "eventID", "eventDate");
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -1009,17 +1037,18 @@ class DwcDpVerbatimConverterTest {
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate"),
+        schema("event_pk", "eventID", "eventDate"),
         List.of(
-            RowFactory.create("EVT001", "2024-06-15"), RowFactory.create("EVT002", "2024-06-16")));
+            RowFactory.create("EPK-001", "EVT001", "2024-06-15"),
+            RowFactory.create("EPK-002", "EVT002", "2024-06-16")));
 
-    DataPackage dp = DataPackageFixtures.withEvent("eventID", "eventDate");
+    DataPackage dp = DataPackageFixtures.withEvent("event_pk", "eventID", "eventDate");
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String targetPath = "file://" + dir + "/verbatim.avro";
 
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -1113,7 +1142,356 @@ class DwcDpVerbatimConverterTest {
     assertEquals(3L, metrics.largestFileCount());
   }
 
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
+  @Test
+  void writeMetrics_eventMaterialWithoutOccurrence_countsVirtualOccurrences(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+    writeParquet(
+        dir,
+        "data/material.parquet",
+        schema(
+            "materialEntity_pk",
+            "materialEntityID",
+            "evidenceForOccurrenceID",
+            "collectionEvent_fk"),
+        List.of(
+            RowFactory.create("MPK-001", "MAT001", null, "EPK-001"),
+            RowFactory.create("MPK-002", null, null, "EPK-001"),
+            // has evidence, but there's no local occurrence table at all for it to resolve
+            // against — evidenceForOccurrenceID is a weak FK, so this legitimately references
+            // an occurrence outside this package; it's still eligible for virtual promotion
+            RowFactory.create("MPK-003", "MAT003", "OCC001", "EPK-001")));
+
+    var metrics =
+        DwcDpVerbatimConverter.writeMetrics(
+            spark,
+            DataPackageFixtures.withEventAndMaterial(),
+            "file://" + dir,
+            FileSystem.getLocal(new Configuration()),
+            "test-dataset");
+
+    assertEquals(3L, metrics.occurrenceCount());
+    assertEquals(1L, metrics.eventCount());
+    assertEquals(3L, metrics.largestFileCount());
+  }
+
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
+  @Test
+  void writeMetrics_materialEvidenceReferencesOccurrenceOutsidePackage_becomesVirtual(
+      @TempDir Path dir) throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+    // Only OCC-LOCAL exists in this package's own occurrence table.
+    writeParquet(
+        dir,
+        "data/occurrence.parquet",
+        schema("occurrence_pk", "occurrenceID", "event_fk"),
+        List.of(RowFactory.create("OPK-LOCAL", "OCC-LOCAL", "EPK-001")));
+    writeParquet(
+        dir,
+        "data/material.parquet",
+        schema(
+            "materialEntity_pk",
+            "materialEntityID",
+            "evidenceForOccurrenceID",
+            "collectionEvent_fk"),
+        List.of(
+            // resolves to the real local occurrence -> enriches it, not virtual
+            RowFactory.create("MPK-001", "MAT001", "OCC-LOCAL", "EPK-001"),
+            // evidenceForOccurrenceID is a weak FK — this legitimately references an occurrence
+            // that simply isn't part of this package, so it's still eligible for virtual
+            // promotion via its resolvable collectionEvent_fk
+            RowFactory.create("MPK-002", "MAT002", "OCC-ELSEWHERE", "EPK-001")));
+
+    var metrics =
+        DwcDpVerbatimConverter.writeMetrics(
+            spark,
+            DataPackageFixtures.withEventOccurrenceAndMaterial(),
+            "file://" + dir,
+            FileSystem.getLocal(new Configuration()),
+            "test-dataset");
+
+    assertEquals(
+        2L,
+        metrics.occurrenceCount(),
+        "1 physical (enriched OCC-LOCAL) + 1 virtual (MPK-002, evidence doesn't resolve locally)");
+  }
+
+  // ---- convert() end-to-end ----
+
+  /**
+   * Exercises {@link DwcDpVerbatimConverter#convert} itself for the virtual-occurrence-only
+   * scenario, rather than the builder or {@code writeMetrics} in isolation like the other tests in
+   * this class.
+   *
+   * <p>Every other "round trip" test in this file (e.g. {@code
+   * eventCore_fullPackage_roundTripAvroWriteAndRead}) calls {@link
+   * DwcDpVerbatimConverter#buildEventCoreDataset} directly and writes Avro by hand — none of them
+   * go through {@code convert()}'s own {@code datapackage.json} reading ({@link
+   * DataPackageDescriptorReader}), path resolution ({@link
+   * org.gbif.pipelines.spark.util.PathUtil#interpretedAttemptPath}), single-file merge, or {@code
+   * writeMetrics} call. This test does, so it's the one place proving those pieces agree with each
+   * other for a package with no physical {@code occurrence} table — only {@code event} + {@code
+   * material} — where the only occurrence rows that exist are the virtual ones {@link the
+   * declarative material mapping} synthesises.
+   */
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
+  @Test
+  void convert_eventMaterialWithoutOccurrence_producesVirtualOccurrenceAndMatchingMetrics(
+      @TempDir Path dir) throws Exception {
+    String datasetId = UUID.randomUUID().toString();
+    int attempt = 1;
+    Path attemptDir = dir.resolve(datasetId).resolve(String.valueOf(attempt));
+
+    writeParquet(
+        attemptDir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+    writeParquet(
+        attemptDir,
+        "data/material.parquet",
+        schema(
+            "materialEntity_pk",
+            "materialEntityID",
+            "evidenceForOccurrenceID",
+            "collectionEvent_fk",
+            "catalogNumber"),
+        List.of(RowFactory.create("MPK-001", "MAT001", null, "EPK-001", "CAT001")));
+
+    DataPackage dp = DataPackageFixtures.withEventAndMaterial();
+    MapperUtil.MAPPER.writeValue(attemptDir.resolve("datapackage.json").toFile(), dp);
+
+    PipelinesConfig config = new PipelinesConfig();
+    config.setOutputPath("file://" + dir);
+    config.setInputPath("file://" + dir);
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+
+    DwcDpVerbatimConverter.VerbatimConversionMetrics metrics =
+        DwcDpVerbatimConverter.convert(
+            spark,
+            fs,
+            config,
+            datasetId,
+            attempt,
+            /* containsEvents= */ true,
+            /* containsOccurrences= */ false);
+
+    assertEquals(1L, metrics.occurrenceCount(), "the one virtual occurrence must be counted");
+    assertEquals(1L, metrics.eventCount());
+
+    // metrics returned by convert() must match what it actually wrote to archive-to-verbatim.yml
+    Map<String, Long> writtenMetrics =
+        org.gbif.pipelines.core.utils.MetricsUtil.readMetricsYaml(
+            fs, "file://" + attemptDir + "/archive-to-verbatim.yml");
+    assertEquals(1L, writtenMetrics.get(Metrics.ARCHIVE_TO_OCC_COUNT));
+
+    List<ExtendedRecord> records =
+        spark
+            .read()
+            .format("avro")
+            .load("file://" + attemptDir + "/verbatim.avro")
+            .as(Encoders.bean(ExtendedRecord.class))
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord eventRecord = records.get(0);
+    assertEquals("EVT001", eventRecord.getId());
+
+    List<Map<String, String>> occExt =
+        eventRecord.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE);
+    assertNotNull(
+        occExt, "virtual occurrence must be present as an extension on the written record");
+    assertEquals(1, occExt.size());
+    assertEquals("MAT001", occExt.get(0).get(DwcTerm.occurrenceID.qualifiedName()));
+    assertEquals("MaterialSample", occExt.get(0).get(DwcTerm.basisOfRecord.qualifiedName()));
+  }
+
+  // ---- conversion report ----
+
+  @Test
+  void writeMetrics_writesGenericMappingBranchFunnels(@TempDir Path dir) throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+    writeParquet(
+        dir,
+        "data/occurrence.parquet",
+        schema("occurrence_pk", "occurrenceID", "event_fk"),
+        List.of(
+            RowFactory.create("OPK-001", "OCC001", "EPK-001"),
+            RowFactory.create("OPK-002", "OCC002", "EPK-001")));
+
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    String datasetBasePath = "file://" + dir;
+    List<MappingBranchExecutionMetrics> branchMetrics =
+        List.of(
+            new MappingBranchExecutionMetrics(
+                "extension-fragment:event-occurrences",
+                List.of(
+                    new RelationExecutionMetrics(
+                        "event",
+                        "occurrence",
+                        "FAN_OUT",
+                        "OPTIONAL",
+                        false,
+                        1L,
+                        1L,
+                        2L,
+                        2L,
+                        1L,
+                        0L,
+                        1L,
+                        2L,
+                        false))));
+
+    DwcDpVerbatimConverter.writeMetrics(
+        spark,
+        DataPackageFixtures.withEventAndOccurrence(),
+        datasetBasePath,
+        fs,
+        "test-dataset",
+        Optional.empty(),
+        branchMetrics);
+
+    String report = readTextFile(fs, datasetBasePath + "/conversion-report.txt");
+
+    assertTrue(report.contains("mapping branches (execution funnels):"), report);
+    assertTrue(report.contains("extension-fragment:event-occurrences"), report);
+    assertTrue(report.contains("event -> occurrence [FAN_OUT, OPTIONAL]"), report);
+    assertTrue(report.contains("input=1"), report);
+    assertTrue(report.contains("key-present=1"), report);
+    assertTrue(report.contains("matched=1"), report);
+    assertTrue(report.contains("multi-match=1"), report);
+    assertTrue(report.contains("output-rows=2"), report);
+  }
+
+  /**
+   * Finds the line in {@code report} containing {@code label} and returns the trailing integer on
+   * that line — avoids brittle exact-whitespace matching against the report's hand-aligned
+   * formatting (several labels are prefixed with {@code "-> "}, so this searches for the label
+   * anywhere in the line rather than requiring it at the start).
+   */
+  private static long extractTrailingLong(String report, String label) {
+    return report
+        .lines()
+        .filter(line -> line.contains(label))
+        .map(line -> line.substring(line.indexOf(label) + label.length()).trim())
+        .mapToLong(Long::parseLong)
+        .findFirst()
+        .orElseThrow(
+            () -> new AssertionError("Line containing '" + label + "' not found in:\n" + report));
+  }
+
+  @Test
+  void writeIngestPlans_writesDatasetScopedCompactAndDetailedViews(@TempDir Path dir)
+      throws Exception {
+    DataPackage dp = DataPackageFixtures.withEvent("event_pk", "eventID");
+    DwcDpMappingEngine engine = DwcDpMappingEngine.currentSchema();
+    MappingPlan plan = EventDwcaMapping.current(engine.schemaGraph());
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    String datasetBasePath = "file://" + dir;
+
+    DwcDpVerbatimConverter.writeIngestPlans(fs, datasetBasePath, engine, plan, dp);
+
+    String compact =
+        readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.INGEST_PLAN_COMPACT);
+    String detailed =
+        readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.INGEST_PLAN_DETAILED);
+
+    assertTrue(compact.contains("View: dataset / compact"), compact);
+    assertTrue(compact.contains("Target: " + DwcTerm.eventID.qualifiedName()), compact);
+    assertTrue(detailed.contains("View: dataset / detailed"), detailed);
+    assertTrue(detailed.contains("Target: " + DwcTerm.eventID.qualifiedName()), detailed);
+    assertTrue(detailed.contains("Producer:"), detailed);
+  }
+
+  @Test
+  void writeMetrics_extensionSummarySectionReflectsWrittenRecords(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir, "data/event.parquet", schema("eventID"), List.of(RowFactory.create("EVT001")));
+
+    DataPackage dp = DataPackageFixtures.withEvent("eventID");
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    String datasetBasePath = "file://" + dir;
+
+    ExtendedRecord withMedia =
+        ExtendedRecord.newBuilder()
+            .setId("EVT001")
+            .setCoreId(null)
+            .setCoreRowType(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT)
+            .setCoreTerms(Map.of())
+            .setExtensions(
+                Map.of(
+                    DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA,
+                    List.of(Map.of("k", "v1"), Map.of("k", "v2"))))
+            .build();
+    ExtendedRecord withoutExtensions =
+        ExtendedRecord.newBuilder()
+            .setId("EVT002")
+            .setCoreId(null)
+            .setCoreRowType(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT)
+            .setCoreTerms(Map.of())
+            .setExtensions(Map.of())
+            .build();
+
+    Dataset<ExtendedRecord> records =
+        spark.createDataset(
+            List.of(withMedia, withoutExtensions), Encoders.bean(ExtendedRecord.class));
+
+    DwcDpVerbatimConverter.writeMetrics(
+        spark, dp, datasetBasePath, fs, "test-dataset", Optional.of(records));
+
+    org.apache.hadoop.fs.Path reportPath =
+        new org.apache.hadoop.fs.Path(datasetBasePath + "/conversion-report.txt");
+    String report;
+    try (var reader =
+        new BufferedReader(new InputStreamReader(fs.open(reportPath), StandardCharsets.UTF_8))) {
+      report = reader.lines().collect(Collectors.joining("\n"));
+    }
+
+    assertTrue(report.contains("source tables (raw row counts):"), report);
+    assertTrue(report.contains("output extensions (rows actually written):"), report);
+    assertTrue(report.contains(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA), report);
+
+    String multimediaLine =
+        report
+            .lines()
+            .filter(line -> line.contains(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(multimediaLine.contains("rows=2"), multimediaLine);
+    assertTrue(multimediaLine.contains("records-with-this-ext=1"), multimediaLine);
+    assertEquals(2L, extractTrailingLong(report, "core records written:"));
+  }
+
   // ---- helpers ----
+
+  private static String readTextFile(FileSystem fs, String path) throws Exception {
+    try (var reader =
+        new BufferedReader(
+            new InputStreamReader(
+                fs.open(new org.apache.hadoop.fs.Path(path)), StandardCharsets.UTF_8))) {
+      return reader.lines().collect(Collectors.joining("\n"));
+    }
+  }
 
   private void writeParquet(Path dir, String relativePath, StructType schema, List<Row> rows) {
     SparkTest.writeParquet(spark, dir, relativePath, schema, rows);

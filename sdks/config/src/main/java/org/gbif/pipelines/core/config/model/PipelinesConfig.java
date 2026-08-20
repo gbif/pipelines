@@ -29,6 +29,16 @@ public class PipelinesConfig implements Serializable {
   private String dwcdpNfsRepository;
 
   /**
+   * When {@code true}, {@code DwcDpVerbatimConverter} additionally computes per-builder join
+   * funnels (resolved/ambiguous/unresolved breakdowns for agent, protocol, provenance,
+   * geological-context, organism, etc. resolution) and includes them in {@code
+   * conversion-report.txt}. Off by default — each funnel is an extra Spark pass over the relevant
+   * source table purely for reporting, so this is meant to be switched on for a specific
+   * dataset/attempt when investigating a conversion, not left on in normal runs.
+   */
+  private boolean dwcdpDetailedConversionReport = false;
+
+  /**
    * The directory where the intermediate files & debug outputs are written to as part of the
    * rebuild jobs
    */
