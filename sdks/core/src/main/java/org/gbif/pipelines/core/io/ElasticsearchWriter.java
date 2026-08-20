@@ -1,8 +1,19 @@
 package org.gbif.pipelines.core.io;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.json.JsonData;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -12,18 +23,13 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
 
 @Slf4j
 @Builder
@@ -32,52 +38,95 @@ public class ElasticsearchWriter<T> {
 
   private String[] esHosts;
   private int syncModeThreshold;
-  private Function<T, IndexRequest> indexRequestFn;
+  private Function<T, Document> indexRequestFn;
   private ExecutorService executor;
   private Collection<T> records;
   private long esMaxBatchSize;
   private long esMaxBatchSizeBytes;
   private Integer backPressure;
 
+  @Value
+  @Builder
+  public static class Document {
+    String index;
+    String id;
+    String source;
+  }
+
+  private static class Batch {
+    private final List<BulkOperation> operations = new ArrayList<>();
+    private long bytes;
+
+    private void add(Document doc) {
+      operations.add(
+          BulkOperation.of(
+              op ->
+                  op.index(
+                      idx ->
+                          idx.index(doc.getIndex())
+                              .id(doc.getId())
+                              .document(JsonData.fromJson(doc.getSource())))));
+      bytes += doc.getSource().getBytes(UTF_8).length;
+    }
+
+    private boolean isEmpty() {
+      return operations.isEmpty();
+    }
+
+    private boolean isFull(long maxSize, long maxBytes) {
+      return operations.size() > maxSize - 1 || bytes > maxBytes;
+    }
+  }
+
   @SneakyThrows
   public void write() {
 
     boolean useSyncMode = syncModeThreshold > records.size();
 
-    // Create ES client and extra function
     HttpHost[] hosts = Arrays.stream(esHosts).map(HttpHost::create).toArray(HttpHost[]::new);
-    try (RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(hosts))) {
+    try (RestClient restClient = RestClient.builder(hosts).build();
+        ElasticsearchClient client =
+            new ElasticsearchClient(
+                new RestClientTransport(restClient, new JacksonJsonpMapper()))) {
 
       final Phaser phaser = new Phaser(1);
 
-      final Queue<BulkRequest> requests = new LinkedBlockingQueue<>();
-      requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
+      final Queue<Batch> requests = new LinkedBlockingQueue<>();
+      requests.add(new Batch());
 
       Consumer<T> addIndexRequestFn =
           br ->
               Optional.ofNullable(requests.peek())
                   .ifPresent(req -> req.add(indexRequestFn.apply(br)));
 
-      Consumer<BulkRequest> clientBulkFn =
+      Consumer<Batch> clientBulkFn =
           br -> {
             try {
-              log.info("Push ES request, number of actions - {}", br.numberOfActions());
-              BulkResponse bulk = client.bulk(br, RequestOptions.DEFAULT);
-              phaser.arrive();
-              if (bulk.hasFailures()) {
-                log.error(bulk.buildFailureMessage());
-                throw new ElasticsearchException(bulk.buildFailureMessage());
+              log.info("Push ES request, number of actions - {}", br.operations.size());
+              BulkResponse bulk =
+                  client.bulk(
+                      BulkRequest.of(b -> b.operations(br.operations).timeout(t -> t.time("5m"))));
+              if (Boolean.TRUE.equals(bulk.errors())) {
+                String failure =
+                    bulk.items().stream()
+                        .filter(item -> item.error() != null)
+                        .map(item -> item.error().reason())
+                        .collect(Collectors.joining("; "));
+                log.error(failure);
+                throw new IllegalStateException(failure);
               }
             } catch (IOException ex) {
               log.error(ex.getMessage(), ex);
-              throw new ElasticsearchException(ex.getMessage(), ex);
+              throw new IllegalStateException(ex.getMessage(), ex);
+            } finally {
+              phaser.arrive();
             }
           };
 
       Runnable pushIntoEsFn =
           () ->
               Optional.ofNullable(requests.poll())
-                  .filter(req -> req.numberOfActions() > 0)
+                  .filter(req -> !req.isEmpty())
                   .ifPresent(
                       req -> {
                         phaser.register();
@@ -88,23 +137,18 @@ public class ElasticsearchWriter<T> {
                         }
                       });
 
-      // Push requests into ES
       for (T t : records) {
         addIndexRequestFn.accept(t);
-        BulkRequest peek = requests.peek();
-        if (peek == null
-            || peek.numberOfActions() > esMaxBatchSize - 1
-            || peek.estimatedSizeInBytes() > esMaxBatchSizeBytes) {
+        Batch peek = requests.peek();
+        if (peek == null || peek.isFull(esMaxBatchSize, esMaxBatchSizeBytes)) {
           checkBackpressure(useSyncMode, phaser);
           pushIntoEsFn.run();
-          requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
+          requests.add(new Batch());
         }
       }
 
-      // Final push
       pushIntoEsFn.run();
 
-      // Wait for all futures
       log.info("Waiting for all threads to arrive...");
       phaser.arriveAndAwaitAdvance();
       log.info("Writing data to ES has been finished");

@@ -6,6 +6,7 @@ import static org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter.INCE
 import static org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter.KINGDOM_RANK;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +19,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 import org.gbif.api.model.Constants;
 import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.api.vocabulary.EventIssue;

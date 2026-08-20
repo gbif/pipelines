@@ -73,32 +73,6 @@
             <artifactId>elasticsearch-tools</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>${elasticsearch.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.lucene</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.elasticsearch</groupId>
-                    <artifactId>elasticsearch-cli</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-            <version>8.6.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <!-- Netty dependencies to be provided to avoid version conflicts with Hadoop -->
         <dependency>
             <groupId>io.netty</groupId>
@@ -157,10 +131,6 @@
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.elasticsearch</groupId>
-                    <artifactId>elasticsearch</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.gbif.pipelines</groupId>
@@ -587,7 +557,6 @@
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch-spark-30_${scala.binary.version}</artifactId>
-            <version>${elasticsearch-spark.version}</version>
             <scope>provided</scope>
         </dependency>
         <!-- Old Apache Commons HttpClient (needed by ES-Hadoop 7.x) -->

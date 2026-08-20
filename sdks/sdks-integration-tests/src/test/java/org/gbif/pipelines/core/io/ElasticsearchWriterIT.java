@@ -10,11 +10,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.http.client.methods.HttpGet;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.gbif.pipelines.EsServer;
 import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.model.IndexParams;
@@ -251,7 +248,7 @@ public class ElasticsearchWriterIT {
         basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
   }
 
-  @Test(expected = ElasticsearchException.class)
+  @Test(expected = IllegalStateException.class)
   public void wrongMappingTest() {
     // State
     String idxName = "wrong-mapping-test";
@@ -285,12 +282,14 @@ public class ElasticsearchWriterIT {
         .collect(Collectors.toList());
   }
 
-  private static Function<BasicRecord, IndexRequest> createindexRequestFn(String idxName) {
-    return br -> {
-      String k = br.getId();
-      String dummyJson = "{\"test\": \"text\"}";
-      return new IndexRequest(idxName).id(k).source(dummyJson, XContentType.JSON);
-    };
+  private static Function<BasicRecord, ElasticsearchWriter.Document> createindexRequestFn(
+      String idxName) {
+    return br ->
+        ElasticsearchWriter.Document.builder()
+            .index(idxName)
+            .id(br.getId())
+            .source("{\"test\": \"text\"}")
+            .build();
   }
 
   /** Utility method to create an index. */

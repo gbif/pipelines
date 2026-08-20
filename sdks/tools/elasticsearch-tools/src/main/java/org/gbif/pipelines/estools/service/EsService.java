@@ -267,7 +267,15 @@ public class EsService {
    */
   @SneakyThrows
   public static void deleteAllIndexes(@NonNull EsClient esClient) {
-    esClient.performDeleteRequest("_all");
+    // ES 8+ rejects DELETE /_all (action.destructive_requires_name).
+    Set<String> indexes =
+        HttpResponseParser.parseIndexesInAliasResponse(
+            esClient.performGetRequest(buildEndpoint("_aliases")).getEntity());
+    for (String idx : indexes) {
+      if (!idx.startsWith(".")) {
+        deleteIndex(esClient, idx);
+      }
+    }
   }
 
   /**
