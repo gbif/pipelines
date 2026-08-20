@@ -55,6 +55,7 @@ class CompiledMappingDatasetPrunerReachabilityTest {
             "test",
             CoreType.EVENT,
             "event",
+            Optional.empty(),
             List.of(),
             List.of(fragment),
             List.of(),

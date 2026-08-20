@@ -372,6 +372,9 @@ public final class TargetMappingPlanRenderer {
     if (aggregation instanceof ValueAggregation.ExactlyOne) {
       return "EXACTLY_ONE";
     }
+    if (aggregation instanceof ValueAggregation.FirstOrUrnFallback) {
+      return "FIRST_OR_URN_FALLBACK";
+    }
     if (aggregation instanceof ValueAggregation.Delimited delimited) {
       return "DELIMITED('" + delimited.delimiter() + "', distinct=" + delimited.distinct() + ")";
     }

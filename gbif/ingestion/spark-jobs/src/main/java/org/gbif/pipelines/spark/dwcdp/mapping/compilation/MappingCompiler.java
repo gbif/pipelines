@@ -40,6 +40,9 @@ public final class MappingCompiler {
       throw new MappingCompilationException(structuralProblems);
     }
 
+    Optional<CompiledTargetProducer> coreIdentity =
+        plan.coreIdentity().map(field -> compileTarget("core-identity", field));
+
     List<CompiledTargetProducer> rootCoreTargets =
         plan.coreFields().stream().map(field -> compileTarget("core", field)).toList();
     List<CompiledCoreFragment> rawCoreFragments =
@@ -119,6 +122,7 @@ public final class MappingCompiler {
         plan.name(),
         plan.coreType(),
         plan.coreSourceResource(),
+        coreIdentity,
         selectedRootCoreTargets,
         coreFragments,
         coreTargetMerges,
@@ -191,10 +195,24 @@ public final class MappingCompiler {
     List<CompiledTargetMerge> targetMerges = new ArrayList<>();
     List<MappingDecision> mergeDecisions = new ArrayList<>();
     for (TargetMerge merge : mergeDeclarations.values()) {
-      List<CompiledTargetProducer> producers =
-          candidates.stream()
-              .filter(candidate -> candidate.targetTerm().equals(merge.targetTerm()))
-              .toList();
+      List<CompiledTargetProducer> producers = new ArrayList<>();
+      for (CompiledFragment fragment : rawFragments) {
+        List<CompiledTargetProducer> fragmentProducers =
+            fragment.targets().stream()
+                .filter(candidate -> candidate.targetTerm().equals(merge.targetTerm()))
+                .toList();
+        if (fragmentProducers.size() <= 1) {
+          producers.addAll(fragmentProducers);
+          continue;
+        }
+
+        Resolution fragmentResolution =
+            resolveTargets(
+                "extension:" + extension.rowType() + "/fragment:" + fragment.name(),
+                fragmentProducers);
+        producers.addAll(fragmentResolution.selected());
+        mergeDecisions.addAll(fragmentResolution.decisions());
+      }
       if (producers.isEmpty()) {
         mergeDecisions.add(
             missingMergeProducerDecision("extension:" + extension.rowType(), merge, candidates));

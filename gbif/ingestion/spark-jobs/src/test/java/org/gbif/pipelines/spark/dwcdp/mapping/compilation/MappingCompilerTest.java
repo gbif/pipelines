@@ -143,4 +143,42 @@ class MappingCompilerTest {
     assertEquals("urn:test:missing", problem.targetTerm());
     assertTrue(error.getMessage().contains("event-row -> urn:test:existing [EXPLICIT]"));
   }
+
+  @Test
+  void extensionMergeResolvesCompetingProducersWithinFragmentBeforeMerging() {
+    String target = "urn:test:occurrenceID";
+    SchemaPath event = SchemaPath.root("event");
+    InMemorySchemaGraph graph = new InMemorySchemaGraph().resource("event", "event_pk", "eventID");
+
+    ExtensionFragment fragment =
+        ExtensionFragmentBuilder.extensionFragment("event-row", "urn:test:extension", "event")
+            .scopeKey("event_pk")
+            .rowIdentity(event.field("event_pk"))
+            .field(
+                TargetFieldMapping.inferredOneOf(
+                    target, ValueAggregation.firstNonNull(), event.field("eventID")))
+            .field(
+                TargetFieldMapping.oneOf(
+                    target,
+                    ValueAggregation.firstOrUrnFallback("urn:test:event:"),
+                    event.field("eventID"),
+                    event.field("event_pk")))
+            .build();
+    ExtensionMapping extension =
+        new ExtensionMapping(
+            "urn:test:extension",
+            ExtensionRowComposition.ENRICH,
+            Optional.empty(),
+            List.of(new TargetMerge(target, ValueAggregation.firstNonNull())),
+            List.of(fragment));
+
+    CompiledExtension compiled = new MappingCompiler(graph).compile(extension);
+
+    assertEquals(1, compiled.targetMerges().size());
+    assertEquals(1, compiled.targetMerges().get(0).producers().size());
+    assertTrue(
+        compiled.targetMerges().get(0).producers().get(0).aggregation()
+            instanceof ValueAggregation.FirstOrUrnFallback);
+    assertEquals(1, compiled.fragments().get(0).targets().size());
+  }
 }

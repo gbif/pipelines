@@ -54,6 +54,7 @@ public final class CompiledMappingDatasetPruner {
         mapping.name(),
         mapping.coreType(),
         mapping.coreSourceResource(),
+        mapping.coreIdentity().flatMap(identity -> pruneProducer(identity, scope)),
         coreTargets,
         coreFragments,
         coreMerges,
@@ -295,7 +296,9 @@ public final class CompiledMappingDatasetPruner {
     int fixedPrefix =
         producer.aggregation() instanceof ValueAggregation.PreferredLabeledOrFallback
             ? 4
-            : producer.aggregation() instanceof ValueAggregation.LabeledOrFallback ? 3 : 0;
+            : producer.aggregation() instanceof ValueAggregation.LabeledOrFallback
+                ? 3
+                : producer.aggregation() instanceof ValueAggregation.FirstOrUrnFallback ? 2 : 0;
 
     if (fixedPrefix == 0) {
       return producer.sources().stream().filter(scope::supports).toList();

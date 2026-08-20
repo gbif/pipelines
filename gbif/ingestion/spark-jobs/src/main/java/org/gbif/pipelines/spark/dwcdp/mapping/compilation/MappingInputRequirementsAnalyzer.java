@@ -32,7 +32,7 @@ public final class MappingInputRequirementsAnalyzer {
     String core = mapping.coreSourceResource();
     use(out, core);
     addResourceIdentity(out, core);
-    column(out, core, coreNaturalId(mapping));
+    mapping.coreIdentity().ifPresent(identity -> addProducer(out, identity));
 
     mapping.coreTargets().forEach(target -> addProducer(out, target));
     mapping.coreFragments().forEach(fragment -> addCoreFragment(out, core, fragment));
@@ -179,12 +179,5 @@ public final class MappingInputRequirementsAnalyzer {
     if (hasResource(resource)) {
       out.allColumns(resource);
     }
-  }
-
-  private static String coreNaturalId(CompiledMapping mapping) {
-    return switch (mapping.coreType()) {
-      case EVENT -> "eventID";
-      case OCCURRENCE -> "occurrenceID";
-    };
   }
 }

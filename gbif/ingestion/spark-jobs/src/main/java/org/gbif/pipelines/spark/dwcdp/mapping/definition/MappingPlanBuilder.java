@@ -10,6 +10,7 @@ public final class MappingPlanBuilder {
   private final String name;
   private final CoreType coreType;
   private final String coreSourceResource;
+  private TargetFieldMapping coreIdentity;
   private final List<TargetFieldMapping> coreFields = new ArrayList<>();
   private final List<CoreFragment> coreFragments = new ArrayList<>();
   private final Map<String, TargetMerge> coreTargetMerges = new LinkedHashMap<>();
@@ -27,6 +28,12 @@ public final class MappingPlanBuilder {
   public static MappingPlanBuilder mappingPlan(
       String name, CoreType coreType, String coreSourceResource) {
     return new MappingPlanBuilder(name, coreType, coreSourceResource);
+  }
+
+  /** Configures execution identity independently of publisher-visible DwC terms. */
+  public MappingPlanBuilder coreIdentity(ValueAggregation aggregation, FieldRef... sources) {
+    coreIdentity = TargetFieldMapping.oneOf("__dwca_core_id", aggregation, sources);
+    return this;
   }
 
   public MappingPlanBuilder coreField(TargetFieldMapping field) {
@@ -72,6 +79,7 @@ public final class MappingPlanBuilder {
         name,
         coreType,
         coreSourceResource,
+        java.util.Optional.ofNullable(coreIdentity),
         coreFields,
         coreFragments,
         new ArrayList<>(coreTargetMerges.values()),

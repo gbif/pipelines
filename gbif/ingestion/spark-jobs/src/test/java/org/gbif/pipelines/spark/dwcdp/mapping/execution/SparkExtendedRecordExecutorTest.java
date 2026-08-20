@@ -15,6 +15,7 @@ import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.IdentifierMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
@@ -110,6 +111,10 @@ class SparkExtendedRecordExecutorTest {
 
     MappingPlan plan =
         MappingPlanBuilder.mappingPlan("event-core", CoreType.EVENT, "event")
+            .coreIdentity(
+                ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
+                eventPath.field("eventID"),
+                eventPath.field("event_pk"))
             .coreField(
                 TargetFieldMapping.oneOf(
                     DwcTerm.eventID.qualifiedName(),
@@ -187,6 +192,47 @@ class SparkExtendedRecordExecutorTest {
   }
 
   @Test
+  void eventCoreOccurrenceExtensionWithoutOccurrenceIdColumnUsesUrnFallback() {
+    List<ExtendedRecord> records =
+        new SparkExtendedRecordExecutor(graph)
+            .execute(
+                TestTableLoader.of(
+                    "event", events(),
+                    "occurrence", eventOccurrencesWithoutNaturalId()),
+                eventOccurrenceFallbackPlan())
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    List<Map<String, String>> occurrences =
+        records.get(0).getExtensions().get(OccurrenceMapping.ROW_TYPE_OCCURRENCE);
+    assertNotNull(occurrences);
+    assertEquals(1, occurrences.size());
+    assertEquals(
+        "urn:gbif:dwcdp:occurrence:O1",
+        occurrences.get(0).get(DwcTerm.occurrenceID.qualifiedName()));
+  }
+
+  @Test
+  void eventCoreOccurrenceExtensionWithBlankOccurrenceIdUsesUrnFallback() {
+    List<ExtendedRecord> records =
+        new SparkExtendedRecordExecutor(graph)
+            .execute(
+                TestTableLoader.of(
+                    "event", events(),
+                    "occurrence", eventOccurrencesWithBlankNaturalId()),
+                eventOccurrenceFallbackPlan())
+            .collectAsList();
+
+    List<Map<String, String>> occurrences =
+        records.get(0).getExtensions().get(OccurrenceMapping.ROW_TYPE_OCCURRENCE);
+    assertNotNull(occurrences);
+    assertEquals(1, occurrences.size());
+    assertEquals(
+        "urn:gbif:dwcdp:occurrence:O1",
+        occurrences.get(0).get(DwcTerm.occurrenceID.qualifiedName()));
+  }
+
+  @Test
   void occurrenceCoreWithoutNaturalIdColumnUsesPrimaryKeyFallbackAndKeepsExtensionsAttached() {
     List<ExtendedRecord> records =
         new SparkExtendedRecordExecutor(graph)
@@ -217,9 +263,31 @@ class SparkExtendedRecordExecutorTest {
     assertEquals("urn:gbif:dwcdp:occurrence:O1", records.get(0).getId());
   }
 
+  private MappingPlan eventOccurrenceFallbackPlan() {
+    SchemaPath event = SchemaPath.root("event");
+    return MappingPlanBuilder.mappingPlan("event-occurrence-fallback", CoreType.EVENT, "event")
+        .coreIdentity(
+            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
+            event.field("eventID"),
+            event.field("event_pk"))
+        .coreField(
+            TargetFieldMapping.oneOf(
+                DwcTerm.eventID.qualifiedName(),
+                ValueAggregation.firstNonNull(),
+                event.field("eventID")))
+        .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
+        .mergeTarget(DwcTerm.occurrenceID.qualifiedName(), ValueAggregation.firstNonNull())
+        .importFragment(OccurrenceMapping.directOccurrence(graph))
+        .build();
+  }
+
   private MappingPlan eventIdentityPlan() {
     SchemaPath event = SchemaPath.root("event");
     return MappingPlanBuilder.mappingPlan("event-identity", CoreType.EVENT, "event")
+        .coreIdentity(
+            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
+            event.field("eventID"),
+            event.field("event_pk"))
         .coreField(
             TargetFieldMapping.oneOf(
                 DwcTerm.eventID.qualifiedName(),
@@ -233,6 +301,10 @@ class SparkExtendedRecordExecutorTest {
   private MappingPlan occurrenceIdentityPlan() {
     SchemaPath occurrence = SchemaPath.root("occurrence");
     return MappingPlanBuilder.mappingPlan("occurrence-identity", CoreType.OCCURRENCE, "occurrence")
+        .coreIdentity(
+            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
+            occurrence.field("occurrenceID"),
+            occurrence.field("occurrence_pk"))
         .coreField(
             TargetFieldMapping.oneOf(
                 DwcTerm.occurrenceID.qualifiedName(),
@@ -276,6 +348,23 @@ class SparkExtendedRecordExecutorTest {
         new StructType()
             .add("occurrence_pk", DataTypes.StringType)
             .add("occurrenceID", DataTypes.StringType));
+  }
+
+  private Dataset<Row> eventOccurrencesWithoutNaturalId() {
+    return spark.createDataFrame(
+        List.of(RowFactory.create("O1", "E1")),
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType));
+  }
+
+  private Dataset<Row> eventOccurrencesWithBlankNaturalId() {
+    return spark.createDataFrame(
+        List.of(RowFactory.create("O1", "   ", "E1")),
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType));
   }
 
   private Dataset<Row> occurrenceIdentifiers() {

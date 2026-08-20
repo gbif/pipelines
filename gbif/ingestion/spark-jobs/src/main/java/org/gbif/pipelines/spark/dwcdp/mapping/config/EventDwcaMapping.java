@@ -70,6 +70,7 @@ public final class EventDwcaMapping {
         .mergeTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
+        .mergeTarget(TargetTerms.resolve("occurrenceID"), ValueAggregation.firstNonNull())
         .importFragment(OccurrenceMapping.directOccurrence(graph))
         .importFragment(OccurrenceMapping.recordedBy(graph))
         .importFragment(OccurrenceMapping.identifiedBy(graph))
@@ -197,6 +198,10 @@ public final class EventDwcaMapping {
   private static MappingPlanBuilder eventBase(String name) {
     SchemaPath event = SchemaPath.root("event");
     return mappingPlan(name, CoreType.EVENT, "event")
+        .coreIdentity(
+            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
+            event.field("eventID"),
+            event.field("event_pk"))
         .coreField(
             TargetFieldMapping.oneOf(
                 DwcTerm.eventID.qualifiedName(),

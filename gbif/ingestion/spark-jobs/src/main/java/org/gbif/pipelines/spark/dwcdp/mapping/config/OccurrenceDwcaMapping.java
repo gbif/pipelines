@@ -90,7 +90,13 @@ public final class OccurrenceDwcaMapping {
   }
 
   private static MappingPlanBuilder currentCoreBase(SchemaGraph graph, String name) {
-    MappingPlanBuilder builder = mappingPlan(name, CoreType.OCCURRENCE, "occurrence");
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    MappingPlanBuilder builder =
+        mappingPlan(name, CoreType.OCCURRENCE, "occurrence")
+            .coreIdentity(
+                ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
+                occurrence.field("occurrenceID"),
+                occurrence.field("occurrence_pk"));
     DirectFieldMappings.from(graph, "occurrence", SchemaPath.root("occurrence")).addTo(builder);
     return builder
         .importCoreFragment(OccurrenceCoreMapping.recordedBy(graph))

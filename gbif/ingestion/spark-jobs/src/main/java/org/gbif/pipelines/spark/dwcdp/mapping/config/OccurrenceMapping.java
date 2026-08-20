@@ -7,6 +7,8 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 
 /** Reusable occurrence-row mappings shared by Occurrence core and Event -> Occurrence extension. */
@@ -27,6 +29,13 @@ public final class OccurrenceMapping {
             .scopeKey("event_fk")
             .rowIdentity(occurrence.field("occurrence_pk"));
     DirectFieldMappings.from(graph, "occurrence", occurrence).addTo(builder);
+    builder.field(
+        TargetFieldMapping.oneOf(
+            DwcTerm.occurrenceID.qualifiedName(),
+            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
+            occurrence.field("occurrenceID"),
+            occurrence.field("occurrence_pk")));
+
     return builder.build();
   }
   /** Organism fields enrich an existing occurrence row matched by occurrence_pk. */

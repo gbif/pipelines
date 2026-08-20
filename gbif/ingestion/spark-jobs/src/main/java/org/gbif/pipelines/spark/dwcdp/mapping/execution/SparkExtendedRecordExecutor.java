@@ -4,16 +4,12 @@ import static org.apache.spark.sql.functions.array_distinct;
 import static org.apache.spark.sql.functions.array_join;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
-import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.filter;
-import static org.apache.spark.sql.functions.length;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.sort_array;
 import static org.apache.spark.sql.functions.struct;
 import static org.apache.spark.sql.functions.transform;
-import static org.apache.spark.sql.functions.trim;
-import static org.apache.spark.sql.functions.when;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -236,9 +232,13 @@ public final class SparkExtendedRecordExecutor {
     String corePk = coreResource.primaryKey().orElseThrow();
 
     List<Column> selected = new ArrayList<>();
-    selected.add(
-        coreIdentityColumn(rawCore, plan.coreType(), coreIdColumn(plan.coreType()), corePk)
-            .as(CORE_ID));
+    CompiledTargetProducer coreIdentity =
+        plan.coreIdentity()
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Mapping has no configured core identity: " + plan.name()));
+    selected.add(coreIdentityExpression(coreIdentity, rawCore).as(CORE_ID));
     selected.add(rawCore.col(corePk).cast("string").as("__dwca_core_pk"));
     Map<String, String> targetColumns = new LinkedHashMap<>();
 
@@ -641,7 +641,6 @@ public final class SparkExtendedRecordExecutor {
       String sourceResource,
       FieldRef sourceScopeKey,
       String corePk) {
-    String naturalId = coreIdColumn(plan.coreType());
     SchemaResource source =
         graph
             .resource(sourceResource)
@@ -658,7 +657,7 @@ public final class SparkExtendedRecordExecutor {
     if (sourceResource.equals(plan.coreSourceResource())) {
       Dataset<Row> core = loader.load(sourceResource).orElseThrow();
       return core.select(
-          coreIdentityColumn(core, plan.coreType(), naturalId, corePk).as(CORE_ID),
+          coreIdentityExpression(plan.coreIdentity().orElseThrow(), core).as(CORE_ID),
           core.col(sourceScopeKey.column()).cast("string").as("__dwca_source_pk"));
     }
 
@@ -673,7 +672,7 @@ public final class SparkExtendedRecordExecutor {
     if (directScopeRelations.size() == 1) {
       Dataset<Row> core = loader.load(plan.coreSourceResource()).orElseThrow();
       return core.select(
-          coreIdentityColumn(core, plan.coreType(), naturalId, corePk).as(CORE_ID),
+          coreIdentityExpression(plan.coreIdentity().orElseThrow(), core).as(CORE_ID),
           core.col(corePk).cast("string").as("__dwca_source_pk"));
     }
     if (directScopeRelations.size() > 1) {
@@ -714,8 +713,7 @@ public final class SparkExtendedRecordExecutor {
           .dataset()
           .limit(0)
           .select(
-              coreIdentityColumn(
-                      execution.pathResult(), corePath, plan.coreType(), naturalId, corePk)
+              coreIdentityExpression(plan.coreIdentity().orElseThrow(), execution.pathResult())
                   .as(CORE_ID),
               lit(null).cast("string").as("__dwca_source_pk"));
     }
@@ -726,7 +724,7 @@ public final class SparkExtendedRecordExecutor {
         .pathResult()
         .dataset()
         .select(
-            coreIdentityColumn(execution.pathResult(), corePath, plan.coreType(), naturalId, corePk)
+            coreIdentityExpression(plan.coreIdentity().orElseThrow(), execution.pathResult())
                 .as(CORE_ID),
             execution
                 .pathResult()
@@ -735,47 +733,26 @@ public final class SparkExtendedRecordExecutor {
                 .as("__dwca_source_pk"));
   }
 
-  private static Column coreIdentityColumn(
-      Dataset<Row> dataset, CoreType coreType, String naturalId, String corePk) {
-    Column primaryKey = dataset.col(corePk).cast("string");
-    Column fallback = generatedCoreId(coreType, primaryKey);
-    if (!hasColumn(dataset, naturalId)) {
-      return fallback;
-    }
-    return naturalIdOrFallback(dataset.col(naturalId).cast("string"), fallback);
+  private static Column coreIdentityExpression(
+      CompiledTargetProducer identity, Dataset<Row> dataset) {
+    List<Column> sources =
+        identity.sources().stream()
+            .map(
+                source ->
+                    hasColumn(dataset, source.field().column())
+                        ? dataset.col(source.field().column()).cast("string")
+                        : lit(null).cast("string"))
+            .toList();
+    return SparkTargetExpression.row(identity, sources);
   }
 
-  private static Column coreIdentityColumn(
-      SparkPathResult pathResult,
-      SchemaPath corePath,
-      CoreType coreType,
-      String naturalId,
-      String corePk) {
-    Column primaryKey = pathResult.column(corePath.field(corePk)).cast("string");
-    Column fallback = generatedCoreId(coreType, primaryKey);
-    Column natural = pathResult.columnOrNull(corePath.field(naturalId)).cast("string");
-    return naturalIdOrFallback(natural, fallback);
-  }
-
-  private static Column naturalIdOrFallback(Column naturalId, Column fallback) {
-    return when(naturalId.isNotNull().and(length(trim(naturalId)).gt(0)), naturalId)
-        .otherwise(fallback);
-  }
-
-  private static Column generatedCoreId(CoreType coreType, Column primaryKey) {
-    String prefix =
-        switch (coreType) {
-          case EVENT -> "urn:gbif:dwcdp:event:";
-          case OCCURRENCE -> "urn:gbif:dwcdp:occurrence:";
-        };
-    return concat(lit(prefix), primaryKey);
-  }
-
-  private static String coreIdColumn(CoreType coreType) {
-    return switch (coreType) {
-      case EVENT -> "eventID";
-      case OCCURRENCE -> "occurrenceID";
-    };
+  private static Column coreIdentityExpression(
+      CompiledTargetProducer identity, SparkPathResult pathResult) {
+    List<Column> sources =
+        identity.sources().stream()
+            .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
+            .toList();
+    return SparkTargetExpression.row(identity, sources);
   }
 
   private static String coreRowType(CoreType coreType) {
