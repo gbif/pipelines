@@ -32,7 +32,7 @@
   <properties>
 
     <gbif-cli.version>3.0.1</gbif-cli.version>
-    <gbif-httputils.version>0.12</gbif-httputils.version>
+    <gbif-httputils.version>1.4</gbif-httputils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
 
     <!-- Match the GBIF http-client! -->
