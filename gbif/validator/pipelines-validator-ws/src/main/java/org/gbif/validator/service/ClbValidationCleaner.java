@@ -3,13 +3,15 @@ package org.gbif.validator.service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationSearchRequest;
+import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -24,7 +26,8 @@ import org.springframework.stereotype.Component;
 public class ClbValidationCleaner {
 
   private final ChecklistbankWsClient checklistbankWsClient;
-  private final ValidationService validationService;
+  private final ValidatorEmailService emailService;
+  private final ValidationMapper validationMapper;
 
   @Value("${clb.cleaner.hoursOld}")
   private final int hoursOld;
@@ -36,14 +39,15 @@ public class ClbValidationCleaner {
         Date.from(
             LocalDateTime.now().atZone(ZoneId.systemDefault()).minusHours(hoursOld).toInstant());
 
-    PagingResponse<Validation> validationsWaitingForClbApi =
-        validationService.list(
+    List<Validation> validationsWaitingForClbApi =
+        validationMapper.list(
+            null,
             ValidationSearchRequest.builder()
                 .status(Set.of(Validation.Status.WAITING_FOR_CHECKLISTBANK))
                 .toDate(toDate)
                 .build());
 
-    validationsWaitingForClbApi.getResults().stream()
+    validationsWaitingForClbApi.stream()
         .filter(v -> v.getClbDatasetKey() != null)
         .forEach(
             validation -> {
@@ -60,7 +64,8 @@ public class ClbValidationCleaner {
                 validation.setStatus(Validation.Status.FAILED);
               }
 
-              validationService.update(validation);
+              validationMapper.update(validation);
+              emailService.sendEmailNotification(validation);
             });
   }
 }
