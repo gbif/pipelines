@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
@@ -211,5 +212,14 @@ public class ValidationResource {
   public List<UUID> getRunningValidations(
       @Parameter(description = "Minimum running time in minutes") @RequestParam("min") int min) {
     return validationService.getRunningValidations(min);
+  }
+
+  @PostMapping(
+      path = "/clbValidationCallback/{validationKey}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void clbValidationCallback(
+      @PathVariable("validationKey") UUID validationKey,
+      @RequestBody ClbDatasetImport clbDatasetImport) {
+    validationService.validateChecklistResults(validationKey, clbDatasetImport);
   }
 }

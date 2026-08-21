@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -175,5 +176,8 @@ public class ValidationsTest {
     public List<UUID> getRunningValidations(int min) {
       return Collections.emptyList();
     }
+
+    @Override
+    public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {}
   }
 }

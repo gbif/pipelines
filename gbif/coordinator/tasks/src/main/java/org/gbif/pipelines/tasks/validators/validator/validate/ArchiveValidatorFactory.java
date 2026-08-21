@@ -1,10 +1,12 @@
 package org.gbif.pipelines.tasks.validators.validator.validate;
 
+import java.util.Optional;
 import lombok.Builder;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
-import org.gbif.pipelines.validator.checklists.ChecklistValidator;
+import org.gbif.pipelines.validator.ChecklistValidator;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -15,9 +17,28 @@ public class ArchiveValidatorFactory {
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final PipelinesArchiveValidatorMessage message;
-  private final ChecklistValidator checklistValidator;
 
   public ArchiveValidator create() {
+
+    Optional<DatasetType> datasetTypeOpt =
+        DatasetTypeUtils.getDatasetType(config.archiveRepository, message.getDatasetUuid());
+
+    if (datasetTypeOpt.isPresent()
+        && datasetTypeOpt.get() == DatasetType.CHECKLIST
+        && FileFormat.DWCA.name().equals(message.getFileFormat())) {
+      return ChecklistDwcaArchiveValidator.builder()
+          .validationClient(validationClient)
+          .config(config)
+          .message(message)
+          .schemaValidatorFactory(schemaValidatorFactory)
+          .checklistValidator(
+              new ChecklistValidator(
+                  config.clbConfig.url,
+                  config.clbConfig.user,
+                  config.clbConfig.password,
+                  config.clbConfig.callbackUrl))
+          .build();
+    }
 
     // DWCA
     if (FileFormat.DWCA.name().equals(message.getFileFormat())) {
@@ -26,7 +47,6 @@ public class ArchiveValidatorFactory {
           .config(config)
           .message(message)
           .schemaValidatorFactory(schemaValidatorFactory)
-          .checklistValidator(checklistValidator)
           .build();
     }
 

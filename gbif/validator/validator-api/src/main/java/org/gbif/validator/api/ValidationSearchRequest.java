@@ -68,6 +68,8 @@ public class ValidationSearchRequest {
   @Min(0)
   private Integer limit = 20;
 
+  private Integer clbDatasetKey;
+
   public static class ValidationSearchRequestBuilder {
 
     /** Adds a sort to the list of sortBy elements. */

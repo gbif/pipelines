@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.ws;
+package org.gbif.pipelines.validator.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -6,30 +6,31 @@ import java.util.Map;
 import lombok.SneakyThrows;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.validator.api.ClbDatasetImport;
 
 public class ChecklistbankWsClientMock implements ChecklistbankWsClient {
 
   public static final int DEFAULT_KEY = 1;
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  private final ImporterResponse importerResponse;
+  private final ClbDatasetImport importerResponse;
 
   @SneakyThrows
   public ChecklistbankWsClientMock(String apiImporterResponsePath) {
     importerResponse =
         OBJECT_MAPPER.readValue(
-            ClassLoader.getSystemResourceAsStream(apiImporterResponsePath), ImporterResponse.class);
+            ClassLoader.getSystemResourceAsStream(apiImporterResponsePath), ClbDatasetImport.class);
   }
 
   @Override
-  public ValidatorResponse validateArchive(byte[] file) {
+  public ValidatorResponse validateArchive(String callback, byte[] file) {
     ValidatorResponse validatorResponse = new ValidatorResponse();
     validatorResponse.setKey(DEFAULT_KEY);
     return validatorResponse;
   }
 
   @Override
-  public ImporterResponse checkImporter(int key) {
+  public ClbDatasetImport checkImporter(int key) {
     return importerResponse;
   }
 

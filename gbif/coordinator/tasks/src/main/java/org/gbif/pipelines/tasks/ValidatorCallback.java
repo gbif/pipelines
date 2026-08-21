@@ -125,7 +125,7 @@ public class ValidatorCallback<I extends PipelineBasedMessage, O extends Pipelin
         log.info(logInfo);
       }
 
-      updateValidatorInfoStatus(Status.FINISHED);
+      updateValidatorInfoStatus(handler.getFinalValidationStatus(message));
 
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();

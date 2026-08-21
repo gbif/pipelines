@@ -1,23 +1,20 @@
-package org.gbif.pipelines.validator.checklists;
+package org.gbif.pipelines.validator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.nio.file.Paths;
 import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClientMock;
+import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.ws.ChecklistbankWsClientMock;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests related to {@link org.gbif.pipelines.validator.checklists.ChecklistValidator}. */
+/** Unit tests related to {@link org.gbif.pipelines.validator.ChecklistValidator}. */
 public class ChecklistValidatorTest {
 
   @Test
@@ -26,14 +23,13 @@ public class ChecklistValidatorTest {
     try {
       ChecklistbankWsClient checklistbankWsClient =
           new ChecklistbankWsClientMock("checklists/api_response_without_extensions.json");
-      ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient);
+      ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient, null);
+
+      // it simulates the response received in the callback
+      ClbDatasetImport clbDatasetImport = checklistbankWsClient.checkImporter(1);
 
       // When
-      List<Metrics.FileInfo> report =
-          checklistValidator.evaluate(
-              Paths.get(
-                  ClassLoader.getSystemResource("checklists/archive_without_extensions.zip")
-                      .getFile()));
+      List<Metrics.FileInfo> report = checklistValidator.evaluateResults(clbDatasetImport);
 
       // Should
       // Metrics.FileInfo checks
@@ -74,14 +70,13 @@ public class ChecklistValidatorTest {
     try {
       ChecklistbankWsClient checklistbankWsClient =
           new ChecklistbankWsClientMock("checklists/api_response_with_extensions.json");
-      ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient);
+      ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient, null);
+
+      // it simulates the response received in the callback
+      ClbDatasetImport clbDatasetImport = checklistbankWsClient.checkImporter(1);
 
       // When
-      List<Metrics.FileInfo> report =
-          checklistValidator.evaluate(
-              Paths.get(
-                  ClassLoader.getSystemResource("checklists/archive_with_extensions.zip")
-                      .getFile()));
+      List<Metrics.FileInfo> report = checklistValidator.evaluateResults(clbDatasetImport);
 
       // Should
       // Metrics.FileInfo checks

@@ -80,6 +80,15 @@ public class Validation {
   /** Validation status. */
   private Status status;
 
+  /** CLB dataset key used only in checklist validations. */
+  private Integer clbDatasetKey;
+
+  /**
+   * RabbitMQ message sent before triggering the CLB validation. Needed to resume the workflow after
+   * CLB callback.
+   */
+  @JsonIgnore private String clbValidationMessage;
+
   /** Dataset parsed from EML file */
   @JsonIgnore private Dataset dataset;
 

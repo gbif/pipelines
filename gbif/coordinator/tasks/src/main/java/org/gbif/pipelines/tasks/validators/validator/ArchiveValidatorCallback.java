@@ -14,8 +14,8 @@ import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.ValidatorCallback;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
-import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback that is called when the {@link PipelinesArchiveValidatorMessage} is received. */
@@ -45,6 +45,7 @@ public class ArchiveValidatorCallback
           .build()
           .handleMessage();
     } else {
+      // TODO: never used?
       PipelinesCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
           .historyClient(historyClient)
           .config(config)
@@ -80,9 +81,6 @@ public class ArchiveValidatorCallback
           .config(config)
           .message(message)
           .schemaValidatorFactory(schemaValidatorFactory)
-          .checklistValidator(
-              new ChecklistValidator(
-                  config.clbConfig.url, config.clbConfig.user, config.clbConfig.password))
           .build()
           .create()
           .validate();
@@ -98,5 +96,15 @@ public class ArchiveValidatorCallback
         .build()
         .create()
         .createOutgoingMessage();
+  }
+
+  @Override
+  public Validation.Status getFinalValidationStatus(PipelinesArchiveValidatorMessage message) {
+    return ArchiveValidatorFactory.builder()
+        .message(message)
+        .config(config)
+        .build()
+        .create()
+        .getFinalValidationStatus();
   }
 }

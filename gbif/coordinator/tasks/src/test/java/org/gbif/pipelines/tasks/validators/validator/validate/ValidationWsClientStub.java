@@ -8,6 +8,7 @@ import java.util.UUID;
 import lombok.Builder;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
@@ -76,6 +77,9 @@ public class ValidationWsClientStub implements ValidationWsClient {
   public List<UUID> getRunningValidations(int min) {
     return Collections.emptyList();
   }
+
+  @Override
+  public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {}
 
   @Override
   public void delete(UUID key) {

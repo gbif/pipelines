@@ -16,4 +16,7 @@ public class ChecklistBankConfiguration {
 
   @Parameter(names = "--clb-api-password")
   public String password;
+
+  @Parameter(names = "--clb-callback-url")
+  public String callbackUrl;
 }

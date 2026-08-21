@@ -235,6 +235,11 @@
       <version>${logback.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>elasticsearch-tools</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>
