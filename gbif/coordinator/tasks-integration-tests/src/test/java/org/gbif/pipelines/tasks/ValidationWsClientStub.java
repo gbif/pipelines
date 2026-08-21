@@ -78,9 +78,7 @@ public class ValidationWsClientStub implements ValidationWsClient {
   }
 
   @Override
-  public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {
-
-  }
+  public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {}
 
   public Optional<FileInfo> getFileInfo(DwcFileType type, String term) {
     return validation.getMetrics().getFileInfos().stream()
