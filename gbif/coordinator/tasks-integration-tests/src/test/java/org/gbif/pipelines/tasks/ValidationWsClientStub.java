@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.dwc.terms.Term;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Validation;
@@ -74,6 +75,11 @@ public class ValidationWsClientStub implements ValidationWsClient {
   @Override
   public List<UUID> getRunningValidations(int min) {
     return Collections.emptyList();
+  }
+
+  @Override
+  public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {
+
   }
 
   public Optional<FileInfo> getFileInfo(DwcFileType type, String term) {
