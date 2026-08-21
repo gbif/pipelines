@@ -683,9 +683,9 @@
         "license": {"type": "keyword"}
       }
     },
-    "taxonID": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-    "taxonConceptID": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-    "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+    "taxonID": {"type": "keyword", "copy_to": "all", "normalizer": "lowercase_normalizer"},
+    "taxonConceptID": {"type": "keyword", "copy_to": "all", "normalizer": "lowercase_normalizer"},
+    "verbatimScientificName": {"type": "keyword", "copy_to": "all", "normalizer": "lowercase_normalizer"},
     "dnaSequenceID":  {"type": "keyword"},
 
     "nucleotideSequence": {

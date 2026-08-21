@@ -219,7 +219,7 @@
         "taxonomicCoverage": {
           "type": "object",
           "properties": {
-            "taxonIDs": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"}
+            "taxonIDs": {"type": "keyword", "copy_to": "all", "normalizer": "lowercase_normalizer"}
           }
         }
       }

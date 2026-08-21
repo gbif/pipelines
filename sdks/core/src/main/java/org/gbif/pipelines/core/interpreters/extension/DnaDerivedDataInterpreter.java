@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -7,7 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 import org.gbif.api.util.DnaUtils;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
