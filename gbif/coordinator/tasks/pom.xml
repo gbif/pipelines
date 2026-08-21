@@ -47,7 +47,7 @@
     <commons-configuration.version>1.10</commons-configuration.version>
     <xercesImpl.version>2.12.2</xercesImpl.version>
     <woodstox-core.version>7.1.1</woodstox-core.version>
-    <log4j.version>2.25.2</log4j.version>
+    <log4j.version>2.25.5</log4j.version>
   </properties>
 
   <dependencies>
