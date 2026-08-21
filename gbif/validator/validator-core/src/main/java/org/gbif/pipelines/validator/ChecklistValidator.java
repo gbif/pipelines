@@ -71,7 +71,10 @@ public class ChecklistValidator {
 
     int datasetKey = validatorResponse.getKey();
     if (datasetKey == 0) {
-      throw new IllegalStateException("Validation failed with key zero for " + archivePath);
+      throw new IllegalStateException(
+          "Validation failed with key zero for "
+              + archivePath
+              + ". Most likely is that the CLB API service is off.");
     }
 
     return datasetKey;
