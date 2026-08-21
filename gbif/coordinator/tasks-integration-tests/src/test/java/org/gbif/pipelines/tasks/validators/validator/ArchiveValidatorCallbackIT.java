@@ -54,7 +54,7 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
     config.clbConfig =
-        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX", null);
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -126,7 +126,7 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
     config.clbConfig =
-        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX", null);
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -200,7 +200,7 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
     config.clbConfig =
-        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX", null);
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -226,7 +226,8 @@ public class ArchiveValidatorCallbackIT {
 
     // Should
 
-    assertEquals(1, PUBLISHER.getMessages().size());
+    // the validation is async so it doesn't send the next message in the cli
+    assertEquals(0, PUBLISHER.getMessages().size());
 
     // Result
     Validation validation = validationClient.getValidation();
@@ -276,7 +277,7 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
     config.clbConfig =
-        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX", null);
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -310,7 +311,7 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
     config.clbConfig =
-        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX", null);
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -344,7 +345,7 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
     config.clbConfig =
-        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX", null);
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -378,7 +379,7 @@ public class ArchiveValidatorCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
     config.clbConfig =
-        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX", null);
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
