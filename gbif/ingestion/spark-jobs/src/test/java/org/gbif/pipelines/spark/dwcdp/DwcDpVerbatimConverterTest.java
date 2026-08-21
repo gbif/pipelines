@@ -268,6 +268,10 @@ class DwcDpVerbatimConverterTest {
         "sibling of:org-2",
         occ001.get(DwcTerm.associatedOrganisms.qualifiedName()),
         "associatedOrganisms contributed by organism table must survive Avro round-trip");
+    assertEquals(
+        "https://example.com/img1.jpg",
+        occ001.get(DwcTerm.associatedMedia.qualifiedName()),
+        "occurrence-owned media must be bridged through associatedMedia for downstream extraction");
 
     Map<String, String> occ002 = occExt.get(1);
     assertEquals("OCC002", occ002.get(DwcTerm.occurrenceID.qualifiedName()));

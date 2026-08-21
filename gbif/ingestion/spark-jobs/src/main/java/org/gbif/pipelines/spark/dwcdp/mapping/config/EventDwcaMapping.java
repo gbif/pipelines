@@ -71,7 +71,11 @@ public final class EventDwcaMapping {
         .mergeTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("occurrenceID"), ValueAggregation.firstNonNull())
+        .mergeTarget(
+            DwcTerm.associatedMedia.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .importFragment(OccurrenceMapping.directOccurrence(graph))
+        .importFragment(OccurrenceMapping.associatedMedia(graph))
+        .importFragment(OccurrenceMapping.materialAssociatedMedia(graph))
         .importFragment(OccurrenceMapping.recordedBy(graph))
         .importFragment(OccurrenceMapping.identifiedBy(graph))
         .importFragment(OccurrenceMapping.organism(graph))
