@@ -6,7 +6,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
-import org.gbif.pipelines.validator.checklists.ChecklistValidator;
+import org.gbif.pipelines.validator.ChecklistValidator;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -23,7 +23,9 @@ public class ArchiveValidatorFactory {
     Optional<DatasetType> datasetTypeOpt =
         DatasetTypeUtils.getDatasetType(config.archiveRepository, message.getDatasetUuid());
 
-    if (datasetTypeOpt.isPresent() && datasetTypeOpt.get() == DatasetType.CHECKLIST) {
+    if (datasetTypeOpt.isPresent()
+        && datasetTypeOpt.get() == DatasetType.CHECKLIST
+        && FileFormat.DWCA.name().equals(message.getFileFormat())) {
       return ChecklistDwcaArchiveValidator.builder()
           .validationClient(validationClient)
           .config(config)
