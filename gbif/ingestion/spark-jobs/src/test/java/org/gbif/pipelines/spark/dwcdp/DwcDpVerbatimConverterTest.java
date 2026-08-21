@@ -431,6 +431,38 @@ class DwcDpVerbatimConverterTest {
     assertEquals("Mass", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
   }
 
+  @Test
+  void eventCore_occurrenceInheritsFallbackEventIdWhenPublisherEventIdMissing(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", null)));
+
+    writeParquet(
+        dir,
+        "data/occurrence.parquet",
+        schema("occurrence_pk", "occurrenceID", "event_fk", "scientificName"),
+        List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Quercus robur")));
+
+    DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord event = records.get(0);
+    String expectedEventId = "urn:gbif:dwcdp:event:EPK-001";
+    assertEquals(expectedEventId, event.getId());
+
+    List<Map<String, String>> occurrences =
+        event.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE);
+    assertNotNull(occurrences);
+    assertEquals(1, occurrences.size());
+    assertEquals(expectedEventId, occurrences.get(0).get(DwcTerm.eventID.qualifiedName()));
+  }
+
   // ---- comprehensive round-trip: occurrence-core ----
 
   /**

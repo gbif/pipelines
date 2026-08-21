@@ -40,6 +40,26 @@ public final class OccurrenceMapping {
   }
 
   /**
+   * Copies the owning Event identity onto an Event-core Occurrence extension row. The publisher
+   * eventID wins when present; otherwise the Event structural primary key supplies the same URN
+   * fallback used by Event core identity.
+   */
+  public static ExtensionFragment eventIdentity(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath event = occurrence.join("event").via("event_fk").optional().exactlyOne();
+    return extensionFragment("occurrence-event-identity", ROW_TYPE_OCCURRENCE, event)
+        .scopeKey("event_fk")
+        .rowMatch(occurrence.field("occurrence_pk"))
+        .field(
+            TargetFieldMapping.oneOf(
+                DwcTerm.eventID.qualifiedName(),
+                ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
+                event.field("eventID"),
+                event.field("event_pk")))
+        .build();
+  }
+
+  /**
    * Compatibility bridge for Event-core ingestion: occurrence-owned media URLs are copied to
    * dwc:associatedMedia so they survive the existing Event -> Occurrence extraction pipeline.
    */
