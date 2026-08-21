@@ -1,11 +1,11 @@
-package org.gbif.pipelines.validator.checklists.ws;
+package org.gbif.pipelines.validator.ws;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import org.gbif.dwc.terms.Term;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +20,7 @@ public interface ChecklistbankWsClient {
   @PostMapping(
       value = "validator",
       consumes = {"application/octet-stream", "application/zip"})
-  ValidatorResponse validateArchive(byte[] file);
+  ValidatorResponse validateArchive(@RequestParam("callback") String callbackUrl, byte[] file);
 
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)
@@ -29,30 +29,7 @@ public interface ChecklistbankWsClient {
   }
 
   @GetMapping(path = "importer/{key}")
-  ImporterResponse checkImporter(@PathVariable("key") int key);
-
-  @Data
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  class ImporterResponse {
-    private int datasetKey;
-    private int attempt;
-    private String state;
-    private Long bareNameCount;
-    private Long distributionCount;
-    private Long estimateCount;
-    private Long mediaCount;
-    private Long nameCount;
-    private Long referenceCount;
-    private Long synonymCount;
-    private Long taxonCount;
-    private Long treatmentCount;
-    private Long typeMaterialCount;
-    private Long vernacularCount;
-    private Long usagesCount;
-    private Map<String, Long> issuesCount = new HashMap<>();
-    private Map<Term, Long> verbatimByTermCount = new HashMap<>();
-    private Map<Term, Map<Term, Long>> verbatimByRowTypeCount = new HashMap<>();
-  }
+  ClbDatasetImport checkImporter(@PathVariable("key") int key);
 
   @GetMapping(path = "dataset/{key}/verbatim")
   VerbatimResponse getVerbatim(

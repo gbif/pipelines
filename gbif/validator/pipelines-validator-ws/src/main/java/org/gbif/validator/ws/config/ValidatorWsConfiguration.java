@@ -10,6 +10,7 @@ import java.net.URI;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileStoreManager;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
@@ -73,6 +74,14 @@ public class ValidatorWsConfiguration {
     ObjectMapper objectMapper = JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
     objectMapper.registerModule(new JavaTimeModule());
     return objectMapper;
+  }
+
+  @Bean
+  public ChecklistValidator checklistValidator(
+      @Value("${clbConfig.url}") String clbUrl,
+      @Value("${clbConfig.user}") String clbUser,
+      @Value("${clbConfig.password}") String clbPassword) {
+    return new ChecklistValidator(clbUrl, clbUser, clbPassword, null);
   }
 
   /** Configure the Jackson ObjectMapper adding a custom JsonFilter for errors. */

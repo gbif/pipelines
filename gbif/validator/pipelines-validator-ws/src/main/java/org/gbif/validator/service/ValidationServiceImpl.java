@@ -22,8 +22,12 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
+import org.gbif.pipelines.validator.ChecklistValidator;
+import org.gbif.pipelines.validator.Validations;
 import org.gbif.utils.file.CompressionUtil.UnsupportedCompressionType;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.FileFormat;
+import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
@@ -51,6 +55,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private final MessagePublisher messagePublisher;
 
   private final ValidatorEmailService emailService;
+
+  private final ChecklistValidator checklistValidator;
 
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
@@ -241,6 +247,58 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   public List<UUID> getRunningValidations(int min) {
     Date date = Date.from(Instant.now().minus(Duration.ofMinutes(min)));
     return validationMapper.getRunningValidations(date);
+  }
+
+  @Override
+  public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {
+    Validation validation = get(validationKey);
+
+    validation.setStatus(Status.RUNNING);
+    update(validation);
+
+    if (clbDatasetImport == null) {
+      log.info("CLB validation response for {}} is null", validationKey);
+      validation.setStatus(Status.FAILED);
+      update(validation);
+      return;
+    }
+
+    if (validation.getClbDatasetKey() != clbDatasetImport.getDatasetKey()) {
+      log.info(
+          "CLB Dataset key {} is different from validation clb dataset key {}",
+          clbDatasetImport.getDatasetKey(),
+          validation.getClbDatasetKey());
+      validation.setStatus(Status.FAILED);
+      update(validation);
+      return;
+    }
+
+    if (clbDatasetImport.getState() == ClbDatasetImport.State.failed) {
+      validation.setStatus(Status.FAILED);
+      update(validation);
+    } else if (clbDatasetImport.getState() == ClbDatasetImport.State.canceled) {
+      validation.setStatus(Status.ABORTED);
+      update(validation);
+    } else if (clbDatasetImport.getState() == ClbDatasetImport.State.finished) {
+      try {
+        List<Metrics.FileInfo> result = checklistValidator.evaluateResults(clbDatasetImport);
+        log.info(
+            "Validating DWCA checklist archive - finished calling checklistbank, merging results");
+        result.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+        validation.setStatus(Status.FINISHED);
+        update(validation);
+
+        // send message to continue the process
+        messagePublisher.send(
+            checklistValidator.createNextMessage(validation.getClbValidationMessage()));
+        log.info("Next message for checklist validation {} has been sent", validationKey);
+
+      } catch (IOException e) {
+        log.error("Error processing CLB validation results for {}", validationKey, e);
+        validation.setStatus(Status.FAILED);
+        update(validation);
+      }
+    }
   }
 
   /** Persists a validation entity. */

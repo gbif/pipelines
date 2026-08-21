@@ -1,7 +1,8 @@
-package org.gbif.pipelines.validator.checklists;
+package org.gbif.pipelines.validator;
 
-import static org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient.*;
+import static org.gbif.pipelines.validator.ws.ChecklistbankWsClient.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,14 +11,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.crawler.DwcaValidationReport;
+import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
@@ -29,26 +38,19 @@ import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 public class ChecklistValidator {
 
   private static final int SAMPLE_ISSUES_SIZE = 5;
-
-  // values to wait for validation api response
-  private static final int MAX_WAIT_SECONDS = 720;
-  private static final int WAIT_DELAY_IN_SECONDS = 1;
-  private static final int DELAY_MULTIPLIER = 2;
-  private static final int MAX_WAIT_DELAY_IN_SECONDS = 30;
-
-  private static final String FINISHED = "finished";
-  private static final String CANCELED = "canceled";
-  private static final String FAILED = "failed";
-  private static final List<String> FINISHED_STATES = List.of(FINISHED, CANCELED, FAILED);
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final ChecklistbankWsClient checklistbankWsClient;
+  private final String callbackUrl;
 
-  public ChecklistValidator(String clbApiUrl, String clbApiUser, String clbApiPassword) {
-    this(buildChecklistbankWsClient(clbApiUrl, clbApiUser, clbApiPassword));
+  public ChecklistValidator(
+      String clbApiUrl, String clbApiUser, String clbApiPassword, String callbackUrl) {
+    this(buildChecklistbankWsClient(clbApiUrl, clbApiUser, clbApiPassword), callbackUrl);
   }
 
-  public ChecklistValidator(ChecklistbankWsClient checklistbankWsClient) {
+  public ChecklistValidator(ChecklistbankWsClient checklistbankWsClient, String callbackUrl) {
     this.checklistbankWsClient = checklistbankWsClient;
+    this.callbackUrl = callbackUrl;
   }
 
   private static ChecklistbankWsClient buildChecklistbankWsClient(
@@ -62,26 +64,28 @@ public class ChecklistValidator {
   }
 
   @SneakyThrows
-  public List<Metrics.FileInfo> evaluate(Path archivePath) throws IOException {
-    List<Metrics.FileInfo> results = new ArrayList<>();
-
+  public int submitValidation(Path archivePath, UUID validationKey) {
     ValidatorResponse validatorResponse =
-        checklistbankWsClient.validateArchive(Files.readAllBytes(archivePath));
-    int datasetKey = validatorResponse.getKey();
+        checklistbankWsClient.validateArchive(
+            callbackUrl + "/" + validationKey, Files.readAllBytes(archivePath));
 
+    int datasetKey = validatorResponse.getKey();
     if (datasetKey == 0) {
       throw new IllegalStateException("Validation failed with key zero for " + archivePath);
     }
 
-    ImporterResponse importerResponse = getImporterResponse(datasetKey, archivePath);
+    return datasetKey;
+  }
 
-    if (!importerResponse.getState().equalsIgnoreCase(FINISHED)) {
-      throw new IllegalStateException(
-          "Validation failed with status " + importerResponse.getState() + " for " + archivePath);
-    }
+  @SneakyThrows
+  public List<Metrics.FileInfo> evaluateResults(ClbDatasetImport clbDatasetImport)
+      throws IOException {
+    List<Metrics.FileInfo> results = new ArrayList<>();
+
+    int datasetKey = clbDatasetImport.getDatasetKey();
 
     for (Map.Entry<Term, Map<Term, Long>> entry :
-        importerResponse.getVerbatimByRowTypeCount().entrySet()) {
+        clbDatasetImport.getVerbatimByRowTypeCount().entrySet()) {
       Term rowType = entry.getKey();
       Map<Term, Long> terms = entry.getValue();
       List<Metrics.TermInfo> termsInfo =
@@ -97,7 +101,7 @@ public class ChecklistValidator {
       if (rowType == DwcTerm.Taxon) {
         // core
         List<Metrics.IssueInfo> issues =
-            importerResponse.getIssuesCount().entrySet().stream()
+            clbDatasetImport.getIssuesCount().entrySet().stream()
                 .map(
                     e ->
                         Metrics.IssueInfo.builder()
@@ -111,23 +115,23 @@ public class ChecklistValidator {
         results.add(
             Metrics.FileInfo.builder()
                 .rowType(DwcTerm.Taxon.qualifiedName())
-                .count(importerResponse.getVerbatimByTermCount().get(rowType))
+                .count(clbDatasetImport.getVerbatimByTermCount().get(rowType))
                 .fileName(getFileNameByRowType(datasetKey, rowType).orElse(null))
                 .fileType(DwcFileType.CORE)
                 .issues(issues)
                 .terms(termsInfo)
-                .indexedCount(importerResponse.getUsagesCount())
+                .indexedCount(clbDatasetImport.getUsagesCount())
                 .build());
       } else {
         // extensions
         results.add(
             Metrics.FileInfo.builder()
                 .rowType(rowType.qualifiedName())
-                .count(importerResponse.getVerbatimByTermCount().get(rowType))
+                .count(clbDatasetImport.getVerbatimByTermCount().get(rowType))
                 .fileName(getFileNameByRowType(datasetKey, rowType).orElse(null))
                 .fileType(DwcFileType.EXTENSION)
                 .terms(termsInfo)
-                .indexedCount(getExtensionCount(rowType, importerResponse))
+                .indexedCount(getExtensionCount(rowType, clbDatasetImport))
                 .build());
       }
     }
@@ -135,30 +139,25 @@ public class ChecklistValidator {
     return results;
   }
 
-  private ImporterResponse getImporterResponse(int datasetKey, Path archivePath)
-      throws InterruptedException {
-    ImporterResponse importerResponse = checklistbankWsClient.checkImporter(datasetKey);
-    int currentDelay = WAIT_DELAY_IN_SECONDS;
-    int secondsToWait = MAX_WAIT_SECONDS;
-    while (!FINISHED_STATES.contains(importerResponse.getState().toLowerCase())
-        && secondsToWait > 0) {
-      TimeUnit.SECONDS.sleep(currentDelay);
-      secondsToWait -= currentDelay;
-      // Exponential backoff with cap
-      currentDelay = Math.min(currentDelay * DELAY_MULTIPLIER, MAX_WAIT_DELAY_IN_SECONDS);
+  @SneakyThrows
+  public PipelinesBalancerMessage createNextMessage(String rawPreviousMessage) {
+    PipelinesArchiveValidatorMessage previousMessage =
+        OBJECT_MAPPER.readValue(rawPreviousMessage, PipelinesArchiveValidatorMessage.class);
 
-      importerResponse = checklistbankWsClient.checkImporter(datasetKey);
-    }
+    PipelinesDwcaMessage nextMessage = new PipelinesDwcaMessage();
+    nextMessage.setDatasetUuid(previousMessage.getDatasetUuid());
+    nextMessage.setAttempt(previousMessage.getAttempt());
+    nextMessage.setValidationReport(
+        new DwcaValidationReport(
+            previousMessage.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)));
+    nextMessage.setPipelineSteps(previousMessage.getPipelineSteps());
+    nextMessage.setExecutionId(previousMessage.getExecutionId());
+    nextMessage.setDatasetType(DatasetType.CHECKLIST);
+    nextMessage.setEndpointType(EndpointType.DWC_ARCHIVE);
 
-    if (!importerResponse.getState().equalsIgnoreCase(FINISHED) && secondsToWait <= 0) {
-      throw new IllegalStateException(
-          "Max time waiting for api validator response exceeded for key "
-              + datasetKey
-              + " and archive "
-              + archivePath);
-    }
-
-    return importerResponse;
+    String nextMessageClassName = nextMessage.getClass().getSimpleName();
+    String messagePayload = nextMessage.toString();
+    return new PipelinesBalancerMessage(nextMessageClassName, messagePayload);
   }
 
   private Optional<String> getFileNameByRowType(int datasetKey, Term rowType) {
@@ -200,7 +199,7 @@ public class ChecklistValidator {
         .toList();
   }
 
-  private Long getExtensionCount(Term rowType, ImporterResponse importerResponse) {
+  private Long getExtensionCount(Term rowType, ClbDatasetImport importerResponse) {
     Extension extension = Extension.fromRowType(rowType.qualifiedName());
     return switch (extension) {
       case DISTRIBUTION -> importerResponse.getDistributionCount();

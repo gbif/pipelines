@@ -1,9 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-  <include file="org/gbif/validator/liquibase/001-initial.xml"/>
-  <include file="/org/gbif/validator/liquibase/002-clb-validation.xml"/>
+  <changeSet id="2" author="mlopez">
+    <sql>
+      ALTER TABLE validation ADD COLUMN clb_dataset_key integer;
+      ALTER TABLE validation ADD COLUMN clb_validation_message text;
+    </sql>
+  </changeSet>
 </databaseChangeLog>
