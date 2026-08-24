@@ -71,7 +71,9 @@ public final class CompiledMappingDatasetPruner {
 
     List<CompiledFragment> structurallyAvailable =
         extension.fragments().stream()
-            .filter(fragment -> supportsExtensionFragmentStructure(fragment, scope))
+            .filter(
+                fragment ->
+                    supportsExtensionFragmentStructure(fragment, scope, extension.rowComposition()))
             .map(
                 fragment ->
                     pruneFragmentTargets(
@@ -322,10 +324,24 @@ public final class CompiledMappingDatasetPruner {
   }
 
   private static boolean supportsExtensionFragmentStructure(
-      CompiledFragment fragment, MappingDatasetScope scope) {
-    // scopeKey is structural because extension rows cannot be attached without it. Other relation
-    // resources are evaluated only if a surviving target/identity actually depends on their path.
-    return scope.hasResource(fragment.sourceResource()) && scope.supports(fragment.scopeKey());
+      CompiledFragment fragment,
+      MappingDatasetScope scope,
+      ExtensionRowComposition rowComposition) {
+    // scopeKey is always structural because extension rows cannot be attached without it.
+    //
+    // For UNION, a declared rowIdentity defines the independent physical child row. If that
+    // identity path is unavailable, retaining the fragment would silently degrade it into a
+    // different row set (for example occurrence-owned Multimedia becoming one routing-only row
+    // per occurrence when occurrence-media is absent).
+    //
+    // ENRICH is different: rowIdentity fragments may deliberately act as alternative/fallback
+    // row sources. Humboldt relies on this when target tables are absent and the physical survey
+    // row becomes the base, so identity availability must continue to be resolved by the ENRICH
+    // fallback selection below rather than rejected here.
+    return scope.hasResource(fragment.sourceResource())
+        && scope.supports(fragment.scopeKey())
+        && (rowComposition != ExtensionRowComposition.UNION
+            || fragment.rowIdentity().map(scope::supports).orElse(true));
   }
 
   private static Set<String> producerOwners(List<CompiledTargetMerge> merges) {
