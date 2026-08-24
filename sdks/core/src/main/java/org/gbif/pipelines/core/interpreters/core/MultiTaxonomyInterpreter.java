@@ -60,7 +60,7 @@ public class MultiTaxonomyInterpreter {
             createNameUsageMatchRequest(er, checklistKey);
         TaxonRecord taxonRecord =
             TaxonRecord.newBuilder().setId(er.getId()).setDatasetKey(checklistKey).build();
-        createTaxonRecord(nameUsageMatchRequest, kvStore, taxonRecord);
+        createTaxonRecord(nameUsageMatchRequest, kvStore, checklistKey, taxonRecord);
         trs.add(taxonRecord);
       }
 
@@ -113,7 +113,7 @@ public class MultiTaxonomyInterpreter {
               createNameUsageMatchRequest(er, checklistKey);
           TaxonRecord taxonRecord =
               TaxonRecord.newBuilder().setId(er.getId()).setDatasetKey(checklistKey).build();
-          createTaxonRecord(nameUsageMatchRequest, kvStore, taxonRecord);
+          createTaxonRecord(nameUsageMatchRequest, kvStore, checklistKey, taxonRecord);
           trs.add(taxonRecord);
         }
       }
