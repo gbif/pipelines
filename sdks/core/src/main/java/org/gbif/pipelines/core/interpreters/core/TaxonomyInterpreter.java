@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.Constants;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.NameUsageMatchRequest;
@@ -66,7 +67,7 @@ public class TaxonomyInterpreter {
 
       ModelUtils.checkNullOrEmpty(er);
       NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er, checklistKey);
-      createTaxonRecord(nameUsageMatchRequest, kvStore, tr);
+      createTaxonRecord(nameUsageMatchRequest, kvStore, checklistKey, tr);
       tr.setId(er.getId());
     };
   }
@@ -107,14 +108,20 @@ public class TaxonomyInterpreter {
   protected static void createTaxonRecord(
       NameUsageMatchRequest nameUsageMatchRequest,
       KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
+      String checklistKey,
       TaxonRecord tr) {
     matchTaxon(
         nameUsageMatchRequest,
         kvStore,
         tr,
         r -> {
-          tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
-          tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+          if (Constants.NUB_DATASET_KEY.toString().equals(checklistKey)) {
+            tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
+            tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+          } else {
+            tr.setUsage(null);
+            tr.setClassification(Collections.emptyList());
+          }
         },
         r -> {
           TaxonRecordConverter.convert(r, tr);
