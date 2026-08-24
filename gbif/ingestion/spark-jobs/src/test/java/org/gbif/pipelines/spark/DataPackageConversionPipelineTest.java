@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark;
 
+import static org.gbif.pipelines.spark.dwcdp.DataPackageConverter.DATAPACKAGE_SUBDIR;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URISyntaxException;
@@ -10,7 +11,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.dp.descriptor.DataPackageDescriptor;
 import org.gbif.dp.descriptor.JacksonDataPackageParser;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -51,7 +51,14 @@ class DataPackageConversionPipelineTest {
         createPipeline(inputBasePath, outputBasePath, "tsv-package", 0));
 
     Dataset<Row> df =
-        spark.read().parquet("file://" + destination + "/tsv-package/0/occurrences.parquet");
+        spark
+            .read()
+            .parquet(
+                "file://"
+                    + destination
+                    + "/tsv-package/0/"
+                    + DATAPACKAGE_SUBDIR
+                    + "/occurrences.parquet");
     assertEquals(3, df.count());
   }
 
@@ -64,16 +71,14 @@ class DataPackageConversionPipelineTest {
         createPipeline(inputBasePath, outputBasePath, "tsv-package", 0));
 
     DataPackageDescriptor out =
-        new JacksonDataPackageParser().parse(destination.resolve("tsv-package/0/datapackage.json"));
+        new JacksonDataPackageParser()
+            .parse(
+                destination
+                    .resolve("tsv-package/0")
+                    .resolve(DATAPACKAGE_SUBDIR)
+                    .resolve("datapackage.json"));
 
     assertFalse(out.resources().isEmpty());
     assertNull(out.resources().get(0).dialect());
-  }
-
-  private static PipelinesConfig minimalConfig(String inputPath, String outputPath) {
-    PipelinesConfig config = new PipelinesConfig();
-    config.setInputPath(inputPath);
-    config.setOutputPath(outputPath);
-    return config;
   }
 }

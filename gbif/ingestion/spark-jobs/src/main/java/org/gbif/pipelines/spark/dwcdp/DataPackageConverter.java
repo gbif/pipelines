@@ -23,6 +23,8 @@ import org.jspecify.annotations.NonNull;
 @Slf4j
 public class DataPackageConverter {
 
+  public static final String DATAPACKAGE_SUBDIR = "datapackage";
+
   private final DataPackageParser parser;
   private final ObjectMapper mapper;
   private final long targetPartitionByteSize;
@@ -38,6 +40,8 @@ public class DataPackageConverter {
     Path descriptorPath = getDescriptorPath(source);
     Path sourceBase = descriptorPath.getParent();
 
+    String datapackageDestination =
+        (destination.endsWith("/") ? destination : destination + "/") + DATAPACKAGE_SUBDIR;
     DataPackageDescriptor descriptor = parser.parse(descriptorPath);
     List<ResourceDescriptor> converted = new ArrayList<>();
 
@@ -48,7 +52,7 @@ public class DataPackageConverter {
       Path inputRelative = sourceBase.relativize(inputAbsolute);
 
       String outputRelative = swapExtension(inputRelative.toString(), "parquet");
-      String outputUri = destination + "/" + outputRelative;
+      String outputUri = datapackageDestination + "/" + outputRelative;
 
       long count = readAndWrite(spark, resource, resource.paths(), outputUri);
       metrics.put("COUNT_" + resource.name().toUpperCase(), count);
@@ -73,7 +77,7 @@ public class DataPackageConverter {
 
     DataPackageDescriptor outputDescriptor =
         new DataPackageDescriptor(descriptor.name(), converted);
-    writeDescriptor(spark, outputDescriptor, destination);
+    writeDescriptor(spark, outputDescriptor, datapackageDestination);
   }
 
   private static @NonNull Path getDescriptorPath(Path source) {
