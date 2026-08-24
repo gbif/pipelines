@@ -5,6 +5,7 @@ import static org.gbif.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.ws.security.UserRoles.IPT_ROLE;
 import static org.gbif.ws.security.UserRoles.USER_ROLE;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,7 +51,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)
-@Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
 @RequiredArgsConstructor
 public class ValidationResource {
 
@@ -59,6 +59,7 @@ public class ValidationResource {
   private final ErrorMapper errorMapper;
 
   /** Uploads a file and starts the validation process. */
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
   @Operation(
       summary = "Upload a file and start validation",
       description = "Uploads a file and starts synchronous validation.")
@@ -77,6 +78,7 @@ public class ValidationResource {
   }
 
   /** Asynchronously downloads a file from a URL and starts the validation process. */
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
   @Operation(
       summary = "Submit a URL for validation",
       description = "Asynchronously downloads a file from the provided URL and starts validation.")
@@ -98,6 +100,7 @@ public class ValidationResource {
   }
 
   /** Gets the detail of Validation. */
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
   @Operation(
       summary = "Get validation details",
       description = "Retrieve details for a specific validation job.")
@@ -114,6 +117,7 @@ public class ValidationResource {
   }
 
   /** Cancels a Validation. */
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
   @Operation(
       summary = "Cancel validation",
       description = "Cancel a running or queued validation job.")
@@ -131,6 +135,7 @@ public class ValidationResource {
   }
 
   /** Deletes a Validation. */
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
   @Operation(
       summary = "Delete validation",
       description = "Delete a validation job and its results.")
@@ -144,6 +149,7 @@ public class ValidationResource {
   }
 
   /** Updates the detail of Validation. */
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
   @Operation(summary = "Update validation", description = "Update the details of a validation job.")
   @ApiResponses({
     @ApiResponse(
@@ -166,6 +172,7 @@ public class ValidationResource {
   }
 
   /** Get EML data */
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
   @Operation(
       summary = "Get EML data",
       description = "Return EML (metadata) for a validation's dataset.")
@@ -182,6 +189,7 @@ public class ValidationResource {
   }
 
   /** Lists the validations of a user. */
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
   @Operation(
       summary = "List validations",
       description = "List validations for the current user with paging and filters.")
@@ -214,6 +222,7 @@ public class ValidationResource {
     return validationService.getRunningValidations(min);
   }
 
+  @Hidden
   @PostMapping(
       path = "/clbValidationCallback/{validationKey}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
