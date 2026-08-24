@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
 import org.gbif.validator.api.ClbDatasetImport;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
  * certain period of time and updates its state.
  */
 @SuppressWarnings("unchecked")
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ClbValidationCleaner {
@@ -38,6 +40,8 @@ public class ClbValidationCleaner {
     Date toDate =
         Date.from(
             LocalDateTime.now().atZone(ZoneId.systemDefault()).minusHours(hoursOld).toInstant());
+
+    log.info("Cleaning validations that are {} hours old until {}", hoursOld, toDate);
 
     List<Validation> validationsWaitingForClbApi =
         validationMapper.list(
