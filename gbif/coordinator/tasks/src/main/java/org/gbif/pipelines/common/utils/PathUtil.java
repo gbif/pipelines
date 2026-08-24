@@ -26,6 +26,15 @@ public class PathUtil {
     return directoryPath;
   }
 
+  public static Path buildChecklistDwcaInputPath(
+      String archiveRepository, UUID dataSetUuid, String filename) {
+    Path directoryPath = Paths.get(archiveRepository, dataSetUuid.toString(), filename);
+    if (!directoryPath.toFile().exists()) {
+      throw new IllegalStateException("Directory does not exist! - " + directoryPath);
+    }
+    return directoryPath;
+  }
+
   /**
    * Input path result example, directory -
    * /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2, if directory is absent, tries

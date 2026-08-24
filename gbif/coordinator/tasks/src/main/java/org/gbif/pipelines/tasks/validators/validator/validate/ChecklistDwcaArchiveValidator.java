@@ -1,6 +1,6 @@
 package org.gbif.pipelines.tasks.validators.validator.validate;
 
-import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+import static org.gbif.pipelines.common.utils.PathUtil.buildChecklistDwcaInputPath;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Paths;
@@ -41,7 +41,8 @@ public class ChecklistDwcaArchiveValidator extends BaseDwcaArchiveValidator {
       int datasetKey =
           checklistValidator.submitValidation(
               Paths.get(
-                  buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())
+                  buildChecklistDwcaInputPath(
+                          config.archiveRepository, message.getDatasetUuid(), validation.getFile())
                       .toString()),
               validation.getKey());
 
