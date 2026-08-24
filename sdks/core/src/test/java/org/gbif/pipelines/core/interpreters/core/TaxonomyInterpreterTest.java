@@ -1,5 +1,8 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.api.model.Constants.COL_DATASET_KEY;
+import static org.gbif.api.model.Constants.NUB_DATASET_KEY;
+
 import java.io.IOException;
 import java.util.Map;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -95,7 +98,7 @@ public class TaxonomyInterpreterTest {
   }
 
   @Test
-  public void checkNonMatchTest() {
+  public void checkNonMatchTestNub() {
 
     // State
     NameUsageMatchRequest identification = NameUsageMatchRequest.builder().build();
@@ -118,7 +121,7 @@ public class TaxonomyInterpreterTest {
               @Override
               public void close() throws IOException {}
             },
-            "fake-checklist-key")
+            NUB_DATASET_KEY.toString())
         .accept(
             ExtendedRecord.newBuilder()
                 .setId("112345")
@@ -133,5 +136,49 @@ public class TaxonomyInterpreterTest {
             .getIssues()
             .getIssueList()
             .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
+    Assert.assertNotNull(testRecord.getUsage());
+    Assert.assertEquals("0", testRecord.getUsage().getKey());
+  }
+
+  @Test
+  public void checkNonMatchTestCol() {
+
+    // State
+    NameUsageMatchRequest identification = NameUsageMatchRequest.builder().build();
+
+    NameUsageMatchResponse noMatch = new NameUsageMatchResponse();
+    Diagnostics diagnostics = new Diagnostics();
+    diagnostics.setMatchType(MatchType.NONE);
+    noMatch.setDiagnostics(diagnostics);
+
+    TaxonRecord testRecord = TaxonRecord.newBuilder().setId("not-an-id").build();
+
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(
+            new KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>() {
+              @Override
+              public NameUsageMatchResponse get(NameUsageMatchRequest nameUsageMatchRequest) {
+                return noMatch;
+              }
+
+              @Override
+              public void close() throws IOException {}
+            },
+            COL_DATASET_KEY.toString())
+        .accept(
+            ExtendedRecord.newBuilder()
+                .setId("112345")
+                .setCoreTerms(Map.of(DwcTerm.scientificName.name(), "nonsense"))
+                .build(),
+            testRecord);
+
+    // Should
+    Assert.assertNotNull(testRecord.getIssues());
+    Assert.assertTrue(
+        testRecord
+            .getIssues()
+            .getIssueList()
+            .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
+    Assert.assertNull(testRecord.getUsage());
   }
 }
