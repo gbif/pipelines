@@ -352,6 +352,15 @@ public final class SparkExtensionMaterializer {
     }
 
     boolean distinctRowIdentity = identity.isPresent() && !identityAlias.equals(parentAlias);
+    Dataset<Row> materializedRows = pathResult.dataset();
+    if (rowProducing && filterEmptyPayload && identity.isPresent()) {
+      // Independent UNION branches may be rooted above optional child links. A null declared row
+      // identity means that child row does not exist and must not materialize as a routing-only
+      // extension record. ENRICH base rows are deliberately excluded: their row may remain valid
+      // even when an optional child identity is null (for example a survey with no linked target).
+      materializedRows = materializedRows.filter(col(identityAlias).isNotNull());
+    }
+
     Dataset<Row> grouped;
     if (rowProducing && identity.isEmpty()) {
       // No declared logical key means each physical source/result row is an extension row. This is
@@ -368,20 +377,18 @@ public final class SparkExtensionMaterializer {
                   .as(targetAlias(target.targetTerm(), target.owner(), mergeTerms)));
         }
       }
-      grouped = pathResult.dataset().select(selected.toArray(Column[]::new));
+      grouped = materializedRows.select(selected.toArray(Column[]::new));
     } else if (aggregates.isEmpty()) {
       if (distinctRowIdentity) {
         grouped =
-            pathResult
-                .dataset()
+            materializedRows
                 .select(
                     col(parentAlias).cast("string").as(COL_PARENT_KEY),
                     col(identityAlias).cast("string").as(COL_ROW_KEY))
                 .distinct();
       } else {
         grouped =
-            pathResult
-                .dataset()
+            materializedRows
                 .select(col(parentAlias).cast("string").as(COL_PARENT_KEY))
                 .distinct()
                 .withColumn(COL_ROW_KEY, col(COL_PARENT_KEY));
@@ -390,16 +397,14 @@ public final class SparkExtensionMaterializer {
       Column[] aggArray = aggregates.toArray(Column[]::new);
       if (distinctRowIdentity) {
         grouped =
-            pathResult
-                .dataset()
+            materializedRows
                 .groupBy(col(parentAlias), col(identityAlias))
                 .agg(aggArray[0], java.util.Arrays.copyOfRange(aggArray, 1, aggArray.length))
                 .withColumnRenamed(parentAlias, COL_PARENT_KEY)
                 .withColumnRenamed(identityAlias, COL_ROW_KEY);
       } else {
         grouped =
-            pathResult
-                .dataset()
+            materializedRows
                 .groupBy(col(parentAlias))
                 .agg(aggArray[0], java.util.Arrays.copyOfRange(aggArray, 1, aggArray.length))
                 .withColumnRenamed(parentAlias, COL_PARENT_KEY)

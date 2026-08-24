@@ -59,46 +59,6 @@ public final class OccurrenceMapping {
         .build();
   }
 
-  /**
-   * Compatibility bridge for Event-core ingestion: occurrence-owned media URLs are copied to
-   * dwc:associatedMedia so they survive the existing Event -> Occurrence extraction pipeline.
-   */
-  public static ExtensionFragment associatedMedia(SchemaGraph graph) {
-    MappingPath occurrence = MappingPath.root(graph, "occurrence");
-    MappingPath link = occurrence.join("occurrence-media").via("occurrence_fk").optional().fanOut();
-    MappingPath media = link.join("media").via("media_fk").optional().exactlyOne();
-    ExtensionFragmentBuilder builder =
-        extensionFragment("occurrence-associated-media", ROW_TYPE_OCCURRENCE, media)
-            .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"));
-    builder.field(
-        TargetFieldMapping.oneOf(
-                DwcTerm.associatedMedia.qualifiedName(),
-                ValueAggregation.firstNonNull(),
-                media.field("accessURI"))
-            .contributionIdentity(media.field("media_pk")));
-    return builder.build();
-  }
-
-  /** Compatibility bridge for media attached to the occurrence's unambiguous evidence material. */
-  public static ExtensionFragment materialAssociatedMedia(SchemaGraph graph) {
-    MappingPath occurrence = MappingPath.root(graph, "occurrence");
-    MappingPath material = OccurrenceEnrichment.evidenceMaterialPath(occurrence);
-    MappingPath link = material.join("material-media").via("materialEntity_fk").optional().fanOut();
-    MappingPath media = link.join("media").via("media_fk").optional().exactlyOne();
-    ExtensionFragmentBuilder builder =
-        extensionFragment("occurrence-material-associated-media", ROW_TYPE_OCCURRENCE, media)
-            .scopeKey("event_fk")
-            .rowMatch(occurrence.field("occurrence_pk"));
-    builder.field(
-        TargetFieldMapping.oneOf(
-                DwcTerm.associatedMedia.qualifiedName(),
-                ValueAggregation.firstNonNull(),
-                media.field("accessURI"))
-            .contributionIdentity(media.field("media_pk")));
-    return builder.build();
-  }
-
   /** Organism fields enrich an existing occurrence row matched by occurrence_pk. */
   public static ExtensionFragment organism(SchemaGraph graph) {
     MappingPath occurrence = MappingPath.root(graph, "occurrence");
