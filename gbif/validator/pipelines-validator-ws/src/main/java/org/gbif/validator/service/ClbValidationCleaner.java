@@ -58,11 +58,11 @@ public class ClbValidationCleaner {
               ClbDatasetImport clbDatasetImport =
                   checklistbankWsClient.checkImporter(validation.getClbDatasetKey());
 
-              if (clbDatasetImport == null || clbDatasetImport.getState() == null) {
+              if (clbDatasetImport == null || clbDatasetImport.getStatus() == null) {
                 validation.setStatus(Validation.Status.FAILED);
-              } else if (clbDatasetImport.getState() == ClbDatasetImport.State.finished) {
+              } else if (clbDatasetImport.getStatus() == ClbDatasetImport.State.finished) {
                 validation.setStatus(Validation.Status.FINISHED);
-              } else if (clbDatasetImport.getState() == ClbDatasetImport.State.canceled) {
+              } else if (clbDatasetImport.getStatus() == ClbDatasetImport.State.canceled) {
                 validation.setStatus(Validation.Status.ABORTED);
               } else {
                 validation.setStatus(Validation.Status.FAILED);
