@@ -229,6 +229,10 @@ public class ValidationResource {
   public void clbValidationCallback(
       @PathVariable("validationKey") UUID validationKey,
       @RequestBody ClbDatasetImport clbDatasetImport) {
+    log.info(
+        "ClbValidationCallback import received for validation {}: {} ",
+        validationKey,
+        clbDatasetImport);
     validationService.validateChecklistResults(validationKey, clbDatasetImport);
   }
 }
