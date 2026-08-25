@@ -90,7 +90,8 @@ public class Validation {
    * CLB callback.
    */
   @Hidden
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) private String clbValidationMessage;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  private String clbValidationMessage;
 
   /** Dataset parsed from EML file */
   @JsonIgnore private Dataset dataset;
