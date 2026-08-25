@@ -71,7 +71,7 @@
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>dwc-dp-schemas</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>${dwc-dp-schemas.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gbif.pipelines</groupId>
