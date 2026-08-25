@@ -12,7 +12,7 @@ public class ClbDatasetImport {
 
   private int datasetKey;
   private int attempt;
-  private State state;
+  private State status;
   private Long bareNameCount;
   private Long distributionCount;
   private Long estimateCount;
