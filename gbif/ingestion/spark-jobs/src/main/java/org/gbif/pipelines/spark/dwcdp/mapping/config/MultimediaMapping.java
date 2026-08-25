@@ -3,12 +3,9 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
 
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 
 /** Declarative mappings for the Simple Multimedia extension. */
@@ -86,7 +83,7 @@ public final class MultimediaMapping {
 
     DirectFieldMappings.from(graph, "media", media).addTo(builder);
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
-    addOccurrenceIdentity(builder, occurrence, media);
+    OccurrenceExtensionRouting.addOccurrenceId(builder, occurrence);
     return builder.build();
   }
 
@@ -111,7 +108,7 @@ public final class MultimediaMapping {
 
     DirectFieldMappings.from(graph, "media", media).addTo(builder);
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
-    addOccurrenceIdentity(builder, occurrence, media);
+    OccurrenceExtensionRouting.addOccurrenceId(builder, occurrence);
     return builder.build();
   }
 
@@ -151,20 +148,5 @@ public final class MultimediaMapping {
     DirectFieldMappings.from(graph, "media", media).addTo(builder);
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
     return builder.build();
-  }
-
-  /**
-   * Marks an Event-level extension row as belonging to a specific Occurrence. The existing
-   * Event-core downstream escape hatch uses dwc:occurrenceID to route such extension rows to the
-   * extracted occurrence.
-   */
-  private static void addOccurrenceIdentity(
-      ExtensionFragmentBuilder builder, MappingPath occurrence, MappingPath media) {
-    builder.field(
-        TargetFieldMapping.oneOf(
-            DwcTerm.occurrenceID.qualifiedName(),
-            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
-            occurrence.field("occurrenceID"),
-            occurrence.field("occurrence_pk")));
   }
 }

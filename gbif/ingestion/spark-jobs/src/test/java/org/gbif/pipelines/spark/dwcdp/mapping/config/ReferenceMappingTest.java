@@ -146,7 +146,15 @@ class ReferenceMappingTest {
             "chronometric-age-conversion-protocol-references-for-event",
             "event-molecular-protocol-references",
             "event-dna-analysis-identification-references",
-            "event-dna-sequence-identification-references"),
+            "event-dna-sequence-identification-references",
+            "occurrence-references-for-event",
+            "occurrence-protocol-references-for-event",
+            "material-references-for-event-occurrence",
+            "material-protocol-references-for-event-occurrence",
+            "identification-references-for-event-occurrence",
+            "material-molecular-protocol-references-for-event-occurrence",
+            "material-dna-analysis-identification-references-for-event-occurrence",
+            "material-dna-sequence-identification-references-for-event-occurrence"),
         eventReferences.fragments().stream()
             .map(ExtensionFragment::name)
             .collect(Collectors.toSet()));
