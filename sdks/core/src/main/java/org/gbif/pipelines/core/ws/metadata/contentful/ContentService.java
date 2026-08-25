@@ -1,5 +1,9 @@
 package org.gbif.pipelines.core.ws.metadata.contentful;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -7,24 +11,17 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.SneakyThrows;
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.gbif.pipelines.core.ws.metadata.response.Programme;
 import org.gbif.pipelines.core.ws.metadata.response.Project;
 
 /** Client service to Elastisarch/Contentful CMS service. */
 public class ContentService {
 
-  private final RestHighLevelClient restHighLevelClient;
+  private final ElasticsearchClient elasticsearchClient;
   private static final String DEFAULT_LOCALE = "en-GB";
 
-  private static RestHighLevelClient buildClient(String... hostsAddresses) {
+  private static ElasticsearchClient buildClient(String... hostsAddresses) {
     HttpHost[] hosts =
         Arrays.stream(hostsAddresses)
             .map(
@@ -38,23 +35,24 @@ public class ContentService {
                   }
                 })
             .toArray(HttpHost[]::new);
-    RestClientBuilder builder =
+    RestClient restClient =
         RestClient.builder(hosts)
-            .setRequestConfigCallback(b -> b.setConnectTimeout(180_000).setSocketTimeout(180_000));
-    return new RestHighLevelClient(builder);
+            .setRequestConfigCallback(b -> b.setConnectTimeout(180_000).setSocketTimeout(180_000))
+            .build();
+    return new ElasticsearchClient(new RestClientTransport(restClient, new JacksonJsonpMapper()));
   }
 
   /**
    * @param hosts Elasticsearch hosts
    */
   public ContentService(String... hosts) {
-    restHighLevelClient = buildClient(hosts);
+    elasticsearchClient = buildClient(hosts);
   }
 
   /** Release ES content client */
   @SneakyThrows
   public void close() {
-    restHighLevelClient.close();
+    elasticsearchClient.close();
   }
 
   /**
@@ -65,14 +63,15 @@ public class ContentService {
    */
   @SneakyThrows
   public Project getProject(String projectId) {
-    SearchSourceBuilder searchSourceBuilder =
-        new SearchSourceBuilder().query(QueryBuilders.termQuery("projectId", projectId)).size(1);
-    SearchRequest searchRequest =
-        new SearchRequest().indices("project").source(searchSourceBuilder);
-
-    SearchResponse response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-    if (response.getHits().getTotalHits().value > 0) {
-      Map<String, Object> sourceFields = response.getHits().getHits()[0].getSourceAsMap();
+    SearchResponse<Map> response =
+        elasticsearchClient.search(
+            s ->
+                s.index("project")
+                    .size(1)
+                    .query(q -> q.term(t -> t.field("projectId").value(projectId))),
+            Map.class);
+    if (hasHits(response)) {
+      Map<String, Object> sourceFields = response.hits().hits().get(0).source();
       return new Project(
           getFieldValue(sourceFields, "title", DEFAULT_LOCALE),
           getFieldValue(sourceFields, "projectId"),
@@ -88,13 +87,12 @@ public class ContentService {
   @SneakyThrows
   private Programme getProgramme(String programmeId) {
     if (Objects.nonNull(programmeId)) {
-      SearchSourceBuilder searchSourceBuilder =
-          new SearchSourceBuilder().query(QueryBuilders.idsQuery().addIds(programmeId)).size(1);
-      SearchRequest searchRequest =
-          new SearchRequest().indices("programme").source(searchSourceBuilder);
-      SearchResponse response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-      if (response.getHits().getTotalHits().value > 0) {
-        Map<String, Object> sourceFields = response.getHits().getHits()[0].getSourceAsMap();
+      SearchResponse<Map> response =
+          elasticsearchClient.search(
+              s -> s.index("programme").size(1).query(q -> q.ids(i -> i.values(programmeId))),
+              Map.class);
+      if (hasHits(response)) {
+        Map<String, Object> sourceFields = response.hits().hits().get(0).source();
         return new Programme(
             getFieldValue(sourceFields, "id"),
             getFieldValue(sourceFields, "title", DEFAULT_LOCALE),
@@ -102,6 +100,11 @@ public class ContentService {
       }
     }
     return null;
+  }
+
+  private static boolean hasHits(SearchResponse<Map> response) {
+    return !response.hits().hits().isEmpty()
+        || (response.hits().total() != null && response.hits().total().value() > 0);
   }
 
   private String getFieldValue(Map<String, Object> source, String... field) {

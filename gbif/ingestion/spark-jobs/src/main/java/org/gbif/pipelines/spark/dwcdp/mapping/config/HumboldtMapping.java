@@ -1,0 +1,149 @@
+package org.gbif.pipelines.spark.dwcdp.mapping.config;
+
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
+
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.EcoTerm;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
+
+/**
+ * Declarative mapping of the behaviour currently implemented by {@code HumboldtExtensionBuilder}.
+ */
+public final class HumboldtMapping {
+
+  /** DwC-A Humboldt Ecological Inventory extension row type. */
+  public static final String ROW_TYPE_HUMBOLDT = Extension.HUMBOLDT.getRowType();
+
+  private HumboldtMapping() {}
+
+  /**
+   * Defines one Humboldt row per survey target. Target fields themselves are copied through using
+   * the same term resolution as the legacy mapper.
+   */
+  public static ExtensionFragment surveyTargets(SchemaGraph graph) {
+    MappingPath survey = MappingPath.root(graph, "survey");
+    MappingPath link = survey.join("survey-survey-target").via("survey_fk").fanOut();
+    MappingPath target = link.join("survey-target").via("surveyTarget_fk").exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment("humboldt-survey-targets", ROW_TYPE_HUMBOLDT, target)
+            .rowIdentity(target.field("surveyTarget_pk"));
+
+    SchemaResource targetResource = requiredResource(graph, "survey-target");
+    for (String column : targetResource.fields().keySet()) {
+      if (isStructural(column)) {
+        continue;
+      }
+      TargetTerms.resolveHumboldtOutput(column)
+          .ifPresent(
+              targetTerm ->
+                  builder.field(
+                      TargetFieldMapping.oneOf(
+                          targetTerm, ValueAggregation.firstNonNull(), target.field(column))));
+    }
+    return builder.build();
+  }
+
+  /** Defines a single Humboldt row per survey when there is no survey-target fan-out. */
+  public static ExtensionFragment surveyRows() {
+    SchemaPath survey = SchemaPath.root("survey");
+    return extensionFragment("humboldt-survey-row", ROW_TYPE_HUMBOLDT, "survey")
+        .rowIdentity(survey.field("survey_pk"))
+        .build();
+  }
+
+  /**
+   * Survey-scoped fields copied onto every Humboldt row. Structural columns are excluded; target
+   * ownership conflicts are deliberately detected later from compiled producer lineage rather than
+   * hidden here with source-name exclusions.
+   */
+  public static ExtensionFragment surveyFields(SchemaGraph graph) {
+    MappingPath survey = MappingPath.root(graph, "survey");
+    ExtensionFragmentBuilder builder =
+        extensionFragment("humboldt-survey-fields", ROW_TYPE_HUMBOLDT, "survey");
+
+    DirectFieldMappings.humboldt(graph, "survey", survey).addTo(builder);
+    return builder.build();
+  }
+
+  /** Resolves survey.identifiedByID through agent.agentID while preserving publisher text. */
+  public static ExtensionFragment identifiedBy(SchemaGraph graph) {
+    return AgentMapping.extension(
+        graph,
+        ROW_TYPE_HUMBOLDT,
+        new AgentMapping.Spec(
+            "humboldt-identified-by-agent",
+            "survey",
+            "identifiedByID",
+            "identifiedBy",
+            EcoTerm.identifiedBy.qualifiedName()));
+  }
+
+  /**
+   * Resolves survey.samplingPerformedByID through agent.agentID while preserving publisher text.
+   */
+  public static ExtensionFragment samplingPerformedBy(SchemaGraph graph) {
+    return AgentMapping.extension(
+        graph,
+        ROW_TYPE_HUMBOLDT,
+        new AgentMapping.Spec(
+            "humboldt-sampling-performed-by-agent",
+            "survey",
+            "samplingPerformedByID",
+            "samplingPerformedBy",
+            EcoTerm.samplingPerformedBy.qualifiedName()));
+  }
+
+  /**
+   * {@code survey.samplingProtocol} is represented as {@code eco:protocolDescriptions}. If the
+   * publisher already supplied a textual value it wins; otherwise the protocol FK is resolved to
+   * {@code protocol.protocolDescription}.
+   */
+  public static ExtensionFragment samplingProtocol(SchemaGraph graph) {
+    MappingPath survey = MappingPath.root(graph, "survey");
+    MappingPath protocol =
+        survey.join("protocol").via("samplingProtocol_fk").optional().exactlyOne();
+
+    return extensionFragment("humboldt-sampling-protocol", ROW_TYPE_HUMBOLDT, protocol)
+        .field(
+            TargetFieldMapping.oneOf(
+                EcoTerm.protocolDescriptions.qualifiedName(),
+                ValueAggregation.firstNonNull(),
+                survey.field("samplingProtocol"),
+                protocol.field("protocolDescription")))
+        .build();
+  }
+
+  /** Publisher value wins; otherwise resolve {@code samplingEffortProtocol_fk} through protocol. */
+  public static ExtensionFragment samplingEffortProtocol(SchemaGraph graph) {
+    MappingPath survey = MappingPath.root(graph, "survey");
+    MappingPath protocol =
+        survey.join("protocol").via("samplingEffortProtocol_fk").optional().exactlyOne();
+
+    return extensionFragment("humboldt-sampling-effort-protocol", ROW_TYPE_HUMBOLDT, protocol)
+        .field(
+            TargetFieldMapping.oneOf(
+                EcoTerm.samplingEffortProtocol.qualifiedName(),
+                ValueAggregation.firstNonNull(),
+                survey.field("samplingEffortProtocol"),
+                protocol.field("protocolDescription")))
+        .build();
+  }
+
+  private static boolean isStructural(String column) {
+    return column.endsWith("_pk") || column.endsWith("_fk");
+  }
+
+  private static SchemaResource requiredResource(SchemaGraph graph, String name) {
+    return graph
+        .resource(name)
+        .orElseThrow(() -> new IllegalArgumentException("DwC-DP schema has no resource " + name));
+  }
+}

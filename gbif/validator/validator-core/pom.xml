@@ -100,24 +100,8 @@
       <artifactId>elasticsearch-rest-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.elasticsearch.client</groupId>
-      <artifactId>elasticsearch-rest-high-level-client</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.elasticsearch</groupId>
-          <artifactId>jna</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.elasticsearch</groupId>
-          <artifactId>jna</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>co.elastic.clients</groupId>
+      <artifactId>elasticsearch-java</artifactId>
     </dependency>
 
     <dependency>

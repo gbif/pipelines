@@ -185,12 +185,6 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>validator-core</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.elasticsearch.client</groupId>
-          <artifactId>elasticsearch-rest-high-level-client</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

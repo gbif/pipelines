@@ -96,7 +96,14 @@ public class DwcDpToVerbatimCallback
         readMetric(datasetId, message.getAttempt(), Metrics.ARCHIVE_TO_OCC_COUNT);
     long eventCount = readMetric(datasetId, message.getAttempt(), Metrics.EVENT_CORE_RECORDS_COUNT);
 
-    if (message.isContainsOccurrences()) {
+    log.debug(
+        "Routing decision for dataset {}: occurrenceCount={}, eventCount={}, containsOccurrences(msg)={} -> sending {}",
+        datasetId,
+        occurrenceCount,
+        eventCount,
+        message.isContainsOccurrences(),
+        occurrenceCount > 0 ? "PipelinesVerbatimMessage" : "PipelinesEventsMessage");
+    if (occurrenceCount > 0) {
       // OCCURRENCE_WF_GRAPH or EVENT_OCCURRENCE_WF_GRAPH
       // tripletValid=false: DwC-DP occurrences use occurrenceID not
       // catalogNumber/institutionCode/collectionCode triplets
@@ -157,6 +164,10 @@ public class DwcDpToVerbatimCallback
             + Pipeline.ARCHIVE_TO_VERBATIM
             + ".yml";
     Map<String, Long> metrics = MetricsUtil.readMetricsYaml(fileSystem, metricsPath);
-    return metrics.getOrDefault(key, 0L);
+    if (!metrics.containsKey(key)) {
+      log.warn("Metric {} not found in {} — defaulting to 0", key, metricsPath);
+      return 0L;
+    }
+    return metrics.get(key);
   }
 }

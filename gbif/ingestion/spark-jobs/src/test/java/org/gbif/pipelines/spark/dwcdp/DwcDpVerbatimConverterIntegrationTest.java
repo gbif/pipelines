@@ -26,7 +26,6 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TableLoader;
@@ -76,16 +75,17 @@ class DwcDpVerbatimConverterIntegrationTest {
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate", "decimalLatitude"),
-        List.of(RowFactory.create("EVT001", "2024-06-15", "59.0")));
+        schema("event_pk", "eventID", "eventDate", "decimalLatitude"),
+        List.of(RowFactory.create("EPK-001", "EVT001", "2024-06-15", "59.0")));
 
-    DataPackage dp = DataPackageFixtures.withEvent("eventID", "eventDate", "decimalLatitude");
+    DataPackage dp =
+        DataPackageFixtures.withEvent("event_pk", "eventID", "eventDate", "decimalLatitude");
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String targetPath = "file://" + dir + "/verbatim.avro";
 
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -119,7 +119,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     Object coreRowType = record.get("coreRowType");
     assertNotNull(coreRowType);
     assertInstanceOf(org.apache.avro.util.Utf8.class, coreRowType);
-    assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_EVENT, coreRowType.toString());
+    assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT, coreRowType.toString());
 
     @SuppressWarnings("unchecked")
     java.util.Map<Object, Object> coreTerms =
@@ -142,20 +142,22 @@ class DwcDpVerbatimConverterIntegrationTest {
 
   @Test
   void avroWrite_readableByEventInterpretationPipeline(@TempDir Path dir) throws Exception {
+    // event_pk added — OccurrenceExtensionBuilder resolves occurrence.event_fk against it
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate", "parentEventID", "decimalLatitude"),
+        schema("event_pk", "eventID", "eventDate", "parentEvent_fk", "decimalLatitude"),
         List.of(
-            RowFactory.create("EVT001", "2024-06-15", null, "59.0"),
-            RowFactory.create("EVT002", "2024-06-16", "EVT001", "59.1")));
+            RowFactory.create("EPK-001", "EVT001", "2024-06-15", null, "59.0"),
+            RowFactory.create("EPK-002", "EVT002", "2024-06-16", "EPK-001", "59.1")));
+    // event_fk instead of eventID — occurrence never carries the natural key directly
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrenceID", "eventID", "scientificName"),
+        schema("occurrence_pk", "occurrenceID", "event_fk", "scientificName"),
         List.of(
-            RowFactory.create("OCC001", "EVT001", "Quercus robur"),
-            RowFactory.create("OCC002", "EVT002", "Pinus sylvestris")));
+            RowFactory.create("OPK-001", "OCC001", "EPK-001", "Quercus robur"),
+            RowFactory.create("OPK-002", "OCC002", "EPK-002", "Pinus sylvestris")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
@@ -163,7 +165,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String verbatimPath = "file://" + dir + "/verbatim.avro";
 
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -191,7 +193,8 @@ class DwcDpVerbatimConverterIntegrationTest {
     assertNull(first.getCoreId(), "coreId should be null until set by downstream pipeline");
     assertEquals("2024-06-15", first.getCoreTerms().get(DwcTerm.eventDate.qualifiedName()));
 
-    List<Map<String, String>> occExt = first.getExtensions().get(DwcDpRowTypes.ROW_TYPE_OCCURRENCE);
+    List<Map<String, String>> occExt =
+        first.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE);
     assertNotNull(occExt);
     assertEquals(1, occExt.size());
     assertEquals("Quercus robur", occExt.get(0).get(DwcTerm.scientificName.qualifiedName()));
@@ -230,7 +233,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     assertEquals(2, rebuilt.size());
     rebuilt.sort(Comparator.comparing(ExtendedRecord::getId));
     assertEquals("EVT001", rebuilt.get(0).getCoreId());
-    assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_EVENT, rebuilt.get(0).getCoreRowType());
+    assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT, rebuilt.get(0).getCoreRowType());
   }
 
   // ---- OccurrenceExtensionConverter compatibility ----
@@ -238,18 +241,20 @@ class DwcDpVerbatimConverterIntegrationTest {
   @Test
   void avroWrite_occurrenceExtensionExtractableByIdentifiersPipeline(@TempDir Path dir)
       throws Exception {
+    // event_pk added — OccurrenceExtensionBuilder resolves occurrence.event_fk against it
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate"),
-        List.of(RowFactory.create("EVT001", "2024-06-15")));
+        schema("event_pk", "eventID", "eventDate"),
+        List.of(RowFactory.create("EPK-001", "EVT001", "2024-06-15")));
+    // event_fk instead of eventID — occurrence never carries the natural key directly
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrenceID", "eventID", "scientificName"),
+        schema("occurrence_pk", "occurrenceID", "event_fk", "scientificName"),
         List.of(
-            RowFactory.create("OCC001", "EVT001", "Quercus robur"),
-            RowFactory.create("OCC002", "EVT001", "Pinus sylvestris")));
+            RowFactory.create("OPK-001", "OCC001", "EPK-001", "Quercus robur"),
+            RowFactory.create("OPK-002", "OCC002", "EPK-001", "Pinus sylvestris")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
@@ -257,7 +262,7 @@ class DwcDpVerbatimConverterIntegrationTest {
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String verbatimPath = "file://" + dir + "/verbatim.avro";
 
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)

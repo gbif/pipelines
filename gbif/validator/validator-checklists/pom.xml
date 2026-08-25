@@ -304,17 +304,6 @@
       <version>${guava.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.elasticsearch.client</groupId>
-      <artifactId>elasticsearch-rest-high-level-client</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.elasticsearch</groupId>
-          <artifactId>jna</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
     <!-- Logging -->
     <dependency>
       <groupId>org.slf4j</groupId>

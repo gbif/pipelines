@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp;
 
+import static org.gbif.pipelines.spark.dwcdp.DataPackageConverter.DATAPACKAGE_SUBDIR;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,15 +47,21 @@ class DataPackageConverterTest {
     spark.stop();
   }
 
+  private Dataset<Row> read(SparkSession spark, Path destination, String filename) {
+    return spark
+        .read()
+        .parquet("file://" + destination + "/" + DATAPACKAGE_SUBDIR + "/" + filename);
+  }
+
   @Test
   void tsvPackageIsConvertedToParquet(@TempDir Path destination) throws Exception {
     converter.convert(spark, fixtures.resolve("tsv-package"), "file://" + destination);
 
-    Dataset<Row> occ = spark.read().parquet("file://" + destination + "/occurrences.parquet");
+    Dataset<Row> occ = read(spark, destination, "occurrences.parquet");
     assertEquals(100, occ.count());
     assertEquals("Puma concolor", occ.filter("id = '1'").first().getAs("scientificName"));
 
-    Dataset<Row> taxa = spark.read().parquet("file://" + destination + "/taxa.parquet");
+    Dataset<Row> taxa = read(spark, destination, "taxa.parquet");
     assertEquals(3, taxa.count());
   }
 
@@ -62,7 +69,7 @@ class DataPackageConverterTest {
   void csvPackageIsConvertedToParquet(@TempDir Path destination) throws Exception {
     converter.convert(spark, fixtures.resolve("csv-package"), "file://" + destination);
 
-    Dataset<Row> df = spark.read().parquet("file://" + destination + "/occurrences.parquet");
+    Dataset<Row> df = read(spark, destination, "occurrences.parquet");
     assertEquals(3, df.count());
     // if delimiter was wrong everything lands in one column
     assertTrue(df.columns().length > 1);
@@ -74,7 +81,7 @@ class DataPackageConverterTest {
     converter.convert(spark, source, "file://" + destination);
 
     Dataset<Row> original = spark.read().parquet("file://" + source + "/occurrences.parquet");
-    Dataset<Row> converted = spark.read().parquet("file://" + destination + "/occurrences.parquet");
+    Dataset<Row> converted = read(spark, destination, "occurrences.parquet");
 
     assertEquals(original.count(), converted.count());
     assertEquals(original.schema(), converted.schema());
@@ -84,10 +91,11 @@ class DataPackageConverterTest {
   void mixedPackageHandlesBothFormats(@TempDir Path destination) throws Exception {
     converter.convert(spark, fixtures.resolve("mixed-package"), "file://" + destination);
 
-    Dataset<Row> occ = spark.read().parquet("file://" + destination + "/occurrences.parquet");
+    Dataset<Row> occ = read(spark, destination, "occurrences.parquet");
     assertEquals(2, occ.count());
 
-    Dataset<Row> media = spark.read().parquet("file://" + destination + "/media.parquet");
+    Dataset<Row> media =
+        spark.read().parquet("file://" + destination + "/" + DATAPACKAGE_SUBDIR + "/media.parquet");
     assertEquals(2, media.count());
   }
 
@@ -96,7 +104,7 @@ class DataPackageConverterTest {
     converter.convert(
         spark, fixtures.resolve("tsv-package/datapackage.json"), "file://" + destination);
 
-    Dataset<Row> df = spark.read().parquet("file://" + destination + "/occurrences.parquet");
+    Dataset<Row> df = read(spark, destination, "occurrences.parquet");
     assertEquals(100, df.count());
   }
 
@@ -105,7 +113,8 @@ class DataPackageConverterTest {
     converter.convert(spark, fixtures.resolve("tsv-package"), "file://" + destination);
 
     DataPackageDescriptor out =
-        new JacksonDataPackageParser().parse(destination.resolve("datapackage.json"));
+        new JacksonDataPackageParser()
+            .parse(destination.resolve(DATAPACKAGE_SUBDIR).resolve("datapackage.json"));
 
     assertEquals(2, out.resources().size());
 
@@ -125,7 +134,8 @@ class DataPackageConverterTest {
     converter.convert(spark, fixtures.resolve("mixed-package"), "file://" + destination);
 
     DataPackageDescriptor out =
-        new JacksonDataPackageParser().parse(destination.resolve("datapackage.json"));
+        new JacksonDataPackageParser()
+            .parse(destination.resolve(DATAPACKAGE_SUBDIR).resolve("datapackage.json"));
 
     ResourceDescriptor media =
         out.resources().stream().filter(r -> r.name().equals("media")).findFirst().orElseThrow();
@@ -140,7 +150,7 @@ class DataPackageConverterTest {
 
     // count actual parquet part files written
     List<Path> paths =
-        Files.list(destination)
+        Files.list(destination.resolve(DATAPACKAGE_SUBDIR))
             .filter(p -> p.getFileName().toString().startsWith("part-"))
             .toList();
     int fileCount = paths.size();
@@ -157,7 +167,8 @@ class DataPackageConverterTest {
     converter.convert(spark, fixtures.resolve("multi-partition-package"), "file://" + destination);
 
     DataPackageDescriptor out =
-        new JacksonDataPackageParser().parse(destination.resolve("datapackage.json"));
+        new JacksonDataPackageParser()
+            .parse(destination.resolve(DATAPACKAGE_SUBDIR).resolve("datapackage.json"));
 
     ResourceDescriptor occ =
         out.resources().stream()
@@ -180,7 +191,8 @@ class DataPackageConverterTest {
         spark, fixtures.resolve("tsv-package"), "file://" + destination);
 
     DataPackageDescriptor out =
-        new JacksonDataPackageParser().parse(destination.resolve("datapackage.json"));
+        new JacksonDataPackageParser()
+            .parse(destination.resolve(DATAPACKAGE_SUBDIR).resolve("datapackage.json"));
 
     ResourceDescriptor occ =
         out.resources().stream()

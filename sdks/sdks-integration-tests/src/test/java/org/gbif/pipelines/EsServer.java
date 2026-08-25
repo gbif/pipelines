@@ -46,11 +46,13 @@ public class EsServer extends ExternalResource {
 
   @Override
   protected void before() throws Throwable {
-    if (COUNTER.get() == 0) {
+    if (COUNTER.getAndIncrement() == 0) {
       embeddedElastic =
           new ElasticsearchContainer(
-                  DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss")
+                  DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch")
                       .withTag(getEsVersion()))
+              .withEnv("xpack.security.enabled", "false")
+              .withEnv("xpack.security.http.ssl.enabled", "false")
               .withReuse(true);
 
       embeddedElastic.start();
@@ -70,7 +72,7 @@ public class EsServer extends ExternalResource {
 
   @Override
   protected void after() {
-    if (COUNTER.addAndGet(-1) == 0) {
+    if (COUNTER.decrementAndGet() == 0) {
       embeddedElastic.stop();
       esClient.close();
       try {

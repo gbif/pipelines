@@ -1,14 +1,15 @@
 package org.gbif.pipelines.coordinator;
 
 import static org.gbif.pipelines.util.SparkConfUtil.evaluate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
 import org.gbif.pipelines.util.SparkConfUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class SparkConfTest {
 
@@ -16,53 +17,53 @@ public class SparkConfTest {
   public void testBoundaries() {
     int recordNumber = 1234;
 
-    Assert.assertTrue(evaluate("0 <= recordNumber < 5000", recordNumber));
-    Assert.assertFalse(evaluate("5000 <= recordNumber < 50_000", recordNumber));
-    Assert.assertTrue(evaluate("1000 <= recordNumber", recordNumber));
-    Assert.assertTrue(evaluate("recordNumber < 2000", recordNumber));
-    Assert.assertTrue(evaluate("recordNumber > 1000", recordNumber));
-    Assert.assertFalse(evaluate("recordNumber > 2000", recordNumber));
-    Assert.assertTrue(evaluate("recordCount < 100_000", 99999));
-    Assert.assertFalse(evaluate("recordCount < 100_000", 100_001));
+    assertTrue(evaluate("0 <= recordNumber < 5000", recordNumber));
+    Assertions.assertFalse(evaluate("5000 <= recordNumber < 50_000", recordNumber));
+    assertTrue(evaluate("1000 <= recordNumber", recordNumber));
+    assertTrue(evaluate("recordNumber < 2000", recordNumber));
+    assertTrue(evaluate("recordNumber > 1000", recordNumber));
+    Assertions.assertFalse(evaluate("recordNumber > 2000", recordNumber));
+    assertTrue(evaluate("recordCount < 100_000", 99999));
+    Assertions.assertFalse(evaluate("recordCount < 100_000", 100_001));
   }
 
   @Test
   public void testExclusiveBoundaries() {
     // Both exclusive: A < x < B
-    Assert.assertTrue(evaluate("0 < x < 5000", 1));
-    Assert.assertFalse(evaluate("0 < x < 5000", 0)); // lower boundary excluded
-    Assert.assertFalse(evaluate("0 < x < 5000", 5000)); // upper boundary excluded
-    Assert.assertTrue(evaluate("0 < x < 5000", 4999));
+    assertTrue(evaluate("0 < x < 5000", 1));
+    Assertions.assertFalse(evaluate("0 < x < 5000", 0)); // lower boundary excluded
+    Assertions.assertFalse(evaluate("0 < x < 5000", 5000)); // upper boundary excluded
+    assertTrue(evaluate("0 < x < 5000", 4999));
 
     // Lower exclusive, upper inclusive: A < x <= B
-    Assert.assertTrue(evaluate("0 < x <= 5000", 5000)); // upper boundary included
-    Assert.assertFalse(evaluate("0 < x <= 5000", 0)); // lower boundary excluded
-    Assert.assertTrue(evaluate("0 < x <= 5000", 1));
+    assertTrue(evaluate("0 < x <= 5000", 5000)); // upper boundary included
+    Assertions.assertFalse(evaluate("0 < x <= 5000", 0)); // lower boundary excluded
+    assertTrue(evaluate("0 < x <= 5000", 1));
 
     // Both inclusive: A <= x <= B
-    Assert.assertTrue(evaluate("0 <= x <= 5000", 0)); // lower boundary included
-    Assert.assertTrue(evaluate("0 <= x <= 5000", 5000)); // upper boundary included
-    Assert.assertFalse(evaluate("0 <= x <= 5000", 5001));
+    assertTrue(evaluate("0 <= x <= 5000", 0)); // lower boundary included
+    assertTrue(evaluate("0 <= x <= 5000", 5000)); // upper boundary included
+    Assertions.assertFalse(evaluate("0 <= x <= 5000", 5001));
 
     // Upper inclusive: x <= B
-    Assert.assertTrue(evaluate("x <= 5000", 5000));
-    Assert.assertFalse(evaluate("x <= 5000", 5001));
-    Assert.assertTrue(evaluate("x <= 5000", 4999));
+    assertTrue(evaluate("x <= 5000", 5000));
+    Assertions.assertFalse(evaluate("x <= 5000", 5001));
+    assertTrue(evaluate("x <= 5000", 4999));
 
     // Lower inclusive via >=: x >= A
-    Assert.assertTrue(evaluate("x >= 1000", 1000));
-    Assert.assertFalse(evaluate("x >= 1000", 999));
-    Assert.assertTrue(evaluate("x >= 1000", 1001));
+    assertTrue(evaluate("x >= 1000", 1000));
+    Assertions.assertFalse(evaluate("x >= 1000", 999));
+    assertTrue(evaluate("x >= 1000", 1001));
 
     // Reversed compound: B > x > A (same as A < x < B)
-    Assert.assertTrue(evaluate("5000 > x > 0", 1));
-    Assert.assertFalse(evaluate("5000 > x > 0", 0));
-    Assert.assertFalse(evaluate("5000 > x > 0", 5000));
+    assertTrue(evaluate("5000 > x > 0", 1));
+    Assertions.assertFalse(evaluate("5000 > x > 0", 0));
+    Assertions.assertFalse(evaluate("5000 > x > 0", 5000));
 
     // Reversed compound both inclusive: B >= x >= A
-    Assert.assertTrue(evaluate("5000 >= x >= 0", 0));
-    Assert.assertTrue(evaluate("5000 >= x >= 0", 5000));
-    Assert.assertFalse(evaluate("5000 >= x >= 0", 5001));
+    assertTrue(evaluate("5000 >= x >= 0", 0));
+    assertTrue(evaluate("5000 >= x >= 0", 5000));
+    Assertions.assertFalse(evaluate("5000 >= x >= 0", 5001));
   }
 
   @Test
