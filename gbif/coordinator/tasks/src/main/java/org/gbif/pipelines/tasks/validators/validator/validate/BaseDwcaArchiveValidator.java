@@ -50,7 +50,7 @@ public abstract class BaseDwcaArchiveValidator implements ArchiveValidator {
 
     validation = runValidations(validation);
 
-    log.info("Update validation key {}", message.getDatasetUuid());
+    log.info("Update validation {} with key {}", validation, message.getDatasetUuid());
     validationClient.update(validation);
 
     boolean hasFatalIssues =

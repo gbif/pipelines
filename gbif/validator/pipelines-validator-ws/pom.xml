@@ -9,8 +9,6 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <version>4.0.38.1-SNAPSHOT</version>
-
   <artifactId>pipelines-validator-ws</artifactId>
 
   <name>Pipelines :: GBIF :: Validator :: Web Services</name>

@@ -253,8 +253,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {
     Validation validation = get(validationKey);
 
-    validation.setStatus(Status.RUNNING);
-    update(validation);
+    if (!validation.isExecuting()) {
+      throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
+    }
 
     if (clbDatasetImport == null) {
       log.info("CLB validation response for {}} is null", validationKey);
@@ -272,6 +273,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       update(validation);
       return;
     }
+
+    validation.setStatus(Status.RUNNING);
+    update(validation);
 
     if (clbDatasetImport.getState() == ClbDatasetImport.State.failed) {
       validation.setStatus(Status.FAILED);
@@ -293,7 +297,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
             checklistValidator.createNextMessage(validation.getClbValidationMessage()));
         log.info("Next message for checklist validation {} has been sent", validationKey);
 
-      } catch (IOException e) {
+      } catch (Exception e) {
         log.error("Error processing CLB validation results for {}", validationKey, e);
         validation.setStatus(Status.FAILED);
         update(validation);
