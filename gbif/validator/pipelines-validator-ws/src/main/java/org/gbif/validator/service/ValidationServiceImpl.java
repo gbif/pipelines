@@ -302,6 +302,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         validation.setStatus(Status.FAILED);
         update(validation);
       }
+    } else {
+      log.info(
+          "Setting validation {} to FAILED since there is no valid clb validation", validationKey);
+      validation.setStatus(Status.FAILED);
+      update(validation);
     }
   }
 

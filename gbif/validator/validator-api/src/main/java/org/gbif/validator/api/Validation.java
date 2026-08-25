@@ -2,7 +2,6 @@ package org.gbif.validator.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.util.Date;
 import java.util.EnumSet;
@@ -89,9 +88,7 @@ public class Validation {
    * RabbitMQ message sent before triggering the CLB validation. Needed to resume the workflow after
    * CLB callback.
    */
-  @Hidden
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  private String clbValidationMessage;
+  @Hidden private String clbValidationMessage;
 
   /** Dataset parsed from EML file */
   @JsonIgnore private Dataset dataset;
