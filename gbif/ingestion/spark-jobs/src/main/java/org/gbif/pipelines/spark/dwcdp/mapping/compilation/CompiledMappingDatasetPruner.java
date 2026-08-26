@@ -3,11 +3,16 @@ package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 
 /**
  * Prunes an already compiled canonical mapping to the physical resources/columns declared by one
@@ -16,7 +21,8 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
  * <p>Compilation still happens against the complete official schema first. This class deliberately
  * does not re-run producer precedence after pruning: a producer that lost during canonical
  * compilation is never resurrected just because the canonical winner is unavailable in one dataset.
- * Dataset pruning is therefore an execution optimization, not a second mapping compiler.
+ * Dataset pruning is therefore a physical-plan specialization step, not a second producer
+ * precedence compiler. Every surviving Spark dependency must be declared by the dataset.
  */
 public final class CompiledMappingDatasetPruner {
 
@@ -24,8 +30,12 @@ public final class CompiledMappingDatasetPruner {
     Objects.requireNonNull(mapping, "mapping");
     Objects.requireNonNull(scope, "scope");
 
+    Map<String, List<CompiledRelationStep>> coreRelationsByOwner =
+        mapping.coreFragments().stream()
+            .collect(Collectors.toMap(CompiledCoreFragment::name, CompiledCoreFragment::relations));
     List<CompiledTargetProducer> coreTargets = pruneProducers(mapping.coreTargets(), scope);
-    List<CompiledTargetMerge> coreMerges = pruneMerges(mapping.coreTargetMerges(), scope);
+    List<CompiledTargetMerge> coreMerges =
+        pruneMerges(mapping.coreTargetMerges(), scope, coreRelationsByOwner);
     Set<String> coreMergeOwners = producerOwners(coreMerges);
 
     List<CompiledCoreFragment> coreFragments =
@@ -66,7 +76,11 @@ public final class CompiledMappingDatasetPruner {
 
   private Optional<CompiledExtension> pruneExtension(
       CompiledExtension extension, MappingDatasetScope scope) {
-    List<CompiledTargetMerge> merges = pruneMerges(extension.targetMerges(), scope);
+    Map<String, List<CompiledRelationStep>> relationsByOwner =
+        extension.fragments().stream()
+            .collect(Collectors.toMap(CompiledFragment::name, CompiledFragment::relations));
+    List<CompiledTargetMerge> merges =
+        pruneMerges(extension.targetMerges(), scope, relationsByOwner);
     Set<String> mergeOwners = producerOwners(merges);
 
     List<CompiledFragment> structurallyAvailable =
@@ -149,34 +163,28 @@ public final class CompiledMappingDatasetPruner {
   }
 
   private static CompiledCoreFragment pruneCoreFragment(
-      CompiledCoreFragment fragment,
-      MappingDatasetScope scope,
-      Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> mergeFields) {
-    List<CompiledTargetProducer> targets = pruneProducers(fragment.targets(), scope);
-    Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> requiredFields =
-        supportedFields(targetFields(targets), scope);
-    requiredFields.addAll(supportedFields(mergeFields, scope));
+      CompiledCoreFragment fragment, MappingDatasetScope scope, Set<FieldRef> mergeFields) {
+    Predicate<FieldRef> available = fieldAvailability(scope, fragment.relations());
+    List<CompiledTargetProducer> targets = pruneProducers(fragment.targets(), scope, available);
+    Set<FieldRef> requiredFields = supportedFields(targetFields(targets), available);
+    requiredFields.addAll(supportedFields(mergeFields, available));
     return new CompiledCoreFragment(
         fragment.name(),
         fragment.sourceResource(),
         fragment.path(),
-        pruneUnreachableRelations(fragment.relations(), requiredFields),
+        pruneUnreachableRelations(fragment.relations(), requiredFields, scope),
         targets);
   }
 
   private static CompiledFragment pruneFragmentTargets(
-      CompiledFragment fragment,
-      MappingDatasetScope scope,
-      Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> mergeFields) {
-    List<CompiledTargetProducer> targets = pruneProducers(fragment.targets(), scope);
-    Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> requiredFields =
-        supportedFields(targetFields(targets), scope);
-    requiredFields.addAll(supportedFields(mergeFields, scope));
+      CompiledFragment fragment, MappingDatasetScope scope, Set<FieldRef> mergeFields) {
+    Predicate<FieldRef> available = fieldAvailability(scope, fragment.relations());
+    List<CompiledTargetProducer> targets = pruneProducers(fragment.targets(), scope, available);
+    Set<FieldRef> requiredFields = supportedFields(targetFields(targets), available);
+    requiredFields.addAll(supportedFields(mergeFields, available));
     requiredFields.add(fragment.scopeKey());
-    Optional<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> rowIdentity =
-        fragment.rowIdentity().filter(scope::supports);
-    Optional<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> rowMatch =
-        fragment.rowMatch().filter(scope::supports);
+    Optional<FieldRef> rowIdentity = fragment.rowIdentity().filter(available);
+    Optional<FieldRef> rowMatch = fragment.rowMatch().filter(available);
     rowIdentity.ifPresent(requiredFields::add);
     rowMatch.ifPresent(requiredFields::add);
     return new CompiledFragment(
@@ -184,15 +192,14 @@ public final class CompiledMappingDatasetPruner {
         fragment.rowType(),
         fragment.sourceResource(),
         fragment.path(),
-        pruneUnreachableRelations(fragment.relations(), requiredFields),
+        pruneUnreachableRelations(fragment.relations(), requiredFields, scope),
         fragment.scopeKey(),
         rowIdentity,
         rowMatch,
         targets);
   }
 
-  private static Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef>
-      mergeFieldsForOwner(List<CompiledTargetMerge> merges, String owner) {
+  private static Set<FieldRef> mergeFieldsForOwner(List<CompiledTargetMerge> merges, String owner) {
     List<CompiledTargetProducer> owned =
         merges.stream()
             .flatMap(merge -> merge.producers().stream())
@@ -201,18 +208,15 @@ public final class CompiledMappingDatasetPruner {
     return targetFields(owned);
   }
 
-  private static Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> supportedFields(
-      Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> fields,
-      MappingDatasetScope scope) {
-    Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> supported =
-        new LinkedHashSet<>();
-    fields.stream().filter(scope::supports).forEach(supported::add);
+  private static Set<FieldRef> supportedFields(
+      Set<FieldRef> fields, Predicate<FieldRef> available) {
+    Set<FieldRef> supported = new LinkedHashSet<>();
+    fields.stream().filter(available).forEach(supported::add);
     return supported;
   }
 
-  private static Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> targetFields(
-      List<CompiledTargetProducer> targets) {
-    Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> fields = new LinkedHashSet<>();
+  private static Set<FieldRef> targetFields(List<CompiledTargetProducer> targets) {
+    Set<FieldRef> fields = new LinkedHashSet<>();
     for (CompiledTargetProducer target : targets) {
       target.sources().forEach(source -> fields.add(source.field()));
       target.contributionIdentity().ifPresent(source -> fields.add(source.field()));
@@ -231,8 +235,13 @@ public final class CompiledMappingDatasetPruner {
    */
   private static List<CompiledRelationStep> pruneUnreachableRelations(
       List<CompiledRelationStep> relations,
-      Set<org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef> requiredFields) {
+      Set<FieldRef> requiredFields,
+      MappingDatasetScope scope) {
     return relations.stream()
+        // A relation may be on a surviving logical field path but still be impossible to execute
+        // for this dataset (missing join key, selector, or declared filter dependency). Dataset
+        // specialization must remove it before Spark planning.
+        .filter(scope::supports)
         .filter(
             step ->
                 requiredFields.stream()
@@ -241,10 +250,22 @@ public final class CompiledMappingDatasetPruner {
   }
 
   private static List<CompiledTargetMerge> pruneMerges(
-      List<CompiledTargetMerge> merges, MappingDatasetScope scope) {
+      List<CompiledTargetMerge> merges,
+      MappingDatasetScope scope,
+      Map<String, List<CompiledRelationStep>> relationsByOwner) {
     List<CompiledTargetMerge> result = new ArrayList<>();
     for (CompiledTargetMerge merge : merges) {
-      List<CompiledTargetProducer> producers = pruneProducers(merge.producers(), scope);
+      List<CompiledTargetProducer> producers =
+          merge.producers().stream()
+              .map(
+                  producer ->
+                      pruneProducer(
+                          producer,
+                          scope,
+                          fieldAvailability(
+                              scope, relationsByOwner.getOrDefault(producer.owner(), List.of()))))
+              .flatMap(Optional::stream)
+              .toList();
       if (!producers.isEmpty()) {
         result.add(new CompiledTargetMerge(merge.targetTerm(), merge.aggregation(), producers));
       }
@@ -254,23 +275,38 @@ public final class CompiledMappingDatasetPruner {
 
   private static List<CompiledTargetProducer> pruneProducers(
       List<CompiledTargetProducer> producers, MappingDatasetScope scope) {
+    return pruneProducers(producers, scope, scope::supports);
+  }
+
+  private static List<CompiledTargetProducer> pruneProducers(
+      List<CompiledTargetProducer> producers,
+      MappingDatasetScope scope,
+      Predicate<FieldRef> available) {
     return producers.stream()
-        .map(producer -> pruneProducer(producer, scope))
+        .map(producer -> pruneProducer(producer, scope, available))
         .flatMap(Optional::stream)
         .toList();
   }
 
   private static Optional<CompiledTargetProducer> pruneProducer(
       CompiledTargetProducer producer, MappingDatasetScope scope) {
-    List<CompiledSourceField> sources = pruneSources(producer, scope);
-    if (sources.isEmpty() || sources.stream().noneMatch(scope::supports)) {
+    return pruneProducer(producer, scope, scope::supports);
+  }
+
+  private static Optional<CompiledTargetProducer> pruneProducer(
+      CompiledTargetProducer producer, MappingDatasetScope scope, Predicate<FieldRef> available) {
+    List<CompiledSourceField> sources = pruneSources(producer, scope, available);
+    boolean positional = fixedSourcePrefix(producer.aggregation()) > 0;
+    if (sources.isEmpty()
+        || (!positional && sources.stream().noneMatch(source -> available.test(source.field())))) {
       return Optional.empty();
     }
     if (producer.contributionIdentity().isPresent()
-        && !scope.supports(producer.contributionIdentity().orElseThrow())) {
+        && !available.test(producer.contributionIdentity().orElseThrow().field())) {
       return Optional.empty();
     }
-    if (producer.orderBy().isPresent() && !scope.supports(producer.orderBy().orElseThrow())) {
+    if (producer.orderBy().isPresent()
+        && !available.test(producer.orderBy().orElseThrow().field())) {
       return Optional.empty();
     }
     return Optional.of(
@@ -294,26 +330,29 @@ public final class CompiledMappingDatasetPruner {
    * after those fixed prefixes may still be pruned normally.
    */
   private static List<CompiledSourceField> pruneSources(
-      CompiledTargetProducer producer, MappingDatasetScope scope) {
-    int fixedPrefix =
-        producer.aggregation() instanceof ValueAggregation.PreferredLabeledOrFallback
-            ? 4
-            : producer.aggregation() instanceof ValueAggregation.LabeledOrFallback
-                ? 3
-                : producer.aggregation() instanceof ValueAggregation.FirstOrUrnFallback ? 2 : 0;
+      CompiledTargetProducer producer, MappingDatasetScope scope, Predicate<FieldRef> available) {
+    int fixedPrefix = fixedSourcePrefix(producer.aggregation());
 
     if (fixedPrefix == 0) {
-      return producer.sources().stream().filter(scope::supports).toList();
+      return producer.sources().stream().filter(source -> available.test(source.field())).toList();
     }
 
     List<CompiledSourceField> sources = new ArrayList<>();
     for (int i = 0; i < producer.sources().size(); i++) {
       CompiledSourceField source = producer.sources().get(i);
-      if (i < fixedPrefix || scope.supports(source)) {
+      if (i < fixedPrefix || available.test(source.field())) {
         sources.add(source);
       }
     }
     return List.copyOf(sources);
+  }
+
+  private static int fixedSourcePrefix(ValueAggregation aggregation) {
+    return aggregation instanceof ValueAggregation.PreferredLabeledOrFallback
+        ? 4
+        : aggregation instanceof ValueAggregation.LabeledOrFallback
+            ? 3
+            : aggregation instanceof ValueAggregation.FirstOrUrnFallback ? 2 : 0;
   }
 
   private static boolean supportsCoreFragmentStructure(
@@ -338,10 +377,30 @@ public final class CompiledMappingDatasetPruner {
     // row sources. Humboldt relies on this when target tables are absent and the physical survey
     // row becomes the base, so identity availability must continue to be resolved by the ENRICH
     // fallback selection below rather than rejected here.
+    Predicate<FieldRef> available = fieldAvailability(scope, fragment.relations());
     return scope.hasResource(fragment.sourceResource())
-        && scope.supports(fragment.scopeKey())
+        && available.test(fragment.scopeKey())
         && (rowComposition != ExtensionRowComposition.UNION
-            || fragment.rowIdentity().map(scope::supports).orElse(true));
+            || fragment.rowIdentity().map(available::test).orElse(true));
+  }
+
+  private static Predicate<FieldRef> fieldAvailability(
+      MappingDatasetScope scope, List<CompiledRelationStep> relations) {
+    Map<SchemaRelation, CompiledRelationStep> stepsByRelation =
+        relations.stream()
+            .collect(Collectors.toMap(CompiledRelationStep::relation, step -> step, (a, b) -> a));
+    return field -> {
+      if (!scope.supports(field)) {
+        return false;
+      }
+      for (SchemaRelation relation : field.path().relations()) {
+        CompiledRelationStep step = stepsByRelation.get(relation);
+        if (step != null && !scope.supports(step)) {
+          return false;
+        }
+      }
+      return true;
+    };
   }
 
   private static Set<String> producerOwners(List<CompiledTargetMerge> merges) {
