@@ -7,7 +7,10 @@ import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.mail.validator.ValidatorEmailService;
+import org.gbif.pipelines.validator.ChecklistValidator;
 import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
@@ -30,6 +33,8 @@ public class ClbValidationCleaner {
   private final ChecklistbankWsClient checklistbankWsClient;
   private final ValidatorEmailService emailService;
   private final ValidationMapper validationMapper;
+  private final MessagePublisher messagePublisher;
+  private final ChecklistValidator checklistValidator;
 
   @Value("${clb.cleaner.hoursOld}")
   private final int hoursOld;
@@ -60,24 +65,35 @@ public class ClbValidationCleaner {
                     checklistbankWsClient.checkImport(validation.getClbDatasetKey());
 
                 // set to FAILED by default
-                validation.setStatus(Validation.Status.FAILED);
+                setStatus(validation, Validation.Status.FAILED);
 
                 if (importResponse != null && importResponse.getStatus() != null) {
                   if (importResponse.getStatus().equalsIgnoreCase(ClbDatasetImport.FINISHED)) {
-                    validation.setStatus(Validation.Status.FINISHED);
+                    setStatus(validation, Validation.Status.FINISHED);
+
+                    // send message to continue the process
+                    messagePublisher.send(
+                        checklistValidator.createNextMessage(validation.getClbValidationMessage()));
                   } else if (importResponse
                       .getStatus()
                       .equalsIgnoreCase(ClbDatasetImport.CANCELED)) {
-                    validation.setStatus(Validation.Status.ABORTED);
+                    setStatus(validation, Validation.Status.ABORTED);
                   }
                 }
               } catch (Exception e) {
                 log.warn("Error getting clb validations for key {}", validation.getKey(), e);
-                validation.setStatus(Validation.Status.FAILED);
+                setStatus(validation, Validation.Status.FAILED);
               }
 
               validationMapper.update(validation);
               emailService.sendEmailNotification(validation);
             });
+  }
+
+  private void setStatus(Validation validation, Validation.Status newStatus) {
+    validation.getMetrics().getStepTypes().stream()
+        .filter(step -> step.getStepType().equals(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()))
+        .forEach(step -> step.setStatus(newStatus));
+    validation.setStatus(newStatus);
   }
 }

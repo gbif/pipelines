@@ -3,7 +3,6 @@ package org.gbif.pipelines.validator;
 import static org.gbif.pipelines.validator.ws.ChecklistbankWsClient.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -81,8 +80,7 @@ public class ChecklistValidator {
   }
 
   @SneakyThrows
-  public List<Metrics.FileInfo> evaluateResults(ClbDatasetImport clbDatasetImport)
-      throws IOException {
+  public List<Metrics.FileInfo> evaluateResults(ClbDatasetImport clbDatasetImport) {
     List<Metrics.FileInfo> results = new ArrayList<>();
 
     int datasetKey = clbDatasetImport.getDatasetKey();

@@ -259,8 +259,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
     if (clbDatasetImport == null) {
       log.info("CLB validation response for {}} is null", validationKey);
-      validation.setStatus(Status.FAILED);
-      update(validation);
+      updateChecklistValidatorStatus(validation, Status.FAILED);
       return;
     }
 
@@ -269,28 +268,23 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
           "CLB Dataset key {} is different from validation clb dataset key {}",
           clbDatasetImport.getDatasetKey(),
           validation.getClbDatasetKey());
-      validation.setStatus(Status.FAILED);
-      update(validation);
+      updateChecklistValidatorStatus(validation, Status.FAILED);
       return;
     }
 
-    validation.setStatus(Status.RUNNING);
-    update(validation);
+    updateChecklistValidatorStatus(validation, Status.RUNNING);
 
     if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.FAILED)) {
-      validation.setStatus(Status.FAILED);
-      update(validation);
+      updateChecklistValidatorStatus(validation, Status.FAILED);
     } else if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.CANCELED)) {
-      validation.setStatus(Status.ABORTED);
-      update(validation);
+      updateChecklistValidatorStatus(validation, Status.ABORTED);
     } else if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.FINISHED)) {
       try {
         List<Metrics.FileInfo> result = checklistValidator.evaluateResults(clbDatasetImport);
         log.info(
             "Validating DWCA checklist archive - finished calling checklistbank, merging results");
         result.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
-        validation.setStatus(Status.FINISHED);
-        update(validation);
+        updateChecklistValidatorStatus(validation, Status.FINISHED);
 
         // send message to continue the process
         messagePublisher.send(
@@ -299,15 +293,21 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
       } catch (Exception e) {
         log.error("Error processing CLB validation results for {}", validationKey, e);
-        validation.setStatus(Status.FAILED);
-        update(validation);
+        updateChecklistValidatorStatus(validation, Status.FAILED);
       }
     } else {
       log.info(
           "Setting validation {} to FAILED since there is no valid clb validation", validationKey);
-      validation.setStatus(Status.FAILED);
-      update(validation);
+      updateChecklistValidatorStatus(validation, Status.FAILED);
     }
+  }
+
+  private void updateChecklistValidatorStatus(Validation validation, Status newStatus) {
+    validation.getMetrics().getStepTypes().stream()
+        .filter(step -> step.getStepType().equals(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()))
+        .forEach(step -> step.setStatus(newStatus));
+    validation.setStatus(newStatus);
+    update(validation);
   }
 
   /** Persists a validation entity. */
