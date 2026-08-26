@@ -3,6 +3,7 @@ package org.gbif.pipelines.validator;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
@@ -17,16 +18,21 @@ import org.junit.jupiter.api.Test;
 /** Unit tests related to {@link org.gbif.pipelines.validator.ChecklistValidator}. */
 public class ChecklistValidatorTest {
 
+  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
   @Test
   public void testChecklistValidatorWithoutExtensions() {
 
     try {
-      ChecklistbankWsClient checklistbankWsClient =
-          new ChecklistbankWsClientMock("checklists/api_response_without_extensions.json");
+      ChecklistbankWsClient checklistbankWsClient = new ChecklistbankWsClientMock();
       ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient, null);
 
       // it simulates the response received in the callback
-      ClbDatasetImport clbDatasetImport = checklistbankWsClient.checkImporter(1);
+      ClbDatasetImport clbDatasetImport =
+          OBJECT_MAPPER.readValue(
+              ClassLoader.getSystemResourceAsStream(
+                  "checklists/api_response_without_extensions.json"),
+              ClbDatasetImport.class);
 
       // When
       List<Metrics.FileInfo> report = checklistValidator.evaluateResults(clbDatasetImport);
@@ -68,12 +74,14 @@ public class ChecklistValidatorTest {
   public void testChecklistValidatorWithExtensions() {
 
     try {
-      ChecklistbankWsClient checklistbankWsClient =
-          new ChecklistbankWsClientMock("checklists/api_response_with_extensions.json");
+      ChecklistbankWsClient checklistbankWsClient = new ChecklistbankWsClientMock();
       ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient, null);
 
       // it simulates the response received in the callback
-      ClbDatasetImport clbDatasetImport = checklistbankWsClient.checkImporter(1);
+      ClbDatasetImport clbDatasetImport =
+          OBJECT_MAPPER.readValue(
+              ClassLoader.getSystemResourceAsStream("checklists/api_response_with_extensions.json"),
+              ClbDatasetImport.class);
 
       // When
       List<Metrics.FileInfo> report = checklistValidator.evaluateResults(clbDatasetImport);

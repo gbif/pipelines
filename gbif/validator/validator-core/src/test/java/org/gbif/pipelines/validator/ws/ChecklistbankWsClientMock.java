@@ -13,15 +13,6 @@ public class ChecklistbankWsClientMock implements ChecklistbankWsClient {
   public static final int DEFAULT_KEY = 1;
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  private final ClbDatasetImport importerResponse;
-
-  @SneakyThrows
-  public ChecklistbankWsClientMock(String apiImporterResponsePath) {
-    importerResponse =
-        OBJECT_MAPPER.readValue(
-            ClassLoader.getSystemResourceAsStream(apiImporterResponsePath), ClbDatasetImport.class);
-  }
-
   @Override
   public ValidatorResponse validateArchive(String callback, byte[] file) {
     ValidatorResponse validatorResponse = new ValidatorResponse();
@@ -30,8 +21,11 @@ public class ChecklistbankWsClientMock implements ChecklistbankWsClient {
   }
 
   @Override
-  public ClbDatasetImport checkImporter(int key) {
-    return importerResponse;
+  public ImportResponse checkImport(int key) {
+    ImportResponse importResponse = new ImportResponse();
+    importResponse.setDatasetKey(DEFAULT_KEY);
+    importResponse.setStatus(ClbDatasetImport.State.finished);
+    return importResponse;
   }
 
   @SneakyThrows
