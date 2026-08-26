@@ -277,13 +277,13 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     validation.setStatus(Status.RUNNING);
     update(validation);
 
-    if (clbDatasetImport.getStatus() == ClbDatasetImport.State.failed) {
+    if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.FAILED)) {
       validation.setStatus(Status.FAILED);
       update(validation);
-    } else if (clbDatasetImport.getStatus() == ClbDatasetImport.State.canceled) {
+    } else if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.CANCELED)) {
       validation.setStatus(Status.ABORTED);
       update(validation);
-    } else if (clbDatasetImport.getStatus() == ClbDatasetImport.State.finished) {
+    } else if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.FINISHED)) {
       try {
         List<Metrics.FileInfo> result = checklistValidator.evaluateResults(clbDatasetImport);
         log.info(

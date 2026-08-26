@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import org.gbif.dwc.terms.Term;
-import org.gbif.validator.api.ClbDatasetImport;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,7 +34,7 @@ public interface ChecklistbankWsClient {
   @JsonIgnoreProperties(ignoreUnknown = true)
   class ImportResponse {
     private int datasetKey;
-    private ClbDatasetImport.State status;
+    private String status;
   }
 
   @GetMapping(path = "dataset/{key}/verbatim")

@@ -24,7 +24,7 @@ public class ChecklistbankWsClientMock implements ChecklistbankWsClient {
   public ImportResponse checkImport(int key) {
     ImportResponse importResponse = new ImportResponse();
     importResponse.setDatasetKey(DEFAULT_KEY);
-    importResponse.setStatus(ClbDatasetImport.State.finished);
+    importResponse.setStatus(ClbDatasetImport.FINISHED);
     return importResponse;
   }
 

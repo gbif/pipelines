@@ -10,9 +10,14 @@ import org.gbif.dwc.terms.Term;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ClbDatasetImport {
 
+  public static final String FINISHED = "finished";
+  public static final String CANCELED = "canceled";
+  public static final String FAILED = "failed";
+
   private int datasetKey;
   private int attempt;
-  private State status;
+  // mapped as string to avoid errors with changes in the CLB API
+  private String status;
   private Long bareNameCount;
   private Long distributionCount;
   private Long estimateCount;
@@ -28,21 +33,4 @@ public class ClbDatasetImport {
   private Map<String, Long> issuesCount = new HashMap<>();
   private Map<Term, Long> verbatimByTermCount = new HashMap<>();
   private Map<Term, Map<Term, Long>> verbatimByRowTypeCount = new HashMap<>();
-
-  public enum State {
-    finished,
-    canceled,
-    failed,
-    waiting,
-    preparing,
-    downloading,
-    processing,
-    deleting,
-    inserting,
-    matching,
-    indexing,
-    analyzing,
-    archiving,
-    exporting
-  }
 }

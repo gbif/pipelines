@@ -63,9 +63,11 @@ public class ClbValidationCleaner {
                 validation.setStatus(Validation.Status.FAILED);
 
                 if (importResponse != null && importResponse.getStatus() != null) {
-                  if (importResponse.getStatus() == ClbDatasetImport.State.finished) {
+                  if (importResponse.getStatus().equalsIgnoreCase(ClbDatasetImport.FINISHED)) {
                     validation.setStatus(Validation.Status.FINISHED);
-                  } else if (importResponse.getStatus() == ClbDatasetImport.State.canceled) {
+                  } else if (importResponse
+                      .getStatus()
+                      .equalsIgnoreCase(ClbDatasetImport.CANCELED)) {
                     validation.setStatus(Validation.Status.ABORTED);
                   }
                 }
