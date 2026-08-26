@@ -55,16 +55,22 @@ public class ClbValidationCleaner {
         .filter(v -> v.getClbDatasetKey() != null)
         .forEach(
             validation -> {
-              ClbDatasetImport clbDatasetImport =
-                  checklistbankWsClient.checkImporter(validation.getClbDatasetKey());
+              try {
+                ChecklistbankWsClient.ImportResponse importResponse =
+                    checklistbankWsClient.checkImport(validation.getClbDatasetKey());
 
-              if (clbDatasetImport == null || clbDatasetImport.getStatus() == null) {
+                // set to FAILED by default
                 validation.setStatus(Validation.Status.FAILED);
-              } else if (clbDatasetImport.getStatus() == ClbDatasetImport.State.finished) {
-                validation.setStatus(Validation.Status.FINISHED);
-              } else if (clbDatasetImport.getStatus() == ClbDatasetImport.State.canceled) {
-                validation.setStatus(Validation.Status.ABORTED);
-              } else {
+
+                if (importResponse != null && importResponse.getStatus() != null) {
+                  if (importResponse.getStatus() == ClbDatasetImport.State.finished) {
+                    validation.setStatus(Validation.Status.FINISHED);
+                  } else if (importResponse.getStatus() == ClbDatasetImport.State.canceled) {
+                    validation.setStatus(Validation.Status.ABORTED);
+                  }
+                }
+              } catch (Exception e) {
+                log.warn("Error getting clb validations for key {}", validation.getKey(), e);
                 validation.setStatus(Validation.Status.FAILED);
               }
 

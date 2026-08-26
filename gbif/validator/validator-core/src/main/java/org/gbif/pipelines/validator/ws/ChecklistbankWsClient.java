@@ -28,8 +28,15 @@ public interface ChecklistbankWsClient {
     private int key;
   }
 
-  @GetMapping(path = "importer/{key}")
-  ClbDatasetImport checkImporter(@PathVariable("key") int key);
+  @GetMapping(path = "dataset/{key}/import")
+  ImportResponse checkImport(@PathVariable("key") int key);
+
+  @Data
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  class ImportResponse {
+    private int datasetKey;
+    private ClbDatasetImport.State status;
+  }
 
   @GetMapping(path = "dataset/{key}/verbatim")
   VerbatimResponse getVerbatim(
