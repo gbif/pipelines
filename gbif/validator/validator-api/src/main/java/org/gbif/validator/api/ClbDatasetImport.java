@@ -32,6 +32,17 @@ public class ClbDatasetImport {
   public enum State {
     finished,
     canceled,
-    failed
+    failed,
+    waiting,
+    preparing,
+    downloading,
+    processing,
+    deleting,
+    inserting,
+    matching,
+    indexing,
+    analyzing,
+    archiving,
+    exporting
   }
 }
