@@ -1,5 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp;
 
+import static org.gbif.pipelines.spark.dwcdp.DataPackageConverter.DATAPACKAGE_SUBDIR;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -109,14 +111,16 @@ public class DwcDpVerbatimConverter {
         containsEvents,
         containsOccurrences);
 
-    String parquetBasePath =
-        PathUtil.interpretedAttemptPath(config.getOutputPath(), datasetId, attempt);
+    String workspacePath =
+        PathUtil.interpretedAttemptPath(config.getInputPath(), datasetId, attempt);
     String verbatimOutputPath =
         PathUtil.interpretedAttemptPath(config.getInputPath(), datasetId, attempt)
             + "/verbatim.avro";
+    String datapackagePath =
+        (workspacePath.endsWith("/") ? workspacePath : workspacePath + "/") + DATAPACKAGE_SUBDIR;
 
     DataPackage dataPackage =
-        DataPackageDescriptorReader.read(fileSystem, parquetBasePath + "/datapackage.json");
+        DataPackageDescriptorReader.read(fileSystem, datapackagePath + "/datapackage.json");
 
     // Production TableLoader: resolves table names to Parquet paths via the DataPackage
     // descriptor, returning Optional.empty() for tables not listed in the package.
@@ -124,7 +128,7 @@ public class DwcDpVerbatimConverter {
         tableName ->
             dataPackage
                 .findResource(tableName)
-                .map(r -> spark.read().parquet(parquetBasePath + "/" + r.getPath()));
+                .map(r -> spark.read().parquet(datapackagePath + "/" + r.getPath()));
 
     Dataset<ExtendedRecord> records;
     MappingExecutionOutput mappingExecution = null;
@@ -152,7 +156,7 @@ public class DwcDpVerbatimConverter {
     }
 
     if (ingestPlan != null) {
-      writeIngestPlans(fileSystem, parquetBasePath, mappingEngine, ingestPlan, dataPackage);
+      writeIngestPlans(fileSystem, workspacePath, mappingEngine, ingestPlan, dataPackage);
     }
 
     records.persist(StorageLevel.MEMORY_AND_DISK());
@@ -173,7 +177,7 @@ public class DwcDpVerbatimConverter {
           writeMetrics(
               spark,
               dataPackage,
-              parquetBasePath,
+              workspacePath,
               fileSystem,
               datasetId,
               Optional.of(records),
@@ -244,17 +248,17 @@ public class DwcDpVerbatimConverter {
 
   static void writeIngestPlans(
       FileSystem fileSystem,
-      String datasetBasePath,
+      String workspacePath,
       DwcDpMappingEngine mappingEngine,
       MappingPlan plan,
       DataPackage dataPackage) {
     writeTextFile(
         fileSystem,
-        datasetBasePath + "/" + INGEST_PLAN_COMPACT,
+        workspacePath + "/" + INGEST_PLAN_COMPACT,
         mappingEngine.targetPlan(plan, dataPackage));
     writeTextFile(
         fileSystem,
-        datasetBasePath + "/" + INGEST_PLAN_DETAILED,
+        workspacePath + "/" + INGEST_PLAN_DETAILED,
         mappingEngine.targetPlanDetailed(plan, dataPackage));
   }
 
@@ -302,7 +306,10 @@ public class DwcDpVerbatimConverter {
       Optional<Dataset<ExtendedRecord>> verbatimDataset,
       List<MappingBranchExecutionMetrics> branchMetrics) {
 
-    Map<String, Long> sourceCounts = sourceCounts(spark, dataPackage, datasetBasePath);
+    String datapackageSubdir =
+        (datasetBasePath.endsWith("/") ? datasetBasePath : datasetBasePath + "/")
+            + DATAPACKAGE_SUBDIR;
+    Map<String, Long> sourceCounts = sourceCounts(spark, dataPackage, datapackageSubdir);
     long occurrenceCount = sourceCounts.getOrDefault("occurrence", 0L);
     long eventCount = sourceCounts.getOrDefault("event", 0L);
     long largestFileCount =

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp;
 
+import static org.gbif.pipelines.spark.dwcdp.DataPackageConverter.DATAPACKAGE_SUBDIR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -1085,9 +1086,12 @@ class DwcDpVerbatimConverterTest {
   @Test
   void writeMetrics_writesExpectedCountsAsUtf16Yaml(@TempDir Path dir) throws Exception {
     writeParquet(
-        dir, "data/event.parquet", schema("eventID"), List.of(RowFactory.create("EVT001")));
+        dir.resolve(DATAPACKAGE_SUBDIR),
+        "data/event.parquet",
+        schema("eventID"),
+        List.of(RowFactory.create("EVT001")));
     writeParquet(
-        dir,
+        dir.resolve(DATAPACKAGE_SUBDIR),
         "data/occurrence.parquet",
         schema("occurrenceID", "eventID", "scientificName"),
         List.of(
@@ -1121,7 +1125,7 @@ class DwcDpVerbatimConverterTest {
   @Test
   void writeMetrics_eventOnly_occurrenceCountIsZero(@TempDir Path dir) throws Exception {
     writeParquet(
-        dir,
+        dir.resolve(DATAPACKAGE_SUBDIR),
         "data/event.parquet",
         schema("eventID", "eventDate"),
         List.of(
@@ -1326,12 +1330,12 @@ class DwcDpVerbatimConverterTest {
   @Test
   void writeMetrics_writesGenericMappingBranchFunnels(@TempDir Path dir) throws Exception {
     writeParquet(
-        dir,
+        dir.resolve(DATAPACKAGE_SUBDIR),
         "data/event.parquet",
         schema("event_pk", "eventID"),
         List.of(RowFactory.create("EPK-001", "EVT001")));
     writeParquet(
-        dir,
+        dir.resolve(DATAPACKAGE_SUBDIR),
         "data/occurrence.parquet",
         schema("occurrence_pk", "occurrenceID", "event_fk"),
         List.of(
@@ -1426,7 +1430,10 @@ class DwcDpVerbatimConverterTest {
   void writeMetrics_extensionSummarySectionReflectsWrittenRecords(@TempDir Path dir)
       throws Exception {
     writeParquet(
-        dir, "data/event.parquet", schema("eventID"), List.of(RowFactory.create("EVT001")));
+        dir.resolve(DATAPACKAGE_SUBDIR),
+        "data/event.parquet",
+        schema("eventID"),
+        List.of(RowFactory.create("EVT001")));
 
     DataPackage dp = DataPackageFixtures.withEvent("eventID");
     FileSystem fs = FileSystem.getLocal(new Configuration());

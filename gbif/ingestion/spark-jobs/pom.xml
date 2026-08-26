@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingestion</artifactId>
-        <version>4.0.38-SNAPSHOT</version>
+        <version>4.0.39-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -71,7 +71,7 @@
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>dwc-dp-schemas</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>${dwc-dp-schemas.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gbif.pipelines</groupId>
