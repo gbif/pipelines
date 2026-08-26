@@ -258,7 +258,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     }
 
     if (clbDatasetImport == null) {
-      log.info("CLB validation response for {}} is null", validationKey);
+      log.info("CLB validation response for {} is null", validationKey);
       updateChecklistValidatorStatus(validation, Status.FAILED);
       return;
     }
