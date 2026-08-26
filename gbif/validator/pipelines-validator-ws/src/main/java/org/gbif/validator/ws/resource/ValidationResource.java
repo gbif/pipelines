@@ -228,11 +228,11 @@ public class ValidationResource {
       consumes = MediaType.APPLICATION_JSON_VALUE)
   public void clbValidationCallback(
       @PathVariable("validationKey") UUID validationKey,
-      @RequestBody ClbDatasetImport clbDatasetImport) {
+      @RequestBody String clbDatasetImport) {
     log.info(
         "ClbValidationCallback import received for validation {}: {} ",
         validationKey,
         clbDatasetImport);
-    validationService.validateChecklistResults(validationKey, clbDatasetImport);
+//    validationService.validateChecklistResults(validationKey, clbDatasetImport);
   }
 }
