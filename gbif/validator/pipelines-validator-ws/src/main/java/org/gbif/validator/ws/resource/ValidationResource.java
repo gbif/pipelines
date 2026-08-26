@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
@@ -227,12 +226,11 @@ public class ValidationResource {
       path = "/clbValidationCallback/{validationKey}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   public void clbValidationCallback(
-      @PathVariable("validationKey") UUID validationKey,
-      @RequestBody String clbDatasetImport) {
+      @PathVariable("validationKey") UUID validationKey, @RequestBody String clbDatasetImport) {
     log.info(
         "ClbValidationCallback import received for validation {}: {} ",
         validationKey,
         clbDatasetImport);
-//    validationService.validateChecklistResults(validationKey, clbDatasetImport);
+    //    validationService.validateChecklistResults(validationKey, clbDatasetImport);
   }
 }
