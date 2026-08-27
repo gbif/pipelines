@@ -46,7 +46,13 @@ final class OccurrenceEnrichment {
   }
 
   static MappingPath usagePolicyPath(MappingPath material) {
-    return material.join("usage-policy").via("usagePolicy_fk").optional().exactlyOne();
+    MappingPath link =
+        material
+            .join("material-usage-policy")
+            .via("materialEntity_fk")
+            .optional()
+            .exactlyOne();
+    return link.join("usage-policy").via("usagePolicy_fk").optional().exactlyOne();
   }
 
   static MappingPath geologicalContextPath(MappingPath material) {
@@ -294,3 +300,4 @@ final class OccurrenceEnrichment {
     return column.endsWith("_pk") || column.endsWith("_fk");
   }
 }
+
