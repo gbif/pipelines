@@ -28,7 +28,7 @@ public interface ChecklistbankWsClient {
   }
 
   @GetMapping(path = "dataset/{key}/import")
-  ImportResponse checkImport(@PathVariable("key") int key);
+  List<ImportResponse> checkImport(@PathVariable("key") int key);
 
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)

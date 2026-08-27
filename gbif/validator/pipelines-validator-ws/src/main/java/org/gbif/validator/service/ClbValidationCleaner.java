@@ -61,8 +61,12 @@ public class ClbValidationCleaner {
         .forEach(
             validation -> {
               try {
-                ChecklistbankWsClient.ImportResponse importResponse =
+                List<ChecklistbankWsClient.ImportResponse> importResponses =
                     checklistbankWsClient.checkImport(validation.getClbDatasetKey());
+                ChecklistbankWsClient.ImportResponse importResponse =
+                    (importResponses != null && !importResponses.isEmpty())
+                        ? importResponses.get(0)
+                        : null;
 
                 // set to FAILED by default
                 setStatus(validation, Validation.Status.FAILED);
