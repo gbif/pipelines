@@ -192,13 +192,25 @@ public final class SparkExtensionMaterializer {
   private ExtensionMaterializationResult materializeUnion(
       TableLoader loader, CompiledExtension extension) {
     List<FragmentResult> rows = new ArrayList<>();
+    List<CompiledFragment> enrichments = new ArrayList<>();
     Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
 
     for (CompiledFragment fragment : extension.fragments()) {
+      if (fragment.rowMatch().isPresent()) {
+        enrichments.add(fragment);
+        continue;
+      }
       if (loader.load(fragment.sourceResource()).isEmpty()) {
         continue;
       }
       FragmentResult materialized = materializeFragment(loader, fragment, true, true, Set.of());
+      if (fragment.rowIdentity().isPresent()) {
+        materialized =
+            new FragmentResult(
+                materialized.dataset().filter(col(COL_ROW_KEY).isNotNull()),
+                materialized.parentKeySource(),
+                materialized.targets());
+      }
       rows.add(materialized);
       materialized.targets().forEach(targets::putIfAbsent);
     }
@@ -226,6 +238,33 @@ public final class SparkExtensionMaterializer {
     Dataset<Row> combined = rows.get(0).dataset();
     for (int i = 1; i < rows.size(); i++) {
       combined = combined.unionByName(rows.get(i).dataset(), true);
+    }
+
+    for (CompiledFragment fragment : enrichments) {
+      if (loader.load(fragment.sourceResource()).isEmpty()) {
+        continue;
+      }
+      FragmentResult enrichment = materializeFragment(loader, fragment, false, false, Set.of());
+      ensureNoDuplicateTargets(targets, enrichment.targets(), Set.of());
+
+      Dataset<Row> enrichmentForJoin = enrichment.dataset();
+      Column joinCondition =
+          combined.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY));
+      // When an enrichment is scoped by the same logical field it matches, row identity alone is
+      // sufficient. Otherwise keep the enrichment parent-scoped to avoid cross-parent matches.
+      if (!fragment.scopeKey().equals(fragment.rowMatch().orElseThrow())) {
+        joinCondition =
+            combined
+                .col(COL_PARENT_KEY)
+                .equalTo(enrichmentForJoin.col(COL_PARENT_KEY))
+                .and(joinCondition);
+      }
+      combined =
+          combined
+              .join(enrichmentForJoin, joinCondition, "left_outer")
+              .drop(enrichmentForJoin.col(COL_PARENT_KEY))
+              .drop(enrichmentForJoin.col(COL_ROW_KEY));
+      enrichment.targets().forEach(targets::putIfAbsent);
     }
 
     // UNION row identity is the visible extension payload within one parent, matching the legacy
@@ -352,15 +391,6 @@ public final class SparkExtensionMaterializer {
     }
 
     boolean distinctRowIdentity = identity.isPresent() && !identityAlias.equals(parentAlias);
-    Dataset<Row> materializedRows = pathResult.dataset();
-    if (rowProducing && filterEmptyPayload && identity.isPresent()) {
-      // Independent UNION branches may be rooted above optional child links. A null declared row
-      // identity means that child row does not exist and must not materialize as a routing-only
-      // extension record. ENRICH base rows are deliberately excluded: their row may remain valid
-      // even when an optional child identity is null (for example a survey with no linked target).
-      materializedRows = materializedRows.filter(col(identityAlias).isNotNull());
-    }
-
     Dataset<Row> grouped;
     if (rowProducing && identity.isEmpty()) {
       // No declared logical key means each physical source/result row is an extension row. This is
@@ -377,18 +407,20 @@ public final class SparkExtensionMaterializer {
                   .as(targetAlias(target.targetTerm(), target.owner(), mergeTerms)));
         }
       }
-      grouped = materializedRows.select(selected.toArray(Column[]::new));
+      grouped = pathResult.dataset().select(selected.toArray(Column[]::new));
     } else if (aggregates.isEmpty()) {
       if (distinctRowIdentity) {
         grouped =
-            materializedRows
+            pathResult
+                .dataset()
                 .select(
                     col(parentAlias).cast("string").as(COL_PARENT_KEY),
                     col(identityAlias).cast("string").as(COL_ROW_KEY))
                 .distinct();
       } else {
         grouped =
-            materializedRows
+            pathResult
+                .dataset()
                 .select(col(parentAlias).cast("string").as(COL_PARENT_KEY))
                 .distinct()
                 .withColumn(COL_ROW_KEY, col(COL_PARENT_KEY));
@@ -397,14 +429,16 @@ public final class SparkExtensionMaterializer {
       Column[] aggArray = aggregates.toArray(Column[]::new);
       if (distinctRowIdentity) {
         grouped =
-            materializedRows
+            pathResult
+                .dataset()
                 .groupBy(col(parentAlias), col(identityAlias))
                 .agg(aggArray[0], java.util.Arrays.copyOfRange(aggArray, 1, aggArray.length))
                 .withColumnRenamed(parentAlias, COL_PARENT_KEY)
                 .withColumnRenamed(identityAlias, COL_ROW_KEY);
       } else {
         grouped =
-            materializedRows
+            pathResult
+                .dataset()
                 .groupBy(col(parentAlias))
                 .agg(aggArray[0], java.util.Arrays.copyOfRange(aggArray, 1, aggArray.length))
                 .withColumnRenamed(parentAlias, COL_PARENT_KEY)

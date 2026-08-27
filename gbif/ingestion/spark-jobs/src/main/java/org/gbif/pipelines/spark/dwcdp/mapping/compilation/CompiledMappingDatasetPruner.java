@@ -87,7 +87,8 @@ public final class CompiledMappingDatasetPruner {
         extension.fragments().stream()
             .filter(
                 fragment ->
-                    supportsExtensionFragmentStructure(fragment, scope, extension.rowComposition()))
+                    supportsExtensionFragmentStructure(
+                        fragment, scope, extension.rowComposition()))
             .map(
                 fragment ->
                     pruneFragmentTargets(
@@ -163,7 +164,9 @@ public final class CompiledMappingDatasetPruner {
   }
 
   private static CompiledCoreFragment pruneCoreFragment(
-      CompiledCoreFragment fragment, MappingDatasetScope scope, Set<FieldRef> mergeFields) {
+      CompiledCoreFragment fragment,
+      MappingDatasetScope scope,
+      Set<FieldRef> mergeFields) {
     Predicate<FieldRef> available = fieldAvailability(scope, fragment.relations());
     List<CompiledTargetProducer> targets = pruneProducers(fragment.targets(), scope, available);
     Set<FieldRef> requiredFields = supportedFields(targetFields(targets), available);
@@ -177,7 +180,9 @@ public final class CompiledMappingDatasetPruner {
   }
 
   private static CompiledFragment pruneFragmentTargets(
-      CompiledFragment fragment, MappingDatasetScope scope, Set<FieldRef> mergeFields) {
+      CompiledFragment fragment,
+      MappingDatasetScope scope,
+      Set<FieldRef> mergeFields) {
     Predicate<FieldRef> available = fieldAvailability(scope, fragment.relations());
     List<CompiledTargetProducer> targets = pruneProducers(fragment.targets(), scope, available);
     Set<FieldRef> requiredFields = supportedFields(targetFields(targets), available);
@@ -199,7 +204,8 @@ public final class CompiledMappingDatasetPruner {
         targets);
   }
 
-  private static Set<FieldRef> mergeFieldsForOwner(List<CompiledTargetMerge> merges, String owner) {
+  private static Set<FieldRef> mergeFieldsForOwner(
+      List<CompiledTargetMerge> merges, String owner) {
     List<CompiledTargetProducer> owned =
         merges.stream()
             .flatMap(merge -> merge.producers().stream())
@@ -294,11 +300,14 @@ public final class CompiledMappingDatasetPruner {
   }
 
   private static Optional<CompiledTargetProducer> pruneProducer(
-      CompiledTargetProducer producer, MappingDatasetScope scope, Predicate<FieldRef> available) {
+      CompiledTargetProducer producer,
+      MappingDatasetScope scope,
+      Predicate<FieldRef> available) {
     List<CompiledSourceField> sources = pruneSources(producer, scope, available);
     boolean positional = fixedSourcePrefix(producer.aggregation()) > 0;
     if (sources.isEmpty()
-        || (!positional && sources.stream().noneMatch(source -> available.test(source.field())))) {
+        || (!positional
+            && sources.stream().noneMatch(source -> available.test(source.field())))) {
       return Optional.empty();
     }
     if (producer.contributionIdentity().isPresent()
@@ -330,7 +339,9 @@ public final class CompiledMappingDatasetPruner {
    * after those fixed prefixes may still be pruned normally.
    */
   private static List<CompiledSourceField> pruneSources(
-      CompiledTargetProducer producer, MappingDatasetScope scope, Predicate<FieldRef> available) {
+      CompiledTargetProducer producer,
+      MappingDatasetScope scope,
+      Predicate<FieldRef> available) {
     int fixedPrefix = fixedSourcePrefix(producer.aggregation());
 
     if (fixedPrefix == 0) {
@@ -381,7 +392,8 @@ public final class CompiledMappingDatasetPruner {
     return scope.hasResource(fragment.sourceResource())
         && available.test(fragment.scopeKey())
         && (rowComposition != ExtensionRowComposition.UNION
-            || fragment.rowIdentity().map(available::test).orElse(true));
+            || (fragment.rowIdentity().map(available::test).orElse(true)
+                && fragment.rowMatch().map(available::test).orElse(true)));
   }
 
   private static Predicate<FieldRef> fieldAvailability(

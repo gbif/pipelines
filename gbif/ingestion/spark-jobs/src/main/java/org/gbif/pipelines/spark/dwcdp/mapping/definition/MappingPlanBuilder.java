@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /** Fluent composition API for Event- or Occurrence-core plans. */
 public final class MappingPlanBuilder {
   private final String name;
   private final CoreType coreType;
   private final String coreSourceResource;
-  private TargetFieldMapping coreIdentity;
+  private Optional<TargetFieldMapping> coreIdentity = Optional.empty();
   private final List<TargetFieldMapping> coreFields = new ArrayList<>();
   private final List<CoreFragment> coreFragments = new ArrayList<>();
   private final Map<String, TargetMerge> coreTargetMerges = new LinkedHashMap<>();
@@ -30,9 +31,9 @@ public final class MappingPlanBuilder {
     return new MappingPlanBuilder(name, coreType, coreSourceResource);
   }
 
-  /** Configures execution identity independently of publisher-visible DwC terms. */
   public MappingPlanBuilder coreIdentity(ValueAggregation aggregation, FieldRef... sources) {
-    coreIdentity = TargetFieldMapping.oneOf("__dwca_core_id", aggregation, sources);
+    coreIdentity =
+        Optional.of(TargetFieldMapping.oneOf("__dwca_core_id", aggregation, sources));
     return this;
   }
 
@@ -79,7 +80,7 @@ public final class MappingPlanBuilder {
         name,
         coreType,
         coreSourceResource,
-        java.util.Optional.ofNullable(coreIdentity),
+        coreIdentity,
         coreFields,
         coreFragments,
         new ArrayList<>(coreTargetMerges.values()),
@@ -129,6 +130,14 @@ public final class MappingPlanBuilder {
             "Fragment " + fragment.name() + " targets " + fragment.rowType() + ", not " + rowType);
       }
       parent.extensions.computeIfAbsent(rowType, ignored -> new ArrayList<>()).add(fragment);
+      return this;
+    }
+
+    /** Imports reusable fragments into this extension in declaration order. */
+    public ExtensionBuilder importFragments(Iterable<ExtensionFragment> fragments) {
+      for (ExtensionFragment fragment : fragments) {
+        importFragment(fragment);
+      }
       return this;
     }
 
