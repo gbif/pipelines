@@ -95,9 +95,7 @@ class MultimediaMappingTest {
 
     Dataset<Row> occurrences =
         spark.createDataFrame(
-            List.of(
-                RowFactory.create("O1", "OCC-1", "E1"),
-                RowFactory.create("O2", "OCC-2", "E1")),
+            List.of(RowFactory.create("O1", "OCC-1", "E1"), RowFactory.create("O2", "OCC-2", "E1")),
             new StructType()
                 .add("occurrence_pk", DataTypes.StringType)
                 .add("occurrenceID", DataTypes.StringType)
@@ -153,7 +151,11 @@ class MultimediaMappingTest {
     return spark.createDataFrame(
         List.of(
             RowFactory.create(
-                "UP1", "Copyright", "Example holder", null, null,
+                "UP1",
+                "Copyright",
+                "Example holder",
+                null,
+                null,
                 "https://creativecommons.org/licenses/by/4.0/")),
         new StructType()
             .add("usagePolicy_pk", DataTypes.StringType)

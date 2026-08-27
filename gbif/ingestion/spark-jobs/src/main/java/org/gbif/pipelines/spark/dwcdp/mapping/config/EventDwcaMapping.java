@@ -144,8 +144,10 @@ public final class EventDwcaMapping {
         .importFragment(ReferenceMapping.materialProtocolReferencesForEvent(graph))
         .importFragment(ReferenceMapping.occurrenceIdentificationReferencesForEvent(graph))
         .importFragment(ReferenceMapping.occurrenceMolecularProtocolReferencesForEvent(graph))
-        .importFragment(ReferenceMapping.occurrenceDnaAnalysisIdentificationReferencesForEvent(graph))
-        .importFragment(ReferenceMapping.occurrenceDnaSequenceIdentificationReferencesForEvent(graph))
+        .importFragment(
+            ReferenceMapping.occurrenceDnaAnalysisIdentificationReferencesForEvent(graph))
+        .importFragment(
+            ReferenceMapping.occurrenceDnaSequenceIdentificationReferencesForEvent(graph))
         .endExtension()
         .extension(HumboldtMapping.ROW_TYPE_HUMBOLDT)
         .importFragment(HumboldtMapping.surveyTargets(graph))

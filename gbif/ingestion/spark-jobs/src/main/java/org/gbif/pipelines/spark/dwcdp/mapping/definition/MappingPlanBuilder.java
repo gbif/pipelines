@@ -32,8 +32,7 @@ public final class MappingPlanBuilder {
   }
 
   public MappingPlanBuilder coreIdentity(ValueAggregation aggregation, FieldRef... sources) {
-    coreIdentity =
-        Optional.of(TargetFieldMapping.oneOf("__dwca_core_id", aggregation, sources));
+    coreIdentity = Optional.of(TargetFieldMapping.oneOf("__dwca_core_id", aggregation, sources));
     return this;
   }
 

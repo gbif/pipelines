@@ -41,7 +41,10 @@ class DwcDpMappingEngineDatasetPruningTest {
 
   @BeforeAll
   void setupSpark() {
-    spark = SparkTestSession.createBuilder().appName("DwcDpMappingEngineDatasetPruningTest").getOrCreate();
+    spark =
+        SparkTestSession.createBuilder()
+            .appName("DwcDpMappingEngineDatasetPruningTest")
+            .getOrCreate();
   }
 
   @AfterAll
@@ -132,7 +135,8 @@ class DwcDpMappingEngineDatasetPruningTest {
     CompiledMapping scoped = engine.compile(plan, dataPackage);
     MappingInputRequirements requirements = engine.inputRequirements(plan, dataPackage);
 
-    assertFalse(requirements.resource("identification").columns().contains("isAcceptedIdentification"));
+    assertFalse(
+        requirements.resource("identification").columns().contains("isAcceptedIdentification"));
     assertFalse(
         scoped.extensions().stream()
             .flatMap(extension -> extension.fragments().stream())
@@ -153,29 +157,27 @@ class DwcDpMappingEngineDatasetPruningTest {
       StructType schema = sparkSchema(resource);
       List<Row> rows =
           switch (resource.getName()) {
-            case "event" ->
-                List.of(row(resource, Map.of("event_pk", "EPK-1", "eventDate", "2024-06-15")));
-            case "occurrence" ->
-                List.of(
-                    row(
-                        resource,
-                        Map.of(
-                            "occurrence_pk", "OPK-1",
-                            "occurrenceID", "OCC1",
-                            "event_fk", "EPK-1",
-                            "occurrenceStatus", "present")));
-            case "identification" ->
-                List.of(
-                    row(
-                        resource,
-                        Map.of(
-                            "identification_pk", "IPK-1",
-                            "identificationID", "ID1",
-                            "occurrence_fk", "OPK-1",
-                            "scientificName", "Parus major",
-                            "typeStatus", "",
-                            "identifiedBy", "Ada",
-                            "dateIdentified", "2024-06-16")));
+            case "event" -> List.of(
+                row(resource, Map.of("event_pk", "EPK-1", "eventDate", "2024-06-15")));
+            case "occurrence" -> List.of(
+                row(
+                    resource,
+                    Map.of(
+                        "occurrence_pk", "OPK-1",
+                        "occurrenceID", "OCC1",
+                        "event_fk", "EPK-1",
+                        "occurrenceStatus", "present")));
+            case "identification" -> List.of(
+                row(
+                    resource,
+                    Map.of(
+                        "identification_pk", "IPK-1",
+                        "identificationID", "ID1",
+                        "occurrence_fk", "OPK-1",
+                        "scientificName", "Parus major",
+                        "typeStatus", "",
+                        "identifiedBy", "Ada",
+                        "dateIdentified", "2024-06-16")));
             default -> List.of();
           };
       tables.put(resource.getName(), spark.createDataFrame(rows, schema));
@@ -185,8 +187,7 @@ class DwcDpMappingEngineDatasetPruningTest {
 
     // This is deliberately the same engine entry point used by DwcDpVerbatimConverter.convert().
     // The regression is only considered covered once Spark materializes the complete Event plan.
-    try (MappingExecutionOutput output =
-        engine.executeWithMetrics(loader, plan, dataPackage)) {
+    try (MappingExecutionOutput output = engine.executeWithMetrics(loader, plan, dataPackage)) {
       assertEquals(1, output.records().collectAsList().size());
     }
   }

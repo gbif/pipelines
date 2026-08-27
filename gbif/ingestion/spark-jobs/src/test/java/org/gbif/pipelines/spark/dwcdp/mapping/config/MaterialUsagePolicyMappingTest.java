@@ -34,7 +34,8 @@ class MaterialUsagePolicyMappingTest {
 
   @BeforeAll
   void setup() {
-    spark = SparkTestSession.createBuilder().appName("MaterialUsagePolicyMappingTest").getOrCreate();
+    spark =
+        SparkTestSession.createBuilder().appName("MaterialUsagePolicyMappingTest").getOrCreate();
     graph = new DwcDpSchemaLoader().current();
   }
 
@@ -75,7 +76,8 @@ class MaterialUsagePolicyMappingTest {
     assertEquals(1, rows.size());
     Row row = rows.get(0);
     assertEquals("© Example Museum", row.getAs(result.columnName(TargetTerms.resolve("rights"))));
-    assertEquals("Example Museum", row.getAs(result.columnName(TargetTerms.resolve("rightsHolder"))));
+    assertEquals(
+        "Example Museum", row.getAs(result.columnName(TargetTerms.resolve("rightsHolder"))));
     assertEquals("public", row.getAs(result.columnName(TargetTerms.resolve("accessRights"))));
     assertEquals(
         "https://creativecommons.org/licenses/by/4.0/",

@@ -248,8 +248,7 @@ public final class SparkExtensionMaterializer {
       ensureNoDuplicateTargets(targets, enrichment.targets(), Set.of());
 
       Dataset<Row> enrichmentForJoin = enrichment.dataset();
-      Column joinCondition =
-          combined.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY));
+      Column joinCondition = combined.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY));
       // When an enrichment is scoped by the same logical field it matches, row identity alone is
       // sufficient. Otherwise keep the enrichment parent-scoped to avoid cross-parent matches.
       if (!fragment.scopeKey().equals(fragment.rowMatch().orElseThrow())) {

@@ -164,8 +164,7 @@ public final class MultimediaMapping {
   /** License/rights metadata owned by a media row through media-usage-policy. */
   public static ExtensionFragment usagePolicy(SchemaGraph graph) {
     MappingPath media = MappingPath.root(graph, "media");
-    MappingPath link =
-        media.join("media-usage-policy").via("media_fk").optional().fanOut();
+    MappingPath link = media.join("media-usage-policy").via("media_fk").optional().fanOut();
     MappingPath usagePolicy =
         link.join("usage-policy").via("usagePolicy_fk").optional().exactlyOne();
 
