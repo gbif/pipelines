@@ -18,11 +18,13 @@ public class ChecklistbankWsManualTest {
             "https://api.dev.checklistbank.org", "user", "pwd", "http://test.com");
 
     int datasetKey =
-        checklistValidator.submitValidation(
-            Paths.get(
-                ClassLoader.getSystemResource("checklists/archive_without_extensions.zip")
-                    .getFile()),
-            UUID.randomUUID());
+        checklistValidator
+            .submitValidation(
+                Paths.get(
+                    ClassLoader.getSystemResource("checklists/archive_without_extensions.zip")
+                        .getFile()),
+                UUID.randomUUID())
+            .join();
 
     Assertions.assertTrue(datasetKey > 0);
   }

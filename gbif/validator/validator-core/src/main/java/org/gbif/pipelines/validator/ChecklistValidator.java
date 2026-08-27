@@ -3,6 +3,7 @@ package org.gbif.pipelines.validator;
 import static org.gbif.pipelines.validator.ws.ChecklistbankWsClient.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -62,21 +64,27 @@ public class ChecklistValidator {
         .build(ChecklistbankWsClient.class);
   }
 
-  @SneakyThrows
-  public int submitValidation(Path archivePath, UUID validationKey) {
-    ValidatorResponse validatorResponse =
-        checklistbankWsClient.validateArchive(
-            callbackUrl + "/" + validationKey, Files.readAllBytes(archivePath));
+  public CompletableFuture<Integer> submitValidation(Path archivePath, UUID validationKey) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            ValidatorResponse validatorResponse =
+                checklistbankWsClient.validateArchive(
+                    callbackUrl + "/" + validationKey, Files.readAllBytes(archivePath));
 
-    int datasetKey = validatorResponse.getKey();
-    if (datasetKey == 0) {
-      throw new IllegalStateException(
-          "Validation failed with key zero for "
-              + archivePath
-              + ". Most likely is that the CLB API service is off.");
-    }
+            int datasetKey = validatorResponse.getKey();
+            if (datasetKey == 0) {
+              throw new IllegalStateException(
+                  "Validation failed with key zero for "
+                      + archivePath
+                      + ". Most likely is that the CLB API service is off.");
+            }
 
-    return datasetKey;
+            return datasetKey;
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        });
   }
 
   @SneakyThrows

@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -233,6 +234,7 @@ public class ValidationResource {
         "ClbValidationCallback import received for validation {}: {} ",
         validationKey,
         clbDatasetImport);
-    validationService.validateChecklistResults(validationKey, clbDatasetImport);
+    CompletableFuture.runAsync(
+        () -> validationService.validateChecklistResults(validationKey, clbDatasetImport));
   }
 }

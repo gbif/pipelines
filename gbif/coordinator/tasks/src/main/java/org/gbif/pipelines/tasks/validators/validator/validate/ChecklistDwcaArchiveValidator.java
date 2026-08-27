@@ -2,9 +2,12 @@ package org.gbif.pipelines.tasks.validators.validator.validate;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildChecklistDwcaInputPath;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.UUID;
 import lombok.Builder;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
@@ -33,27 +36,54 @@ public class ChecklistDwcaArchiveValidator extends BaseDwcaArchiveValidator {
   }
 
   @Override
+  @SneakyThrows
   public Validation runValidations(Validation validation) {
     // DWCA validation
     validation = validateDwcaArchive(validation);
+    validation.setStatus(Validation.Status.WAITING_FOR_CHECKLISTBANK);
+    validation.setClbValidationMessage(OBJECT_MAPPER.writeValueAsString(message));
 
-    try {
-      int datasetKey =
-          checklistValidator.submitValidation(
-              Paths.get(
-                  buildChecklistDwcaInputPath(
-                          config.archiveRepository, message.getDatasetUuid(), validation.getFile())
-                      .toString()),
-              validation.getKey());
+    Path archivePath =
+        buildChecklistDwcaInputPath(
+            config.archiveRepository, message.getDatasetUuid(), validation.getFile());
+    UUID validationKey = validation.getKey();
 
-      log.info("Submitted DWCA archive validation with dataset key {}", datasetKey);
+    checklistValidator
+        .submitValidation(archivePath, validationKey)
+        .whenComplete(
+            (datasetKey, throwable) -> {
+              Validation currentValidation = validationClient.get(validationKey);
+              if (currentValidation == null) {
+                log.error("Couldn't find validation for {}", validationKey, throwable);
+                throw new IllegalStateException("Couldn't find validation for " + validationKey);
+              }
 
-      validation.setClbDatasetKey(datasetKey);
-      validation.setClbValidationMessage(OBJECT_MAPPER.writeValueAsString(message));
-    } catch (Exception ex) {
-      log.error("Error validating Checklist DWCA archive", ex);
-      validation.setStatus(Validation.Status.FAILED);
-    }
+              if (throwable != null || datasetKey == null) {
+                log.error(
+                    "Error submitting CLB validation for {} and datasetKey received {}",
+                    validationKey,
+                    datasetKey,
+                    throwable);
+                currentValidation.setStatus(Validation.Status.FAILED);
+                validationClient.update(currentValidation);
+                return;
+              }
+
+              log.info(
+                  "CLB archive validation submitted with dataset key {} for validation {}",
+                  datasetKey,
+                  validationKey);
+              currentValidation.setClbDatasetKey(datasetKey);
+              try {
+                currentValidation.setClbValidationMessage(
+                    OBJECT_MAPPER.writeValueAsString(message));
+              } catch (JsonProcessingException e) {
+                log.error(
+                    "Error updating CLB validation message for validation {}", validationKey, e);
+                currentValidation.setStatus(Validation.Status.FAILED);
+              }
+              validationClient.update(currentValidation);
+            });
 
     return validation;
   }
