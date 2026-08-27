@@ -119,6 +119,12 @@ public class EsIndexUtils {
           options.getIndexSearchSlowlogThresholdFetchInfo());
     }
 
+    settings.put(
+        Field.INDEX_QUERY_DEFAULT_FIELD,
+        EsQueryBoosts.defaultFieldSetting(options.getEsSchemaPath()));
+
+    settings.put(Field.INDEX_CODEC, options.getIndexCodec()); // Use best compression for the index
+
     return IndexParams.builder()
         .indexName(options.getEsIndexName())
         .datasetKey(options.getDatasetId())

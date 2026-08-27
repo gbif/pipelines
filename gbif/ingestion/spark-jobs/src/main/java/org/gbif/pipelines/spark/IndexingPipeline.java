@@ -226,6 +226,7 @@ public class IndexingPipeline {
     String[] esHosts;
     String datasetId;
     Integer attempt;
+    @Builder.Default String indexCodec = "best_compression";
     @Builder.Default Integer indexNumberShards = 1;
     @Builder.Default String indexRefreshInterval = "40s";
     @Builder.Default Integer indexNumberReplicas = 1;
