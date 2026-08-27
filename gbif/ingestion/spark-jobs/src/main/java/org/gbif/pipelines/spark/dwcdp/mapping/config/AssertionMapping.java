@@ -46,6 +46,64 @@ public final class AssertionMapping {
             List.of()));
   }
 
+  /** Direct Occurrence assertions promoted to Event core and routed back to that occurrence. */
+  public static ExtensionFragment occurrenceAssertionsForEvent(SchemaGraph graph) {
+    return assertions(
+        graph,
+        Spec.routed(
+            "occurrence-assertions-for-event",
+            "occurrence",
+            "event_fk",
+            "occurrence-assertion",
+            "occurrence_fk",
+            List.of(OwnershipPathStep.fanOut("occurrence-assertion", "occurrence_fk"))));
+  }
+
+  /** Material assertions owned by a specific Event-nested Occurrence. */
+  public static ExtensionFragment materialAssertionsForEvent(SchemaGraph graph) {
+    return assertions(
+        graph,
+        Spec.routed(
+            "material-assertions-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            "material-assertion",
+            "materialEntity_fk",
+            List.of(OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"))));
+  }
+
+  /** Nucleotide-analysis assertions owned through a specific Occurrence evidence material. */
+  public static ExtensionFragment occurrenceNucleotideAnalysisAssertionsForEvent(
+      SchemaGraph graph) {
+    return assertions(
+        graph,
+        Spec.routed(
+            "material-nucleotide-analysis-assertions-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            "nucleotide-analysis-assertion",
+            "nucleotideAnalysis_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"))));
+  }
+
+  /** Molecular-protocol assertions owned through a specific Occurrence evidence material. */
+  public static ExtensionFragment occurrenceMolecularProtocolAssertionsForEvent(SchemaGraph graph) {
+    return assertions(
+        graph,
+        Spec.routed(
+            "material-molecular-protocol-assertions-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            "molecular-protocol-assertion",
+            "molecularProtocol_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"))));
+  }
+
   /** Survey assertions promoted to their owning Event. */
   public static ExtensionFragment surveyAssertionsForEvent(SchemaGraph graph) {
     return assertions(
@@ -166,7 +224,8 @@ public final class AssertionMapping {
     Objects.requireNonNull(graph, "graph");
     Objects.requireNonNull(spec, "spec");
 
-    MappingPath current = MappingPath.root(graph, spec.sourceResource());
+    MappingPath source = MappingPath.root(graph, spec.sourceResource());
+    MappingPath current = source;
     for (OwnershipPathStep step : spec.ownershipPath()) {
       current = step.appendTo(current);
     }
@@ -187,6 +246,9 @@ public final class AssertionMapping {
             .scopeKey(spec.scopeKeyColumn())
             .rowIdentity(assertion.field("assertionID"));
     addAssertionFields(builder, assertion, protocol);
+    if (spec.routeToOccurrence()) {
+      OccurrenceExtensionRouting.addOccurrenceId(builder, source);
+    }
     return builder.build();
   }
 
@@ -229,7 +291,42 @@ public final class AssertionMapping {
       String scopeKeyColumn,
       String assertionResource,
       String assertionViaColumn,
-      List<OwnershipPathStep> ownershipPath) {
+      List<OwnershipPathStep> ownershipPath,
+      boolean routeToOccurrence) {
+
+    private Spec(
+        String fragmentName,
+        String sourceResource,
+        String scopeKeyColumn,
+        String assertionResource,
+        String assertionViaColumn,
+        List<OwnershipPathStep> ownershipPath) {
+      this(
+          fragmentName,
+          sourceResource,
+          scopeKeyColumn,
+          assertionResource,
+          assertionViaColumn,
+          ownershipPath,
+          false);
+    }
+
+    static Spec routed(
+        String fragmentName,
+        String sourceResource,
+        String scopeKeyColumn,
+        String assertionResource,
+        String assertionViaColumn,
+        List<OwnershipPathStep> ownershipPath) {
+      return new Spec(
+          fragmentName,
+          sourceResource,
+          scopeKeyColumn,
+          assertionResource,
+          assertionViaColumn,
+          ownershipPath,
+          true);
+    }
 
     private Spec {
       Objects.requireNonNull(fragmentName, "fragmentName");

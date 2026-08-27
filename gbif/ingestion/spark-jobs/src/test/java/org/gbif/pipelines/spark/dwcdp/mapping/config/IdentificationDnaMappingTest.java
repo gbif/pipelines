@@ -66,7 +66,12 @@ class IdentificationDnaMappingTest {
         identificationExtension(EventDwcaMapping.current(graph));
     assertEquals(ExtensionRowComposition.UNION, eventIdentifications.rowComposition());
     assertEquals(
-        Set.of("event-dna-analysis-identifications", "event-dna-sequence-identifications"),
+        Set.of(
+            "event-dna-analysis-identifications",
+            "event-dna-sequence-identifications",
+            "occurrence-identification-history-for-event",
+            "material-dna-analysis-identifications-for-event-occurrence",
+            "material-dna-sequence-identifications-for-event-occurrence"),
         fragmentNames(eventIdentifications));
 
     ExtensionMapping occurrenceIdentifications =
