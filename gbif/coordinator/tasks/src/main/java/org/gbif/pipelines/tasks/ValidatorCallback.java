@@ -106,7 +106,10 @@ public class ValidatorCallback<I extends PipelineBasedMessage, O extends Pipelin
       log.info("Handler has been finished, datasetKey - {}", datasetKey);
 
       Validations.updateStatus(
-          validationClient, message.getDatasetUuid(), stepType, Validation.Status.FINISHED);
+          validationClient,
+          message.getDatasetUuid(),
+          stepType,
+          handler.getFinalValidationStatus(message));
 
       // Send a wrapped outgoing message to Balancer queue
       O outgoingMessage = handler.createOutgoingMessage(message);
@@ -124,9 +127,6 @@ public class ValidatorCallback<I extends PipelineBasedMessage, O extends Pipelin
                 + outgoingMessage;
         log.info(logInfo);
       }
-
-      updateValidatorInfoStatus(handler.getFinalValidationStatus(message));
-
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
       log.error(error, ex);
@@ -159,10 +159,6 @@ public class ValidatorCallback<I extends PipelineBasedMessage, O extends Pipelin
           message.getDatasetUuid());
     }
     return false;
-  }
-
-  private void updateValidatorInfoStatus(Status status) {
-    updateValidatorInfoStatus(status, null);
   }
 
   private void updateValidatorInfoStatus(Status status, String text) {
