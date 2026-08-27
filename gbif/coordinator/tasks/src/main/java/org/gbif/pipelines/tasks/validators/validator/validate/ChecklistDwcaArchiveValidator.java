@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.validators.validator.validate;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildChecklistDwcaInputPath;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -74,14 +73,6 @@ public class ChecklistDwcaArchiveValidator extends BaseDwcaArchiveValidator {
                   datasetKey,
                   validationKey);
               currentValidation.setClbDatasetKey(datasetKey);
-              try {
-                currentValidation.setClbValidationMessage(
-                    OBJECT_MAPPER.writeValueAsString(message));
-              } catch (JsonProcessingException e) {
-                log.error(
-                    "Error updating CLB validation message for validation {}", validationKey, e);
-                currentValidation.setStatus(Validation.Status.FAILED);
-              }
               validationClient.update(currentValidation);
             });
 
