@@ -263,7 +263,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       return;
     }
 
-    if (validation.getClbDatasetKey() != clbDatasetImport.getDatasetKey()) {
+    if (validation.getClbDatasetKey() == null
+        || validation.getClbDatasetKey() != clbDatasetImport.getDatasetKey()) {
       log.info(
           "CLB Dataset key {} is different from validation clb dataset key {}",
           clbDatasetImport.getDatasetKey(),
