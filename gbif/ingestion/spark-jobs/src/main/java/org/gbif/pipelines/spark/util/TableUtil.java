@@ -222,52 +222,11 @@ public class TableUtil {
 
     if (datasetType == DatasetType.OCCURRENCE) {
       // add the classification fields
-      String classificationStruct =
-          """
-              STRUCT<
-                taxonkey: STRING,
-                scientificname: STRING,
-                acceptedtaxonkey: STRING,
-                acceptednameusageid: STRING,
-                acceptedscientificname: STRING,
-                genericname: STRING,
-                specificepithet: STRING,
-                infraspecificepithet: STRING,
-                taxonrank: STRING,
-                kingdomkey: STRING,
-                phylumkey: STRING,
-                classkey: STRING,
-                orderkey: STRING,
-                superfamilykey: STRING,
-                familykey: STRING,
-                subfamilykey: STRING,
-                tribekey: STRING,
-                subtribekey: STRING,
-                genuskey: STRING,
-                subgenuskey: STRING,
-                specieskey: STRING,
-                kingdom: STRING,
-                phylum: STRING,
-                class: STRING,
-                order: STRING,
-                superfamily: STRING,
-                family: STRING,
-                subfamily: STRING,
-                tribe: STRING,
-                subtribe: STRING,
-                genus: STRING,
-                subgenus: STRING,
-                species: STRING,
-                iucnredlistcategory: STRING,
-                taxonkeys: ARRAY<STRING>,
-                issues: ARRAY<STRING>,
-                taxonomicstatus: STRING>
-              """;
-
       Map<String, String> uuidToColumnPrefix = config.getClassifications();
-
       for (String prefix : uuidToColumnPrefix.values()) {
-        fieldDefn += String.format(",\n%s_classification %s", prefix, classificationStruct);
+        fieldDefn +=
+            String.format(
+                ",\n%s_classification %s", prefix, HiveDataTypes.TYPE_CLASSIFICATION_STRUCT);
       }
     }
 

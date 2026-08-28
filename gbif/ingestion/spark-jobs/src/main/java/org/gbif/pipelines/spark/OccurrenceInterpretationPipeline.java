@@ -932,7 +932,7 @@ public class OccurrenceInterpretationPipeline {
                   element_at(classification, lit("species")).as("species"),
                   element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
                   taxonkeys.as("taxonkeys"),
-                  taxonomicIssue.as("issues"),
+                  taxonomicIssue.as("taxonomicissue"),
                   taxonomicStatus.as("taxonomicstatus")));
     }
 

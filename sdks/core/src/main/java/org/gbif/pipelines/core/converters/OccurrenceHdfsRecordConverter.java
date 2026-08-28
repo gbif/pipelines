@@ -348,18 +348,6 @@ public class OccurrenceHdfsRecordConverter {
                     tr.getDatasetKey(), tr.getUsage() == null ? null : tr.getUsage().getStatus()));
     occurrenceHdfsRecord.setTaxonomicstatuses(statuses);
 
-    occurrenceHdfsRecord.setTaxonomicissue(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr ->
-                        tr.getIssues() != null && tr.getIssues().getIssueList() != null
-                            ? tr.getIssues().getIssueList()
-                            : List.of(),
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
-
     occurrenceHdfsRecord.setClassificationdetails(
         multiTaxonRecord.getTaxonRecords().stream()
             .filter(tr -> tr.getDatasetKey() != null)
@@ -527,6 +515,12 @@ public class OccurrenceHdfsRecordConverter {
 
     // set taxonkeys
     occurrenceHdfsRecord.setTaxonkeys(getTaxonKeys(taxonRecord));
+
+    // set taxonomic issue
+    occurrenceHdfsRecord.setTaxonomicissue(
+        taxonRecord.getIssues() != null && taxonRecord.getIssues().getIssueList() != null
+            ? taxonRecord.getIssues().getIssueList()
+            : List.of());
 
     if (Objects.nonNull(taxonRecord.getAcceptedUsage())) {
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getAcceptedUsage().getName());
