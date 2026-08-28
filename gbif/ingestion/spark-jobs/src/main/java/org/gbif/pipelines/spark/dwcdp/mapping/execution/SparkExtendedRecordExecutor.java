@@ -2,14 +2,17 @@ package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
 import static org.apache.spark.sql.functions.array_distinct;
 import static org.apache.spark.sql.functions.array_join;
+import static org.apache.spark.sql.functions.coalesce;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
 import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.filter;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.sort_array;
+import static org.apache.spark.sql.functions.split;
 import static org.apache.spark.sql.functions.struct;
 import static org.apache.spark.sql.functions.transform;
+import static org.apache.spark.sql.functions.when;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -17,11 +20,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
@@ -33,17 +38,25 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledCoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
@@ -60,10 +73,22 @@ import org.gbif.pipelines.spark.util.TableLoader;
  */
 public final class SparkExtendedRecordExecutor {
   private static final String CORE_ID = "__dwca_core_id";
+  private static final String OWNER_EVENT_PK = "__dwcdp_owner_event_pk";
+  private static final Set<String> MATERIAL_FRAGMENT_NAMES =
+      Set.of(
+          "occurrence-material",
+          "occurrence-material-collected-by-agent",
+          "occurrence-material-identified-by-agent",
+          "occurrence-material-collector-roles",
+          "occurrence-material-direct-provenance",
+          "occurrence-material-provenance",
+          "occurrence-material-geological-context",
+          "occurrence-material-protocols");
 
   private final SchemaGraph graph;
   private final SparkExtensionMaterializer extensionMaterializer;
   private final SparkMappingPathExecutor pathExecutor;
+  private final SparkEventOccurrenceDiscovery occurrenceDiscovery;
 
   public SparkExtendedRecordExecutor(SchemaGraph graph) {
     this(graph, new ExecutionMetricsCollector());
@@ -82,6 +107,7 @@ public final class SparkExtendedRecordExecutor {
     this.extensionMaterializer =
         new SparkExtensionMaterializer(graph, metricsCollector, prefixCache);
     this.pathExecutor = new SparkMappingPathExecutor(graph, metricsCollector, prefixCache);
+    this.occurrenceDiscovery = new SparkEventOccurrenceDiscovery(graph);
   }
 
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {
@@ -128,27 +154,17 @@ public final class SparkExtendedRecordExecutor {
         continue;
       }
 
-      ExtensionMaterializationResult materialized =
-          extensionMaterializer.materialize(loader, extension);
-      if (materialized.targetColumns().isEmpty()) {
+      AttachedExtension attachedExtension =
+          isEventOccurrenceExtension(plan, extension)
+              ? materializeEventOccurrenceExtension(loader, plan, extension, corePk)
+              : materializeAndAttachExtension(loader, plan, extension, corePk);
+      if (attachedExtension.targetColumns().isEmpty()) {
         continue;
       }
-      String attachmentSourceResource = materialized.parentKeySource().path().rootResource();
-      Dataset<Row> bridge =
-          attachmentBridge(
-              loader, plan, attachmentSourceResource, materialized.parentKeySource(), corePk);
-      Dataset<Row> attached =
-          bridge
-              .join(
-                  materialized.dataset(),
-                  bridge
-                      .col("__dwca_source_pk")
-                      .equalTo(materialized.dataset().col(materialized.parentKeyColumn())),
-                  "inner")
-              .drop(materialized.dataset().col(materialized.parentKeyColumn()));
+      Dataset<Row> attached = attachedExtension.dataset();
 
       List<TermColumn> terms =
-          materialized.targetColumns().entrySet().stream()
+          attachedExtension.targetColumns().entrySet().stream()
               .sorted(Map.Entry.comparingByKey())
               .map(e -> new TermColumn(e.getKey(), e.getValue()))
               .toList();
@@ -224,6 +240,289 @@ public final class SparkExtendedRecordExecutor {
                 },
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) record -> record != null);
+  }
+
+  private boolean isEventOccurrenceExtension(CompiledMapping plan, CompiledExtension extension) {
+    return plan.coreType() == CoreType.EVENT
+        && extension.rowType().equals(OccurrenceMapping.ROW_TYPE_OCCURRENCE);
+  }
+
+  private AttachedExtension materializeAndAttachExtension(
+      TableLoader loader, CompiledMapping plan, CompiledExtension extension, String corePk) {
+    ExtensionMaterializationResult materialized =
+        extensionMaterializer.materialize(loader, extension);
+    if (materialized.targetColumns().isEmpty()) {
+      return new AttachedExtension(materialized.dataset(), Map.of());
+    }
+
+    String attachmentSourceResource = materialized.parentKeySource().path().rootResource();
+    Dataset<Row> bridge =
+        attachmentBridge(
+            loader, plan, attachmentSourceResource, materialized.parentKeySource(), corePk);
+    Dataset<Row> attached =
+        bridge
+            .join(
+                materialized.dataset(),
+                bridge
+                    .col("__dwca_source_pk")
+                    .equalTo(materialized.dataset().col(materialized.parentKeyColumn())),
+                "inner")
+            .drop(materialized.dataset().col(materialized.parentKeyColumn()));
+    return new AttachedExtension(attached, materialized.targetColumns());
+  }
+
+  private AttachedExtension materializeEventOccurrenceExtension(
+      TableLoader loader, CompiledMapping plan, CompiledExtension extension, String corePk) {
+    SparkEventOccurrenceDiscovery.Result discovery = occurrenceDiscovery.discover(loader);
+    CompiledExtension normalExtension = withoutMaterialFragments(extension);
+    ExtensionMaterializationResult normal =
+        extensionMaterializer.materialize(loader, normalExtension);
+
+    Dataset<Row> attached =
+        attachEventOccurrenceRows(loader, plan, corePk, normal, discovery.ownership());
+    Map<String, String> targetColumns = new LinkedHashMap<>(normal.targetColumns());
+
+    Optional<TableLoader> contextLoader = EventOccurrenceMaterialContext.loader(loader, discovery);
+    if (contextLoader.isPresent()) {
+      ExtensionMapping materialMapping = materialContextMapping(extension);
+      ExtensionMaterializationResult material =
+          extensionMaterializer.materialize(contextLoader.get(), materialMapping);
+      Set<String> allowedTerms = materialContributionTerms(extension);
+      MaterialEnrichment merged =
+          mergeMaterialContext(attached, targetColumns, material, extension, allowedTerms);
+      attached = merged.dataset();
+      targetColumns = merged.targetColumns();
+    }
+
+    String eventIdColumn = targetColumns.get(DwcTerm.eventID.qualifiedName());
+    if (eventIdColumn != null) {
+      attached = attached.withColumn(eventIdColumn, col(CORE_ID));
+    }
+    return new AttachedExtension(attached, targetColumns);
+  }
+
+  private Dataset<Row> attachEventOccurrenceRows(
+      TableLoader loader,
+      CompiledMapping plan,
+      String corePk,
+      ExtensionMaterializationResult occurrence,
+      Dataset<Row> ownership) {
+    Dataset<Row> rows = occurrence.dataset().alias("row");
+    Dataset<Row> own = ownership.alias("own");
+
+    List<Column> selected = new ArrayList<>();
+    for (String name : occurrence.dataset().columns()) {
+      selected.add(col("row." + name).as(name));
+    }
+    selected.add(col("own." + SparkEventOccurrenceDiscovery.COL_EVENT_PK).as(OWNER_EVENT_PK));
+
+    Dataset<Row> owned =
+        rows.join(
+                own,
+                col("row." + occurrence.rowKeyColumn())
+                    .equalTo(col("own." + SparkEventOccurrenceDiscovery.COL_OCCURRENCE_PK)),
+                "inner")
+            .select(selected.toArray(Column[]::new));
+
+    Dataset<Row> core = loader.load(plan.coreSourceResource()).orElseThrow().alias("core");
+    Dataset<Row> bridge =
+        core.select(
+            coreIdentityExpression(plan.coreIdentity().orElseThrow(), core).as(CORE_ID),
+            col("core." + corePk).cast("string").as(OWNER_EVENT_PK));
+
+    return owned
+        .join(bridge, owned.col(OWNER_EVENT_PK).equalTo(bridge.col(OWNER_EVENT_PK)), "inner")
+        .drop(bridge.col(OWNER_EVENT_PK));
+  }
+
+  private CompiledExtension withoutMaterialFragments(CompiledExtension extension) {
+    FieldRef occurrencePk = MappingPath.root(graph, "occurrence").field("occurrence_pk");
+    List<CompiledFragment> fragments =
+        extension.fragments().stream()
+            .filter(fragment -> !MATERIAL_FRAGMENT_NAMES.contains(fragment.name()))
+            .map(
+                fragment ->
+                    new CompiledFragment(
+                        fragment.name(),
+                        fragment.rowType(),
+                        fragment.sourceResource(),
+                        fragment.path(),
+                        fragment.relations(),
+                        occurrencePk,
+                        fragment.rowIdentity(),
+                        fragment.rowMatch(),
+                        fragment.targets()))
+            .toList();
+    List<CompiledTargetMerge> merges =
+        extension.targetMerges().stream()
+            .flatMap(
+                merge -> {
+                  List<CompiledTargetProducer> producers =
+                      merge.producers().stream()
+                          .filter(producer -> !MATERIAL_FRAGMENT_NAMES.contains(producer.owner()))
+                          .toList();
+                  return producers.isEmpty()
+                      ? java.util.stream.Stream.empty()
+                      : java.util.stream.Stream.of(
+                          new CompiledTargetMerge(
+                              merge.targetTerm(), merge.aggregation(), producers));
+                })
+            .toList();
+    return new CompiledExtension(
+        extension.rowType(),
+        extension.rowComposition(),
+        extension.maxRowsPerParent(),
+        merges,
+        fragments,
+        extension.decisions());
+  }
+
+  private ExtensionMapping materialContextMapping(CompiledExtension original) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    ExtensionFragment base =
+        ExtensionFragmentBuilder.extensionFragment(
+                "occurrence-material-context-base",
+                OccurrenceMapping.ROW_TYPE_OCCURRENCE,
+                "occurrence")
+            .scopeKey("event_fk")
+            .rowIdentity(occurrence.field("occurrence_pk"))
+            .build();
+
+    Set<String> configuredNames =
+        original.fragments().stream().map(CompiledFragment::name).collect(Collectors.toSet());
+    List<ExtensionFragment> fragments = new ArrayList<>();
+    fragments.add(base);
+    List.of(
+            OccurrenceMapping.material(graph),
+            OccurrenceMapping.materialCollectedBy(graph),
+            OccurrenceMapping.materialIdentifiedBy(graph),
+            OccurrenceMapping.materialCollectorRoles(graph),
+            OccurrenceMapping.materialDirectProvenance(graph),
+            OccurrenceMapping.materialProvenance(graph),
+            OccurrenceMapping.materialGeologicalContext(graph),
+            OccurrenceMapping.materialProtocols(graph))
+        .stream()
+        .filter(fragment -> configuredNames.contains(fragment.name()))
+        .forEach(fragments::add);
+
+    List<TargetMerge> merges =
+        original.targetMerges().stream()
+            .filter(
+                merge ->
+                    merge.producers().stream()
+                        .anyMatch(producer -> MATERIAL_FRAGMENT_NAMES.contains(producer.owner())))
+            .map(merge -> new TargetMerge(merge.targetTerm(), merge.aggregation()))
+            .toList();
+
+    return new ExtensionMapping(
+        OccurrenceMapping.ROW_TYPE_OCCURRENCE,
+        ExtensionRowComposition.ENRICH,
+        Optional.empty(),
+        merges,
+        fragments);
+  }
+
+  private Set<String> materialContributionTerms(CompiledExtension extension) {
+    Set<String> terms = new HashSet<>();
+    extension.fragments().stream()
+        .filter(fragment -> MATERIAL_FRAGMENT_NAMES.contains(fragment.name()))
+        .flatMap(fragment -> fragment.targets().stream())
+        .map(CompiledTargetProducer::targetTerm)
+        .forEach(terms::add);
+    extension.targetMerges().stream()
+        .filter(
+            merge ->
+                merge.producers().stream()
+                    .anyMatch(producer -> MATERIAL_FRAGMENT_NAMES.contains(producer.owner())))
+        .map(CompiledTargetMerge::targetTerm)
+        .forEach(terms::add);
+    return terms;
+  }
+
+  private MaterialEnrichment mergeMaterialContext(
+      Dataset<Row> attached,
+      Map<String, String> currentTargetColumns,
+      ExtensionMaterializationResult material,
+      CompiledExtension original,
+      Set<String> allowedTerms) {
+    Map<String, CompiledTargetMerge> merges =
+        original.targetMerges().stream()
+            .collect(Collectors.toMap(CompiledTargetMerge::targetTerm, merge -> merge));
+
+    List<String> terms =
+        material.targetColumns().keySet().stream().filter(allowedTerms::contains).sorted().toList();
+    if (terms.isEmpty()) {
+      return new MaterialEnrichment(attached, new LinkedHashMap<>(currentTargetColumns));
+    }
+
+    Dataset<Row> context = material.dataset().alias("ctx");
+    List<Column> contextColumns = new ArrayList<>();
+    contextColumns.add(col("ctx." + material.parentKeyColumn()).as("__dwcdp_context_event_pk"));
+    contextColumns.add(col("ctx." + material.rowKeyColumn()).as("__dwcdp_context_occurrence_pk"));
+    Map<String, String> contextAliases = new LinkedHashMap<>();
+    int index = 0;
+    for (String term : terms) {
+      String alias = "__dwcdp_material_context_" + index++;
+      contextAliases.put(term, alias);
+      contextColumns.add(col("ctx." + material.columnName(term)).as(alias));
+    }
+    context = context.select(contextColumns.toArray(Column[]::new));
+
+    Dataset<Row> mergedDataset =
+        attached
+            .join(
+                context,
+                attached
+                    .col(OWNER_EVENT_PK)
+                    .equalTo(context.col("__dwcdp_context_event_pk"))
+                    .and(
+                        attached
+                            .col(SparkExtensionMaterializer.COL_ROW_KEY)
+                            .equalTo(context.col("__dwcdp_context_occurrence_pk"))),
+                "left_outer")
+            .drop(context.col("__dwcdp_context_event_pk"))
+            .drop(context.col("__dwcdp_context_occurrence_pk"));
+
+    Map<String, String> targetColumns = new LinkedHashMap<>(currentTargetColumns);
+    for (String term : terms) {
+      String contextAlias = contextAliases.get(term);
+      String currentAlias = targetColumns.get(term);
+      if (currentAlias == null) {
+        targetColumns.put(term, contextAlias);
+        continue;
+      }
+
+      CompiledTargetMerge merge = merges.get(term);
+      Column combined =
+          merge == null
+              ? coalesce(col(currentAlias), col(contextAlias))
+              : combineMergedTarget(col(currentAlias), col(contextAlias), merge);
+      mergedDataset = mergedDataset.withColumn(currentAlias, combined);
+    }
+
+    return new MaterialEnrichment(mergedDataset, targetColumns);
+  }
+
+  private static Column combineMergedTarget(
+      Column current, Column material, CompiledTargetMerge merge) {
+    if (merge.aggregation() instanceof ValueAggregation.FirstNonNull) {
+      return coalesce(current, material);
+    }
+    if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      Column combined = concat_ws(delimited.delimiter(), current, material);
+      if (delimited.distinct()) {
+        combined =
+            concat_ws(
+                delimited.delimiter(),
+                array_distinct(split(combined, Pattern.quote(delimited.delimiter()))));
+      }
+      return when(current.isNull().and(material.isNull()), lit(null)).otherwise(combined);
+    }
+    throw new UnsupportedOperationException(
+        "Unsupported Event-occurrence Material merge for "
+            + merge.targetTerm()
+            + ": "
+            + merge.aggregation());
   }
 
   private CoreProjection projectCore(
@@ -799,6 +1098,10 @@ public final class SparkExtendedRecordExecutor {
   }
 
   private record CoreProjection(Dataset<Row> dataset, Map<String, String> targetColumns) {}
+
+  private record AttachedExtension(Dataset<Row> dataset, Map<String, String> targetColumns) {}
+
+  private record MaterialEnrichment(Dataset<Row> dataset, Map<String, String> targetColumns) {}
 
   private record TermColumn(String term, String column) implements Serializable {}
 
