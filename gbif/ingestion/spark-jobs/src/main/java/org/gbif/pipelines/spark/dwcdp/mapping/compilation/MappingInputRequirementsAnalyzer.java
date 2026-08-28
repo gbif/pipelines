@@ -2,6 +2,8 @@ package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 
 import java.util.Objects;
 import java.util.Optional;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
@@ -51,7 +53,37 @@ public final class MappingInputRequirementsAnalyzer {
               extension.fragments().forEach(fragment -> addExtensionFragment(out, core, fragment));
             });
 
+    if (mapping.coreType() == CoreType.EVENT
+        && mapping.extensions().stream()
+            .anyMatch(
+                extension -> extension.rowType().equals(OccurrenceMapping.ROW_TYPE_OCCURRENCE))) {
+      addEventOccurrenceDiscovery(out);
+    }
+
     return out.build();
+  }
+
+  private void addEventOccurrenceDiscovery(MappingInputRequirements.Builder out) {
+    column(out, "event", "event_pk");
+
+    column(out, "occurrence", "occurrence_pk");
+    column(out, "occurrence", "occurrenceID");
+    column(out, "occurrence", "event_fk");
+
+    column(out, "material", "materialEntity_pk");
+    column(out, "material", "collectionEvent_fk");
+    column(out, "material", "evidenceForOccurrenceID");
+
+    column(out, "identification", "materialEntity_fk");
+    column(out, "identification", "nucleotideAnalysis_fk");
+    column(out, "identification", "nucleotideSequence_fk");
+    column(out, "identification", "occurrence_fk");
+
+    column(out, "nucleotide-analysis", "nucleotideAnalysis_pk");
+    column(out, "nucleotide-analysis", "materialEntity_fk");
+    column(out, "nucleotide-analysis", "nucleotideSequence_fk");
+
+    column(out, "nucleotide-sequence", "nucleotideSequence_pk");
   }
 
   private void addCoreFragment(
