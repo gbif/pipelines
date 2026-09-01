@@ -17,6 +17,7 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.EventOccurrenceNestedContextMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
@@ -182,6 +183,7 @@ class EventOccurrenceOwnershipDiscoveryTest {
   private MappingPlan plan() {
     SchemaPath event = SchemaPath.root("event");
     return MappingPlanBuilder.mappingPlan("event-occurrence-ownership", CoreType.EVENT, "event")
+        .nestedExtensionContext(EventOccurrenceNestedContextMapping.context(graph))
         .coreIdentity(
             ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
             event.field("eventID"),

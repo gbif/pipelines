@@ -13,7 +13,29 @@ public record MappingPlan(
     List<TargetFieldMapping> coreFields,
     List<CoreFragment> coreFragments,
     List<TargetMerge> coreTargetMerges,
-    List<ExtensionMapping> extensions) {
+    List<ExtensionMapping> extensions,
+    List<NestedExtensionContext> nestedExtensionContexts) {
+
+  public MappingPlan(
+      String name,
+      CoreType coreType,
+      String coreSourceResource,
+      Optional<TargetFieldMapping> coreIdentity,
+      List<TargetFieldMapping> coreFields,
+      List<CoreFragment> coreFragments,
+      List<TargetMerge> coreTargetMerges,
+      List<ExtensionMapping> extensions) {
+    this(
+        name,
+        coreType,
+        coreSourceResource,
+        coreIdentity,
+        coreFields,
+        coreFragments,
+        coreTargetMerges,
+        extensions,
+        List.of());
+  }
 
   public MappingPlan {
     Objects.requireNonNull(name, "name");
@@ -24,5 +46,6 @@ public record MappingPlan(
     coreFragments = List.copyOf(coreFragments);
     coreTargetMerges = List.copyOf(coreTargetMerges);
     extensions = List.copyOf(extensions);
+    nestedExtensionContexts = List.copyOf(nestedExtensionContexts);
   }
 }

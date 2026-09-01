@@ -19,6 +19,7 @@ public final class MappingPlanBuilder {
   private final Map<String, ExtensionRowComposition> extensionCompositions = new LinkedHashMap<>();
   private final Map<String, Integer> extensionRowLimits = new LinkedHashMap<>();
   private final Map<String, Map<String, TargetMerge>> extensionTargetMerges = new LinkedHashMap<>();
+  private final List<NestedExtensionContext> nestedExtensionContexts = new ArrayList<>();
 
   private MappingPlanBuilder(String name, CoreType coreType, String coreSourceResource) {
     this.name = name;
@@ -57,6 +58,11 @@ public final class MappingPlanBuilder {
     return this;
   }
 
+  public MappingPlanBuilder nestedExtensionContext(NestedExtensionContext context) {
+    nestedExtensionContexts.add(context);
+    return this;
+  }
+
   public ExtensionBuilder extension(String rowType) {
     return new ExtensionBuilder(this, rowType);
   }
@@ -83,7 +89,8 @@ public final class MappingPlanBuilder {
         coreFields,
         coreFragments,
         new ArrayList<>(coreTargetMerges.values()),
-        builtExtensions);
+        builtExtensions,
+        nestedExtensionContexts);
   }
 
   public static final class ExtensionBuilder {

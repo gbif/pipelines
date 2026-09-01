@@ -69,6 +69,7 @@ public final class CompiledMappingDatasetPruner {
         coreFragments,
         coreMerges,
         extensions,
+        mapping.nestedExtensionContexts(),
         mapping.coreDecisions().stream()
             .filter(decision -> visibleCoreTargets.contains(decision.targetTerm()))
             .toList());
