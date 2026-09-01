@@ -28,15 +28,16 @@ public interface ChecklistbankWsClient {
     private int key;
   }
 
-  @GetMapping(path = "importer/{key}")
-  ImporterResponse checkImporter(@PathVariable("key") int key);
+  @GetMapping(path = "dataset/{key}/import")
+  List<ImporterResponse> checkImport(@PathVariable("key") int key);
 
   @Data
   @JsonIgnoreProperties(ignoreUnknown = true)
   class ImporterResponse {
     private int datasetKey;
     private int attempt;
-    private String state;
+    // mapped as string to avoid errors with changes in the CLB API
+    private String status;
     private Long bareNameCount;
     private Long distributionCount;
     private Long estimateCount;
