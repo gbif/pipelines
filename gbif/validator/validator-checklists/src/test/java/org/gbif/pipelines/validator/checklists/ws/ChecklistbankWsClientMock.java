@@ -29,8 +29,8 @@ public class ChecklistbankWsClientMock implements ChecklistbankWsClient {
   }
 
   @Override
-  public ImporterResponse checkImporter(int key) {
-    return importerResponse;
+  public List<ImporterResponse> checkImport(int key) {
+    return List.of(importerResponse);
   }
 
   @SneakyThrows

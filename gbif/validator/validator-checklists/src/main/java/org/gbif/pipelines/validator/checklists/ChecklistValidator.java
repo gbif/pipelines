@@ -75,9 +75,9 @@ public class ChecklistValidator {
 
     ImporterResponse importerResponse = getImporterResponse(datasetKey, archivePath);
 
-    if (!importerResponse.getState().equalsIgnoreCase(FINISHED)) {
+    if (!importerResponse.getStatus().equalsIgnoreCase(FINISHED)) {
       throw new IllegalStateException(
-          "Validation failed with status " + importerResponse.getState() + " for " + archivePath);
+          "Validation failed with status " + importerResponse.getStatus() + " for " + archivePath);
     }
 
     for (Map.Entry<Term, Map<Term, Long>> entry :
@@ -137,20 +137,38 @@ public class ChecklistValidator {
 
   private ImporterResponse getImporterResponse(int datasetKey, Path archivePath)
       throws InterruptedException {
-    ImporterResponse importerResponse = checklistbankWsClient.checkImporter(datasetKey);
+    List<ImporterResponse> importerResponseList = checklistbankWsClient.checkImport(datasetKey);
+    ImporterResponse importerResponse =
+        importerResponseList != null && !importerResponseList.isEmpty()
+            ? importerResponseList.get(0)
+            : null;
     int currentDelay = WAIT_DELAY_IN_SECONDS;
     int secondsToWait = MAX_WAIT_SECONDS;
-    while (!FINISHED_STATES.contains(importerResponse.getState().toLowerCase())
+    while (importerResponse != null
+        && !FINISHED_STATES.contains(importerResponse.getStatus().toLowerCase())
         && secondsToWait > 0) {
       TimeUnit.SECONDS.sleep(currentDelay);
       secondsToWait -= currentDelay;
       // Exponential backoff with cap
       currentDelay = Math.min(currentDelay * DELAY_MULTIPLIER, MAX_WAIT_DELAY_IN_SECONDS);
 
-      importerResponse = checklistbankWsClient.checkImporter(datasetKey);
+      importerResponseList = checklistbankWsClient.checkImport(datasetKey);
+      importerResponse =
+          importerResponseList != null && !importerResponseList.isEmpty()
+              ? importerResponseList.get(0)
+              : null;
     }
 
-    if (!importerResponse.getState().equalsIgnoreCase(FINISHED) && secondsToWait <= 0) {
+    if (importerResponse == null) {
+      throw new IllegalStateException(
+          "Received null response from CLB for dataset"
+              + datasetKey
+              + " and archive "
+              + archivePath);
+    }
+
+    if (!FINISHED_STATES.contains(importerResponse.getStatus().toLowerCase())
+        && secondsToWait <= 0) {
       throw new IllegalStateException(
           "Max time waiting for api validator response exceeded for key "
               + datasetKey
