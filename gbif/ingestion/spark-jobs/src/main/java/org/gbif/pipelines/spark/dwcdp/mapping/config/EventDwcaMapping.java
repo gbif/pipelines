@@ -45,6 +45,7 @@ public final class EventDwcaMapping {
             .importCoreFragment(EventCoreMapping.eventProvenance(graph));
 
     builder
+        .nestedExtensionContext(EventOccurrenceNestedContextMapping.context(graph))
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
         .mergeTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())

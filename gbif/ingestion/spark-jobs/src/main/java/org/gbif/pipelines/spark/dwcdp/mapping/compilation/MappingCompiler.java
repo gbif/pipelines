@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
@@ -127,8 +128,8 @@ public final class MappingCompiler {
         coreFragments,
         coreTargetMerges,
         extensions,
-        java.util.stream.Stream.concat(core.decisions().stream(), mergeDecisions.stream())
-            .toList());
+        plan.nestedExtensionContexts(),
+        Stream.concat(core.decisions().stream(), mergeDecisions.stream()).toList());
   }
 
   public CompiledExtension compile(ExtensionMapping extension) {
@@ -260,8 +261,7 @@ public final class MappingCompiler {
         extension.maxRowsPerParent(),
         targetMerges,
         resolvedFragments,
-        java.util.stream.Stream.concat(resolution.decisions().stream(), mergeDecisions.stream())
-            .toList());
+        Stream.concat(resolution.decisions().stream(), mergeDecisions.stream()).toList());
   }
 
   private static MappingDecision missingMergeProducerDecision(
