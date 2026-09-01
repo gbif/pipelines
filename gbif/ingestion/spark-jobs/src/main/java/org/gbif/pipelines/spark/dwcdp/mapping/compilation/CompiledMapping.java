@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.NestedExtensionContext;
 
 /**
  * Schema-resolved, ambiguity-checked, engine-neutral mapping between configuration and execution.
@@ -18,7 +19,31 @@ public record CompiledMapping(
     List<CompiledCoreFragment> coreFragments,
     List<CompiledTargetMerge> coreTargetMerges,
     List<CompiledExtension> extensions,
+    List<NestedExtensionContext> nestedExtensionContexts,
     List<MappingDecision> coreDecisions) {
+
+  public CompiledMapping(
+      String name,
+      CoreType coreType,
+      String coreSourceResource,
+      Optional<CompiledTargetProducer> coreIdentity,
+      List<CompiledTargetProducer> coreTargets,
+      List<CompiledCoreFragment> coreFragments,
+      List<CompiledTargetMerge> coreTargetMerges,
+      List<CompiledExtension> extensions,
+      List<MappingDecision> coreDecisions) {
+    this(
+        name,
+        coreType,
+        coreSourceResource,
+        coreIdentity,
+        coreTargets,
+        coreFragments,
+        coreTargetMerges,
+        extensions,
+        List.of(),
+        coreDecisions);
+  }
 
   public CompiledMapping {
     Objects.requireNonNull(name, "name");
@@ -29,6 +54,7 @@ public record CompiledMapping(
     coreFragments = List.copyOf(coreFragments);
     coreTargetMerges = List.copyOf(coreTargetMerges);
     extensions = List.copyOf(extensions);
+    nestedExtensionContexts = List.copyOf(nestedExtensionContexts);
     coreDecisions = List.copyOf(coreDecisions);
   }
 
