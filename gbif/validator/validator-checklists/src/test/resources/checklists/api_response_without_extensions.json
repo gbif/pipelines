@@ -2,7 +2,7 @@
   "datasetKey": 100000102,
   "attempt": 1,
   "job": "ImportJob",
-  "state": "finished",
+  "status": "finished",
   "started": "2026-07-10T08:42:41.817882",
   "finished": "2026-07-10T08:42:42.752508",
   "createdBy": 955,
