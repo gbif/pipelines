@@ -202,30 +202,42 @@ public class HttpRequestBuilderTest {
     assertTrue(node.has(Field.MAPPINGS));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void bodyWithNullMappingsTest() {
 
     // State
     String mappings = null;
 
+    // Expect
+    thrown.expectMessage("Mappings cannot be null or empty");
+
     // When
     HttpRequestBuilder.newInstance().withMappings(mappings).build();
-
-    // Should
-    thrown.expectMessage("Mappings cannot be null or empty");
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void bodyWithNullPathMappingsTest() {
 
     // State
     Path mappings = null;
 
+    // Expect
+    thrown.expectMessage("mappingsPath is marked non-null but is null");
+
     // When
     HttpRequestBuilder.newInstance().withMappings(mappings).build();
+  }
 
-    // Should
-    thrown.expectMessage("The path of the mappings cannot be null");
+  @Test
+  public void testInvalidLoadingPath() {
+    // State
+    Path mappings = Path.of("elastic/someconfig.json");
+
+    // expect
+    thrown.expectMessage("ES Mapping resource not found on classpath: ");
+
+    // When
+    HttpRequestBuilder.newInstance().withMappings(mappings).build();
   }
 
   private void assertMappings(JsonNode mappingsNode) {

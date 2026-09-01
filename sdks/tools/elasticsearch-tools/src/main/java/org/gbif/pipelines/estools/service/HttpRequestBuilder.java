@@ -247,8 +247,12 @@ class HttpRequestBuilder {
   static InputStream loadFile(Path path) {
     if (path.isAbsolute()) {
       return new FileInputStream(path.toFile());
-    } else {
-      return Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
     }
+    InputStream is =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
+    if (is == null) {
+      throw new IllegalArgumentException("ES Mapping resource not found on classpath: " + path);
+    }
+    return is;
   }
 }
