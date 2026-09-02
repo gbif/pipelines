@@ -13,13 +13,19 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -98,7 +104,7 @@ public class FullIndexBuildPipelineGeoTimeFix {
   }
 
   public static void main(String[] argsv) throws Exception {
-    Args args = new Args();
+    FullIndexBuildPipelineGeoTimeFix.Args args = new FullIndexBuildPipelineGeoTimeFix.Args();
     JCommander jCommander = new JCommander(args);
     jCommander.setAcceptUnknownOptions(true);
     jCommander.parse(argsv);
@@ -160,23 +166,17 @@ public class FullIndexBuildPipelineGeoTimeFix {
       return;
     }
 
-    // Explicit read schema, since datasets built at different times can have a column typed as
-    // float in some parquet files and double in others for fields whose type changed over time
-    // (e.g. geologicalContext.range.gt/lte moved from float to double). Forcing those known
-    // fields to double up front lets Spark safely up-cast float columns on read, instead of
-    // failing when the schema inferred from the first file(s) loaded doesn't match a later
-    // file's column type.
-    StructType readSchema = recordClassSchema(isOccurrence, args.sourceDirectory);
-    for (String[] path : FLOAT_TO_DOUBLE_FIELD_PATHS) {
-      readSchema = widenFieldToDouble(readSchema, path, 0);
-    }
-
-    // load all hdfs view parquet
+    // Datasets built at different times can have a column typed as float in some parquet files
+    // and double in others for fields whose type changed over time (e.g.
+    // geologicalContext.range.gt/lte moved from float to double). Spark's Parquet reader can't
+    // implicitly convert between float and double in either direction (it throws
+    // SchemaColumnConvertNotSupportedException), so a single explicit schema can't reconcile a
+    // mix of both on its own. Instead: split the paths by what's actually on disk for the
+    // known-drifted field(s), read each group with a schema matching its physical type, cast the
+    // float group up to double after decoding (a normal, always-safe Catalyst cast), then union.
     Dataset<Row> hdfs =
-        spark
-            .read()
-            .schema(readSchema)
-            .parquet(scanResult.successfulPaths().toArray(new String[0]))
+        readWithDriftedFieldsAsDouble(
+                spark, scanResult.successfulPaths(), isOccurrence, args.sourceDirectory)
             .coalesce(args.numberOfShards);
 
     spark
@@ -355,6 +355,8 @@ public class FullIndexBuildPipelineGeoTimeFix {
     {"geologicalContext", "range", "gt"}, {"geologicalContext", "range", "lte"}
   };
 
+  private static final int SCHEMA_PROBE_PARALLELISM = 32;
+
   private static StructType recordClassSchema(boolean isOccurrence, String sourceDirectory) {
     Class<?> recordClass;
     if (isOccurrence) {
@@ -372,12 +374,112 @@ public class FullIndexBuildPipelineGeoTimeFix {
   }
 
   /**
+   * Reads {@code paths}, guaranteeing that every field in {@link #FLOAT_TO_DOUBLE_FIELD_PATHS}
+   * comes back as a double column, regardless of whether it's stored as float or double on disk in
+   * any given file.
+   */
+  private static Dataset<Row> readWithDriftedFieldsAsDouble(
+      SparkSession spark, List<String> paths, boolean isOccurrence, String sourceDirectory) {
+
+    StructType baseSchema = recordClassSchema(isOccurrence, sourceDirectory);
+
+    // Paths are bucketed by physical type of the first configured field; the paths in
+    // FLOAT_TO_DOUBLE_FIELD_PATHS are assumed to always drift together (they were introduced and
+    // changed in lockstep), so one representative field is enough to classify a file.
+    Map<Boolean, List<String>> partitioned =
+        partitionPathsByFieldType(spark, paths, FLOAT_TO_DOUBLE_FIELD_PATHS[0]);
+    List<String> legacyFloatPaths = partitioned.get(true);
+    List<String> currentDoublePaths = partitioned.get(false);
+
+    Dataset<Row> currentDf = null;
+    if (!currentDoublePaths.isEmpty()) {
+      StructType doubleSchema = baseSchema;
+      for (String[] path : FLOAT_TO_DOUBLE_FIELD_PATHS) {
+        doubleSchema = setFieldType(doubleSchema, path, 0, DataTypes.DoubleType);
+      }
+      currentDf =
+          spark.read().schema(doubleSchema).parquet(currentDoublePaths.toArray(new String[0]));
+    }
+
+    Dataset<Row> legacyDf = null;
+    if (!legacyFloatPaths.isEmpty()) {
+      StructType floatSchema = baseSchema;
+      for (String[] path : FLOAT_TO_DOUBLE_FIELD_PATHS) {
+        floatSchema = setFieldType(floatSchema, path, 0, DataTypes.FloatType);
+      }
+      legacyDf = spark.read().schema(floatSchema).parquet(legacyFloatPaths.toArray(new String[0]));
+      for (String[] path : FLOAT_TO_DOUBLE_FIELD_PATHS) {
+        legacyDf = castFieldToDouble(legacyDf, path);
+      }
+    }
+
+    if (currentDf != null && legacyDf != null) {
+      return currentDf.unionByName(legacyDf);
+    }
+    return currentDf != null ? currentDf : legacyDf;
+  }
+
+  /**
+   * Probes each path's actual on-disk schema (metadata only, no data scan) to determine whether
+   * {@code fieldPath} is stored as float there, and buckets the paths accordingly. Probing is
+   * parallelized on the driver since it's pure I/O (footer reads over many small HDFS directories),
+   * not a Spark job.
+   */
+  private static Map<Boolean, List<String>> partitionPathsByFieldType(
+      SparkSession spark, List<String> paths, String[] fieldPath) {
+
+    ExecutorService executor = Executors.newFixedThreadPool(SCHEMA_PROBE_PARALLELISM);
+    try {
+      List<Future<Boolean>> isFloatByPath =
+          paths.stream()
+              .map(path -> executor.submit(() -> isFieldFloat(spark, path, fieldPath)))
+              .collect(Collectors.toList());
+
+      Map<Boolean, List<String>> result = new HashMap<>();
+      result.put(true, new ArrayList<>());
+      result.put(false, new ArrayList<>());
+      for (int i = 0; i < paths.size(); i++) {
+        try {
+          result.get(isFloatByPath.get(i).get()).add(paths.get(i));
+        } catch (Exception e) {
+          throw new RuntimeException("Failed to probe schema for path " + paths.get(i), e);
+        }
+      }
+      return result;
+    } finally {
+      executor.shutdown();
+    }
+  }
+
+  private static boolean isFieldFloat(SparkSession spark, String path, String[] fieldPath) {
+    StructType schema = spark.read().parquet(path).schema();
+    DataType type = findFieldType(schema, fieldPath, 0);
+    return DataTypes.FloatType.equals(type);
+  }
+
+  private static DataType findFieldType(StructType schema, String[] path, int depth) {
+    for (StructField field : schema.fields()) {
+      if (!field.name().equals(path[depth])) {
+        continue;
+      }
+      if (depth == path.length - 1) {
+        return field.dataType();
+      }
+      return field.dataType() instanceof StructType
+          ? findFieldType((StructType) field.dataType(), path, depth + 1)
+          : null;
+    }
+    return null;
+  }
+
+  /**
    * Sets the type of the field at {@code path} (e.g. {@code {"geologicalContext", "range", "gt"}})
-   * to {@link DataTypes#DoubleType}. A no-op if the path isn't present in {@code schema} (e.g. the
-   * record type doesn't have that field), so it's safe to apply the same path to schemas that don't
+   * to {@code targetType}. A no-op if the path isn't present in {@code schema} (e.g. the record
+   * type doesn't have that field), so it's safe to apply the same path to schemas that don't
    * contain it.
    */
-  private static StructType widenFieldToDouble(StructType schema, String[] path, int depth) {
+  private static StructType setFieldType(
+      StructType schema, String[] path, int depth, DataType targetType) {
     StructField[] fields = schema.fields();
     for (int i = 0; i < fields.length; i++) {
       StructField field = fields[i];
@@ -387,9 +489,10 @@ public class FullIndexBuildPipelineGeoTimeFix {
       StructField[] newFields = fields.clone();
       if (depth == path.length - 1) {
         newFields[i] =
-            new StructField(field.name(), DataTypes.DoubleType, field.nullable(), field.metadata());
+            new StructField(field.name(), targetType, field.nullable(), field.metadata());
       } else if (field.dataType() instanceof StructType) {
-        StructType nested = widenFieldToDouble((StructType) field.dataType(), path, depth + 1);
+        StructType nested =
+            setFieldType((StructType) field.dataType(), path, depth + 1, targetType);
         newFields[i] = new StructField(field.name(), nested, field.nullable(), field.metadata());
       } else {
         return schema;
@@ -397,6 +500,23 @@ public class FullIndexBuildPipelineGeoTimeFix {
       return new StructType(newFields);
     }
     return schema;
+  }
+
+  /** Rebuilds the struct(s) along {@code path} so the leaf field is cast to double. */
+  private static Dataset<Row> castFieldToDouble(Dataset<Row> df, String[] path) {
+    Column castedLeaf = col(String.join(".", path)).cast(DataTypes.DoubleType);
+    if (path.length == 1) {
+      return df.withColumn(path[0], castedLeaf);
+    }
+    return df.withColumn(path[0], withFieldCast(col(path[0]), path, 1, castedLeaf));
+  }
+
+  private static Column withFieldCast(Column current, String[] path, int depth, Column castedLeaf) {
+    if (depth == path.length - 1) {
+      return current.withField(path[depth], castedLeaf);
+    }
+    return current.withField(
+        path[depth], withFieldCast(current.getField(path[depth]), path, depth + 1, castedLeaf));
   }
 
   private static Integer getIndexNumberShards(
