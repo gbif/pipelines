@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.cli;
+package org.gbif.pipelines.tasks.validators.checklist;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,10 +10,8 @@ import lombok.SneakyThrows;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.validator.checklists.ChecklistValidator;
-import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClientMock;
+import org.gbif.pipelines.validator.checklist.ChecklistValidator;
+import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics.FileInfo;

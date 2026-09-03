@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.ws;
+package org.gbif.pipelines.validator.checklist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;

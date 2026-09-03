@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.cli;
+package org.gbif.pipelines.tasks.validators.checklist;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.time.Duration;
@@ -7,8 +7,7 @@ import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
-import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
-import org.gbif.pipelines.validator.checklists.cli.config.RegistryConfiguration;
+import org.gbif.pipelines.common.configs.RegistryConfiguration;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.ClientContract;

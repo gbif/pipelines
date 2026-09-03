@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.cli.config;
+package org.gbif.pipelines.tasks.validators.checklist;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
@@ -9,6 +9,7 @@ import lombok.ToString;
 import org.gbif.cli.PropertyName;
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.configs.RegistryConfiguration;
 
 /** Configuration required to validate downloaded archive */
 @ToString

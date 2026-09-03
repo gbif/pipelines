@@ -11,7 +11,7 @@ import java.time.Duration;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileStoreManager;

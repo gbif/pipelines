@@ -12,7 +12,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.mail.validator.ValidatorEmailService;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationSearchRequest;

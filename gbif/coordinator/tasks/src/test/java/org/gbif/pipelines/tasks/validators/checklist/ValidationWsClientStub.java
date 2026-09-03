@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.cli;
+package org.gbif.pipelines.tasks.validators.checklist;
 
 import java.io.File;
 import java.util.Collections;
@@ -23,7 +23,12 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 public class ValidationWsClientStub implements ValidationWsClient {
 
   private Validation validation =
-      Validation.builder().key(UUID.randomUUID()).file("archive_without_extensions.zip").build();
+      Validation.builder()
+          .key(UUID.randomUUID())
+          .file("archive_without_extensions.zip")
+          .clbDatasetKey(100000102)
+          .status(Validation.Status.RUNNING)
+          .build();
 
   @Override
   public boolean reachedMaxRunningValidations(String userName) {

@@ -1,11 +1,10 @@
-package org.gbif.pipelines.validator.checklists.ws;
+package org.gbif.pipelines.validator.checklist;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
-import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;

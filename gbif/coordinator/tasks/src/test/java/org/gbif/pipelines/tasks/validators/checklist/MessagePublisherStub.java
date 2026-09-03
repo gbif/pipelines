@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.cli;
+package org.gbif.pipelines.tasks.validators.checklist;
 
 import java.util.ArrayList;
 import java.util.List;

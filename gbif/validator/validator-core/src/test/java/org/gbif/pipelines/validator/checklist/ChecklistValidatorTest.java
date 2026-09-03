@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists;
+package org.gbif.pipelines.validator.checklist;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -10,8 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
-import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClientMock;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;

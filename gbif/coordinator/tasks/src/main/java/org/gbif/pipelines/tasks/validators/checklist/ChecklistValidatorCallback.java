@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.cli;
+package org.gbif.pipelines.tasks.validators.checklist;
 
 import static org.gbif.validator.api.Metrics.ValidationStep;
 import static org.gbif.validator.api.Validation.Status;
@@ -16,8 +16,7 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.pipelines.validator.Validations;
-import org.gbif.pipelines.validator.checklists.ChecklistValidator;
-import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
+import org.gbif.pipelines.validator.checklist.ChecklistValidator;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;

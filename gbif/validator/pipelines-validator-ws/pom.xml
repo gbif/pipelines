@@ -150,10 +150,6 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>validator-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>validator-checklists</artifactId>
-    </dependency>
 
     <!-- GBIF -->
     <dependency>

@@ -1,9 +1,8 @@
-package org.gbif.pipelines.validator.checklists.cli;
+package org.gbif.pipelines.tasks.validators.checklist;
 
 import com.google.common.util.concurrent.Service;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
-import org.gbif.pipelines.validator.checklists.cli.config.ChecklistValidatorConfiguration;
 import org.kohsuke.MetaInfServices;
 
 /**

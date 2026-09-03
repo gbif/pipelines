@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.checklists.ws;
+package org.gbif.pipelines.validator.checklist;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
