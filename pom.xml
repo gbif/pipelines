@@ -112,7 +112,7 @@
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <vocabulary-lookup.version>2.0.10</vocabulary-lookup.version>
-    <registry.version>4.2.24</registry.version>
+    <registry.version>4.2.29</registry.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.13</gbif-postal-service.version>
     <dwc-dp-analyser.version>0.0.6</dwc-dp-analyser.version>
