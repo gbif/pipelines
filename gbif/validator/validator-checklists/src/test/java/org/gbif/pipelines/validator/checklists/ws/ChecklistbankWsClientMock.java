@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.ws;
+package org.gbif.pipelines.validator.checklists.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -21,11 +21,11 @@ public class ChecklistbankWsClientMock implements ChecklistbankWsClient {
   }
 
   @Override
-  public List<ImportResponse> checkImport(int key) {
-    ImportResponse importResponse = new ImportResponse();
-    importResponse.setDatasetKey(DEFAULT_KEY);
-    importResponse.setStatus(ClbDatasetImport.FINISHED);
-    return List.of(importResponse);
+  public List<ClbDatasetImport> checkImport(int key) {
+    ClbDatasetImport clbDatasetImport = new ClbDatasetImport();
+    clbDatasetImport.setDatasetKey(DEFAULT_KEY);
+    clbDatasetImport.setStatus(ClbDatasetImport.FINISHED);
+    return List.of(clbDatasetImport);
   }
 
   @SneakyThrows

@@ -1,11 +1,12 @@
-package org.gbif.pipelines.validator.ws;
+package org.gbif.pipelines.validator.checklists.ws;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
-import org.gbif.pipelines.validator.ChecklistValidator;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.junit.jupiter.api.Assertions;
@@ -47,8 +48,7 @@ public class ChecklistbankWsManualTest {
             .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
             .build(ChecklistbankWsClient.class);
 
-    List<ChecklistbankWsClient.ImportResponse> responseList =
-        checklistbankWsClient.checkImport(100000197);
+    List<ClbDatasetImport> responseList = checklistbankWsClient.checkImport(100000197);
 
     Assertions.assertEquals(1, responseList.size());
   }

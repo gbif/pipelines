@@ -3,13 +3,19 @@ package org.gbif.validator.service;
 import static org.gbif.validator.service.ValidationFactory.metricsSubmitError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,15 +25,13 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
-import org.gbif.pipelines.validator.ChecklistValidator;
-import org.gbif.pipelines.validator.Validations;
 import org.gbif.utils.file.CompressionUtil.UnsupportedCompressionType;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.FileFormat;
-import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
@@ -56,7 +60,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private final ValidatorEmailService emailService;
 
-  private final ChecklistValidator checklistValidator;
+  private final ObjectMapper objectMapper;
 
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
@@ -263,42 +267,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       return;
     }
 
-    if (validation.getClbDatasetKey() == null
-        || validation.getClbDatasetKey() != clbDatasetImport.getDatasetKey()) {
-      log.info(
-          "CLB Dataset key {} is different from validation clb dataset key {}",
-          clbDatasetImport.getDatasetKey(),
-          validation.getClbDatasetKey());
-      updateChecklistValidatorStatus(validation, Status.FAILED);
-      return;
-    }
-
-    updateChecklistValidatorStatus(validation, Status.RUNNING);
-
-    if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.FAILED)) {
-      updateChecklistValidatorStatus(validation, Status.FAILED);
-    } else if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.CANCELED)) {
-      updateChecklistValidatorStatus(validation, Status.ABORTED);
-    } else if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.FINISHED)) {
-      try {
-        List<Metrics.FileInfo> result = checklistValidator.evaluateResults(clbDatasetImport);
-        log.info(
-            "Validating DWCA checklist archive - finished calling checklistbank, merging results");
-        result.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
-        updateChecklistValidatorStatus(validation, Status.FINISHED);
-
-        // send message to continue the process
-        messagePublisher.send(
-            checklistValidator.createNextMessage(validation.getClbValidationMessage()));
-        log.info("Next message for checklist validation {} has been sent", validationKey);
-
-      } catch (Exception e) {
-        log.error("Error processing CLB validation results for {}", validationKey, e);
-        updateChecklistValidatorStatus(validation, Status.FAILED);
-      }
-    } else {
-      log.info(
-          "Setting validation {} to FAILED since there is no valid clb validation", validationKey);
+    try {
+      messagePublisher.send(
+          new PipelinesChecklistValidatorMessage(
+              validationKey, objectMapper.writeValueAsString(clbDatasetImport)));
+    } catch (Exception e) {
       updateChecklistValidatorStatus(validation, Status.FAILED);
     }
   }

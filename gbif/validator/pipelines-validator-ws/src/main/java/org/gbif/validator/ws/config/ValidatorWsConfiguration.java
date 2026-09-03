@@ -11,8 +11,7 @@ import java.time.Duration;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
-import org.gbif.pipelines.validator.ChecklistValidator;
-import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileStoreManager;
@@ -93,12 +92,6 @@ public class ValidatorWsConfiguration {
         .withObjectMapper(JacksonJsonObjectMapperProvider.getDefaultObjectMapper())
         .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
         .build(ChecklistbankWsClient.class);
-  }
-
-  @Bean
-  public ChecklistValidator checklistValidator(ChecklistbankWsClient checklistbankWsClient) {
-    // the callback is not needed in the ws, only in the cli
-    return new ChecklistValidator(checklistbankWsClient, null);
   }
 
   /** Configure the Jackson ObjectMapper adding a custom JsonFilter for errors. */

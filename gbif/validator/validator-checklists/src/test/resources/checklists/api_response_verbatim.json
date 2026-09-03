@@ -1,0 +1,19 @@
+{
+  "offset": 0,
+  "limit": 1,
+  "total": 37674,
+  "result": [
+    {
+      "id": 1,
+      "datasetKey": 100000148,
+      "line": 61,
+      "file": "identifier.txt",
+      "type": "gbif:Identifier",
+      "terms": {
+        "dwc:taxonID": "gbif.org:species:7471350"
+      }
+    }
+  ],
+  "empty": false,
+  "last": false
+}

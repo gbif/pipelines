@@ -12,7 +12,7 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
-import org.gbif.pipelines.validator.ChecklistValidator;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 

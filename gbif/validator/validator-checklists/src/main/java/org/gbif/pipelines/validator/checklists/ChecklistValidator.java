@@ -1,6 +1,4 @@
-package org.gbif.pipelines.validator;
-
-import static org.gbif.pipelines.validator.ws.ChecklistbankWsClient.*;
+package org.gbif.pipelines.validator.checklists;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -26,7 +24,7 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -68,7 +66,7 @@ public class ChecklistValidator {
     return CompletableFuture.supplyAsync(
         () -> {
           try {
-            ValidatorResponse validatorResponse =
+            ChecklistbankWsClient.ValidatorResponse validatorResponse =
                 checklistbankWsClient.validateArchive(
                     callbackUrl + "/" + validationKey, Files.readAllBytes(archivePath));
 
@@ -170,7 +168,7 @@ public class ChecklistValidator {
   }
 
   private Optional<String> getFileNameByRowType(int datasetKey, Term rowType) {
-    VerbatimResponse verbatimResponse =
+    ChecklistbankWsClient.VerbatimResponse verbatimResponse =
         checklistbankWsClient.getVerbatim(datasetKey, rowType.simpleName(), null, 1);
 
     if (verbatimResponse != null && !verbatimResponse.getResult().isEmpty()) {
@@ -181,7 +179,7 @@ public class ChecklistValidator {
   }
 
   private List<Metrics.IssueSample> getIssueSamples(int datasetKey, String issue) {
-    VerbatimResponse verbatimResponse =
+    ChecklistbankWsClient.VerbatimResponse verbatimResponse =
         checklistbankWsClient.getVerbatim(
             datasetKey, DwcTerm.Taxon.simpleName(), issue, SAMPLE_ISSUES_SIZE);
     if (verbatimResponse == null

@@ -1,21 +1,24 @@
-package org.gbif.pipelines.validator;
+package org.gbif.pipelines.validator.checklists;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
-import org.gbif.pipelines.validator.ws.ChecklistbankWsClientMock;
+import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClientMock;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests related to {@link org.gbif.pipelines.validator.ChecklistValidator}. */
+/** Unit tests related to {@link ChecklistValidator}. */
 public class ChecklistValidatorTest {
 
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

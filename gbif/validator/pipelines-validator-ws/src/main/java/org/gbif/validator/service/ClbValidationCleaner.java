@@ -1,5 +1,6 @@
 package org.gbif.validator.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -9,9 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.mail.validator.ValidatorEmailService;
-import org.gbif.pipelines.validator.ChecklistValidator;
-import org.gbif.pipelines.validator.ws.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClient;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationSearchRequest;
@@ -34,7 +35,7 @@ public class ClbValidationCleaner {
   private final ValidatorEmailService emailService;
   private final ValidationMapper validationMapper;
   private final MessagePublisher messagePublisher;
-  private final ChecklistValidator checklistValidator;
+  private final ObjectMapper objectMapper;
 
   @Value("${clb.cleaner.hoursOld}")
   private final int hoursOld;
@@ -61,24 +62,25 @@ public class ClbValidationCleaner {
         .forEach(
             validation -> {
               try {
-                List<ChecklistbankWsClient.ImportResponse> importResponses =
+                List<ClbDatasetImport> clbDatasetImportResponses =
                     checklistbankWsClient.checkImport(validation.getClbDatasetKey());
-                ChecklistbankWsClient.ImportResponse importResponse =
-                    (importResponses != null && !importResponses.isEmpty())
-                        ? importResponses.get(0)
+                ClbDatasetImport clbDatasetImport =
+                    (clbDatasetImportResponses != null && !clbDatasetImportResponses.isEmpty())
+                        ? clbDatasetImportResponses.get(0)
                         : null;
 
                 // set to FAILED by default
                 setStatus(validation, Validation.Status.FAILED);
 
-                if (importResponse != null && importResponse.getStatus() != null) {
-                  if (importResponse.getStatus().equalsIgnoreCase(ClbDatasetImport.FINISHED)) {
+                if (clbDatasetImport != null && clbDatasetImport.getStatus() != null) {
+                  if (clbDatasetImport.getStatus().equalsIgnoreCase(ClbDatasetImport.FINISHED)) {
                     setStatus(validation, Validation.Status.FINISHED);
-
-                    // send message to continue the process
+                    // send message to handle the response and continue the process
                     messagePublisher.send(
-                        checklistValidator.createNextMessage(validation.getClbValidationMessage()));
-                  } else if (importResponse
+                        new PipelinesChecklistValidatorMessage(
+                            validation.getKey(),
+                            objectMapper.writeValueAsString(clbDatasetImport)));
+                  } else if (clbDatasetImport
                       .getStatus()
                       .equalsIgnoreCase(ClbDatasetImport.CANCELED)) {
                     setStatus(validation, Validation.Status.ABORTED);

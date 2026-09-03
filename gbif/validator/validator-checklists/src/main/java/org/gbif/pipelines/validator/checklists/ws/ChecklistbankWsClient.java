@@ -1,10 +1,11 @@
-package org.gbif.pipelines.validator.ws;
+package org.gbif.pipelines.validator.checklists.ws;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import org.gbif.dwc.terms.Term;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,14 +29,7 @@ public interface ChecklistbankWsClient {
   }
 
   @GetMapping(path = "dataset/{key}/import")
-  List<ImportResponse> checkImport(@PathVariable("key") int key);
-
-  @Data
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  class ImportResponse {
-    private int datasetKey;
-    private String status;
-  }
+  List<ClbDatasetImport> checkImport(@PathVariable("key") int key);
 
   @GetMapping(path = "dataset/{key}/verbatim")
   VerbatimResponse getVerbatim(
