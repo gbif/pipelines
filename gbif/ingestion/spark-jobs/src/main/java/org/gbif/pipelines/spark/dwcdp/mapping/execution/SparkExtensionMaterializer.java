@@ -192,13 +192,25 @@ public final class SparkExtensionMaterializer {
   private ExtensionMaterializationResult materializeUnion(
       TableLoader loader, CompiledExtension extension) {
     List<FragmentResult> rows = new ArrayList<>();
+    List<CompiledFragment> enrichments = new ArrayList<>();
     Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
 
     for (CompiledFragment fragment : extension.fragments()) {
+      if (fragment.rowMatch().isPresent()) {
+        enrichments.add(fragment);
+        continue;
+      }
       if (loader.load(fragment.sourceResource()).isEmpty()) {
         continue;
       }
       FragmentResult materialized = materializeFragment(loader, fragment, true, true, Set.of());
+      if (fragment.rowIdentity().isPresent()) {
+        materialized =
+            new FragmentResult(
+                materialized.dataset().filter(col(COL_ROW_KEY).isNotNull()),
+                materialized.parentKeySource(),
+                materialized.targets());
+      }
       rows.add(materialized);
       materialized.targets().forEach(targets::putIfAbsent);
     }
@@ -226,6 +238,32 @@ public final class SparkExtensionMaterializer {
     Dataset<Row> combined = rows.get(0).dataset();
     for (int i = 1; i < rows.size(); i++) {
       combined = combined.unionByName(rows.get(i).dataset(), true);
+    }
+
+    for (CompiledFragment fragment : enrichments) {
+      if (loader.load(fragment.sourceResource()).isEmpty()) {
+        continue;
+      }
+      FragmentResult enrichment = materializeFragment(loader, fragment, false, false, Set.of());
+      ensureNoDuplicateTargets(targets, enrichment.targets(), Set.of());
+
+      Dataset<Row> enrichmentForJoin = enrichment.dataset();
+      Column joinCondition = combined.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY));
+      // When an enrichment is scoped by the same logical field it matches, row identity alone is
+      // sufficient. Otherwise keep the enrichment parent-scoped to avoid cross-parent matches.
+      if (!fragment.scopeKey().equals(fragment.rowMatch().orElseThrow())) {
+        joinCondition =
+            combined
+                .col(COL_PARENT_KEY)
+                .equalTo(enrichmentForJoin.col(COL_PARENT_KEY))
+                .and(joinCondition);
+      }
+      combined =
+          combined
+              .join(enrichmentForJoin, joinCondition, "left_outer")
+              .drop(enrichmentForJoin.col(COL_PARENT_KEY))
+              .drop(enrichmentForJoin.col(COL_ROW_KEY));
+      enrichment.targets().forEach(targets::putIfAbsent);
     }
 
     // UNION row identity is the visible extension payload within one parent, matching the legacy

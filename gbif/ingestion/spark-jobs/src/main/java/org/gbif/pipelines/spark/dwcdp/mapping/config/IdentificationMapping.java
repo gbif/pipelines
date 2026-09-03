@@ -40,6 +40,22 @@ public final class IdentificationMapping {
     return builder.build();
   }
 
+  /** Occurrence identification history promoted to Event core and routed to that occurrence. */
+  public static ExtensionFragment occurrenceHistoryForEvent(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification =
+        occurrence.join(IDENTIFICATION).via("occurrence_fk").optional().fanOut();
+    MappingPath agent = identification.join(AGENT).via("identifiedByID").optional().fanOut();
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "occurrence-identification-history-for-event", ROW_TYPE_IDENTIFICATION, agent)
+            .scopeKey("event_fk")
+            .rowIdentity(identification.field("identification_pk"));
+    addIdentificationFields(graph, builder, identification, agent);
+    OccurrenceExtensionRouting.addOccurrenceId(builder, occurrence);
+    return builder.build();
+  }
+
   /** Identifications explicitly linked to a directly Event-owned nucleotide analysis. */
   public static ExtensionFragment eventDnaAnalysisIdentifications(SchemaGraph graph) {
     return dnaIdentifications(
@@ -117,11 +133,46 @@ public final class IdentificationMapping {
                             FilterExpression.isNull("nucleotideAnalysis_fk"))))));
   }
 
+  /** DNA-analysis identifications owned through a specific Event-nested Occurrence. */
+  public static ExtensionFragment occurrenceDnaAnalysisIdentificationsForEvent(SchemaGraph graph) {
+    return dnaIdentifications(
+        graph,
+        DnaSpec.routed(
+            "material-dna-analysis-identifications-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.fanOut(IDENTIFICATION, "nucleotideAnalysis_fk")
+                    .filter(FilterExpression.isNull("occurrence_fk")))));
+  }
+
+  /** DNA-sequence identifications owned through a specific Event-nested Occurrence. */
+  public static ExtensionFragment occurrenceDnaSequenceIdentificationsForEvent(SchemaGraph graph) {
+    return dnaIdentifications(
+        graph,
+        DnaSpec.routed(
+            "material-dna-sequence-identifications-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
+                OwnershipPathStep.fanOut(IDENTIFICATION, "nucleotideSequence_fk")
+                    .filter(
+                        FilterExpression.and(
+                            FilterExpression.isNull("occurrence_fk"),
+                            FilterExpression.isNull("nucleotideAnalysis_fk"))))));
+  }
+
   private static ExtensionFragment dnaIdentifications(SchemaGraph graph, DnaSpec spec) {
     Objects.requireNonNull(graph, "graph");
     Objects.requireNonNull(spec, "spec");
 
-    MappingPath current = MappingPath.root(graph, spec.sourceResource());
+    MappingPath source = MappingPath.root(graph, spec.sourceResource());
+    MappingPath current = source;
     for (OwnershipPathStep step : spec.ownershipPath()) {
       current = step.appendTo(current);
     }
@@ -138,6 +189,9 @@ public final class IdentificationMapping {
             .rowIdentity(identification.field("identification_pk"));
 
     addIdentificationFields(graph, builder, identification, agent);
+    if (spec.routeToOccurrence()) {
+      OccurrenceExtensionRouting.addOccurrenceId(builder, source);
+    }
     return builder.build();
   }
 
@@ -159,7 +213,25 @@ public final class IdentificationMapping {
       String fragmentName,
       String sourceResource,
       String scopeKeyColumn,
-      List<OwnershipPathStep> ownershipPath) {
+      List<OwnershipPathStep> ownershipPath,
+      boolean routeToOccurrence) {
+
+    private DnaSpec(
+        String fragmentName,
+        String sourceResource,
+        String scopeKeyColumn,
+        List<OwnershipPathStep> ownershipPath) {
+      this(fragmentName, sourceResource, scopeKeyColumn, ownershipPath, false);
+    }
+
+    static DnaSpec routed(
+        String fragmentName,
+        String sourceResource,
+        String scopeKeyColumn,
+        List<OwnershipPathStep> ownershipPath) {
+      return new DnaSpec(fragmentName, sourceResource, scopeKeyColumn, ownershipPath, true);
+    }
+
     private DnaSpec {
       Objects.requireNonNull(fragmentName, "fragmentName");
       Objects.requireNonNull(sourceResource, "sourceResource");

@@ -50,6 +50,8 @@ public final class EsConstants {
 
     public static final String INDEX_ANALYSIS = "analysis";
     public static final String INDEX_QUERY_DEFAULT_FIELD = "index.query.default_field";
+
+    public static final String INDEX_CODEC = "index.codec";
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)

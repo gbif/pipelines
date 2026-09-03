@@ -495,6 +495,7 @@ MappingCompiler
 CompiledMapping
 ```
 
+
 ### 7.1 Fail before Spark where possible
 
 Invalid configuration detectable from the mapping definition and schema should fail here.

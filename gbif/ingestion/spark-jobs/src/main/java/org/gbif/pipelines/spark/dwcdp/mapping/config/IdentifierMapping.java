@@ -40,6 +40,41 @@ public final class IdentifierMapping {
     return builder.build();
   }
 
+  /** Direct Occurrence identifiers promoted to Event core and routed to that occurrence. */
+  public static ExtensionFragment occurrenceIdentifiersForEvent(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identifiers =
+        occurrence.join("occurrence-identifier").via("occurrence_fk").optional().fanOut();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment("occurrence-identifiers-for-event", ROW_TYPE_IDENTIFIER, identifiers)
+            .scopeKey("event_fk")
+            .rowIdentity(identifiers.field("identifier"));
+
+    DirectFieldMappings.from(graph, "occurrence-identifier", identifiers).addTo(builder);
+    OccurrenceExtensionRouting.addOccurrenceId(builder, occurrence);
+    return builder.build();
+  }
+
+  /** Material identifiers owned through a specific Event-nested Occurrence. */
+  public static ExtensionFragment materialIdentifiersForEvent(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material =
+        occurrence.join("material").via("evidenceForOccurrenceID").optional().exactlyOne();
+    MappingPath identifiers =
+        material.join("material-identifier").via("materialEntity_fk").optional().fanOut();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "material-identifiers-for-event-occurrence", ROW_TYPE_IDENTIFIER, identifiers)
+            .scopeKey("event_fk")
+            .rowIdentity(identifiers.field("identifier"));
+
+    DirectFieldMappings.from(graph, "material-identifier", identifiers).addTo(builder);
+    OccurrenceExtensionRouting.addOccurrenceId(builder, occurrence);
+    return builder.build();
+  }
+
   /** Direct {@code occurrence-identifier} rows attached to Occurrence core records. */
   public static ExtensionFragment occurrenceIdentifiers(SchemaGraph graph) {
     MappingPath identifiers = MappingPath.root(graph, "occurrence-identifier");
