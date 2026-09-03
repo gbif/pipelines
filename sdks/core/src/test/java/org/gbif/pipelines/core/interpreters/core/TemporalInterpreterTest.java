@@ -1,21 +1,15 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY;
-import static org.gbif.api.vocabulary.OccurrenceIssue.MODIFIED_DATE_UNLIKELY;
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_MISMATCH;
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_UNLIKELY;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.gbif.common.parsers.date.DateComponentOrdering.MDY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.time.Instant;
 import java.time.Year;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
@@ -452,7 +446,7 @@ public class TemporalInterpreterTest {
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), NEXT_YEAR + "-01-11");
     interpreter.interpretDateIdentified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
-    assertEquals(IDENTIFIED_DATE_UNLIKELY.name(), tr.getIssues().getIssueList().get(0));
+    assertEquals(IDENTIFIED_DATE_INVALID.name(), tr.getIssues().getIssueList().get(0));
 
     tr.getIssues().getIssueList().clear();
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1752-12-31");
@@ -1420,5 +1414,38 @@ public class TemporalInterpreterTest {
     assertNull(tr.getDay());
 
     assertEquals(2, tr.getIssues().getIssueList().size());
+  }
+
+  @Test
+  public void testInvalidDateIdentified() {
+    Map<String, String> map = new HashMap<>();
+
+    Map<String, String> identificationExtension = new HashMap<>();
+    identificationExtension.put(DwcTerm.dateIdentified.qualifiedName(), "+19634-02-24");
+
+    ExtendedRecord er =
+        ExtendedRecord.newBuilder()
+            .setId("1")
+            .setCoreTerms(map)
+            .setExtensions(
+                Map.of(DwcTerm.Identification.qualifiedName(), List.of(identificationExtension)))
+            .build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+    TemporalRecord record =
+        TemporalRecord.newBuilder()
+            .setId("1")
+            .setCoreId("1")
+            .setCreated(Instant.now().toEpochMilli())
+            .build();
+
+    // Sequentially apply interpreters
+    TemporalInterpreter interpreter = TemporalInterpreter.builder().create();
+    interpreter.interpretTemporal(er, record);
+    interpreter.interpretModified(er, record);
+    interpreter.interpretDateIdentified(er, tr);
+
+    assertEquals(1, tr.getIssues().getIssueList().size());
+    assertEquals(IDENTIFIED_DATE_INVALID.name(), tr.getIssues().getIssueList().get(0));
+    assertNull(tr.getDateIdentified());
   }
 }

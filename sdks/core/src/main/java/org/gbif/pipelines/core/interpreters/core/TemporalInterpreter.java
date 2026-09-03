@@ -188,8 +188,10 @@ public class TemporalInterpreter implements Serializable {
               normalizedValue,
               validRecordedDateRange,
               OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY,
-              OccurrenceIssue.IDENTIFIED_DATE_INVALID);
-      if (parsed.isSuccessful()) {
+              OccurrenceIssue.IDENTIFIED_DATE_INVALID,
+              true);
+      if (parsed.isSuccessful()
+          && !parsed.getIssues().contains(OccurrenceIssue.IDENTIFIED_DATE_INVALID)) {
         Optional.ofNullable(parsed.getPayload())
             .map(TemporalAccessor::toString)
             .ifPresent(tr::setDateIdentified);
