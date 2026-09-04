@@ -15,7 +15,7 @@ public class CleanDelimiterArraysUdf implements UDF1<WrappedArray<String>, Strin
 
   @Override
   public String[] call(WrappedArray<String> field) throws Exception {
-    return field != null && !field.isEmpty() ? toArray(field) : null;
+    return field != null && !field.isEmpty() ? toArray(field) : new String[0];
   }
 
   /** Converts to an array, returns null if the produced array is empty. */
@@ -25,6 +25,6 @@ public class CleanDelimiterArraysUdf implements UDF1<WrappedArray<String>, Strin
             .map(CLEAN_DELIMITERS)
             .filter(s -> s != null && !s.isEmpty())
             .toArray(String[]::new);
-    return value.length > 0 ? value : null;
+    return value.length > 0 ? value : new String[0];
   }
 }
