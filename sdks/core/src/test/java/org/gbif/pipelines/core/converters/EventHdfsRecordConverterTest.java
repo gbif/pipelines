@@ -15,7 +15,6 @@ import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.*;
@@ -48,7 +47,7 @@ public class EventHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.datasetID.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.datasetName.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.samplingProtocol.simpleName(), multiValue1 + "|" + multiValue2);
-    coreTerms.put(GbifTerm.projectId.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.projectID.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.taxonConceptID.simpleName(), "v_taxonConceptID");
     coreTerms.put(DwcTerm.associatedSequences.simpleName(), "v_ad");
     coreTerms.put(DwcTerm.previousIdentifications.simpleName(), "v_previousIdentifications");

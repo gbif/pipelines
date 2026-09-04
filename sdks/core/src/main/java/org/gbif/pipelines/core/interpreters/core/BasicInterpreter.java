@@ -286,9 +286,9 @@ public class BasicInterpreter {
     }
   }
 
-  /** {@link org.gbif.dwc.terms.GbifTerm#projectId} interpretation. */
+  /** {@link org.gbif.dwc.terms.DwcTerm#projectID} interpretation. */
   public static void interpretProjectId(ExtendedRecord er, BasicRecord br) {
-    List<String> list = extractListValue(er, GbifTerm.projectId);
+    List<String> list = extractListValue(er, DwcTerm.projectID);
     if (!list.isEmpty()) {
       br.setProjectId(list);
     }
