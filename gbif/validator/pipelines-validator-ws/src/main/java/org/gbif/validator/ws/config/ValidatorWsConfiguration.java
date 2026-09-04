@@ -12,10 +12,8 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
-import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileStoreManager;
-import org.gbif.validator.ws.serde.ValidationMixin;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -77,7 +75,6 @@ public class ValidatorWsConfiguration {
   public ObjectMapper registryObjectMapper() {
     ObjectMapper objectMapper = JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
     objectMapper.registerModule(new JavaTimeModule());
-    objectMapper.addMixIn(Validation.class, ValidationMixin.class);
     return objectMapper;
   }
 

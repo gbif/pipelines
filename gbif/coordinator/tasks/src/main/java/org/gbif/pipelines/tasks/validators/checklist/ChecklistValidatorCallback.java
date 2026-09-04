@@ -133,7 +133,7 @@ public class ChecklistValidatorCallback
 
     // In case when validation was finihsed we need don't need to update the status
     if (validation.hasFinished()) {
-      newStatus = validation.getStatus();
+      return validation;
     }
 
     validation.setStatus(newStatus);

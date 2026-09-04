@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -74,10 +75,7 @@ public class Validations {
     Long indexedCount = Optional.ofNullable(f1.getIndexedCount()).orElse(f2.getIndexedCount());
     String rowType = Optional.ofNullable(f1.getRowType()).orElse(f2.getRowType());
 
-    // TODO: need to check duplicates??
-    List<TermInfo> termInfos = new ArrayList<>(f1.getTerms().size() + f2.getTerms().size());
-    termInfos.addAll(f1.getTerms());
-    termInfos.addAll(f2.getTerms());
+    List<TermInfo> termInfos = mergeTermsInfo(f1.getTerms(), f2.getTerms());
 
     List<IssueInfo> issueInfos = new ArrayList<>(f1.getTerms().size() + f2.getTerms().size());
     issueInfos.addAll(f1.getIssues());
@@ -94,19 +92,15 @@ public class Validations {
         .build();
   }
 
-  // TODO: do we need this?
-  //  /**
-  //   * Merge TermInfo where "to" is the main file and add only unique values "from" object
-  //   */
-  //  private static List<TermInfo> mergeTermsInfo(List<TermInfo> from, List<TermInfo> to) {
-  //
-  //    Set<String> toSet = to.stream().map(TermInfo::getTerm).collect(Collectors.toSet());
-  //    List<TermInfo> filtered =
-  //      from.stream().filter(x -> !toSet.contains(x.getTerm())).collect(Collectors.toList());
-  //
-  //    ArrayList<TermInfo> result = new ArrayList<>(to.size() + filtered.size());
-  //    result.addAll(to);
-  //    result.addAll(filtered);
-  //    return result;
-  //  }
+  /** Merge TermInfo where "to" is the main file and add only unique values "from" object */
+  private static List<TermInfo> mergeTermsInfo(List<TermInfo> from, List<TermInfo> to) {
+    Set<String> toSet = to.stream().map(TermInfo::getTerm).collect(Collectors.toSet());
+    List<TermInfo> filtered =
+        from.stream().filter(x -> !toSet.contains(x.getTerm())).collect(Collectors.toList());
+
+    ArrayList<TermInfo> result = new ArrayList<>(to.size() + filtered.size());
+    result.addAll(to);
+    result.addAll(filtered);
+    return result;
+  }
 }
