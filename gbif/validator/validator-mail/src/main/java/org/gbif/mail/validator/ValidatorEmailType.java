@@ -5,7 +5,7 @@ import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.gbif.mail.EmailType;
-import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public enum ValidatorEmailType implements EmailType {
@@ -13,11 +13,11 @@ public enum ValidatorEmailType implements EmailType {
 
   FAILED("failedValidation", "failed_validation.ftl");
 
-  private static final ResourceBundleMessageSource MESSAGE_SOURCE;
+  private static final ReloadableResourceBundleMessageSource MESSAGE_SOURCE;
 
   static {
-    MESSAGE_SOURCE = new ResourceBundleMessageSource();
-    MESSAGE_SOURCE.setBasename("email/subjects/validation_email_subjects");
+    MESSAGE_SOURCE = new ReloadableResourceBundleMessageSource();
+    MESSAGE_SOURCE.setBasename("classpath:email/subjects/validation_email_subjects");
     MESSAGE_SOURCE.setDefaultEncoding(StandardCharsets.UTF_8.displayName());
   }
 
