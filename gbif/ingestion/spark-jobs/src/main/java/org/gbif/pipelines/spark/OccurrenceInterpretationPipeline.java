@@ -886,9 +886,11 @@ public class OccurrenceInterpretationPipeline {
 
       Column classification = element_at(col("classificationdetails"), lit(uuid));
       Column taxonomicStatus = element_at(col("taxonomicstatuses"), lit(uuid));
-      Column taxonomicIssue = element_at(col("taxonomicissue"), lit(uuid));
-      Column taxonkeys = element_at(col("classifications"), lit(uuid));
+      Column taxonomicIssue = element_at(col("taxonomicissues"), lit(uuid));
+      Column taxonKeys = element_at(col("classifications"), lit(uuid));
 
+      // construct a new struct column of the form "gbif_classification" or "ncbi_classification"
+      // based on the column prefix
       String newStructName = columnPrefix + "_classification";
 
       withClassifications =
@@ -931,7 +933,7 @@ public class OccurrenceInterpretationPipeline {
                   element_at(classification, lit("subgenus")).as("subgenus"),
                   element_at(classification, lit("species")).as("species"),
                   element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
-                  taxonkeys.as("taxonkeys"),
+                  taxonKeys.as("taxonkeys"),
                   taxonomicIssue.as("taxonomicissue"),
                   taxonomicStatus.as("taxonomicstatus")));
     }
