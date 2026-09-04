@@ -6,8 +6,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.ToString;
-import org.gbif.cli.PropertyName;
 import org.gbif.common.messaging.config.MessagingConfiguration;
+import org.gbif.pipelines.common.configs.ChecklistBankConfiguration;
 import org.gbif.pipelines.common.configs.RegistryConfiguration;
 
 /** Configuration required to validate downloaded archive */
@@ -28,15 +28,6 @@ public class ChecklistValidatorConfiguration {
   @Min(1)
   public int poolSize;
 
-  @Parameter(names = "--clb-api-url")
-  @PropertyName("clb.api.url")
-  public String clbApiUrl;
-
-  @Parameter(names = "--clb-api-user")
-  @PropertyName("clb.api.user")
-  public String clbApiUser;
-
-  @Parameter(names = "--clb-api-password")
-  @PropertyName("clb.api.password")
-  public String clbApiPassword;
+  @ParametersDelegate @Valid @NotNull
+  public ChecklistBankConfiguration clbConfig = new ChecklistBankConfiguration();
 }

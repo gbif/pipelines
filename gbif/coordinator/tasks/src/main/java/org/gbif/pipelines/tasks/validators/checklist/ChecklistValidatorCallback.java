@@ -44,7 +44,8 @@ public class ChecklistValidatorCallback
     this.config = config;
     this.validationClient = validationClient;
     this.checklistValidator =
-        new ChecklistValidator(config.clbApiUrl, config.clbApiUser, config.clbApiPassword, null);
+        new ChecklistValidator(
+            config.clbConfig.url, config.clbConfig.user, config.clbConfig.password, null);
     this.messagePublisher = messagePublisher;
   }
 
