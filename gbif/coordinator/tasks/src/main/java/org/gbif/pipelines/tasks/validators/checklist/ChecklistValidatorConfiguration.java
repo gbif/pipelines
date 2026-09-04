@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.cli.PropertyName;
 import org.gbif.common.messaging.config.MessagingConfiguration;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.RegistryConfiguration;
 
 /** Configuration required to validate downloaded archive */
@@ -28,13 +27,6 @@ public class ChecklistValidatorConfiguration {
   @NotNull
   @Min(1)
   public int poolSize;
-
-  @Parameter(names = "--meta-file-name")
-  public String metaFileName = Pipeline.VALIDATOR + ".yml";
-
-  @Parameter(names = "--archive-repository")
-  @NotNull
-  public String archiveRepository;
 
   @Parameter(names = "--clb-api-url")
   @PropertyName("clb.api.url")

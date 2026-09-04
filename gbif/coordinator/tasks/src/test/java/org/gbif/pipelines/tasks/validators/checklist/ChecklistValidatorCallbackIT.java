@@ -28,7 +28,6 @@ public class ChecklistValidatorCallbackIT {
   public void checklistTest() {
     // State
     ChecklistValidatorConfiguration config = new ChecklistValidatorConfiguration();
-    config.archiveRepository = getClass().getResource("/dwca/").getFile();
 
     ChecklistbankWsClient checklistbankWsClientMock = new ChecklistbankWsClientMock();
     ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClientMock, null);
