@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.ws.metadata.contentful;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.instrumentation.NoopInstrumentation;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -39,7 +40,9 @@ public class ContentService {
         RestClient.builder(hosts)
             .setRequestConfigCallback(b -> b.setConnectTimeout(180_000).setSocketTimeout(180_000))
             .build();
-    return new ElasticsearchClient(new RestClientTransport(restClient, new JacksonJsonpMapper()));
+    return new ElasticsearchClient(
+        new RestClientTransport(
+            restClient, new JacksonJsonpMapper(), null, NoopInstrumentation.INSTANCE));
   }
 
   /**

@@ -2,6 +2,7 @@ package org.gbif.pipelines.validator.factory;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.instrumentation.NoopInstrumentation;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.util.Arrays;
 import lombok.SneakyThrows;
@@ -23,7 +24,11 @@ public class ElasticsearchClientFactory {
     HttpHost[] hosts = Arrays.stream(esHosts).map(HttpHost::create).toArray(HttpHost[]::new);
     this.client =
         new ElasticsearchClient(
-            new RestClientTransport(RestClient.builder(hosts).build(), new JacksonJsonpMapper()));
+            new RestClientTransport(
+                RestClient.builder(hosts).build(),
+                new JacksonJsonpMapper(),
+                null,
+                NoopInstrumentation.INSTANCE));
   }
 
   public static ElasticsearchClient getInstance(String... esHosts) {
