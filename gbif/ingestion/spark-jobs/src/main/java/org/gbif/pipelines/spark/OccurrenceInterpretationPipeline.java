@@ -934,7 +934,7 @@ public class OccurrenceInterpretationPipeline {
                   element_at(classification, lit("species")).as("species"),
                   element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
                   taxonKeys.as("taxonkeys"),
-coalesce(taxonomicIssue, array().cast("array<string>")).as("taxonomicissue"),
+                  coalesce(taxonomicIssue, array().cast("array<string>")).as("taxonomicissue"),
                   taxonomicStatus.as("taxonomicstatus")));
     }
 
