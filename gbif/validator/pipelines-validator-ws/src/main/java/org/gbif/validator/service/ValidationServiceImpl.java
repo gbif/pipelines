@@ -389,6 +389,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   }
 
   private Set<StepType> getPipelineSteps(DataFile dataFile) {
+    if (dataFile.getFileFormat() == FileFormat.COLDP) {
+      return Set.of(StepType.VALIDATOR_VALIDATE_ARCHIVE);
+    }
+
     StepType stepType;
     if (dataFile.getFileFormat() == FileFormat.DWCA
         || dataFile.getFileFormat() == FileFormat.TABULAR
