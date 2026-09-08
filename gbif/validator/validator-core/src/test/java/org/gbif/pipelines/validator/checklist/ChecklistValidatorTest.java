@@ -204,7 +204,7 @@ public class ChecklistValidatorTest {
           assertEquals(Long.valueOf(93966), fileInfo.getIndexedCount());
           assertEquals(8, fileInfo.getTerms().size());
 
-          assertEquals("NameUsage.txt", fileInfo.getFileName());
+          assertEquals("col:NameUsage.txt", fileInfo.getFileName());
 
           assertEquals(15, fileInfo.getIssues().size());
           assertEquals(Long.valueOf(33822), fileInfo.getIssues().get(0).getCount());
@@ -221,7 +221,7 @@ public class ChecklistValidatorTest {
         } else if (fileInfo.getRowType().equals(ColdpTerm.VernacularName.qualifiedName())) {
           assertEquals(Long.valueOf(43776), fileInfo.getCount());
           assertEquals(Long.valueOf(43776), fileInfo.getIndexedCount());
-          assertEquals("VernacularName.txt", fileInfo.getFileName());
+          assertEquals("col:VernacularName.txt", fileInfo.getFileName());
           assertEquals(3, fileInfo.getTerms().size());
           assertTrue(fileInfo.getIssues().isEmpty());
         }

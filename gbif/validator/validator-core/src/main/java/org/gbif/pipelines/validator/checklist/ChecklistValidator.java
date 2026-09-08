@@ -256,7 +256,7 @@ public class ChecklistValidator {
         datasetKey,
         rowType.simpleName());
     ChecklistbankWsClient.VerbatimResponse verbatimResponse =
-        checklistbankWsClient.getVerbatim(datasetKey, rowType.simpleName(), null, 1);
+        checklistbankWsClient.getVerbatim(datasetKey, rowType.prefixedName(), null, 1);
 
     if (verbatimResponse != null
         && verbatimResponse.getResult() != null

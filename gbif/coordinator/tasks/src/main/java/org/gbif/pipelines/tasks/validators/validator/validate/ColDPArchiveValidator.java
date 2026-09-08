@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.validators.validator.validate;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildChecklistDwcaInputPath;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -45,10 +46,6 @@ public class ColDPArchiveValidator implements ArchiveValidator {
     log.info("Running COLDP validator");
     Validation validation = validationClient.get(message.getDatasetUuid());
 
-    // DWCA validation
-    validation.setStatus(Validation.Status.WAITING_FOR_CHECKLISTBANK);
-    validation.setClbValidationMessage(OBJECT_MAPPER.writeValueAsString(message));
-
     Path archivePath =
         buildChecklistDwcaInputPath(
             config.archiveRepository, message.getDatasetUuid(), validation.getFile());
@@ -75,12 +72,20 @@ public class ColDPArchiveValidator implements ArchiveValidator {
                 return;
               }
 
-              log.info(
-                  "COLDP archive validation submitted with dataset key {} for validation {}",
-                  datasetKey,
-                  validationKey);
-              currentValidation.setClbDatasetKey(datasetKey);
-              validationClient.update(currentValidation);
+              try {
+                log.info(
+                    "COLDP archive validation submitted with dataset key {} for validation {}",
+                    datasetKey,
+                    validationKey);
+                currentValidation.setClbDatasetKey(datasetKey);
+                currentValidation.setClbValidationMessage(
+                    OBJECT_MAPPER.writeValueAsString(message));
+                validationClient.update(currentValidation);
+              } catch (JsonProcessingException e) {
+                log.error("Error updating COLDP validation for {}", validationKey, e);
+                currentValidation.setStatus(Validation.Status.FAILED);
+                validationClient.update(currentValidation);
+              }
             });
   }
 
