@@ -251,6 +251,8 @@ public class ChecklistValidator {
   }
 
   private Optional<String> getFileNameByRowType(int datasetKey, Term rowType) {
+    log.info(
+        "Getting verbatim data from CLB for datasetkey {} and rowType {}", datasetKey, rowType);
     ChecklistbankWsClient.VerbatimResponse verbatimResponse =
         checklistbankWsClient.getVerbatim(datasetKey, rowType.simpleName(), null, 1);
 
