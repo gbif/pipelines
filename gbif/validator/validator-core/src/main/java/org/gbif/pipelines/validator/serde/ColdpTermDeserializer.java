@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import java.io.IOException;
+import life.catalogue.coldp.ColdpTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
-import org.gbif.validator.api.ColdpTerm;
 
 public class ColdpTermDeserializer extends JsonDeserializer<Term> {
 
