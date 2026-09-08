@@ -8,6 +8,7 @@ import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.instrumentation.NoopInstrumentation;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -87,7 +88,8 @@ public class ElasticsearchWriter<T> {
     try (RestClient restClient = RestClient.builder(hosts).build();
         ElasticsearchClient client =
             new ElasticsearchClient(
-                new RestClientTransport(restClient, new JacksonJsonpMapper()))) {
+                new RestClientTransport(
+                    restClient, new JacksonJsonpMapper(), null, NoopInstrumentation.INSTANCE))) {
 
       final Phaser phaser = new Phaser(1);
 
