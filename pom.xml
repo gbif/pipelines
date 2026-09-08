@@ -532,7 +532,7 @@
       <dependency>
         <groupId>org.catalogueoflife</groupId>
         <artifactId>vocab</artifactId>
-        <version>{col.version}</version>
+        <version>${col.version}</version>
       </dependency>
 
       <!-- Avro -->
