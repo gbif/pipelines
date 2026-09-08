@@ -10,7 +10,11 @@
       "file": "identifier.txt",
       "type": "gbif:Identifier",
       "terms": {
-        "dwc:taxonID": "gbif.org:species:7471350"
+        "dwc:taxonID": "gbif.org:species:7471350",
+        "dwc:kingdom": "k",
+        "dwc:genus": "g",
+        "dwc:phylum": "p",
+        "dwc:order": "o"
       }
     }
   ],

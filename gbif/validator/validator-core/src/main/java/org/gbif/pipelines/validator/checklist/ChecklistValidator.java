@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -24,19 +25,21 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
 import org.gbif.validator.api.ClbDatasetImport;
+import org.gbif.validator.api.ColdpTerm;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
 import org.gbif.ws.client.ClientBuilder;
-import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 /** Evaluates checklists using ChecklistBank.org API. */
 @Slf4j
 public class ChecklistValidator {
 
   private static final int SAMPLE_ISSUES_SIZE = 5;
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER =
+      ObjectMapperUtils.createObjectMapperWithColDPSupport();
 
   private final ChecklistbankWsClient checklistbankWsClient;
   private final String callbackUrl;
@@ -56,7 +59,7 @@ public class ChecklistValidator {
     return new ClientBuilder()
         .withUrl(clbApiUrl)
         .withCredentials(clbApiUser, clbApiPassword)
-        .withObjectMapper(JacksonJsonObjectMapperProvider.getDefaultObjectMapper())
+        .withObjectMapper(ObjectMapperUtils.createObjectMapperWithColDPSupport())
         .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
         .build(ChecklistbankWsClient.class);
   }
@@ -86,6 +89,15 @@ public class ChecklistValidator {
 
   @SneakyThrows
   public List<Metrics.FileInfo> evaluateResults(ClbDatasetImport clbDatasetImport) {
+    if (clbDatasetImport.getFormat().equalsIgnoreCase("coldp")) {
+      return evaluateColDPResults(clbDatasetImport);
+    } else {
+      return evaluateDwcaResults(clbDatasetImport);
+    }
+  }
+
+  @SneakyThrows
+  private List<Metrics.FileInfo> evaluateDwcaResults(ClbDatasetImport clbDatasetImport) {
     List<Metrics.FileInfo> results = new ArrayList<>();
 
     int datasetKey = clbDatasetImport.getDatasetKey();
@@ -114,7 +126,7 @@ public class ChecklistValidator {
                             .issue(e.getKey())
                             .count(e.getValue())
                             .issueCategory(EvaluationCategory.CLB_INTERPRETATION_BASED)
-                            .samples(getIssueSamples(datasetKey, e.getKey()))
+                            .samples(getDwcaIssueSamples(datasetKey, e.getKey()))
                             .build())
                 .toList();
 
@@ -146,6 +158,74 @@ public class ChecklistValidator {
   }
 
   @SneakyThrows
+  private List<Metrics.FileInfo> evaluateColDPResults(ClbDatasetImport clbDatasetImport) {
+    List<Metrics.FileInfo> results = new ArrayList<>();
+
+    int datasetKey = clbDatasetImport.getDatasetKey();
+
+    Term mainRowType = getColDPMainRowType(clbDatasetImport);
+
+    List<Metrics.IssueInfo> issues =
+        clbDatasetImport.getIssuesCount().entrySet().stream()
+            .map(
+                e ->
+                    Metrics.IssueInfo.builder()
+                        .issue(e.getKey())
+                        .count(e.getValue())
+                        .issueCategory(EvaluationCategory.CLB_INTERPRETATION_BASED)
+                        .samples(getColDPIssueSamples(datasetKey, e.getKey(), mainRowType))
+                        .build())
+            .toList();
+
+    for (Map.Entry<Term, Map<Term, Long>> entry :
+        clbDatasetImport.getVerbatimByRowTypeCount().entrySet()) {
+      Term rowType = entry.getKey();
+      Map<Term, Long> terms = entry.getValue();
+      List<Metrics.TermInfo> termsInfo =
+          terms.entrySet().stream()
+              .map(
+                  e ->
+                      Metrics.TermInfo.builder()
+                          .term(e.getKey().qualifiedName())
+                          .rawIndexed(e.getValue())
+                          .build())
+              .toList();
+
+      var fileInforBuilder =
+          Metrics.FileInfo.builder()
+              .rowType(rowType.qualifiedName())
+              .count(clbDatasetImport.getVerbatimByTermCount().get(rowType))
+              .fileName(getFileNameByRowType(datasetKey, rowType).orElse(null))
+              .terms(termsInfo)
+              .indexedCount(getColDPRowTypeCount(rowType, clbDatasetImport));
+
+      if (rowType == mainRowType) {
+        fileInforBuilder.issues(issues);
+      }
+
+      results.add(fileInforBuilder.build());
+    }
+
+    return results;
+  }
+
+  private Term getColDPMainRowType(ClbDatasetImport clbDatasetImport) {
+    Set<Term> rowTypes = clbDatasetImport.getVerbatimByTermCount().keySet();
+    if (rowTypes.contains(ColdpTerm.NameUsage)) {
+      return ColdpTerm.NameUsage;
+    } else if (rowTypes.contains(ColdpTerm.Taxon)) {
+      return ColdpTerm.Taxon;
+    } else if (rowTypes.contains(ColdpTerm.Name)) {
+      return ColdpTerm.Name;
+    } else if (rowTypes.contains(ColdpTerm.Reference)) {
+      return ColdpTerm.Reference;
+    } else {
+      // we get the first one as default
+      return rowTypes.iterator().next();
+    }
+  }
+
+  @SneakyThrows
   public PipelinesBalancerMessage createNextMessage(String rawPreviousMessage) {
     PipelinesArchiveValidatorMessage previousMessage =
         OBJECT_MAPPER.readValue(rawPreviousMessage, PipelinesArchiveValidatorMessage.class);
@@ -159,7 +239,11 @@ public class ChecklistValidator {
     nextMessage.setPipelineSteps(previousMessage.getPipelineSteps());
     nextMessage.setExecutionId(previousMessage.getExecutionId());
     nextMessage.setDatasetType(DatasetType.CHECKLIST);
-    nextMessage.setEndpointType(EndpointType.DWC_ARCHIVE);
+    if (previousMessage.getFileFormat().equalsIgnoreCase("COLDP")) {
+      nextMessage.setEndpointType(EndpointType.COLDP);
+    } else {
+      nextMessage.setEndpointType(EndpointType.DWC_ARCHIVE);
+    }
 
     String nextMessageClassName = nextMessage.getClass().getSimpleName();
     String messagePayload = nextMessage.toString();
@@ -177,10 +261,20 @@ public class ChecklistValidator {
     return Optional.empty();
   }
 
-  private List<Metrics.IssueSample> getIssueSamples(int datasetKey, String issue) {
+  private List<Metrics.IssueSample> getDwcaIssueSamples(int datasetKey, String issue) {
+    return getIssueSamples(datasetKey, issue, DwcTerm.Taxon, DwcTerm.taxonID);
+  }
+
+  private List<Metrics.IssueSample> getColDPIssueSamples(
+      int datasetKey, String issue, Term rowType) {
+    return getIssueSamples(datasetKey, issue, rowType, ColdpTerm.ID);
+  }
+
+  private List<Metrics.IssueSample> getIssueSamples(
+      int datasetKey, String issue, Term rowType, Term idTerm) {
     ChecklistbankWsClient.VerbatimResponse verbatimResponse =
         checklistbankWsClient.getVerbatim(
-            datasetKey, DwcTerm.Taxon.simpleName(), issue, SAMPLE_ISSUES_SIZE);
+            datasetKey, rowType.simpleName(), issue, SAMPLE_ISSUES_SIZE);
     if (verbatimResponse == null
         || verbatimResponse.getResult() == null
         || verbatimResponse.getResult().isEmpty()) {
@@ -191,10 +285,10 @@ public class ChecklistValidator {
     return verbatimResponse.getResult().stream()
         .map(
             r -> {
-              String recordID = r.getTerms().get(DwcTerm.taxonID);
+              String recordID = r.getTerms().get(idTerm);
               Map<String, String> relatedData =
                   r.getTerms().entrySet().stream()
-                      .filter(t -> t.getKey() != DwcTerm.taxonID)
+                      .filter(t -> t.getKey() != idTerm)
                       .collect(
                           Collectors.toMap(t -> t.getKey().qualifiedName(), Map.Entry::getValue));
               return Metrics.IssueSample.builder()
@@ -217,5 +311,39 @@ public class ChecklistValidator {
       case MULTIMEDIA -> importerResponse.getMediaCount();
       default -> null;
     };
+  }
+
+  private Long getColDPRowTypeCount(Term rowType, ClbDatasetImport importerResponse) {
+    if (rowType == ColdpTerm.Distribution) {
+      return importerResponse.getDistributionCount();
+    } else if (rowType == ColdpTerm.Taxon) {
+      return importerResponse.getTaxonCount();
+    } else if (rowType == ColdpTerm.Name) {
+      return importerResponse.getNameCount();
+    } else if (rowType == ColdpTerm.NameUsage) {
+      return importerResponse.getUsagesCount();
+    } else if (rowType == ColdpTerm.Synonym) {
+      return importerResponse.getSynonymCount();
+    } else if (rowType == ColdpTerm.Treatment) {
+      return importerResponse.getTreatmentCount();
+    } else if (rowType == ColdpTerm.Reference) {
+      return importerResponse.getReferenceCount();
+    } else if (rowType == ColdpTerm.VernacularName) {
+      return importerResponse.getVernacularCount();
+    } else if (rowType == ColdpTerm.TypeMaterial) {
+      return importerResponse.getTypeMaterialCount();
+    } else if (rowType == ColdpTerm.Media) {
+      return importerResponse.getMediaCount();
+    } else if (rowType == ColdpTerm.NameRelation) {
+      return importerResponse.getNameRelationsCount();
+    } else if (rowType == ColdpTerm.TaxonConceptRelation) {
+      return importerResponse.getTaxonConceptRelationsCount();
+    } else if (rowType == ColdpTerm.SpeciesInteraction) {
+      return importerResponse.getSpeciesInteractionsCount();
+    } else if (rowType == ColdpTerm.SpeciesEstimate) {
+      return importerResponse.getEstimateCount();
+    } else {
+      return null;
+    }
   }
 }

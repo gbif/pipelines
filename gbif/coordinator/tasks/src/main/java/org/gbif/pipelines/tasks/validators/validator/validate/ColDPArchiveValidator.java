@@ -10,7 +10,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
-import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.checklist.ChecklistValidator;
 import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
@@ -18,29 +17,35 @@ import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Slf4j
-public class ChecklistDwcaArchiveValidator extends BaseDwcaArchiveValidator {
+public class ColDPArchiveValidator implements ArchiveValidator {
 
   private static final ObjectMapper OBJECT_MAPPER =
       ObjectMapperUtils.createObjectMapperWithColDPSupport();
 
+  private final ArchiveValidatorConfiguration config;
+  private final ValidationWsClient validationClient;
+  private final PipelinesArchiveValidatorMessage message;
   private final ChecklistValidator checklistValidator;
 
   @Builder
-  public ChecklistDwcaArchiveValidator(
+  public ColDPArchiveValidator(
       ArchiveValidatorConfiguration config,
       ValidationWsClient validationClient,
-      SchemaValidatorFactory schemaValidatorFactory,
       PipelinesArchiveValidatorMessage message,
       ChecklistValidator checklistValidator) {
-    super(config, validationClient, schemaValidatorFactory, message);
+    this.config = config;
+    this.validationClient = validationClient;
+    this.message = message;
     this.checklistValidator = checklistValidator;
   }
 
-  @Override
   @SneakyThrows
-  public Validation runValidations(Validation validation) {
+  @Override
+  public void validate() {
+    log.info("Running COLDP validator");
+    Validation validation = validationClient.get(message.getDatasetUuid());
+
     // DWCA validation
-    validation = validateDwcaArchive(validation);
     validation.setStatus(Validation.Status.WAITING_FOR_CHECKLISTBANK);
     validation.setClbValidationMessage(OBJECT_MAPPER.writeValueAsString(message));
 
@@ -61,7 +66,7 @@ public class ChecklistDwcaArchiveValidator extends BaseDwcaArchiveValidator {
 
               if (throwable != null || datasetKey == null) {
                 log.error(
-                    "Error submitting CLB validation for {} and datasetKey received {}",
+                    "Error submitting COLDP validation for {} and datasetKey received {}",
                     validationKey,
                     datasetKey,
                     throwable);
@@ -71,14 +76,12 @@ public class ChecklistDwcaArchiveValidator extends BaseDwcaArchiveValidator {
               }
 
               log.info(
-                  "CLB archive validation submitted with dataset key {} for validation {}",
+                  "COLDP archive validation submitted with dataset key {} for validation {}",
                   datasetKey,
                   validationKey);
               currentValidation.setClbDatasetKey(datasetKey);
               validationClient.update(currentValidation);
             });
-
-    return validation;
   }
 
   @Override

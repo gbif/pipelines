@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileStoreManager;
 import org.gbif.ws.client.ClientBuilder;
@@ -73,7 +74,7 @@ public class ValidatorWsConfiguration {
   @Primary
   @Bean
   public ObjectMapper registryObjectMapper() {
-    ObjectMapper objectMapper = JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
+    ObjectMapper objectMapper = ObjectMapperUtils.createObjectMapperWithColDPSupport();
     objectMapper.registerModule(new JavaTimeModule());
     return objectMapper;
   }

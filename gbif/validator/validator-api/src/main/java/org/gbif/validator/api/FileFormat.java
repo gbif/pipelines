@@ -5,7 +5,8 @@ public enum FileFormat {
   DWCA(true),
   XML(false),
   TABULAR(true),
-  SPREADSHEET(false);
+  SPREADSHEET(false),
+  COLDP(true);
 
   final boolean tabularBased;
 

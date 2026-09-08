@@ -17,6 +17,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.pipelines.validator.Validations;
 import org.gbif.pipelines.validator.checklist.ChecklistValidator;
+import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
@@ -29,7 +30,8 @@ public class ChecklistValidatorCallback
 
   private static final String STEP_TYPE = StepType.VALIDATOR_VALIDATE_ARCHIVE.name();
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER =
+      ObjectMapperUtils.createObjectMapperWithColDPSupport();
 
   private final ChecklistValidatorConfiguration config;
   private final ChecklistValidator checklistValidator;

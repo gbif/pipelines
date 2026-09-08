@@ -50,6 +50,21 @@ public class ArchiveValidatorFactory {
           .build();
     }
 
+    // COLDP
+    if (FileFormat.COLDP.name().equals(message.getFileFormat())) {
+      return ColDPArchiveValidator.builder()
+          .validationClient(validationClient)
+          .config(config)
+          .message(message)
+          .checklistValidator(
+              new ChecklistValidator(
+                  config.clbConfig.url,
+                  config.clbConfig.user,
+                  config.clbConfig.password,
+                  config.clbConfig.callbackUrl))
+          .build();
+    }
+
     // XML
     if (FileFormat.XML.name().equals(message.getFileFormat())) {
       return XmlArchiveValidator.builder()

@@ -1,0 +1,24 @@
+{
+  "offset": 0,
+  "limit": 10,
+  "total": 93982,
+  "result": [
+    {
+      "id": 1,
+      "datasetKey": 100000213,
+      "line": 75026,
+      "file": "NameUsage.tsv",
+      "type": "col:NameUsage",
+      "terms": {
+        "col:ID": "DICH10",
+        "col:rank": "species",
+        "col:status": "synonym",
+        "col:parentID": "RICH",
+        "col:authorship": "(Ach.) Hale & W.L.Culb.",
+        "col:scientificName": "Dimelaena chrysomelaena"
+      }
+    }
+  ],
+  "empty": false,
+  "last": false
+}

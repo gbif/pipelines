@@ -11,6 +11,7 @@ import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.validator.api.ClbDatasetImport;
+import org.gbif.validator.api.ColdpTerm;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
@@ -153,6 +154,75 @@ public class ChecklistValidatorTest {
           assertEquals(DwcFileType.EXTENSION, fileInfo.getFileType());
           assertEquals("identifier.txt", fileInfo.getFileName());
           assertEquals(2, fileInfo.getTerms().size());
+          assertTrue(fileInfo.getIssues().isEmpty());
+        }
+      }
+
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
+  }
+
+  @Test
+  public void testChecklistValidatorColDP() {
+
+    try {
+      ChecklistbankWsClient checklistbankWsClient =
+          new ChecklistbankWsClientMock("checklists/api_response_verbatim_coldp.json");
+      ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient, null);
+
+      // it simulates the response received in the callback
+      ClbDatasetImport clbDatasetImport =
+          OBJECT_MAPPER.readValue(
+              ClassLoader.getSystemResourceAsStream("checklists/api_response_coldp.json"),
+              ClbDatasetImport.class);
+
+      // When
+      List<Metrics.FileInfo> report = checklistValidator.evaluateResults(clbDatasetImport);
+
+      // Should
+      // Metrics.FileInfo checks
+      assertEquals(2, report.size());
+
+      assertEquals(2, report.size());
+      assertEquals(
+          1,
+          report.stream()
+              .filter(r -> r.getRowType().equals(ColdpTerm.NameUsage.qualifiedName()))
+              .count());
+      assertEquals(
+          1,
+          report.stream()
+              .filter(r -> r.getRowType().equals(ColdpTerm.VernacularName.qualifiedName()))
+              .count());
+
+      for (Metrics.FileInfo fileInfo : report) {
+        assertNull(fileInfo.getFileType());
+
+        if (fileInfo.getRowType().equals(ColdpTerm.NameUsage.qualifiedName())) {
+          assertEquals(Long.valueOf(93982), fileInfo.getCount());
+          assertEquals(Long.valueOf(93966), fileInfo.getIndexedCount());
+          assertEquals(8, fileInfo.getTerms().size());
+
+          assertEquals("NameUsage.txt", fileInfo.getFileName());
+
+          assertEquals(15, fileInfo.getIssues().size());
+          assertEquals(Long.valueOf(33822), fileInfo.getIssues().get(0).getCount());
+          assertTrue(
+              fileInfo.getIssues().stream()
+                  .anyMatch(i -> i.getIssue().equals("missing authorship")));
+          assertTrue(fileInfo.getIssues().stream().allMatch(i -> i.getSamples().size() == 1));
+
+          assertEquals("DICH10", fileInfo.getIssues().get(0).getSamples().get(0).getRecordId());
+          assertEquals(5, fileInfo.getIssues().get(0).getSamples().get(0).getRelatedData().size());
+          assertEquals(
+              EvaluationCategory.CLB_INTERPRETATION_BASED,
+              fileInfo.getIssues().get(0).getIssueCategory());
+        } else if (fileInfo.getRowType().equals(ColdpTerm.VernacularName.qualifiedName())) {
+          assertEquals(Long.valueOf(43776), fileInfo.getCount());
+          assertEquals(Long.valueOf(43776), fileInfo.getIndexedCount());
+          assertEquals("VernacularName.txt", fileInfo.getFileName());
+          assertEquals(3, fileInfo.getTerms().size());
           assertTrue(fileInfo.getIssues().isEmpty());
         }
       }

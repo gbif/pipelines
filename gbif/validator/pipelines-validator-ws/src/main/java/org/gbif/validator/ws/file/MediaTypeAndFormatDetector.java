@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
@@ -29,10 +30,12 @@ import org.gbif.validator.api.FileFormat;
 public class MediaTypeAndFormatDetector {
 
   private static final Tika TIKA = new Tika();
+  private static final Pattern COLDP_REQUIRED_FILE =
+      Pattern.compile("^name(?:[-_]*usage)?[-_]*\\.(csv|tsv|tab|txt)$", Pattern.CASE_INSENSITIVE);
 
   /**
-   * @see org.apache.tika.detect.Detector
    * @return detected media type
+   * @see org.apache.tika.detect.Detector
    */
   public static String detectMediaType(Path filePath) throws IOException {
     return TIKA.detect(filePath);
@@ -73,7 +76,11 @@ public class MediaTypeAndFormatDetector {
       if (content.size() == 1) {
         contentType = MediaTypeAndFormatDetector.detectMediaType(content.get(0));
       } else {
-        return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCA));
+        if (content.stream().anyMatch(c -> isNameColDPFile(c.getFileName().toString()))) {
+          return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.COLDP));
+        } else {
+          return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCA));
+        }
       }
     }
 
@@ -85,6 +92,10 @@ public class MediaTypeAndFormatDetector {
       return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.SPREADSHEET));
     }
     return Optional.empty();
+  }
+
+  static boolean isNameColDPFile(String filName) {
+    return COLDP_REQUIRED_FILE.matcher(filName).matches();
   }
 
   /** Simple holder for mediaType and fileFormat */

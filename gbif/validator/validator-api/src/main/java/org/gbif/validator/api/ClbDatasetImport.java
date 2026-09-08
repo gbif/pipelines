@@ -18,6 +18,7 @@ public class ClbDatasetImport {
   private int attempt;
   // mapped as string to avoid errors with changes in the CLB API
   private String status;
+  private String format;
   private Long bareNameCount;
   private Long distributionCount;
   private Long estimateCount;
@@ -30,6 +31,9 @@ public class ClbDatasetImport {
   private Long typeMaterialCount;
   private Long vernacularCount;
   private Long usagesCount;
+  private Long nameRelationsCount;
+  private Long taxonConceptRelationsCount;
+  private Long speciesInteractionsCount;
   private Map<String, Long> issuesCount = new HashMap<>();
   private Map<Term, Long> verbatimByTermCount = new HashMap<>();
   private Map<Term, Map<Term, Long>> verbatimByRowTypeCount = new HashMap<>();

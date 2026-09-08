@@ -7,6 +7,7 @@
     <sql>
       ALTER TABLE validation ADD COLUMN clb_dataset_key integer;
       ALTER TABLE validation ADD COLUMN clb_validation_message text;
+      ALTER TYPE enum_validation_file_format ADD VALUE IF NOT EXISTS 'COLDP';
     </sql>
   </changeSet>
 </databaseChangeLog>
