@@ -252,11 +252,15 @@ public class ChecklistValidator {
 
   private Optional<String> getFileNameByRowType(int datasetKey, Term rowType) {
     log.info(
-        "Getting verbatim data from CLB for datasetkey {} and rowType {}", datasetKey, rowType);
+        "Getting verbatim data from CLB for datasetkey {} and rowType {}",
+        datasetKey,
+        rowType.simpleName());
     ChecklistbankWsClient.VerbatimResponse verbatimResponse =
         checklistbankWsClient.getVerbatim(datasetKey, rowType.simpleName(), null, 1);
 
-    if (verbatimResponse != null && !verbatimResponse.getResult().isEmpty()) {
+    if (verbatimResponse != null
+        && verbatimResponse.getResult() != null
+        && !verbatimResponse.getResult().isEmpty()) {
       return Optional.ofNullable(verbatimResponse.getResult().get(0).getFile());
     }
 
