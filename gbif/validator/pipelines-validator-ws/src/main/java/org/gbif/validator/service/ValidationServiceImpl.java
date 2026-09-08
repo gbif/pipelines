@@ -272,6 +272,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
           new PipelinesChecklistValidatorMessage(
               validationKey, objectMapper.writeValueAsString(clbDatasetImport)));
     } catch (Exception e) {
+      log.error("Error processing CLB validation response for {}", validationKey, e);
       updateChecklistValidatorStatus(validation, Status.FAILED);
     }
   }

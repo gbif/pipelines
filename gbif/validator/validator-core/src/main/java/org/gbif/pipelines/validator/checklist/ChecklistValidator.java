@@ -191,7 +191,7 @@ public class ChecklistValidator {
                           .build())
               .toList();
 
-      var fileInforBuilder =
+      var fileInfoBuilder =
           Metrics.FileInfo.builder()
               .rowType(rowType.qualifiedName())
               .count(clbDatasetImport.getVerbatimByTermCount().get(rowType))
@@ -200,10 +200,10 @@ public class ChecklistValidator {
               .indexedCount(getColDPRowTypeCount(rowType, clbDatasetImport));
 
       if (rowType == mainRowType) {
-        fileInforBuilder.issues(issues);
+        fileInfoBuilder.issues(issues);
       }
 
-      results.add(fileInforBuilder.build());
+      results.add(fileInfoBuilder.build());
     }
 
     return results;
