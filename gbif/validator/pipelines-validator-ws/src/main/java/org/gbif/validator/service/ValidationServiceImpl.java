@@ -356,6 +356,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Updates the status of a validation process. */
   private Validation updateFailedValidation(UUID key, String errorMessage) {
+    log.error("Failed validation for key {} with error {}", key, errorMessage);
     Validation validation =
         newValidationInstance(key, Validation.Status.FAILED, metricsSubmitError(errorMessage));
     return updateAndGet(validation);
