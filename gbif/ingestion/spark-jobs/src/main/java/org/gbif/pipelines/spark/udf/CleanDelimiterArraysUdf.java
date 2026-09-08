@@ -18,7 +18,7 @@ public class CleanDelimiterArraysUdf implements UDF1<WrappedArray<String>, Strin
     return field != null && !field.isEmpty() ? toArray(field) : new String[0];
   }
 
-  /** Converts to an array, returns null if the produced array is empty. */
+  /** Converts to an array, returns empty array if the produced array is empty. */
   private String[] toArray(WrappedArray<String> field) {
     String[] value =
         JavaConverters.asJavaCollection(field).stream()

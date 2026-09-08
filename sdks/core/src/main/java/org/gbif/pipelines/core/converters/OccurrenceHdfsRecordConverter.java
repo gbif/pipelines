@@ -364,7 +364,7 @@ public class OccurrenceHdfsRecordConverter {
                 issues.put(
                     tr.getDatasetKey(),
                     tr.getUsage() == null
-                        ? null
+                        ? List.of()
                         : tr.getIssues() == null ? List.of() : tr.getIssues().getIssueList()));
     occurrenceHdfsRecord.setTaxonomicissues(issues);
 

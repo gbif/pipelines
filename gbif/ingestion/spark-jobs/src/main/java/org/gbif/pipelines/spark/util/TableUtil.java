@@ -223,13 +223,14 @@ public class TableUtil {
     if (datasetType == DatasetType.OCCURRENCE) {
       // add the classification fields
       Map<String, String> uuidToColumnPrefix = config.getClassifications();
-      for (String prefix : uuidToColumnPrefix.values()) {
-        fieldDefn +=
-            String.format(
-                ",\n%s_classification %s", prefix, HiveDataTypes.TYPE_CLASSIFICATION_STRUCT);
+      if (uuidToColumnPrefix != null && !uuidToColumnPrefix.isEmpty()) {
+        for (String prefix : uuidToColumnPrefix.values()) {
+          fieldDefn +=
+              String.format(
+                  ",\n%s_classification %s", prefix, HiveDataTypes.TYPE_CLASSIFICATION_STRUCT);
+        }
       }
     }
-
     return fieldDefn;
   }
 
