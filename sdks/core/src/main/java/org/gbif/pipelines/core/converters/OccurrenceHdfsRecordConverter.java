@@ -5,8 +5,6 @@ import static org.gbif.pipelines.core.converters.ConverterUtils.mapTerm;
 import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.time.LocalDate;
@@ -112,12 +110,6 @@ public class OccurrenceHdfsRecordConverter {
     mapMoFFromVerbatim(occurrenceHdfsRecord);
 
     return occurrenceHdfsRecord;
-  }
-
-  public Map<String, Object> convertToMap() {
-    OccurrenceHdfsRecord record = convert();
-    ObjectMapper mapper = new ObjectMapper();
-    return mapper.convertValue(record, new TypeReference<>() {});
   }
 
   /**
@@ -356,17 +348,17 @@ public class OccurrenceHdfsRecordConverter {
                     tr.getDatasetKey(), tr.getUsage() == null ? null : tr.getUsage().getStatus()));
     occurrenceHdfsRecord.setTaxonomicstatuses(statuses);
 
-    Map<String, List<String>> issues = new LinkedHashMap<>();
-    multiTaxonRecord
-        .getTaxonRecords()
-        .forEach(
-            tr ->
-                issues.put(
-                    tr.getDatasetKey(),
-                    tr.getUsage() == null
-                        ? List.of()
-                        : tr.getIssues() == null ? List.of() : tr.getIssues().getIssueList()));
-    occurrenceHdfsRecord.setTaxonomicissues(issues);
+    occurrenceHdfsRecord.setTaxonomicissues(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey,
+                    tr ->
+                        tr.getIssues() != null && tr.getIssues().getIssueList() != null
+                            ? tr.getIssues().getIssueList()
+                            : List.of(),
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
 
     occurrenceHdfsRecord.setClassificationdetails(
         multiTaxonRecord.getTaxonRecords().stream()
@@ -385,7 +377,7 @@ public class OccurrenceHdfsRecordConverter {
             .filter(tr -> OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY.equals(tr.getDatasetKey()))
             .findFirst();
 
-    defaultTaxonomyRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+    defaultTaxonomyRecord.ifPresent(tr -> mapDefaultTaxonRecord(occurrenceHdfsRecord, tr));
   }
 
   private static @NonNull ArrayList<String> getTaxonKeys(TaxonRecord tr) {
@@ -442,7 +434,6 @@ public class OccurrenceHdfsRecordConverter {
 
     extractOptValue(verbatim, DwcTerm.scientificName)
         .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName().toLowerCase(), s));
-
     // Classification hierarchy
     taxonRecord
         .getClassification()
@@ -467,7 +458,7 @@ public class OccurrenceHdfsRecordConverter {
   }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private void mapLegacyGbifTaxonRecord(
+  private void mapDefaultTaxonRecord(
       OccurrenceHdfsRecord occurrenceHdfsRecord, TaxonRecord taxonRecord) {
     if (taxonRecord == null) {
       return;
