@@ -265,6 +265,12 @@
         <dependency>
             <groupId>org.gbif.pipelines</groupId>
             <artifactId>validator-api</artifactId>
+            <exclusions>
+              <exclusion>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-to-slf4j</artifactId>
+              </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Test -->
