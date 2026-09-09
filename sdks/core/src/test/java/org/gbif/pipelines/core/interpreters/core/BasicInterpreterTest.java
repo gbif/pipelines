@@ -15,7 +15,6 @@ import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ComparatorUtil;
@@ -447,7 +446,7 @@ public class BasicInterpreterTest {
 
     // State
     Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(GbifTerm.projectId.qualifiedName(), id1 + " | " + id2 + " | ");
+    coreMap.put(DwcTerm.projectID.qualifiedName(), id1 + " | " + id2 + " | ");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();

@@ -22,7 +22,6 @@ import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -56,7 +55,7 @@ public class OccurrenceJsonConverterTest {
     erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
     erMap.put(DwcTerm.taxonID.qualifiedName(), "taxonID");
     erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
-    erMap.put(GbifTerm.projectId.qualifiedName(), multivalue1 + "|" + multivalue2);
+    erMap.put(DwcTerm.projectID.qualifiedName(), multivalue1 + "|" + multivalue2);
     erMap.put(DwcTerm.earliestEonOrLowestEonothem.qualifiedName(), "test1");
     erMap.put(DwcTerm.latestEonOrHighestEonothem.qualifiedName(), "test2");
     erMap.put(DwcTerm.earliestEraOrLowestErathem.qualifiedName(), "test3");
@@ -600,12 +599,14 @@ public class OccurrenceJsonConverterTest {
         "{\"core\":{\"http://rs.tdwg.org/dwc/terms/eventID\":\"eventId\",\"http://rs.tdwg.org/dwc/terms/organismID\":"
             + "\"organismID\",\"http://rs.tdwg.org/dwc/terms/fieldNumber\":\"fieldNumber\","
             + "\"http://rs.tdwg.org/dwc/terms/collectionCode\":\"collectionCode\","
-            + "\"http://rs.tdwg.org/dwc/terms/taxonID\":\"taxonID\",\"http://rs.gbif.org/terms/1.0/projectId\":"
-            + "\"mv;à1|mv2\",\"http://rs.tdwg.org/dwc/terms/latestEpochOrHighestSeries\":\"test8\","
+            + "\"http://rs.tdwg.org/dwc/terms/taxonID\":\"taxonID\","
+            + "\"http://rs.tdwg.org/dwc/terms/latestEpochOrHighestSeries\":\"test8\","
             + "\"http://rs.tdwg.org/dwc/terms/earliestPeriodOrLowestSystem\":\"test5\","
             + "\"http://rs.tdwg.org/dwc/terms/latestAgeOrHighestStage\":\"test10\","
-            + "\"http://rs.tdwg.org/dwc/terms/bed\":\"test16\",\"http://rs.tdwg.org/dwc/terms/recordNumber\":"
-            + "\"recordNumber\",\"http://rs.tdwg.org/dwc/terms/highestBiostratigraphicZone\":\"test12\","
+            + "\"http://rs.tdwg.org/dwc/terms/bed\":\"test16\","
+            + "\"http://rs.tdwg.org/dwc/terms/recordNumber\":\"recordNumber\","
+            + "\"http://rs.tdwg.org/dwc/terms/projectID\":\"mv;à1|mv2\","
+            + "\"http://rs.tdwg.org/dwc/terms/highestBiostratigraphicZone\":\"test12\","
             + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\","
             + "\"http://rs.tdwg.org/dwc/terms/lowestBiostratigraphicZone\":\"test11\","
             + "\"http://rs.tdwg.org/dwc/terms/formation\":\"test14\","

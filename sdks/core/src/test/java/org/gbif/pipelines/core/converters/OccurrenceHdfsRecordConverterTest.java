@@ -9,7 +9,6 @@ import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.*;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.*;
@@ -60,7 +59,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.samplingProtocol.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.recordedBy.simpleName(), multiValue1 + "|" + multiValue2);
-    coreTerms.put(GbifTerm.projectId.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.projectID.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.taxonConceptID.simpleName(), "v_taxonConceptID");
     coreTerms.put(DwcTerm.associatedSequences.simpleName(), "v_ad");
     coreTerms.put(DwcTerm.bed.simpleName(), "v_bed");

@@ -348,7 +348,7 @@ public class OccurrenceHdfsRecordConverter {
                     tr.getDatasetKey(), tr.getUsage() == null ? null : tr.getUsage().getStatus()));
     occurrenceHdfsRecord.setTaxonomicstatuses(statuses);
 
-    occurrenceHdfsRecord.setTaxonomicissue(
+    occurrenceHdfsRecord.setTaxonomicissues(
         multiTaxonRecord.getTaxonRecords().stream()
             .collect(
                 Collectors.toMap(
@@ -377,7 +377,7 @@ public class OccurrenceHdfsRecordConverter {
             .filter(tr -> OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY.equals(tr.getDatasetKey()))
             .findFirst();
 
-    defaultTaxonomyRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+    defaultTaxonomyRecord.ifPresent(tr -> mapDefaultTaxonRecord(occurrenceHdfsRecord, tr));
   }
 
   private static @NonNull ArrayList<String> getTaxonKeys(TaxonRecord tr) {
@@ -458,7 +458,7 @@ public class OccurrenceHdfsRecordConverter {
   }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private void mapLegacyGbifTaxonRecord(
+  private void mapDefaultTaxonRecord(
       OccurrenceHdfsRecord occurrenceHdfsRecord, TaxonRecord taxonRecord) {
     if (taxonRecord == null) {
       return;
@@ -527,6 +527,12 @@ public class OccurrenceHdfsRecordConverter {
 
     // set taxonkeys
     occurrenceHdfsRecord.setTaxonkeys(getTaxonKeys(taxonRecord));
+
+    // set taxonomic issue
+    occurrenceHdfsRecord.setTaxonomicissue(
+        taxonRecord.getIssues() != null && taxonRecord.getIssues().getIssueList() != null
+            ? taxonRecord.getIssues().getIssueList()
+            : List.of());
 
     if (Objects.nonNull(taxonRecord.getAcceptedUsage())) {
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getAcceptedUsage().getName());
