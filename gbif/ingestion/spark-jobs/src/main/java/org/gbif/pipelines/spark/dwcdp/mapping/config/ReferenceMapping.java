@@ -202,6 +202,116 @@ public final class ReferenceMapping {
                 OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
   }
 
+  public static ExtensionFragment occurrenceProtocolReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        Spec.routed(
+            "occurrence-protocol-references-for-event",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("protocol", "occurrenceProtocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment materialProtocolReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        Spec.routed(
+            "material-protocol-references-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("material-protocol", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("protocol", "protocol_fk"),
+                OwnershipPathStep.fanOut("protocol-reference", "protocol_fk"))));
+  }
+
+  public static ExtensionFragment occurrenceReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        Spec.routed(
+            "occurrence-references-for-event",
+            "occurrence",
+            "event_fk",
+            List.of(OwnershipPathStep.fanOut("occurrence-reference", "occurrence_fk"))));
+  }
+
+  public static ExtensionFragment materialReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        Spec.routed(
+            "material-references-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("material-reference", "materialEntity_fk"))));
+  }
+
+  public static ExtensionFragment occurrenceIdentificationReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        Spec.routed(
+            "identification-references-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.fanOut("identification", "occurrence_fk"),
+                OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
+  }
+
+  public static ExtensionFragment occurrenceMolecularProtocolReferencesForEvent(SchemaGraph graph) {
+    return references(
+        graph,
+        Spec.routed(
+            "material-molecular-protocol-references-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("molecular-protocol", "molecularProtocol_fk"),
+                OwnershipPathStep.fanOut("molecular-protocol-reference", "molecularProtocol_fk"))));
+  }
+
+  public static ExtensionFragment occurrenceDnaAnalysisIdentificationReferencesForEvent(
+      SchemaGraph graph) {
+    return references(
+        graph,
+        Spec.routed(
+            "material-dna-analysis-identification-references-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.fanOut("identification", "nucleotideAnalysis_fk")
+                    .filter(FilterExpression.isNull("occurrence_fk")),
+                OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
+  }
+
+  public static ExtensionFragment occurrenceDnaSequenceIdentificationReferencesForEvent(
+      SchemaGraph graph) {
+    return references(
+        graph,
+        Spec.routed(
+            "material-dna-sequence-identification-references-for-event-occurrence",
+            "occurrence",
+            "event_fk",
+            List.of(
+                OwnershipPathStep.exactlyOne("material", "evidenceForOccurrenceID"),
+                OwnershipPathStep.fanOut("nucleotide-analysis", "materialEntity_fk"),
+                OwnershipPathStep.exactlyOne("nucleotide-sequence", "nucleotideSequence_fk"),
+                OwnershipPathStep.fanOut("identification", "nucleotideSequence_fk")
+                    .filter(
+                        FilterExpression.and(
+                            FilterExpression.isNull("occurrence_fk"),
+                            FilterExpression.isNull("nucleotideAnalysis_fk"))),
+                OwnershipPathStep.fanOut("identification-reference", "identification_fk"))));
+  }
+
   public static ExtensionFragment occurrenceProtocolReferences(SchemaGraph graph) {
     return references(
         graph,
@@ -355,7 +465,8 @@ public final class ReferenceMapping {
     Objects.requireNonNull(graph, "graph");
     Objects.requireNonNull(spec, "spec");
 
-    MappingPath current = MappingPath.root(graph, spec.sourceResource());
+    MappingPath source = MappingPath.root(graph, spec.sourceResource());
+    MappingPath current = source;
     for (OwnershipPathStep step : spec.ownershipPath()) {
       current = step.appendTo(current);
     }
@@ -367,6 +478,9 @@ public final class ReferenceMapping {
             .scopeKey(spec.scopeKeyColumn())
             .rowIdentity(reference.field("reference_pk"));
     addReferenceFields(builder, reference);
+    if (spec.routeToOccurrence()) {
+      OccurrenceExtensionRouting.addOccurrenceId(builder, source);
+    }
     return builder.build();
   }
 
@@ -393,7 +507,25 @@ public final class ReferenceMapping {
       String fragmentName,
       String sourceResource,
       String scopeKeyColumn,
-      List<OwnershipPathStep> ownershipPath) {
+      List<OwnershipPathStep> ownershipPath,
+      boolean routeToOccurrence) {
+
+    private Spec(
+        String fragmentName,
+        String sourceResource,
+        String scopeKeyColumn,
+        List<OwnershipPathStep> ownershipPath) {
+      this(fragmentName, sourceResource, scopeKeyColumn, ownershipPath, false);
+    }
+
+    static Spec routed(
+        String fragmentName,
+        String sourceResource,
+        String scopeKeyColumn,
+        List<OwnershipPathStep> ownershipPath) {
+      return new Spec(fragmentName, sourceResource, scopeKeyColumn, ownershipPath, true);
+    }
+
     private Spec {
       Objects.requireNonNull(fragmentName, "fragmentName");
       Objects.requireNonNull(sourceResource, "sourceResource");

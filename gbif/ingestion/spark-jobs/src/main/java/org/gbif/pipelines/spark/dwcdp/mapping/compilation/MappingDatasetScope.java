@@ -42,34 +42,58 @@ public record MappingDatasetScope(Map<String, Set<String>> columnsByResource) {
   }
 
   /**
-   * True when every resource traversed by this field path is present in the datapackage.
-   *
-   * <p>Descriptor field lists are not used as hard negative evidence during execution pruning. The
-   * compiled mapping already determines which columns are required, and ProjectedTableLoader
-   * intersects those requirements with the actual Spark schema after loading the resource. This
-   * keeps datapackage pruning focused on whole resources/branches and avoids dropping valid
-   * producers when a descriptor's field metadata is incomplete.
+   * True when this complete physical field path is declared by the datapackage. Dataset-scoped
+   * compilation treats the descriptor as the executable contract: missing fields and join keys are
+   * removed before Spark planning rather than discovered as unresolved columns at runtime.
    */
   public boolean supports(FieldRef field) {
     if (!hasResource(field.path().rootResource())) {
       return false;
     }
     for (SchemaRelation relation : field.path().relations()) {
-      if (!hasResource(relation.sourceResource()) || !hasResource(relation.targetResource())) {
+      if (!hasResource(relation.sourceResource())
+          || !hasColumn(relation.sourceResource(), relation.sourceColumn())
+          || !hasResource(relation.targetResource())
+          || !hasColumn(relation.targetResource(), relation.targetColumn())) {
         return false;
       }
     }
-    return hasResource(field.path().currentResource());
+    return hasColumn(field.path().currentResource(), field.column());
   }
 
   public boolean supports(CompiledSourceField source) {
     return supports(source.field());
   }
 
-  /** True when both resources for one compiled relation are present in the datapackage. */
+  /** True when every physical dependency needed to execute one relation is declared. */
   public boolean supports(CompiledRelationStep relationStep) {
     SchemaRelation relation = relationStep.relation();
-    return hasResource(relation.sourceResource()) && hasResource(relation.targetResource());
+    if (!hasResource(relation.sourceResource())
+        || !hasColumn(relation.sourceResource(), relation.sourceColumn())
+        || !hasResource(relation.targetResource())
+        || !hasColumn(relation.targetResource(), relation.targetColumn())) {
+      return false;
+    }
+
+    if (relationStep.cardinalityStrategy().isPresent()
+        && relationStep.cardinalityStrategy().orElseThrow()
+            instanceof
+            org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy.Select
+            select
+        && !hasColumn(relation.targetResource(), select.selector())) {
+      return false;
+    }
+
+    if (relationStep.filter().isPresent()) {
+      if (relationStep.filter().requiresAllColumns()) {
+        // Opaque predicates do not expose enough dependency information to prove that a
+        // dataset-scoped Spark plan is safe. Do not execute them in a specialized plan.
+        return false;
+      }
+      return relationStep.filter().requiredColumns().stream()
+          .allMatch(column -> hasColumn(relation.targetResource(), column));
+    }
+    return true;
   }
 
   /**

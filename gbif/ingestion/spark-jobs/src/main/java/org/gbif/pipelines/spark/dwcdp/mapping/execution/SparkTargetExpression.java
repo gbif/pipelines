@@ -119,7 +119,6 @@ final class SparkTargetExpression {
       return coalesce(
           first(nonBlankNaturalId, true), concat(lit(fallback.urn()), first(sources.get(1), true)));
     }
-
     if (target.aggregation() instanceof ValueAggregation.Delimited delimited) {
       Column values;
       if (contributionIdentity.isPresent() || orderBy.isPresent()) {

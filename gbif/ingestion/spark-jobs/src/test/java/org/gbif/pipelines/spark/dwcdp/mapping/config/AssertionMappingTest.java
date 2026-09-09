@@ -87,6 +87,10 @@ class AssertionMappingTest {
         EventDwcaMapping.withAssertions(graph),
         Set.of(
             "event-assertions",
+            "occurrence-assertions-for-event",
+            "material-assertions-for-event-occurrence",
+            "material-nucleotide-analysis-assertions-for-event-occurrence",
+            "material-molecular-protocol-assertions-for-event-occurrence",
             "survey-assertions-for-event",
             "event-nucleotide-analysis-assertions",
             "event-molecular-protocol-assertions",

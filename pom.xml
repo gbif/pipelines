@@ -162,6 +162,15 @@
     <elasticsearch.version>9.5.2</elasticsearch.version>
     <apache.httpcomponents.version>4.4.13</apache.httpcomponents.version>
 
+    <!-- Pinned to match what hbase-client/hbase-common:2.5.13-hadoop3 require (org.apache.hadoop.hbase.trace.*
+         span builders reference io.opentelemetry.semconv.SemanticAttributes, a class removed in semconv 1.30+).
+         elasticsearch-java:9.5.2's optional OTel span instrumentation needs the newer io.opentelemetry.semconv.DbAttributes
+         instead, which is not present in this version; that instrumentation is explicitly disabled via
+         NoopInstrumentation at its call sites (see ElasticsearchWriter, ContentService, ElasticsearchClientFactory)
+         so it never touches semconv classes at runtime, see https://github.com/gbif/pipelines/issues/1516. -->
+    <opentelemetry.version>1.63.0</opentelemetry.version>
+    <opentelemetry-semconv.version>1.29.0-alpha</opentelemetry-semconv.version>
+
     <jackson.version>2.19.4</jackson.version>
     <snake-yaml-version>2.5</snake-yaml-version>
 
@@ -796,6 +805,21 @@
         <groupId>co.elastic.clients</groupId>
         <artifactId>elasticsearch-java</artifactId>
         <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-api</artifactId>
+        <version>${opentelemetry.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-context</artifactId>
+        <version>${opentelemetry.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry.semconv</groupId>
+        <artifactId>opentelemetry-semconv</artifactId>
+        <version>${opentelemetry-semconv.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>

@@ -1,0 +1,451 @@
+{
+  "name" : "",
+  "resources" : [ {
+    "name" : "agent",
+    "path" : "agent.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "agent_pk",
+        "type" : "string"
+      }, {
+        "name" : "agentID",
+        "type" : "string"
+      }, {
+        "name" : "preferredAgentName",
+        "type" : "string"
+      } ]
+    }
+  }, {
+    "name" : "event",
+    "path" : "event.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "event_pk",
+        "type" : "string"
+      }, {
+        "name" : "eventCategory",
+        "type" : "string"
+      }, {
+        "name" : "datasetName",
+        "type" : "string"
+      }, {
+        "name" : "eventConductedBy",
+        "type" : "string"
+      }, {
+        "name" : "eventConductedByID",
+        "type" : "string"
+      }, {
+        "name" : "eventDate",
+        "type" : "string"
+      }, {
+        "name" : "year",
+        "type" : "integer"
+      }, {
+        "name" : "month",
+        "type" : "integer"
+      }, {
+        "name" : "day",
+        "type" : "integer"
+      }, {
+        "name" : "verbatimEventDate",
+        "type" : "string"
+      }, {
+        "name" : "habitat",
+        "type" : "string"
+      }, {
+        "name" : "country",
+        "type" : "string"
+      }, {
+        "name" : "countryCode",
+        "type" : "string"
+      }, {
+        "name" : "locality",
+        "type" : "string"
+      }, {
+        "name" : "locationRemarks",
+        "type" : "string"
+      }, {
+        "name" : "decimalLatitude",
+        "type" : "number"
+      }, {
+        "name" : "decimalLongitude",
+        "type" : "number"
+      }, {
+        "name" : "coordinateUncertaintyInMeters",
+        "type" : "number"
+      } ]
+    }
+  }, {
+    "name" : "identification",
+    "path" : "identification.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "identification_pk",
+        "type" : "string"
+      }, {
+        "name" : "identificationID",
+        "type" : "string"
+      }, {
+        "name" : "occurrence_fk",
+        "type" : "string"
+      }, {
+        "name" : "typeStatus",
+        "type" : "string"
+      }, {
+        "name" : "identifiedBy",
+        "type" : "string"
+      }, {
+        "name" : "dateIdentified",
+        "type" : "string"
+      }, {
+        "name" : "scientificName",
+        "type" : "string"
+      }, {
+        "name" : "kingdom",
+        "type" : "string"
+      }, {
+        "name" : "phylum",
+        "type" : "string"
+      }, {
+        "name" : "class",
+        "type" : "string"
+      }, {
+        "name" : "order",
+        "type" : "string"
+      }, {
+        "name" : "family",
+        "type" : "string"
+      }, {
+        "name" : "genus",
+        "type" : "string"
+      }, {
+        "name" : "specificEpithet",
+        "type" : "string"
+      }, {
+        "name" : "nomenclaturalCode",
+        "type" : "string"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "occurrence_fk" ],
+        "reference" : {
+          "resource" : "occurrence",
+          "fields" : [ "occurrence_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "identification-agent-role",
+    "path" : "identification-agent-role.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "identification_fk",
+        "type" : "string"
+      }, {
+        "name" : "agent_fk",
+        "type" : "string"
+      }, {
+        "name" : "agentRole",
+        "type" : "string"
+      }, {
+        "name" : "agentRoleOrder",
+        "type" : "integer"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "identification_fk" ],
+        "reference" : {
+          "resource" : "identification",
+          "fields" : [ "identification_pk" ]
+        }
+      }, {
+        "fields" : [ "agent_fk" ],
+        "reference" : {
+          "resource" : "agent",
+          "fields" : [ "agent_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "material",
+    "path" : "material.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "materialEntity_pk",
+        "type" : "string"
+      }, {
+        "name" : "materialEntityID",
+        "type" : "string"
+      }, {
+        "name" : "collectionEvent_fk",
+        "type" : "string"
+      }, {
+        "name" : "materialEntityCategory",
+        "type" : "string"
+      }, {
+        "name" : "materialEntityType",
+        "type" : "string"
+      }, {
+        "name" : "institutionCode",
+        "type" : "string"
+      }, {
+        "name" : "institutionID",
+        "type" : "string"
+      }, {
+        "name" : "collectionCode",
+        "type" : "string"
+      }, {
+        "name" : "collectionID",
+        "type" : "string"
+      }, {
+        "name" : "catalogNumber",
+        "type" : "string"
+      }, {
+        "name" : "collectorNumber",
+        "type" : "string"
+      }, {
+        "name" : "collectedBy",
+        "type" : "string"
+      }, {
+        "name" : "collectedByID",
+        "type" : "string"
+      }, {
+        "name" : "preparations",
+        "type" : "string"
+      }, {
+        "name" : "evidenceForOccurrenceID",
+        "type" : "string"
+      }, {
+        "name" : "typeStatus",
+        "type" : "string"
+      }, {
+        "name" : "scientificName",
+        "type" : "string"
+      }, {
+        "name" : "modified",
+        "type" : "string"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "collectionEvent_fk" ],
+        "reference" : {
+          "resource" : "event",
+          "fields" : [ "event_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "material-agent-role",
+    "path" : "material-agent-role.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "materialEntity_fk",
+        "type" : "string"
+      }, {
+        "name" : "agent_fk",
+        "type" : "string"
+      }, {
+        "name" : "agentRole",
+        "type" : "string"
+      }, {
+        "name" : "agentRoleOrder",
+        "type" : "integer"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "materialEntity_fk" ],
+        "reference" : {
+          "resource" : "material",
+          "fields" : [ "materialEntity_pk" ]
+        }
+      }, {
+        "fields" : [ "agent_fk" ],
+        "reference" : {
+          "resource" : "agent",
+          "fields" : [ "agent_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "material-media",
+    "path" : "material-media.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "media_fk",
+        "type" : "string"
+      }, {
+        "name" : "materialEntity_fk",
+        "type" : "string"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "media_fk" ],
+        "reference" : {
+          "resource" : "media",
+          "fields" : [ "media_pk" ]
+        }
+      }, {
+        "fields" : [ "materialEntity_fk" ],
+        "reference" : {
+          "resource" : "material",
+          "fields" : [ "materialEntity_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "material-usage-policy",
+    "path" : "material-usage-policy.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "materialEntity_fk",
+        "type" : "string"
+      }, {
+        "name" : "usagePolicy_fk",
+        "type" : "string"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "materialEntity_fk" ],
+        "reference" : {
+          "resource" : "material",
+          "fields" : [ "materialEntity_pk" ]
+        }
+      }, {
+        "fields" : [ "usagePolicy_fk" ],
+        "reference" : {
+          "resource" : "usage-policy",
+          "fields" : [ "usagePolicy_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "media",
+    "path" : "media.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "media_pk",
+        "type" : "string"
+      }, {
+        "name" : "mediaID",
+        "type" : "string"
+      }, {
+        "name" : "mediaType",
+        "type" : "string"
+      }, {
+        "name" : "title",
+        "type" : "string"
+      }, {
+        "name" : "description",
+        "type" : "string"
+      }, {
+        "name" : "serviceExpectation",
+        "type" : "string"
+      }, {
+        "name" : "accessURI",
+        "type" : "string"
+      }, {
+        "name" : "format",
+        "type" : "string"
+      } ]
+    }
+  }, {
+    "name" : "media-agent-role",
+    "path" : "media-agent-role.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "media_fk",
+        "type" : "string"
+      }, {
+        "name" : "agent_fk",
+        "type" : "string"
+      }, {
+        "name" : "agentRole",
+        "type" : "string"
+      }, {
+        "name" : "agentRoleOrder",
+        "type" : "integer"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "media_fk" ],
+        "reference" : {
+          "resource" : "media",
+          "fields" : [ "media_pk" ]
+        }
+      }, {
+        "fields" : [ "agent_fk" ],
+        "reference" : {
+          "resource" : "agent",
+          "fields" : [ "agent_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "media-usage-policy",
+    "path" : "media-usage-policy.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "media_fk",
+        "type" : "string"
+      }, {
+        "name" : "usagePolicy_fk",
+        "type" : "string"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "media_fk" ],
+        "reference" : {
+          "resource" : "media",
+          "fields" : [ "media_pk" ]
+        }
+      }, {
+        "fields" : [ "usagePolicy_fk" ],
+        "reference" : {
+          "resource" : "usage-policy",
+          "fields" : [ "usagePolicy_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "occurrence",
+    "path" : "occurrence.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "occurrence_pk",
+        "type" : "string"
+      }, {
+        "name" : "occurrenceID",
+        "type" : "string"
+      }, {
+        "name" : "event_fk",
+        "type" : "string"
+      }, {
+        "name" : "occurrenceStatus",
+        "type" : "string"
+      } ],
+      "foreignKeys" : [ {
+        "fields" : [ "event_fk" ],
+        "reference" : {
+          "resource" : "event",
+          "fields" : [ "event_pk" ]
+        }
+      } ]
+    }
+  }, {
+    "name" : "usage-policy",
+    "path" : "usage-policy.parquet",
+    "schema" : {
+      "fields" : [ {
+        "name" : "usagePolicy_pk",
+        "type" : "string"
+      }, {
+        "name" : "rights",
+        "type" : "string"
+      }, {
+        "name" : "rightsHolder",
+        "type" : "string"
+      }, {
+        "name" : "owner",
+        "type" : "string"
+      }, {
+        "name" : "accessRights",
+        "type" : "string"
+      }, {
+        "name" : "license",
+        "type" : "string"
+      } ]
+    }
+  } ]
+}

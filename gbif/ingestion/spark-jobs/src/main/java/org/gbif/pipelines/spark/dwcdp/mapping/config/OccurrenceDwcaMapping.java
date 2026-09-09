@@ -25,9 +25,7 @@ public final class OccurrenceDwcaMapping {
         .extension(MultimediaMapping.ROW_TYPE_MULTIMEDIA)
         .unionRows()
         .limitRowsPerParent(50)
-        .importFragment(MultimediaMapping.occurrenceMedia(graph))
-        .importFragment(MultimediaMapping.materialMediaForOccurrence(graph))
-        .importFragment(MultimediaMapping.chronometricAgeMediaForOccurrence(graph))
+        .importFragments(MultimediaMapping.occurrenceFragments(graph))
         .endExtension()
         .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
         .unionRows()
@@ -97,7 +95,7 @@ public final class OccurrenceDwcaMapping {
                 ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
                 occurrence.field("occurrenceID"),
                 occurrence.field("occurrence_pk"));
-    DirectFieldMappings.from(graph, "occurrence", SchemaPath.root("occurrence")).addTo(builder);
+    DirectFieldMappings.from(graph, "occurrence", occurrence).addTo(builder);
     return builder
         .importCoreFragment(OccurrenceCoreMapping.recordedBy(graph))
         .importCoreFragment(OccurrenceCoreMapping.identifiedBy(graph))

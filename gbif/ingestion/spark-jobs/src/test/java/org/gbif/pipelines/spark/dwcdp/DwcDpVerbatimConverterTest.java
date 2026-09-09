@@ -268,7 +268,6 @@ class DwcDpVerbatimConverterTest {
         "sibling of:org-2",
         occ001.get(DwcTerm.associatedOrganisms.qualifiedName()),
         "associatedOrganisms contributed by organism table must survive Avro round-trip");
-
     Map<String, String> occ002 = occExt.get(1);
     assertEquals("OCC002", occ002.get(DwcTerm.occurrenceID.qualifiedName()));
     assertEquals("Quercus robur", occ002.get(DwcTerm.scientificName.qualifiedName()));
@@ -282,11 +281,27 @@ class DwcDpVerbatimConverterTest {
     List<Map<String, String>> mediaExt =
         evt001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA);
     assertNotNull(mediaExt, "media extension must be present");
-    assertEquals(2, mediaExt.size());
-    List<String> mediaUris =
-        mediaExt.stream().map(m -> m.get(DcTerm.identifier.qualifiedName())).sorted().toList();
-    assertEquals("https://example.com/img1.jpg", mediaUris.get(0));
-    assertEquals("https://example.com/img2.jpg", mediaUris.get(1));
+    assertEquals(3, mediaExt.size());
+    List<Map<String, String>> occurrenceOwnedMedia =
+        mediaExt.stream()
+            .filter(m -> "OCC001".equals(m.get(DwcTerm.occurrenceID.qualifiedName())))
+            .toList();
+    assertEquals(1, occurrenceOwnedMedia.size());
+    assertEquals(
+        "https://example.com/img1.jpg",
+        occurrenceOwnedMedia.get(0).get(DcTerm.identifier.qualifiedName()),
+        "occurrence-owned Event-level media must carry occurrenceID for downstream routing");
+
+    List<Map<String, String>> eventOwnedMedia =
+        mediaExt.stream().filter(m -> m.get(DwcTerm.occurrenceID.qualifiedName()) == null).toList();
+    assertEquals(2, eventOwnedMedia.size());
+    List<String> eventMediaUris =
+        eventOwnedMedia.stream()
+            .map(m -> m.get(DcTerm.identifier.qualifiedName()))
+            .sorted()
+            .toList();
+    assertEquals("https://example.com/img1.jpg", eventMediaUris.get(0));
+    assertEquals("https://example.com/img2.jpg", eventMediaUris.get(1));
 
     List<Map<String, String>> emof =
         evt001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
@@ -425,6 +440,38 @@ class DwcDpVerbatimConverterTest {
     assertEquals(1, emof.size());
     assertEquals("A001", emof.get(0).get(DwcTerm.measurementID.qualifiedName()));
     assertEquals("Mass", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
+  }
+
+  @Test
+  void eventCore_occurrenceInheritsFallbackEventIdWhenPublisherEventIdMissing(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", null)));
+
+    writeParquet(
+        dir,
+        "data/occurrence.parquet",
+        schema("occurrence_pk", "occurrenceID", "event_fk", "scientificName"),
+        List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Quercus robur")));
+
+    DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord event = records.get(0);
+    String expectedEventId = "urn:gbif:dwcdp:event:EPK-001";
+    assertEquals(expectedEventId, event.getId());
+
+    List<Map<String, String>> occurrences =
+        event.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE);
+    assertNotNull(occurrences);
+    assertEquals(1, occurrences.size());
+    assertEquals(expectedEventId, occurrences.get(0).get(DwcTerm.eventID.qualifiedName()));
   }
 
   // ---- comprehensive round-trip: occurrence-core ----
