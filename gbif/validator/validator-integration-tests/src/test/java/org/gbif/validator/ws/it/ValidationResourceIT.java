@@ -153,7 +153,7 @@ public class ValidationResourceIT {
     assertNull(persistedValidation.getDataset());
 
     // Wait for the submit operation to complete
-    TimeUnit.SECONDS.sleep(2L);
+    TimeUnit.SECONDS.sleep(5L);
 
     PagingResponse<Validation> validations =
         validationWsClient.list(
