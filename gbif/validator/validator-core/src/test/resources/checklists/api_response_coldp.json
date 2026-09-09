@@ -1,0 +1,122 @@
+ {
+    "datasetKey": 100000213,
+    "attempt": 1,
+    "jobKey": "365a7444-6141-44fe-998a-fcc39e2c8009",
+    "job": "ImportJob",
+    "status": "finished",
+    "started": "2026-09-07T10:39:40.013966",
+    "finished": "2026-09-07T10:45:50.119548",
+    "createdBy": 955,
+    "bareNameCount": 3,
+    "distributionCount": 0,
+    "estimateCount": 0,
+    "mediaCount": 0,
+    "nameCount": 93969,
+    "nameMatchesCount": 93969,
+    "referenceCount": 0,
+    "synonymCount": 44151,
+    "taxonCount": 49815,
+    "treatmentCount": 0,
+    "typeMaterialCount": 0,
+    "vernacularCount": 43776,
+    "issuesCount": {
+      "parent genus missing": 33822,
+      "synonym rank differs": 19047,
+      "parent species missing": 8558,
+      "duplicate name": 8170,
+      "missing authorship": 1937,
+      "id not unique": 26,
+      "not interpreted": 13,
+      "accepted id invalid": 3,
+      "accepted name missing": 3,
+      "no species included": 3,
+      "partially parsable name": 1,
+      "inconsistent name": 1,
+      "authorship contains nomenclatural note": 1,
+      "wrong monomial case": 1,
+      "authorship unlikely": 1
+    },
+    "namesByCodeCount": {
+      "botanical": 36705
+    },
+    "namesByRankCount": {
+      "species": 64300,
+      "variety": 17911,
+      "subspecies": 5713,
+      "unranked": 5145,
+      "family": 548,
+      "genus": 277,
+      "form": 63,
+      "subvariety": 8,
+      "infraspecific name": 4
+    },
+    "namesByStatusCount": {
+      "not established": 1
+    },
+    "namesByTypeCount": {
+      "scientific": 93940,
+      "formula": 28,
+      "informal": 1
+    },
+    "synonymsByRankCount": {
+      "species": 28977,
+      "variety": 12352,
+      "subspecies": 2724,
+      "form": 51,
+      "unranked": 35,
+      "subvariety": 8,
+      "infraspecific name": 4
+    },
+    "taxaByRankCount": {
+      "species": 35322,
+      "variety": 5557,
+      "unranked": 5110,
+      "subspecies": 2989,
+      "family": 548,
+      "genus": 277,
+      "form": 12
+    },
+    "usagesByStatusCount": {
+      "accepted": 49815,
+      "synonym": 44151
+    },
+    "usagesByOriginCount": {
+      "source": 93966
+    },
+    "vernacularsByLanguageCount": {
+      "eng": 43776
+    },
+    "maxClassificationDepth": 3,
+    "origin": "external",
+    "format": "coldp",
+    "download": "2026-09-07T10:00:22.218",
+    "md5": "6CC138B975323089619554BED6999018",
+    "verbatimCount": 137758,
+    "verbatimByTermCount": {
+      "col:NameUsage": 93982,
+      "col:VernacularName": 43776
+    },
+    "verbatimByRowTypeCount": {
+      "col:NameUsage": {
+        "col:ID": 93982,
+        "col:link": 48994,
+        "col:rank": 88837,
+        "col:family": 44188,
+        "col:status": 93982,
+        "col:parentID": 93434,
+        "col:authorship": 92043,
+        "col:scientificName": 93982
+      },
+      "col:VernacularName": {
+        "col:name": 43776,
+        "col:taxonID": 43776,
+        "col:language": 43776
+      }
+    },
+    "upload": true,
+    "nameRelationsCount": 0,
+    "usagesCount": 93966,
+    "taxonConceptRelationsCount": 0,
+    "speciesInteractionsCount": 0,
+    "nameMatchesMissingCount": 0
+  }

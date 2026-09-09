@@ -7,11 +7,15 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.net.URI;
+import java.time.Duration;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
+import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileStoreManager;
+import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -70,9 +74,22 @@ public class ValidatorWsConfiguration {
   @Primary
   @Bean
   public ObjectMapper registryObjectMapper() {
-    ObjectMapper objectMapper = JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
+    ObjectMapper objectMapper = ObjectMapperUtils.createObjectMapperWithColDPSupport();
     objectMapper.registerModule(new JavaTimeModule());
     return objectMapper;
+  }
+
+  @Bean
+  public ChecklistbankWsClient checklistbankWsClient(
+      @Value("${clb.api.url}") String clbApiUrl,
+      @Value("${clb.api.user}") String clbApiUser,
+      @Value("${clb.api.password}") String clbApiPassword) {
+    return new ClientBuilder()
+        .withUrl(clbApiUrl)
+        .withCredentials(clbApiUser, clbApiPassword)
+        .withObjectMapper(JacksonJsonObjectMapperProvider.getDefaultObjectMapper())
+        .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
+        .build(ChecklistbankWsClient.class);
   }
 
   /** Configure the Jackson ObjectMapper adding a custom JsonFilter for errors. */

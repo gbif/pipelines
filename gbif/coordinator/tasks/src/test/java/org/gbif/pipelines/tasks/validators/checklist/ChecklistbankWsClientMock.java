@@ -1,0 +1,68 @@
+package org.gbif.pipelines.tasks.validators.checklist;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Map;
+import lombok.SneakyThrows;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
+import org.gbif.validator.api.ClbDatasetImport;
+
+public class ChecklistbankWsClientMock implements ChecklistbankWsClient {
+
+  public static final int DEFAULT_KEY = 1;
+  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  @Override
+  public ValidatorResponse validateArchive(String callback, byte[] file) {
+    ValidatorResponse validatorResponse = new ValidatorResponse();
+    validatorResponse.setKey(DEFAULT_KEY);
+    return validatorResponse;
+  }
+
+  @Override
+  public List<ClbDatasetImport> checkImport(int key) {
+    ClbDatasetImport clbDatasetImport = new ClbDatasetImport();
+    clbDatasetImport.setDatasetKey(DEFAULT_KEY);
+    clbDatasetImport.setStatus(ClbDatasetImport.FINISHED);
+    return List.of(clbDatasetImport);
+  }
+
+  @SneakyThrows
+  @Override
+  public VerbatimResponse getVerbatim(int key, String type, String issue, int limit) {
+    VerbatimResponse verbatimResponse =
+        OBJECT_MAPPER.readValue(
+            ClassLoader.getSystemResourceAsStream("checklists/api_response_verbatim.json"),
+            VerbatimResponse.class);
+
+    String file = null;
+    if (type.contains("Identifier")) {
+      file = "identifier.txt";
+    } else if (type.contains("MeasurementOrFact")) {
+      file = "measurementorfacts.txt";
+    } else if (type.contains("Distribution")) {
+      file = "distribution.txt";
+    } else if (type.contains("Taxon")) {
+      file = "taxon.txt";
+    } else if (type.contains("Reference")) {
+      file = "reference.txt";
+    }
+
+    verbatimResponse.getResult().get(0).setType(type);
+    verbatimResponse.getResult().get(0).setFile(file);
+
+    if (issue != null) {
+      Map<Term, String> terms = verbatimResponse.getResult().get(0).getTerms();
+      terms.put(DwcTerm.kingdom, "k");
+      terms.put(DwcTerm.genus, "g");
+      terms.put(DwcTerm.phylum, "p");
+      terms.put(DwcTerm.order, "o");
+      verbatimResponse.getResult().get(0).setIssues(List.of(issue));
+      verbatimResponse.getResult().get(0).setTerms(terms);
+    }
+
+    return verbatimResponse;
+  }
+}

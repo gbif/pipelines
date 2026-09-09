@@ -1,0 +1,13 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="2" author="mlopez">
+    <sql>
+      ALTER TABLE validation ADD COLUMN clb_dataset_key integer;
+      ALTER TABLE validation ADD COLUMN clb_validation_message text;
+      ALTER TYPE enum_validation_file_format ADD VALUE IF NOT EXISTS 'COLDP';
+    </sql>
+  </changeSet>
+</databaseChangeLog>

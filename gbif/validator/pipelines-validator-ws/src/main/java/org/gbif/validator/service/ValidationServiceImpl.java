@@ -3,13 +3,19 @@ package org.gbif.validator.service;
 import static org.gbif.validator.service.ValidationFactory.metricsSubmitError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,10 +25,12 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.utils.file.CompressionUtil.UnsupportedCompressionType;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
@@ -51,6 +59,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private final MessagePublisher messagePublisher;
 
   private final ValidatorEmailService emailService;
+
+  private final ObjectMapper objectMapper;
 
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
@@ -243,6 +253,38 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return validationMapper.getRunningValidations(date);
   }
 
+  @Override
+  public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {
+    Validation validation = get(validationKey);
+
+    if (!validation.isExecuting()) {
+      throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
+    }
+
+    if (clbDatasetImport == null) {
+      log.info("CLB validation response for {} is null", validationKey);
+      updateChecklistValidatorStatus(validation, Status.FAILED);
+      return;
+    }
+
+    try {
+      messagePublisher.send(
+          new PipelinesChecklistValidatorMessage(
+              validationKey, objectMapper.writeValueAsString(clbDatasetImport)));
+    } catch (Exception e) {
+      log.error("Error processing CLB validation response for {}", validationKey, e);
+      updateChecklistValidatorStatus(validation, Status.FAILED);
+    }
+  }
+
+  private void updateChecklistValidatorStatus(Validation validation, Status newStatus) {
+    validation.getMetrics().getStepTypes().stream()
+        .filter(step -> step.getStepType().equals(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()))
+        .forEach(step -> step.setStatus(newStatus));
+    validation.setStatus(newStatus);
+    update(validation);
+  }
+
   /** Persists a validation entity. */
   private Validation create(
       UUID key, DataFile dataFile, Validation.Status status, ValidationRequest validationRequest) {
@@ -315,6 +357,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Updates the status of a validation process. */
   private Validation updateFailedValidation(UUID key, String errorMessage) {
+    log.error("Failed validation for key {} with error {}", key, errorMessage);
     Validation validation =
         newValidationInstance(key, Validation.Status.FAILED, metricsSubmitError(errorMessage));
     return updateAndGet(validation);
@@ -347,6 +390,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   }
 
   private Set<StepType> getPipelineSteps(DataFile dataFile) {
+    if (dataFile.getFileFormat() == FileFormat.COLDP) {
+      return Set.of(StepType.VALIDATOR_VALIDATE_ARCHIVE);
+    }
+
     StepType stepType;
     if (dataFile.getFileFormat() == FileFormat.DWCA
         || dataFile.getFileFormat() == FileFormat.TABULAR

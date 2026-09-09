@@ -2,6 +2,7 @@ package org.gbif.validator.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Set;
@@ -79,6 +80,15 @@ public class Validation {
 
   /** Validation status. */
   private Status status;
+
+  /** CLB dataset key used only in checklist validations. */
+  private Integer clbDatasetKey;
+
+  /**
+   * RabbitMQ message sent before triggering the CLB validation. Needed to resume the workflow after
+   * CLB callback.
+   */
+  @Hidden private String clbValidationMessage;
 
   /** Dataset parsed from EML file */
   @JsonIgnore private Dataset dataset;

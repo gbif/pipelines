@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/CatalogueOfLife/coldp/master/metadata.json
+---
+alias: USDA PLANTS
+title: USDA PLANTS Database
+description: |-
+  The USDA PLANTS Database provides standardized information about the vascular plants,
+  mosses, liverworts, hornworts, and lichens of the United States and its territories. It
+  includes names, plant symbols, checklists, distributional data, species abstracts,
+  characteristics, images, crop information, and references.
+
+  The database covers approximately 49,000 accepted taxa and 44,000 synonyms, including
+  plants native and introduced to the US and its territories.
+
+  When run with the --enrich flag, the generator also fetches per-taxon profile data from
+  the USDA PLANTS API (https://plantsservices.sc.egov.usda.gov/api/) for each accepted name,
+  adding distribution records (native/introduced status by US region), growth habit and
+  duration as taxon properties, and representative images. Additional data available from the
+  API but not currently fetched includes: PlantCharacteristics, PlantNoxiousStatus,
+  PlantInvasiveStatus, PlantWetland, PlantLegalStatus, and PlantSynonyms endpoints.
+  Each call to PlantProfile?symbol=SYMBOL takes ~1 s; with 10 parallel threads the first
+  enrichment run takes ~1.5 hours; subsequent runs reuse cached profile-SYMBOL.json files.
+
+issued: 2026-08-23
+version: 2026-08-23
+contact:
+  organisation: USDA, Natural Resources Conservation Service (NRCS), National Plant Data Team
+  url: https://plants.sc.egov.usda.gov/
+contributor:
+  - family: Döring
+    given: Markus
+    orcid: 0000-0001-7757-1889
+    country: Germany
+    city: Berlin
+    email: mdoering@gbif.org
+    note: Developer of ColDP generator code
+creator:
+  - organisation: USDA, Natural Resources Conservation Service (NRCS), National Plant Data Team
+    url: https://plants.sc.egov.usda.gov/
+license: CC0
+url: https://plants.sc.egov.usda.gov/
+logo: https://www.nrcs.usda.gov/themes/custom/uswds_nrcs/images/nrcs-logo.png
+taxonomicScope: Plantae, Fungi, Lichenes, Bryophyta (US and territories)
+geographicScope: United States and territories
+confidence: 4
+completeness: 90
+notes: |-
+  Generated from plantlst.txt downloaded from the USDA PLANTS Document Library.
+  Families are synthetic nodes (ID prefix fam:) derived from the Family column.
+  Genera missing from plantlst.txt (278 genera) receive synthetic nodes (ID prefix gen:).
+  Rank is inferred from name structure via the GBIF name parser.
+  Profile links point to https://plants.sc.egov.usda.gov/plant-profile/SYMBOL.

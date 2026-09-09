@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
@@ -34,4 +35,6 @@ public interface ValidationService<MF> {
   Dataset getDataset(UUID key);
 
   List<UUID> getRunningValidations(int min);
+
+  void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport);
 }

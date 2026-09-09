@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks;
 
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.pipelines.common.PipelinesException;
+import org.gbif.validator.api.Validation;
 
 public interface StepHandler<In extends PipelineBasedMessage, Out extends PipelineBasedMessage> {
 
@@ -19,5 +20,10 @@ public interface StepHandler<In extends PipelineBasedMessage, Out extends Pipeli
    */
   default String getRouting() {
     throw new PipelinesException("MQ routing key is not specified");
+  }
+
+  /** Only used in {@link ValidatorCallback} to set the status at the end of the process. */
+  default Validation.Status getFinalValidationStatus(In message) {
+    return Validation.Status.FINISHED;
   }
 }

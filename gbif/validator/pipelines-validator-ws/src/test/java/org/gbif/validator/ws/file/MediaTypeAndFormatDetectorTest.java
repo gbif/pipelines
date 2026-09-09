@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import lombok.SneakyThrows;
+import org.apache.tika.mime.MediaType;
 import org.gbif.validator.api.FileFormat;
 import org.junit.jupiter.api.Test;
 
@@ -87,5 +88,26 @@ class MediaTypeAndFormatDetectorTest {
             extractedFolder, org.apache.tika.mime.MediaType.APPLICATION_ZIP.toString());
     assertTrue(mediaTypeAndFormat.isPresent());
     assertEquals(FileFormat.TABULAR, mediaTypeAndFormat.get().getFileFormat());
+
+    // COLDP
+    extractedFolder = getTestPath("/coldp/usda/");
+    mediaTypeAndFormat =
+        MediaTypeAndFormatDetector.evaluateMediaTypeAndFormat(
+            extractedFolder, MediaType.APPLICATION_ZIP.toString());
+    assertTrue(mediaTypeAndFormat.isPresent());
+    assertEquals(FileFormat.COLDP, mediaTypeAndFormat.get().getFileFormat());
+  }
+
+  @Test
+  void colDPUsageFileTest() {
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("NameUsage.tsv"));
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("name.tsv"));
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("Name.tsv"));
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("NAME.tsv"));
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("NameUsage.tsv"));
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("name-Usage.tsv"));
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("name-usage.txt"));
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("name_usage.txt"));
+    assertTrue(MediaTypeAndFormatDetector.isNameColDPFile("name__--_.txt"));
   }
 }

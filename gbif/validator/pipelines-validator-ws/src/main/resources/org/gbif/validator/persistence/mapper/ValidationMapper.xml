@@ -54,7 +54,7 @@
   </sql>
 
   <sql id="VALIDATION_FIELDS">
-    key, source_id, installation_key, notification_emails, status, file_format, username, file, file_size, dataset, metrics, created, modified, deleted
+    key, source_id, installation_key, notification_emails, status, file_format, username, file, file_size, dataset, metrics, created, modified, deleted, clb_dataset_key, clb_validation_message
   </sql>
 
   <!--
@@ -77,6 +77,12 @@
     </if>
     <if test="metrics != null">
     metrics = #{metrics,jdbcType=OTHER},
+    </if>
+    <if test="clbDatasetKey != null">
+      clb_dataset_key = #{clbDatasetKey,jdbcType=INTEGER},
+    </if>
+    <if test="clbValidationMessage != null">
+      clb_validation_message = #{clbValidationMessage,jdbcType=VARCHAR},
     </if>
     modified = now(),
     deleted = null
@@ -158,6 +164,9 @@
     <if test="searchRequest.sourceId != null" >
       AND source_id = #{searchRequest.sourceId,jdbcType=OTHER}
     </if>
+    <if test="searchRequest.clbDatasetKey != null" >
+      AND clb_dataset_key = #{searchRequest.clbDatasetKey,jdbcType=INTEGER}
+    </if>
     <if test="searchRequest.status != null" >
       AND status IN
       <foreach item="status" collection="searchRequest.status" separator="," open="(" close=")">
@@ -166,7 +175,6 @@
     </if>
     <if test="searchRequest.fromDate != null" ><![CDATA[AND created >= #{searchRequest.fromDate,jdbcType=TIMESTAMP}]]></if>
     <if test="searchRequest.toDate != null" ><![CDATA[AND created < #{searchRequest.toDate,jdbcType=TIMESTAMP}]]></if>
-
     <if test="searchRequest.sortBy != null and !searchRequest.sortBy.empty">
       ORDER BY
       <foreach item="sort" collection="searchRequest.sortBy" separator=",">
@@ -190,6 +198,9 @@
     </if>
     <if test="searchRequest.sourceId != null" >
       AND source_id = #{searchRequest.sourceId,jdbcType=OTHER}
+    </if>
+    <if test="searchRequest.clbDatasetKey != null" >
+      AND clb_dataset_key = #{searchRequest.clbDatasetKey,jdbcType=INTEGER}
     </if>
     <if test="searchRequest.fromDate != null" ><![CDATA[AND created >= #{searchRequest.fromDate,jdbcType=TIMESTAMP}]]></if>
     <if test="searchRequest.toDate != null" ><![CDATA[AND created < #{searchRequest.toDate,jdbcType=TIMESTAMP}]]></if>
