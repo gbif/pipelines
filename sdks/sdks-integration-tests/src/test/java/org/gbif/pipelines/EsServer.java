@@ -46,39 +46,42 @@ public class EsServer extends ExternalResource {
 
   @Override
   protected void before() throws Throwable {
-    if (COUNTER.getAndIncrement() == 0) {
-      embeddedElastic =
-          new ElasticsearchContainer(
-                  DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch")
-                      .withTag(getEsVersion()))
-              .withEnv("xpack.security.enabled", "false")
-              .withEnv("xpack.security.http.ssl.enabled", "false")
-              .withReuse(true);
+    synchronized (MUTEX) {
+      if (COUNTER.getAndIncrement() == 0) {
+        embeddedElastic =
+            new ElasticsearchContainer(
+                    DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch")
+                        .withTag(getEsVersion()))
+                .withEnv("xpack.security.enabled", "false")
+                .withEnv("xpack.security.http.ssl.enabled", "false")
+                .withReuse(true);
 
-      embeddedElastic.start();
+        embeddedElastic.start();
 
-      esConfig = EsConfig.from(getServerAddress());
-      restClient = buildRestClient();
-      esClient = EsClient.from(esConfig);
+        esConfig = EsConfig.from(getServerAddress());
+        restClient = buildRestClient();
+        esClient = EsClient.from(esConfig);
 
-      // Fix for https://github.com/gbif/pipelines/issues/568
-      esClient.performPutRequest(
-          "/_cluster/settings",
-          Collections.emptyMap(),
-          new NStringEntity(
-              "{\"persistent\":{\"cluster.routing.allocation.disk.threshold_enabled\":false}}"));
+        esClient.performPutRequest(
+            "/_cluster/settings",
+            Collections.emptyMap(),
+            new NStringEntity(
+                "{\"persistent\":{\"cluster.routing.allocation.disk.threshold_enabled\":false}}"));
+      }
     }
   }
 
   @Override
   protected void after() {
-    if (COUNTER.decrementAndGet() == 0) {
-      embeddedElastic.stop();
-      esClient.close();
-      try {
-        restClient.close();
-      } catch (IOException e) {
-        log.error("Could not close rest client for testing", e);
+    synchronized (MUTEX) {
+      if (COUNTER.decrementAndGet() == 0) {
+        embeddedElastic.stop();
+        esClient.close();
+        try {
+          restClient.close();
+        } catch (IOException e) {
+          log.error("Could not close rest client for testing", e);
+        }
       }
     }
   }
