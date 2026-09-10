@@ -36,3 +36,13 @@ spring:
 retentionPolicy:
   keepDays: 14
   cron: 0 0 * * * *
+
+
+clb:
+  api:
+    url: https://api.dev.checklistbank.org
+    user: fake
+    password: fake123
+  cleaner:
+    hoursOld: 24
+    cron: 0 0 */6 ? * *
