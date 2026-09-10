@@ -297,9 +297,13 @@ public final class CompiledMappingDatasetPruner {
   private static Optional<CompiledTargetProducer> pruneProducer(
       CompiledTargetProducer producer, MappingDatasetScope scope, Predicate<FieldRef> available) {
     List<CompiledSourceField> sources = pruneSources(producer, scope, available);
-    boolean positional = fixedSourcePrefix(producer.aggregation()) > 0;
-    if (sources.isEmpty()
-        || (!positional && sources.stream().noneMatch(source -> available.test(source.field())))) {
+    boolean expression = producer.expressionValue();
+    boolean positional = !expression && fixedSourcePrefix(producer.aggregation()) > 0;
+    if ((expression && sources.stream().anyMatch(source -> !available.test(source.field())))
+        || (!expression
+            && (sources.isEmpty()
+                || (!positional
+                    && sources.stream().noneMatch(source -> available.test(source.field())))))) {
       return Optional.empty();
     }
     if (producer.contributionIdentity().isPresent()
@@ -314,8 +318,7 @@ public final class CompiledMappingDatasetPruner {
         new CompiledTargetProducer(
             producer.targetTerm(),
             producer.owner(),
-            producer.sourceMode(),
-            producer.aggregation(),
+            producer.value(),
             sources,
             producer.origin(),
             producer.contributionIdentity(),
@@ -332,6 +335,9 @@ public final class CompiledMappingDatasetPruner {
    */
   private static List<CompiledSourceField> pruneSources(
       CompiledTargetProducer producer, MappingDatasetScope scope, Predicate<FieldRef> available) {
+    if (producer.expressionValue()) {
+      return producer.sources();
+    }
     int fixedPrefix = fixedSourcePrefix(producer.aggregation());
 
     if (fixedPrefix == 0) {

@@ -887,23 +887,11 @@ public final class SparkExtendedRecordExecutor {
   }
 
   private Column coreTargetExpression(CompiledTargetProducer target, Dataset<Row> root) {
-    List<Column> sources =
-        target.sources().stream()
-            .map(
-                source ->
-                    hasColumn(root, source.field().column())
-                        ? root.col(source.field().column()).cast("string")
-                        : lit(null).cast("string"))
-            .toList();
-    return combineCoreSources(target, sources);
+    return SparkTargetExpression.row(target, field -> columnOrNull(root, field));
   }
 
   private Column coreTargetExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
-    List<Column> sources =
-        target.sources().stream()
-            .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
-            .toList();
-    return combineCoreSources(target, sources);
+    return SparkTargetExpression.row(target, pathResult::columnOrNull);
   }
 
   private static boolean hasColumn(Dataset<Row> dataset, String column) {

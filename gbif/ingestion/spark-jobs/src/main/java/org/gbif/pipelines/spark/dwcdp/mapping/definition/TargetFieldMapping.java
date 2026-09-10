@@ -7,9 +7,7 @@ import java.util.Optional;
 /** Describes how one or more path-qualified source fields populate one DwC-A term. */
 public record TargetFieldMapping(
     String targetTerm,
-    SourceMode sourceMode,
-    List<FieldRef> sources,
-    ValueAggregation aggregation,
+    TargetValue value,
     Origin origin,
     Optional<FieldRef> contributionIdentity,
     Optional<FieldRef> orderBy) {
@@ -27,72 +25,107 @@ public record TargetFieldMapping(
 
   public TargetFieldMapping {
     Objects.requireNonNull(targetTerm, "targetTerm");
-    Objects.requireNonNull(sourceMode, "sourceMode");
-    sources = List.copyOf(sources);
-    Objects.requireNonNull(aggregation, "aggregation");
+    Objects.requireNonNull(value, "value");
     Objects.requireNonNull(origin, "origin");
     contributionIdentity = contributionIdentity == null ? Optional.empty() : contributionIdentity;
     orderBy = orderBy == null ? Optional.empty() : orderBy;
-    if (sources.isEmpty()) {
-      throw new IllegalArgumentException("Target field requires at least one source");
+    if (value instanceof TargetValue.Expression
+        && (contributionIdentity.isPresent() || orderBy.isPresent())) {
+      throw new IllegalArgumentException(
+          "Expression target values do not support contribution identity or ordering");
     }
   }
 
   public static TargetFieldMapping oneOf(
       String targetTerm, ValueAggregation aggregation, FieldRef... sources) {
+    return aggregated(
+        targetTerm, SourceMode.ONE_OF, aggregation, Origin.EXPLICIT, List.of(sources));
+  }
+
+  public static TargetFieldMapping inferredOneOf(
+      String targetTerm, ValueAggregation aggregation, FieldRef... sources) {
+    return aggregated(
+        targetTerm, SourceMode.ONE_OF, aggregation, Origin.INFERRED, List.of(sources));
+  }
+
+  public static TargetFieldMapping allOf(
+      String targetTerm, ValueAggregation aggregation, FieldRef... sources) {
+    return aggregated(
+        targetTerm, SourceMode.ALL_OF, aggregation, Origin.EXPLICIT, List.of(sources));
+  }
+
+  public static TargetFieldMapping expression(String targetTerm, ValueExpression expression) {
     return new TargetFieldMapping(
         targetTerm,
-        SourceMode.ONE_OF,
-        List.of(sources),
-        aggregation,
+        new TargetValue.Expression(expression),
         Origin.EXPLICIT,
         Optional.empty(),
         Optional.empty());
   }
 
-  public static TargetFieldMapping inferredOneOf(
-      String targetTerm, ValueAggregation aggregation, FieldRef... sources) {
+  public static TargetFieldMapping inferredExpression(
+      String targetTerm, ValueExpression expression) {
     return new TargetFieldMapping(
         targetTerm,
-        SourceMode.ONE_OF,
-        List.of(sources),
-        aggregation,
+        new TargetValue.Expression(expression),
         Origin.INFERRED,
         Optional.empty(),
         Optional.empty());
   }
 
-  public static TargetFieldMapping allOf(
-      String targetTerm, ValueAggregation aggregation, FieldRef... sources) {
+  private static TargetFieldMapping aggregated(
+      String targetTerm,
+      SourceMode sourceMode,
+      ValueAggregation aggregation,
+      Origin origin,
+      List<FieldRef> sources) {
     return new TargetFieldMapping(
         targetTerm,
-        SourceMode.ALL_OF,
-        List.of(sources),
-        aggregation,
-        Origin.EXPLICIT,
+        new TargetValue.Aggregated(sourceMode, sources, aggregation),
+        origin,
         Optional.empty(),
         Optional.empty());
   }
 
-  /**
-   * Identity of the logical contribution, used to deduplicate the same linked record across paths.
-   */
-  public TargetFieldMapping contributionIdentity(FieldRef field) {
-    return new TargetFieldMapping(
-        targetTerm, sourceMode, sources, aggregation, origin, Optional.of(field), orderBy);
+  public List<FieldRef> sources() {
+    return value.sources();
   }
 
-  /**
-   * Field used to deterministically order this producer's contributions before target aggregation.
-   */
+  public boolean expressionValue() {
+    return value instanceof TargetValue.Expression;
+  }
+
+  public SourceMode sourceMode() {
+    return aggregatedValue().sourceMode();
+  }
+
+  public ValueAggregation aggregation() {
+    return aggregatedValue().aggregation();
+  }
+
+  public ValueExpression expression() {
+    if (value instanceof TargetValue.Expression expressionValue) {
+      return expressionValue.expression();
+    }
+    throw new IllegalStateException("Target field is not expression-backed: " + targetTerm);
+  }
+
+  /** Identity of the logical contribution, used to deduplicate the same linked record across paths. */
+  public TargetFieldMapping contributionIdentity(FieldRef field) {
+    aggregatedValue();
+    return new TargetFieldMapping(targetTerm, value, origin, Optional.of(field), orderBy);
+  }
+
+  /** Field used to deterministically order this producer's contributions before target aggregation. */
   public TargetFieldMapping orderBy(FieldRef field) {
-    return new TargetFieldMapping(
-        targetTerm,
-        sourceMode,
-        sources,
-        aggregation,
-        origin,
-        contributionIdentity,
-        Optional.of(field));
+    aggregatedValue();
+    return new TargetFieldMapping(targetTerm, value, origin, contributionIdentity, Optional.of(field));
+  }
+
+  private TargetValue.Aggregated aggregatedValue() {
+    if (value instanceof TargetValue.Aggregated aggregated) {
+      return aggregated;
+    }
+    throw new IllegalStateException("Target field is not aggregation-backed: " + targetTerm);
   }
 }

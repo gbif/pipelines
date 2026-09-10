@@ -398,8 +398,7 @@ public final class MappingCompiler {
     return new CompiledTargetProducer(
         field.targetTerm(),
         owner,
-        field.sourceMode(),
-        field.aggregation(),
+        field.value(),
         field.sources().stream().map(CompiledSourceField::new).toList(),
         field.origin(),
         field.contributionIdentity().map(CompiledSourceField::new),
