@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 @Disabled
 public class ChecklistbankWsManualTest {
 
+  private static final String REGISTRY_API_URL = "https://api.gbif-dev.org";
   private static final String DEV_API_URL = "https://api.dev.checklistbank.org";
   private static final String USER = "user";
   private static final String PWD = "pwd";
@@ -23,7 +24,7 @@ public class ChecklistbankWsManualTest {
   @Test
   public void manualValidationTest() throws IOException {
     ChecklistValidator checklistValidator =
-        new ChecklistValidator(DEV_API_URL, USER, PWD, CALLBACK);
+        new ChecklistValidator(REGISTRY_API_URL, DEV_API_URL, USER, PWD, CALLBACK);
 
     int datasetKey =
         checklistValidator

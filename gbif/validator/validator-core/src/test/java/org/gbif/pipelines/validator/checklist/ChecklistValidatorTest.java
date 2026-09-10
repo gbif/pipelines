@@ -20,14 +20,16 @@ import org.junit.jupiter.api.Test;
 /** Unit tests related to {@link ChecklistValidator}. */
 public class ChecklistValidatorTest {
 
-  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final String REGISTRY_API_URL = "https://api.gbif-dev.org";
 
   @Test
   public void testChecklistValidatorWithoutExtensions() {
 
     try {
       ChecklistbankWsClient checklistbankWsClient = new ChecklistbankWsClientMock();
-      ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient, null);
+      ChecklistValidator checklistValidator =
+          new ChecklistValidator(checklistbankWsClient, REGISTRY_API_URL, null);
 
       // it simulates the response received in the callback
       ClbDatasetImport clbDatasetImport =
@@ -77,7 +79,8 @@ public class ChecklistValidatorTest {
 
     try {
       ChecklistbankWsClient checklistbankWsClient = new ChecklistbankWsClientMock();
-      ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient, null);
+      ChecklistValidator checklistValidator =
+          new ChecklistValidator(checklistbankWsClient, REGISTRY_API_URL, null);
 
       // it simulates the response received in the callback
       ClbDatasetImport clbDatasetImport =
@@ -169,7 +172,8 @@ public class ChecklistValidatorTest {
     try {
       ChecklistbankWsClient checklistbankWsClient =
           new ChecklistbankWsClientMock("checklists/api_response_verbatim_coldp.json");
-      ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClient, null);
+      ChecklistValidator checklistValidator =
+          new ChecklistValidator(checklistbankWsClient, REGISTRY_API_URL, null);
 
       // it simulates the response received in the callback
       ClbDatasetImport clbDatasetImport =

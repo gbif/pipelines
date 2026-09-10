@@ -33,6 +33,7 @@ public class ArchiveValidatorFactory {
           .schemaValidatorFactory(schemaValidatorFactory)
           .checklistValidator(
               new ChecklistValidator(
+                  config.stepConfig.registry.wsUrl,
                   config.clbConfig.url,
                   config.clbConfig.user,
                   config.clbConfig.password,
@@ -58,6 +59,7 @@ public class ArchiveValidatorFactory {
           .message(message)
           .checklistValidator(
               new ChecklistValidator(
+                  config.stepConfig.registry.wsUrl,
                   config.clbConfig.url,
                   config.clbConfig.user,
                   config.clbConfig.password,

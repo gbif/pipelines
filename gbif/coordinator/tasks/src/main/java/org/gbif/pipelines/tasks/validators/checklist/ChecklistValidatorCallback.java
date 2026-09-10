@@ -19,6 +19,7 @@ import org.gbif.pipelines.validator.Validations;
 import org.gbif.pipelines.validator.checklist.ChecklistValidator;
 import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
 import org.gbif.validator.api.ClbDatasetImport;
+import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -47,7 +48,11 @@ public class ChecklistValidatorCallback
     this.validationClient = validationClient;
     this.checklistValidator =
         new ChecklistValidator(
-            config.clbConfig.url, config.clbConfig.user, config.clbConfig.password, null);
+            config.registry.wsUrl,
+            config.clbConfig.url,
+            config.clbConfig.user,
+            config.clbConfig.password,
+            null);
     this.messagePublisher = messagePublisher;
   }
 
@@ -103,6 +108,11 @@ public class ChecklistValidatorCallback
           log.info(
               "Validating DWCA checklist archive - finished calling checklistbank, merging results");
           result.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+
+          if (validation.getFileFormat() == FileFormat.COLDP) {
+            validation.getMetrics().setIndexeable(true);
+          }
+
           updateStatus(validation, Status.FINISHED);
 
           // send message to continue the process

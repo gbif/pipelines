@@ -2,6 +2,7 @@ package org.gbif.pipelines.validator.checklist;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -43,14 +44,24 @@ public class ChecklistValidator {
 
   private final ChecklistbankWsClient checklistbankWsClient;
   private final String callbackUrl;
+  private final String registryUrl;
 
   public ChecklistValidator(
-      String clbApiUrl, String clbApiUser, String clbApiPassword, String callbackUrl) {
-    this(buildChecklistbankWsClient(clbApiUrl, clbApiUser, clbApiPassword), callbackUrl);
+      String registryUrl,
+      String clbApiUrl,
+      String clbApiUser,
+      String clbApiPassword,
+      String callbackUrl) {
+    this(
+        buildChecklistbankWsClient(clbApiUrl, clbApiUser, clbApiPassword),
+        registryUrl,
+        callbackUrl);
   }
 
-  public ChecklistValidator(ChecklistbankWsClient checklistbankWsClient, String callbackUrl) {
+  public ChecklistValidator(
+      ChecklistbankWsClient checklistbankWsClient, String registryUrl, String callbackUrl) {
     this.checklistbankWsClient = checklistbankWsClient;
+    this.registryUrl = registryUrl;
     this.callbackUrl = callbackUrl;
   }
 
@@ -239,6 +250,7 @@ public class ChecklistValidator {
     nextMessage.setPipelineSteps(previousMessage.getPipelineSteps());
     nextMessage.setExecutionId(previousMessage.getExecutionId());
     nextMessage.setDatasetType(DatasetType.CHECKLIST);
+    nextMessage.setSource(new URI(registryUrl));
     if (previousMessage.getFileFormat().equalsIgnoreCase("COLDP")) {
       nextMessage.setEndpointType(EndpointType.COLDP);
     } else {

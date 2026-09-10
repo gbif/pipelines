@@ -30,7 +30,8 @@ public class ChecklistValidatorCallbackIT {
     ChecklistValidatorConfiguration config = new ChecklistValidatorConfiguration();
 
     ChecklistbankWsClient checklistbankWsClientMock = new ChecklistbankWsClientMock();
-    ChecklistValidator checklistValidator = new ChecklistValidator(checklistbankWsClientMock, null);
+    ChecklistValidator checklistValidator =
+        new ChecklistValidator(checklistbankWsClientMock, "api.gbif-dev.org", null);
 
     ValidationWsClient validationClient = ValidationWsClientStub.create();
     MessagePublisher messagePublisher = MessagePublisherStub.create();
