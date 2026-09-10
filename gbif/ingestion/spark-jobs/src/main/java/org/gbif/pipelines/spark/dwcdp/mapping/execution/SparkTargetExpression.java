@@ -21,8 +21,10 @@ import static org.apache.spark.sql.functions.when;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import org.apache.spark.sql.Column;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
@@ -30,6 +32,16 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 final class SparkTargetExpression {
 
   private SparkTargetExpression() {}
+
+
+  static Column row(CompiledTargetProducer target, Function<FieldRef, Column> fields) {
+    if (target.expressionValue()) {
+      return SparkValueExpression.build(target.expression(), fields);
+    }
+    List<Column> sources =
+        target.sources().stream().map(source -> fields.apply(source.field())).toList();
+    return row(target, sources);
+  }
 
   static Column row(CompiledTargetProducer target, List<Column> sources) {
     if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
@@ -100,6 +112,10 @@ final class SparkTargetExpression {
       List<Column> sources,
       Optional<Column> contributionIdentity,
       Optional<Column> orderBy) {
+    if (target.expressionValue()) {
+      throw new UnsupportedOperationException(
+          "Row-level ValueExpression cannot be used as an aggregate target: " + target.targetTerm());
+    }
     if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
         && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
       return first(coalesce(sources.toArray(Column[]::new)), true);

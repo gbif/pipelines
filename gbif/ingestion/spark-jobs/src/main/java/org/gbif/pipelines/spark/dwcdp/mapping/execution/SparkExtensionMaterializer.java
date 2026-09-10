@@ -475,9 +475,7 @@ public final class SparkExtensionMaterializer {
   }
 
   private Column rowExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
-    List<Column> sources =
-        target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
-    return SparkTargetExpression.row(target, sources);
+    return SparkTargetExpression.row(target, pathResult::columnOrNull);
   }
 
   private Column aggregateExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
