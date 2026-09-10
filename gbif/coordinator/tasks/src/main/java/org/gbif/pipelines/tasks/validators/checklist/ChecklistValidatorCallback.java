@@ -148,7 +148,6 @@ public class ChecklistValidatorCallback
       return validation;
     }
 
-    validation.setStatus(newStatus);
     validation.setModified(Timestamp.valueOf(ZonedDateTime.now().toLocalDateTime()));
 
     Metrics metrics =
@@ -160,6 +159,18 @@ public class ChecklistValidatorCallback
         break;
       }
     }
+
+    Status mainStatus = newStatus;
+    if (mainStatus == Status.FINISHED) {
+      boolean isQueued =
+          validation.getMetrics().getStepTypes().stream()
+              .filter(x -> !x.getStepType().equals(STEP_TYPE))
+              .anyMatch(x -> x.getStatus() != Status.FINISHED);
+      if (isQueued) {
+        mainStatus = Status.QUEUED;
+      }
+    }
+    validation.setStatus(mainStatus);
 
     validation.setMetrics(metrics);
 
