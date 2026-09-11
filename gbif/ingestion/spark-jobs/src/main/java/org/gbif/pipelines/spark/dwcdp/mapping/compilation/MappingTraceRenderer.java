@@ -134,12 +134,13 @@ public final class MappingTraceRenderer {
   private static void renderTarget(
       StringBuilder out, CompiledTargetProducer target, String indent) {
     out.append(indent).append("Target: ").append(target.targetTerm()).append('\n');
-    out.append(indent)
-        .append("  Strategy: ")
-        .append(target.sourceMode())
-        .append(" / ")
-        .append(target.aggregation())
-        .append('\n');
+    out.append(indent).append("  Strategy: ");
+    if (target.expressionValue()) {
+      out.append("EXPRESSION / ").append(target.expression());
+    } else {
+      out.append(target.sourceMode()).append(" / ").append(target.aggregation());
+    }
+    out.append('\n');
     target
         .contributionIdentity()
         .ifPresent(

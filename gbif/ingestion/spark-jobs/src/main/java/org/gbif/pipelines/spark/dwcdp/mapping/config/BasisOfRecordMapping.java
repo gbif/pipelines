@@ -23,4 +23,25 @@ public final class BasisOfRecordMapping {
         .whenIn(event, "HumanObservation", "Observation")
         .otherwise("Occurrence");
   }
+
+  /** Material-owned classifications. Null means the lower-precedence Event rules may contribute. */
+  public static ValueExpression materialExpression(FieldRef materialCategory) {
+    ValueExpression material = ValueExpression.field(materialCategory);
+    return CaseExpression.builder()
+        .whenIn(material, "PreservedSpecimen", "preserved")
+        .whenIn(material, "FossilSpecimen", "fossilized")
+        .whenIn(material, "LivingSpecimen", "living")
+        .whenIn(material, "MaterialSample", "tissue", "DNA extract")
+        .otherwise(ValueExpression.literal(null));
+  }
+
+  /** Event-owned classifications. Null means the final Occurrence fallback may contribute. */
+  public static ValueExpression eventExpression(FieldRef eventType) {
+    ValueExpression event = ValueExpression.field(eventType);
+    return CaseExpression.builder()
+        .whenIn(event, "MaterialSample", "NucleotideAnalysis")
+        .whenIn(event, "MachineObservation", "Sensor")
+        .whenIn(event, "HumanObservation", "Observation")
+        .otherwise(ValueExpression.literal(null));
+  }
 }
