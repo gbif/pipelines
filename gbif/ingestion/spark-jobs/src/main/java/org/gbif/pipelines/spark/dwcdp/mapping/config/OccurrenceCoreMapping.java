@@ -8,6 +8,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 
 /** Reusable Occurrence-core enrichment fragments. */
@@ -93,6 +94,40 @@ public final class OccurrenceCoreMapping {
     OccurrenceEnrichment.materialTargets(graph, material).forEach(builder::field);
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
     return builder.build();
+  }
+
+  /** Material-derived basisOfRecord contribution from one unambiguous evidence material. */
+  public static CoreFragment materialBasisOfRecord(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material = OccurrenceEnrichment.evidenceMaterialPath(occurrence);
+    return coreFragment("occurrence-core-basis-of-record-material", material)
+        .field(
+            TargetFieldMapping.expression(
+                DwcTerm.basisOfRecord.qualifiedName(),
+                BasisOfRecordMapping.materialExpression(
+                    material.field("materialEntityCategory"))))
+        .build();
+  }
+
+  /** Event-derived basisOfRecord contribution for the Occurrence's owning Event. */
+  public static CoreFragment eventBasisOfRecord(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath event = occurrence.join("event").via("event_fk").optional().exactlyOne();
+    return coreFragment("occurrence-core-basis-of-record-event", event)
+        .field(
+            TargetFieldMapping.expression(
+                DwcTerm.basisOfRecord.qualifiedName(),
+                BasisOfRecordMapping.eventExpression(event.field("eventType"))))
+        .build();
+  }
+
+  /** Final basisOfRecord fallback when neither Material nor Event classification applies. */
+  public static CoreFragment defaultBasisOfRecord() {
+    return coreFragment("occurrence-core-basis-of-record-default", "occurrence")
+        .field(
+            TargetFieldMapping.expression(
+                DwcTerm.basisOfRecord.qualifiedName(), ValueExpression.literal("Occurrence")))
+        .build();
   }
 
   /** Resolves material.collectedByID for one unambiguous evidence material. */

@@ -7,6 +7,7 @@ import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
 import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.filter;
+import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.sort_array;
 import static org.apache.spark.sql.functions.split;
@@ -635,7 +636,7 @@ public final class SparkExtendedRecordExecutor {
             rawCore
                 .groupBy(rawCore.col(corePk).cast("string").as("__dwca_merge_core_pk"))
                 .agg(
-                    coreAggregateExpression(producer, rawCore)
+                    coreFirstNonNullMergeExpression(producer, rawCore)
                         .cast("string")
                         .as("__dwca_merge_value"));
       } else {
@@ -669,7 +670,7 @@ public final class SparkExtendedRecordExecutor {
                 .groupBy(
                     pathResult.dataset().col(corePkAlias).cast("string").as("__dwca_merge_core_pk"))
                 .agg(
-                    coreAggregateExpression(producer, pathResult)
+                    coreFirstNonNullMergeExpression(producer, pathResult)
                         .cast("string")
                         .as("__dwca_merge_value"));
       }
@@ -697,6 +698,20 @@ public final class SparkExtendedRecordExecutor {
     return contributions
         .groupBy("__dwca_merge_core_pk")
         .agg(ordered.getItem(0).getField("value").as(targetAlias(merge.targetTerm())));
+  }
+
+  private Column coreFirstNonNullMergeExpression(
+      CompiledTargetProducer target, Dataset<Row> root) {
+    return target.expressionValue()
+        ? first(coreTargetExpression(target, root), true)
+        : coreAggregateExpression(target, root);
+  }
+
+  private Column coreFirstNonNullMergeExpression(
+      CompiledTargetProducer target, SparkPathResult pathResult) {
+    return target.expressionValue()
+        ? first(coreTargetExpression(target, pathResult), true)
+        : coreAggregateExpression(target, pathResult);
   }
 
   private Column coreAggregateExpression(CompiledTargetProducer target, Dataset<Row> root) {

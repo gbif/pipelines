@@ -155,7 +155,9 @@ public final class TargetMappingPlanRenderer {
       for (CompiledTargetProducer producer : producers) {
         List<CompiledSourceField> visibleSources = visibleSources(producer, datasetScope);
         out.append("    <- ");
-        if (visibleSources.size() > 1) {
+        if (producer.expressionValue()) {
+          out.append("EXPRESSION ");
+        } else if (visibleSources.size() > 1) {
           out.append(producer.sourceMode())
               .append(' ')
               .append(formatAggregation(producer.aggregation()))
@@ -183,11 +185,15 @@ public final class TargetMappingPlanRenderer {
           .append(" [")
           .append(producer.origin())
           .append("]\n");
-      out.append("      values: ")
-          .append(producer.sourceMode())
-          .append(" / ")
-          .append(formatAggregation(producer.aggregation()))
-          .append('\n');
+      out.append("      values: ");
+      if (producer.expressionValue()) {
+        out.append("EXPRESSION / ").append(producer.expression());
+      } else {
+        out.append(producer.sourceMode())
+            .append(" / ")
+            .append(formatAggregation(producer.aggregation()));
+      }
+      out.append('\n');
       if (producer.origin() == TargetFieldMapping.Origin.INFERRED) {
         out.append("      inferred depth: ").append(producer.pathDepth()).append('\n');
       }
