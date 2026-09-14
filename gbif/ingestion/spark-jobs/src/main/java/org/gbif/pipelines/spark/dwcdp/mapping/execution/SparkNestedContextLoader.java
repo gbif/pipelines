@@ -25,22 +25,23 @@ final class SparkNestedContextLoader {
       NestedExtensionContext context,
       SparkNestedContextDiscovery.Result discovery) {
     Optional<Dataset<Row>> rows = loader.load(context.rowResource());
-    Optional<Dataset<Row>> contextual = loader.load(context.contextResource());
-    if (rows.isEmpty() || contextual.isEmpty()) {
+    if (rows.isEmpty()) {
       return Optional.empty();
     }
 
     Dataset<Row> nestedRows = nestedRows(rows.get(), context, discovery.ownership());
-    Dataset<Row> nestedContext =
-        nestedContext(contextual.get(), context, discovery.uniqueContext());
+    Optional<Dataset<Row>> nestedContext =
+        loader
+            .load(context.contextResource())
+            .map(contextual -> nestedContext(contextual, context, discovery.uniqueContext()));
 
     return Optional.of(
         resource -> {
           if (resource.equals(context.rowResource())) {
             return Optional.of(nestedRows);
           }
-          if (resource.equals(context.contextResource())) {
-            return Optional.of(nestedContext);
+          if (resource.equals(context.contextResource()) && nestedContext.isPresent()) {
+            return nestedContext;
           }
           return loader.load(resource);
         });

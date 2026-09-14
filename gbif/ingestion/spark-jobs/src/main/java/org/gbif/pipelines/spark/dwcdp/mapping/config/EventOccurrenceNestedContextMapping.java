@@ -38,6 +38,9 @@ public final class EventOccurrenceNestedContextMapping {
   private static List<ExtensionFragment> contextualFragments(SchemaGraph graph) {
     return List.of(
         OccurrenceMapping.material(graph),
+        OccurrenceMapping.materialBasisOfRecord(graph),
+        OccurrenceMapping.eventBasisOfRecord(graph),
+        OccurrenceMapping.defaultBasisOfRecord(graph),
         OccurrenceMapping.materialCollectedBy(graph),
         OccurrenceMapping.materialIdentifiedBy(graph),
         OccurrenceMapping.materialCollectorRoles(graph),

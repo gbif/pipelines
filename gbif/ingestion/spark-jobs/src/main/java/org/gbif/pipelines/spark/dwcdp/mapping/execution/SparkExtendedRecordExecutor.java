@@ -278,7 +278,7 @@ public final class SparkExtendedRecordExecutor {
     if (contextLoader.isPresent() && !context.contextualFragments().isEmpty()) {
       ExtensionMaterializationResult contextual =
           extensionMaterializer.materialize(
-              contextLoader.get(), contextualMapping(extension, context));
+              contextLoader.get(), contextualMapping(extension, context, contextLoader.get()));
       Set<String> allowedTerms = contextualContributionTerms(extension, context);
       ContextEnrichment merged =
           mergeNestedContext(attached, targetColumns, contextual, extension, allowedTerms);
@@ -375,7 +375,7 @@ public final class SparkExtendedRecordExecutor {
   }
 
   private ExtensionMapping contextualMapping(
-      CompiledExtension extension, NestedExtensionContext context) {
+      CompiledExtension extension, NestedExtensionContext context, TableLoader loader) {
     ExtensionFragment base =
         ExtensionFragmentBuilder.extensionFragment(
                 "nested-context-base", extension.rowType(), context.rowResource())
@@ -383,8 +383,13 @@ public final class SparkExtendedRecordExecutor {
             .rowIdentity(context.rowIdentity())
             .build();
 
+    Set<String> contextualNames = context.contextualFragmentNames();
     Set<String> configuredNames =
-        extension.fragments().stream().map(CompiledFragment::name).collect(Collectors.toSet());
+        extension.fragments().stream()
+            .filter(fragment -> contextualNames.contains(fragment.name()))
+            .filter(fragment -> contextualFragmentExecutable(loader, fragment))
+            .map(CompiledFragment::name)
+            .collect(Collectors.toSet());
     List<ExtensionFragment> fragments = new ArrayList<>();
     fragments.add(base);
     context.contextualFragments().stream()
@@ -397,13 +402,32 @@ public final class SparkExtendedRecordExecutor {
                 merge ->
                     merge.producers().stream()
                         .anyMatch(
-                            producer ->
-                                context.contextualFragmentNames().contains(producer.owner())))
+                            producer -> configuredNames.contains(producer.owner())))
             .map(merge -> new TargetMerge(merge.targetTerm(), merge.aggregation()))
             .toList();
 
     return new ExtensionMapping(
         extension.rowType(), ExtensionRowComposition.ENRICH, Optional.empty(), merges, fragments);
+  }
+
+  private static boolean contextualFragmentExecutable(
+      TableLoader loader, CompiledFragment fragment) {
+    if (loader.load(fragment.sourceResource()).isEmpty()) {
+      return false;
+    }
+    return fragment.relations().stream()
+        .allMatch(
+            step -> {
+              var relation = step.relation();
+              return loader
+                      .load(relation.sourceResource())
+                      .filter(dataset -> hasColumn(dataset, relation.sourceColumn()))
+                      .isPresent()
+                  && loader
+                      .load(relation.targetResource())
+                      .filter(dataset -> hasColumn(dataset, relation.targetColumn()))
+                      .isPresent();
+            });
   }
 
   private Set<String> contextualContributionTerms(
