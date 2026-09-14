@@ -57,7 +57,7 @@ class EventOccurrenceOwnershipDiscoveryTest {
     ExtendedRecord record =
         execute(
             occurrences(row("O1", "occ-1", null)),
-            materials(row("M1", "E1", null, null, "CAT-1")),
+            materials(row("M1", "E1", null, null, "CAT-1", null)),
             identifications(row("I1", "M1", null, null, "O1")),
             null,
             null);
@@ -72,7 +72,7 @@ class EventOccurrenceOwnershipDiscoveryTest {
     ExtendedRecord record =
         execute(
             occurrences(row("O1", "occ-1", null)),
-            materials(row("M1", "E1", null, null, "CAT-1")),
+            materials(row("M1", "E1", null, null, "CAT-1", null)),
             identifications(row("I1", null, "A1", null, "O1")),
             analyses(row("A1", "M1", null)),
             null);
@@ -85,7 +85,7 @@ class EventOccurrenceOwnershipDiscoveryTest {
     ExtendedRecord record =
         execute(
             occurrences(row("O1", "occ-1", null)),
-            materials(row("M1", "E1", null, null, "CAT-1")),
+            materials(row("M1", "E1", null, null, "CAT-1", null)),
             identifications(row("I1", null, null, "S1", "O1")),
             analyses(row("A1", "M1", "S1")),
             sequences("S1"));
@@ -98,7 +98,7 @@ class EventOccurrenceOwnershipDiscoveryTest {
     ExtendedRecord record =
         execute(
             occurrences(row("O1", "occ-1", null), row("O2", "occ-2", null)),
-            materials(row("M1", "E1", null, null, "CAT-1")),
+            materials(row("M1", "E1", null, null, "CAT-1", null)),
             identifications(row("I1", "M1", null, null, "O1"), row("I2", "M1", null, null, "O2")),
             null,
             null);
@@ -118,7 +118,7 @@ class EventOccurrenceOwnershipDiscoveryTest {
     ExtendedRecord record =
         execute(
             occurrences(row("O1", "occ-1", null)),
-            materials(row("M1", "E1", null, null, "CAT-1")),
+            materials(row("M1", "E1", null, null, "CAT-1", null)),
             identifications(row("I1", "M1", null, null, "O1"), row("I2", null, "A1", null, "O1")),
             analyses(row("A1", "M1", null)),
             null);
@@ -131,7 +131,9 @@ class EventOccurrenceOwnershipDiscoveryTest {
     ExtendedRecord record =
         execute(
             occurrences(row("O1", "occ-1", null)),
-            materials(row("M1", "E1", null, null, "CAT-1"), row("M2", "E1", null, null, "CAT-2")),
+            materials(
+                row("M1", "E1", null, null, "CAT-1", null),
+                row("M2", "E1", null, null, "CAT-2", null)),
             identifications(row("I1", "M1", null, null, "O1"), row("I2", "M2", null, null, "O1")),
             null,
             null);
@@ -146,13 +148,75 @@ class EventOccurrenceOwnershipDiscoveryTest {
         execute(
             occurrences(row("O1", "occ-1", "E1")),
             materials(
-                row("M1", "E1", "occ-1", null, "CAT-EVIDENCE"),
-                row("M2", "E1", null, null, "CAT-DISCOVERED")),
+                row("M1", "E1", "occ-1", null, "CAT-EVIDENCE", null),
+                row("M2", "E1", null, null, "CAT-DISCOVERED", null)),
             identifications(row("I1", "M2", null, null, "O1")),
             null,
             null);
 
     assertFalse(onlyOccurrence(record).containsKey(DwcTerm.catalogNumber.qualifiedName()));
+  }
+
+  @Test
+  void materialBasisOfRecordPrecedesOwningEventTypeForDiscoveredOccurrence() {
+    ExtendedRecord record =
+        execute(
+            "Sensor",
+            occurrences(row("O1", "occ-1", null)),
+            materials(row("M1", "E1", null, null, "CAT-1", "preserved")),
+            identifications(row("I1", "M1", null, null, "O1")),
+            null,
+            null);
+
+    assertEquals(
+        "PreservedSpecimen",
+        onlyOccurrence(record).get(DwcTerm.basisOfRecord.qualifiedName()));
+  }
+
+  @Test
+  void owningEventBasisOfRecordAppliesAfterMaterialFallsThrough() {
+    ExtendedRecord record =
+        execute(
+            "Sensor",
+            occurrences(row("O1", "occ-1", null)),
+            materials(row("M1", "E1", null, null, "CAT-1", "other")),
+            identifications(row("I1", "M1", null, null, "O1")),
+            null,
+            null);
+
+    assertEquals(
+        "MachineObservation",
+        onlyOccurrence(record).get(DwcTerm.basisOfRecord.qualifiedName()));
+  }
+
+  @Test
+  void directOccurrenceUsesOwningEventBasisOfRecordWithoutMaterialTable() {
+    ExtendedRecord record =
+        execute(
+            "Observation",
+            occurrences(row("O1", "occ-1", "E1")),
+            null,
+            null,
+            null,
+            null);
+
+    assertEquals(
+        "HumanObservation",
+        onlyOccurrence(record).get(DwcTerm.basisOfRecord.qualifiedName()));
+  }
+
+  @Test
+  void basisOfRecordFallsBackToOccurrence() {
+    ExtendedRecord record =
+        execute(
+            "Sampling",
+            occurrences(row("O1", "occ-1", "E1")),
+            null,
+            null,
+            null,
+            null);
+
+    assertEquals("Occurrence", onlyOccurrence(record).get(DwcTerm.basisOfRecord.qualifiedName()));
   }
 
   private ExtendedRecord execute(
@@ -161,11 +225,25 @@ class EventOccurrenceOwnershipDiscoveryTest {
       Dataset<Row> identification,
       Dataset<Row> analysis,
       Dataset<Row> sequence) {
+    return execute("Sensor", occurrence, material, identification, analysis, sequence);
+  }
+
+  private ExtendedRecord execute(
+      String eventType,
+      Dataset<Row> occurrence,
+      Dataset<Row> material,
+      Dataset<Row> identification,
+      Dataset<Row> analysis,
+      Dataset<Row> sequence) {
     Map<String, Dataset<Row>> tables = new LinkedHashMap<>();
-    tables.put("event", events());
+    tables.put("event", events(eventType));
     tables.put("occurrence", occurrence);
-    tables.put("material", material);
-    tables.put("identification", identification);
+    if (material != null) {
+      tables.put("material", material);
+    }
+    if (identification != null) {
+      tables.put("identification", identification);
+    }
     if (analysis != null) {
       tables.put("nucleotide-analysis", analysis);
     }
@@ -195,8 +273,12 @@ class EventOccurrenceOwnershipDiscoveryTest {
                 event.field("eventID")))
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
         .mergeTarget(DwcTerm.occurrenceID.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeTarget(DwcTerm.basisOfRecord.qualifiedName(), ValueAggregation.firstNonNull())
         .importFragment(OccurrenceMapping.directOccurrence(graph))
         .importFragment(OccurrenceMapping.material(graph))
+        .importFragment(OccurrenceMapping.materialBasisOfRecord(graph))
+        .importFragment(OccurrenceMapping.eventBasisOfRecord(graph))
+        .importFragment(OccurrenceMapping.defaultBasisOfRecord(graph))
         .build();
   }
 
@@ -213,12 +295,13 @@ class EventOccurrenceOwnershipDiscoveryTest {
     return rows;
   }
 
-  private Dataset<Row> events() {
+  private Dataset<Row> events(String eventType) {
     return spark.createDataFrame(
-        List.of(RowFactory.create("E1", "EV1")),
+        List.of(RowFactory.create("E1", "EV1", eventType)),
         new StructType()
             .add("event_pk", DataTypes.StringType)
-            .add("eventID", DataTypes.StringType));
+            .add("eventID", DataTypes.StringType)
+            .add("eventType", DataTypes.StringType));
   }
 
   private Dataset<Row> occurrences(Row... rows) {
@@ -238,7 +321,8 @@ class EventOccurrenceOwnershipDiscoveryTest {
             .add("collectionEvent_fk", DataTypes.StringType)
             .add("evidenceForOccurrenceID", DataTypes.StringType)
             .add("usagePolicy_fk", DataTypes.StringType)
-            .add("catalogNumber", DataTypes.StringType));
+            .add("catalogNumber", DataTypes.StringType)
+            .add("materialEntityCategory", DataTypes.StringType));
   }
 
   private Dataset<Row> identifications(Row... rows) {

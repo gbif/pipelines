@@ -9,6 +9,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilde
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 
 /** Reusable occurrence-row mappings shared by Occurrence core and Event -> Occurrence extension. */
@@ -152,6 +153,48 @@ public final class OccurrenceMapping {
     OccurrenceEnrichment.materialTargets(graph, material).forEach(builder::field);
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
     return builder.build();
+  }
+
+  /** Material-derived basisOfRecord contribution for one unambiguous Material context. */
+  public static ExtensionFragment materialBasisOfRecord(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath material = OccurrenceEnrichment.evidenceMaterialPath(occurrence);
+    return extensionFragment("occurrence-basis-of-record-material", ROW_TYPE_OCCURRENCE, material)
+        .scopeKey("event_fk")
+        .rowMatch(occurrence.field("occurrence_pk"))
+        .field(
+            TargetFieldMapping.expression(
+                DwcTerm.basisOfRecord.qualifiedName(),
+                BasisOfRecordMapping.materialExpression(
+                    material.field("materialEntityCategory"))))
+        .build();
+  }
+
+  /** Event-derived basisOfRecord contribution for the Occurrence's owning Event. */
+  public static ExtensionFragment eventBasisOfRecord(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath event = occurrence.join("event").via("event_fk").optional().exactlyOne();
+    return extensionFragment("occurrence-basis-of-record-event", ROW_TYPE_OCCURRENCE, event)
+        .scopeKey("event_fk")
+        .rowMatch(occurrence.field("occurrence_pk"))
+        .field(
+            TargetFieldMapping.expression(
+                DwcTerm.basisOfRecord.qualifiedName(),
+                BasisOfRecordMapping.eventExpression(event.field("eventType"))))
+        .build();
+  }
+
+  /** Final basisOfRecord fallback when neither Material nor Event classification applies. */
+  public static ExtensionFragment defaultBasisOfRecord(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    return extensionFragment(
+            "occurrence-basis-of-record-default", ROW_TYPE_OCCURRENCE, "occurrence")
+        .scopeKey("event_fk")
+        .rowMatch(occurrence.field("occurrence_pk"))
+        .field(
+            TargetFieldMapping.expression(
+                DwcTerm.basisOfRecord.qualifiedName(), ValueExpression.literal("Occurrence")))
+        .build();
   }
 
   /** Direct material.provenance_fk contributions for an unambiguous evidence material. */
