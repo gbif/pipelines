@@ -4,6 +4,7 @@ import static org.apache.spark.sql.functions.array_distinct;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
 import static org.apache.spark.sql.functions.concat_ws;
+import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.monotonically_increasing_id;
 import static org.apache.spark.sql.functions.sort_array;
@@ -488,6 +489,14 @@ public final class SparkExtensionMaterializer {
     return SparkTargetExpression.aggregate(target, sources, contributionIdentity, orderBy);
   }
 
+  private Column firstNonNullMergeExpression(
+      CompiledTargetProducer target, SparkPathResult pathResult) {
+    if (target.expressionValue()) {
+      return first(rowExpression(target, pathResult), true);
+    }
+    return aggregateExpression(target, pathResult);
+  }
+
   private static void ensureNoDuplicateTargets(
       Map<String, MaterializedTarget> existing,
       Map<String, MaterializedTarget> incoming,
@@ -559,7 +568,9 @@ public final class SparkExtensionMaterializer {
                   pathResult.dataset().col(parentAlias).cast("string").as(COL_PARENT_KEY),
                   pathResult.dataset().col(rowAlias).cast("string").as(COL_ROW_KEY))
               .agg(
-                  aggregateExpression(producer, pathResult).cast("string").as("__dwca_merge_value"))
+                  firstNonNullMergeExpression(producer, pathResult)
+                      .cast("string")
+                      .as("__dwca_merge_value"))
               .withColumn("__dwca_merge_producer_order", lit(producerOrder))
               .filter(
                   col("__dwca_merge_value")
