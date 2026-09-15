@@ -107,8 +107,7 @@ class SparkValueExpressionTest {
         CaseExpression.builder()
             .when(
                 PredicateExpression.any(
-                    PredicateExpression.equals(left, "a"),
-                    PredicateExpression.equals(right, "x")),
+                    PredicateExpression.equals(left, "a"), PredicateExpression.equals(right, "x")),
                 "match")
             .otherwise("fallback");
 
@@ -121,11 +120,13 @@ class SparkValueExpressionTest {
             rows.col("expected"),
             SparkValueExpression.build(expression, field -> rows.col(field.column())).as("actual"));
 
-    actual.collectAsList().forEach(
-        row -> {
-          String expected = row.getAs("expected");
-          Object actualValue = row.getAs("actual");
-          assertEquals(expected, actualValue);
-        });
+    actual
+        .collectAsList()
+        .forEach(
+            row -> {
+              String expected = row.getAs("expected");
+              Object actualValue = row.getAs("actual");
+              assertEquals(expected, actualValue);
+            });
   }
 }

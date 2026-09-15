@@ -101,7 +101,9 @@ class BasisOfRecordOccurrenceMappingTest {
             event("E7", "Sensor"),
             event("E8", "Observation"),
             event("E9", "Other")),
-        new StructType().add("event_pk", DataTypes.StringType).add("eventType", DataTypes.StringType));
+        new StructType()
+            .add("event_pk", DataTypes.StringType)
+            .add("eventType", DataTypes.StringType));
   }
 
   private Dataset<Row> materials() {

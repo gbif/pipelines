@@ -47,9 +47,6 @@ import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
@@ -57,7 +54,6 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.NestedExtensionContext;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
@@ -180,6 +176,8 @@ public final class SparkExtendedRecordExecutor {
     String coreRowType = coreRowType(plan.coreType());
     Map<String, String> coreTargetColumns = coreProjection.targetColumns();
 
+    SparkPlanComplexityGuard.check(assembled, plan.name());
+
     return assembled
         .map(
             (MapFunction<Row, ExtendedRecord>)
@@ -266,25 +264,26 @@ public final class SparkExtendedRecordExecutor {
       NestedExtensionContext context) {
     SparkNestedContextDiscovery.Result discovery =
         new SparkNestedContextDiscovery(graph, context).discover(loader);
-    CompiledExtension normalExtension = withoutContextualFragments(extension, context);
-    ExtensionMaterializationResult normal =
-        extensionMaterializer.materialize(loader, normalExtension);
+    TableLoader scopedLoader =
+        SparkNestedContextLoader.loader(loader, context, discovery)
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Nested extension row resource is unavailable: "
+                            + context.rowResource()
+                            + " for extension "
+                            + extension.rowType()));
 
-    Dataset<Row> attached = attachNestedRows(loader, plan, normal, discovery.ownership(), context);
-    Map<String, String> targetColumns = new LinkedHashMap<>(normal.targetColumns());
-
-    Optional<TableLoader> contextLoader =
-        SparkNestedContextLoader.loader(loader, context, discovery);
-    if (contextLoader.isPresent() && !context.contextualFragments().isEmpty()) {
-      ExtensionMaterializationResult contextual =
-          extensionMaterializer.materialize(
-              contextLoader.get(), contextualMapping(extension, context, contextLoader.get()));
-      Set<String> allowedTerms = contextualContributionTerms(extension, context);
-      ContextEnrichment merged =
-          mergeNestedContext(attached, targetColumns, contextual, extension, allowedTerms);
-      attached = merged.dataset();
-      targetColumns = merged.targetColumns();
-    }
+    // The scoped loader already rewrites the nested row's parent/context links from discovery and
+    // exposes only the unique contextual resource for that (parent,row). Materialize the original
+    // compiled extension once against that scoped view so normal and contextual fragments share one
+    // row set and one set of target-merge semantics. Splitting the extension and joining a second
+    // contextual materialization back in is both redundant and produces a pathological optimizer
+    // shape for even a single expression-backed contextual target.
+    ExtensionMaterializationResult nested =
+        extensionMaterializer.materialize(scopedLoader, extension);
+    Dataset<Row> attached = attachNestedRows(loader, plan, nested, discovery.ownership(), context);
+    Map<String, String> targetColumns = new LinkedHashMap<>(nested.targetColumns());
 
     if (context.parentIdentityTargetTerm().isPresent()) {
       String column = targetColumns.get(context.parentIdentityTargetTerm().get());
@@ -310,13 +309,15 @@ public final class SparkExtendedRecordExecutor {
     }
     selected.add(col("own." + SparkNestedContextDiscovery.COL_PARENT).as(NESTED_PARENT_KEY));
 
+    Column sameParent =
+        col("row." + nested.parentKeyColumn())
+            .equalTo(col("own." + SparkNestedContextDiscovery.COL_PARENT));
+    Column sameRow =
+        col("row." + nested.rowKeyColumn())
+            .equalTo(col("own." + SparkNestedContextDiscovery.COL_ROW));
+
     Dataset<Row> owned =
-        rows.join(
-                own,
-                col("row." + nested.rowKeyColumn())
-                    .equalTo(col("own." + SparkNestedContextDiscovery.COL_ROW)),
-                "inner")
-            .select(selected.toArray(Column[]::new));
+        rows.join(own, sameParent.and(sameRow), "inner").select(selected.toArray(Column[]::new));
 
     Dataset<Row> core = loader.load(plan.coreSourceResource()).orElseThrow().alias("core");
     Dataset<Row> bridge =
@@ -374,60 +375,50 @@ public final class SparkExtendedRecordExecutor {
         extension.decisions());
   }
 
-  private ExtensionMapping contextualMapping(
-      CompiledExtension extension, NestedExtensionContext context, TableLoader loader) {
-    ExtensionFragment base =
-        ExtensionFragmentBuilder.extensionFragment(
-                "nested-context-base", extension.rowType(), context.rowResource())
-            .scopeKey(context.rowParentKey().column())
-            .rowIdentity(context.rowIdentity())
-            .build();
+  private CompiledExtension contextualExtension(
+      CompiledExtension extension, NestedExtensionContext context) {
+    CompiledFragment base =
+        new CompiledFragment(
+            "nested-context-base",
+            extension.rowType(),
+            context.rowResource(),
+            SchemaPath.root(context.rowResource()),
+            List.of(),
+            context.rowParentKey(),
+            Optional.of(context.rowIdentity()),
+            Optional.empty(),
+            List.of());
 
     Set<String> contextualNames = context.contextualFragmentNames();
-    Set<String> configuredNames =
-        extension.fragments().stream()
-            .filter(fragment -> contextualNames.contains(fragment.name()))
-            .filter(fragment -> contextualFragmentExecutable(loader, fragment))
-            .map(CompiledFragment::name)
-            .collect(Collectors.toSet());
-    List<ExtensionFragment> fragments = new ArrayList<>();
+    List<CompiledFragment> fragments = new ArrayList<>();
     fragments.add(base);
-    context.contextualFragments().stream()
-        .filter(fragment -> configuredNames.contains(fragment.name()))
+    extension.fragments().stream()
+        .filter(fragment -> contextualNames.contains(fragment.name()))
         .forEach(fragments::add);
 
-    List<TargetMerge> merges =
+    List<CompiledTargetMerge> merges =
         extension.targetMerges().stream()
-            .filter(
-                merge ->
-                    merge.producers().stream()
-                        .anyMatch(
-                            producer -> configuredNames.contains(producer.owner())))
-            .map(merge -> new TargetMerge(merge.targetTerm(), merge.aggregation()))
+            .flatMap(
+                merge -> {
+                  List<CompiledTargetProducer> producers =
+                      merge.producers().stream()
+                          .filter(producer -> contextualNames.contains(producer.owner()))
+                          .toList();
+                  return producers.isEmpty()
+                      ? Stream.empty()
+                      : Stream.of(
+                          new CompiledTargetMerge(
+                              merge.targetTerm(), merge.aggregation(), producers));
+                })
             .toList();
 
-    return new ExtensionMapping(
-        extension.rowType(), ExtensionRowComposition.ENRICH, Optional.empty(), merges, fragments);
-  }
-
-  private static boolean contextualFragmentExecutable(
-      TableLoader loader, CompiledFragment fragment) {
-    if (loader.load(fragment.sourceResource()).isEmpty()) {
-      return false;
-    }
-    return fragment.relations().stream()
-        .allMatch(
-            step -> {
-              var relation = step.relation();
-              return loader
-                      .load(relation.sourceResource())
-                      .filter(dataset -> hasColumn(dataset, relation.sourceColumn()))
-                      .isPresent()
-                  && loader
-                      .load(relation.targetResource())
-                      .filter(dataset -> hasColumn(dataset, relation.targetColumn()))
-                      .isPresent();
-            });
+    return new CompiledExtension(
+        extension.rowType(),
+        ExtensionRowComposition.ENRICH,
+        Optional.empty(),
+        merges,
+        fragments,
+        extension.decisions());
   }
 
   private Set<String> contextualContributionTerms(
@@ -724,8 +715,7 @@ public final class SparkExtendedRecordExecutor {
         .agg(ordered.getItem(0).getField("value").as(targetAlias(merge.targetTerm())));
   }
 
-  private Column coreFirstNonNullMergeExpression(
-      CompiledTargetProducer target, Dataset<Row> root) {
+  private Column coreFirstNonNullMergeExpression(CompiledTargetProducer target, Dataset<Row> root) {
     return target.expressionValue()
         ? first(coreTargetExpression(target, root), true)
         : coreAggregateExpression(target, root);
@@ -1046,24 +1036,18 @@ public final class SparkExtendedRecordExecutor {
 
   private static Column coreIdentityExpression(
       CompiledTargetProducer identity, Dataset<Row> dataset) {
-    List<Column> sources =
-        identity.sources().stream()
-            .map(
-                source ->
-                    hasColumn(dataset, source.field().column())
-                        ? dataset.col(source.field().column()).cast("string")
-                        : lit(null).cast("string"))
-            .toList();
-    return SparkTargetExpression.row(identity, sources);
+    return SparkTargetExpression.row(
+        identity,
+        field ->
+            hasColumn(dataset, field.column())
+                ? dataset.col(field.column()).cast("string")
+                : lit(null).cast("string"));
   }
 
   private static Column coreIdentityExpression(
       CompiledTargetProducer identity, SparkPathResult pathResult) {
-    List<Column> sources =
-        identity.sources().stream()
-            .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
-            .toList();
-    return SparkTargetExpression.row(identity, sources);
+    return SparkTargetExpression.row(
+        identity, field -> pathResult.columnOrNull(field).cast("string"));
   }
 
   private static String coreRowType(CoreType coreType) {

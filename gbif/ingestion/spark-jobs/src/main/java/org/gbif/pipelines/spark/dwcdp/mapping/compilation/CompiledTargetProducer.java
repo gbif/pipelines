@@ -67,14 +67,30 @@ public record CompiledTargetProducer(
     if (value instanceof TargetValue.Expression expressionValue) {
       return expressionValue.expression();
     }
-    throw new IllegalStateException("Target producer is not expression-backed: " + targetTerm);
+    throw new IllegalStateException(
+        "Target producer is aggregation-backed, not expression-backed: target="
+            + targetTerm
+            + ", owner="
+            + owner
+            + ", value="
+            + value
+            + ". expression() is only valid for TargetValue.Expression producers.");
   }
 
   private TargetValue.Aggregated aggregatedValue() {
     if (value instanceof TargetValue.Aggregated aggregated) {
       return aggregated;
     }
-    throw new IllegalStateException("Target producer is not aggregation-backed: " + targetTerm);
+    throw new IllegalStateException(
+        "Target producer is expression-backed, not aggregation-backed: target="
+            + targetTerm
+            + ", owner="
+            + owner
+            + ", value="
+            + value
+            + ". sourceMode() and aggregation() are only valid for TargetValue.Aggregated producers. "
+            + "Evaluate expression() row-wise and obtain any enclosing reduction from the "
+            + "materialization context (for example a CompiledTargetMerge).");
   }
 
   public int pathDepth() {
@@ -86,18 +102,18 @@ public record CompiledTargetProducer(
 
   public String describe() {
     StringBuilder out = new StringBuilder();
-    out.append("owner: " ).append(owner).append('\n');
-    out.append("origin: " ).append(origin).append('\n');
-    out.append("strategy: " ).append(value).append('\n');
+    out.append("owner: ").append(owner).append('\n');
+    out.append("origin: ").append(origin).append('\n');
+    out.append("strategy: ").append(value).append('\n');
     if (origin == TargetFieldMapping.Origin.INFERRED) {
-      out.append("inferred path depth: " ).append(pathDepth()).append('\n');
+      out.append("inferred path depth: ").append(pathDepth()).append('\n');
     }
     contributionIdentity.ifPresent(
-        source -> out.append("contribution identity: " ).append(source.describe()).append('\n'));
-    orderBy.ifPresent(source -> out.append("order by: " ).append(source.describe()).append('\n'));
+        source -> out.append("contribution identity: ").append(source.describe()).append('\n'));
+    orderBy.ifPresent(source -> out.append("order by: ").append(source.describe()).append('\n'));
     out.append("sources:");
     for (CompiledSourceField source : sources) {
-      out.append("\n  - " ).append(source.describe());
+      out.append("\n  - ").append(source.describe());
     }
     return out.toString();
   }

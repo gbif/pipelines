@@ -1,6 +1,10 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
+import static org.apache.spark.sql.functions.coalesce;
+import static org.apache.spark.sql.functions.concat;
+import static org.apache.spark.sql.functions.length;
 import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.trim;
 import static org.apache.spark.sql.functions.when;
 
 import java.util.Iterator;
@@ -27,6 +31,21 @@ public final class SparkValueExpression {
     if (expression instanceof ValueExpression.FieldExpression field) {
       return Objects.requireNonNull(fields.apply(field.field()), "Resolved field column");
     }
+    if (expression instanceof ValueExpression.ConcatExpression concatenated) {
+      Column[] values =
+          concatenated.expressions().stream()
+              .map(value -> build(value, fields))
+              .toArray(Column[]::new);
+      return concat(values);
+    }
+    if (expression instanceof ValueExpression.FirstNonBlankExpression firstNonBlank) {
+      Column[] values =
+          firstNonBlank.expressions().stream()
+              .map(value -> build(value, fields))
+              .map(value -> when(value.isNotNull().and(length(trim(value)).gt(0)), value))
+              .toArray(Column[]::new);
+      return coalesce(values);
+    }
     if (expression instanceof CaseExpression caseExpression) {
       return buildCase(caseExpression, fields);
     }
@@ -35,12 +54,10 @@ public final class SparkValueExpression {
         "Unsupported value expression: " + expression.getClass().getName());
   }
 
-  private static Column buildCase(
-      CaseExpression expression, Function<FieldRef, Column> fields) {
+  private static Column buildCase(CaseExpression expression, Function<FieldRef, Column> fields) {
     Iterator<CaseExpression.Branch> branches = expression.branches().iterator();
     CaseExpression.Branch first = branches.next();
-    Column result =
-        when(build(first.predicate(), fields), build(first.value(), fields));
+    Column result = when(build(first.predicate(), fields), build(first.value(), fields));
 
     while (branches.hasNext()) {
       CaseExpression.Branch branch = branches.next();
@@ -49,8 +66,7 @@ public final class SparkValueExpression {
     return result.otherwise(build(expression.otherwise(), fields));
   }
 
-  private static Column build(
-      PredicateExpression predicate, Function<FieldRef, Column> fields) {
+  private static Column build(PredicateExpression predicate, Function<FieldRef, Column> fields) {
     if (predicate instanceof PredicateExpression.Equals equals) {
       return build(equals.left(), fields).equalTo(build(equals.right(), fields));
     }

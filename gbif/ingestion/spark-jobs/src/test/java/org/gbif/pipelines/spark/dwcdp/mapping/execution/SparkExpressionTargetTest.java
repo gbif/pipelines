@@ -54,8 +54,12 @@ class SparkExpressionTargetTest {
     var event = source.field("eventType");
     ValueExpression expression =
         CaseExpression.builder()
-            .when(PredicateExpression.equals(ValueExpression.field(material), "preserved"), "specimen")
-            .when(PredicateExpression.equals(ValueExpression.field(event), "Observation"), "observation")
+            .when(
+                PredicateExpression.equals(ValueExpression.field(material), "preserved"),
+                "specimen")
+            .when(
+                PredicateExpression.equals(ValueExpression.field(event), "Observation"),
+                "observation")
             .otherwise("other");
 
     CompiledTargetProducer target =

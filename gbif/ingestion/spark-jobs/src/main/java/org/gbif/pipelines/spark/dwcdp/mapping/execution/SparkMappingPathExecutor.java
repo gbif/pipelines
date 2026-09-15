@@ -11,9 +11,11 @@ import static org.apache.spark.sql.functions.when;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -68,21 +70,42 @@ public final class SparkMappingPathExecutor {
   }
 
   public MappingExecutionResult execute(TableLoader loader, Mapping mapping) {
+    return execute(loader, mapping, null);
+  }
+
+  /**
+   * Executes a mapping while physically materializing only the path-qualified fields needed by the
+   * caller plus relation/cardinality keys required to navigate the path.
+   *
+   * <p>This is an execution concern only; logical mapping semantics are unchanged. Projection-aware
+   * execution deliberately bypasses the shared prefix cache for now because a cached prefix
+   * produced for one dependency set cannot safely satisfy another dependency set.
+   */
+  MappingExecutionResult execute(
+      TableLoader loader, Mapping mapping, Set<FieldRef> terminalRequiredFields) {
     ValidationResult validation = MappingValidator.validate(mapping, graph);
     if (!validation.isValid()) {
       throw new IllegalArgumentException(
           "Invalid mapping " + mapping.name() + ": " + validation.issues());
     }
 
+    boolean projectRequiredColumns = terminalRequiredFields != null;
+    Set<FieldRef> requiredFields =
+        projectRequiredColumns ? requiredPathFields(mapping, terminalRequiredFields) : Set.of();
+
     Dataset<Row> current = loadRequired(loader, mapping.sourceResource());
     Map<FieldRef, String> aliases = new LinkedHashMap<>();
     SchemaPath currentPath = SchemaPath.root(mapping.sourceResource());
-    current = aliasResource(current, currentPath, aliases);
+    current =
+        aliasResource(
+            current, currentPath, aliases, projectRequiredColumns ? requiredFields : null);
 
     List<RelationExecutionMetrics> metrics = new ArrayList<>();
     int startRelation = 0;
     Optional<SparkPathPrefixCache.Hit> cached =
-        prefixCache.longest(mapping.sourceResource(), mapping.relations());
+        projectRequiredColumns
+            ? Optional.empty()
+            : prefixCache.longest(mapping.sourceResource(), mapping.relations());
     if (cached.isPresent()) {
       SparkPathPrefixCache.Hit hit = cached.get();
       current = hit.result().dataset();
@@ -108,16 +131,30 @@ public final class SparkMappingPathExecutor {
           throw new IllegalArgumentException(
               "Required path resource is absent: " + relation.targetResource());
         }
-        current = addNullResource(current, targetPath, relation.targetResource(), aliases);
+        current =
+            addNullResource(
+                current,
+                targetPath,
+                relation.targetResource(),
+                aliases,
+                projectRequiredColumns ? requiredFields : null);
         metrics.add(
             RelationExecutionMetrics.skipped(
                 relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
-        rememberPrefix(mapping, relationIndex, current, aliases, metrics);
+        rememberPrefix(mapping, relationIndex, current, aliases, metrics, !projectRequiredColumns);
         continue;
       }
 
       String sourceAlias = aliases.get(currentPath.field(relation.sourceColumn()));
+      String nestedContextLink =
+          SparkInternalColumns.nestedContextLink(relation.sourceColumn(), relation.targetColumn());
+      String nestedSourceAlias = aliases.get(currentPath.field(nestedContextLink));
+      boolean useNestedContextLink =
+          nestedSourceAlias != null && hasColumn(targetRawOpt.get(), nestedContextLink);
+      if (useNestedContextLink) {
+        sourceAlias = nestedSourceAlias;
+      }
       if (sourceAlias == null) {
         long inputRows = current.count();
         if (step.requirement() == RelationRequirement.REQUIRED) {
@@ -127,16 +164,22 @@ public final class SparkMappingPathExecutor {
                   + " is missing required join column "
                   + relation.sourceColumn());
         }
-        current = addNullResource(current, targetPath, relation.targetResource(), aliases);
+        current =
+            addNullResource(
+                current,
+                targetPath,
+                relation.targetResource(),
+                aliases,
+                projectRequiredColumns ? requiredFields : null);
         metrics.add(
             RelationExecutionMetrics.skipped(
                 relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
-        rememberPrefix(mapping, relationIndex, current, aliases, metrics);
+        rememberPrefix(mapping, relationIndex, current, aliases, metrics, !projectRequiredColumns);
         continue;
       }
       Dataset<Row> targetRaw = targetRawOpt.get();
-      if (!hasColumn(targetRaw, relation.targetColumn())) {
+      if (!useNestedContextLink && !hasColumn(targetRaw, relation.targetColumn())) {
         long inputRows = current.count();
         if (step.requirement() == RelationRequirement.REQUIRED) {
           throw new IllegalArgumentException(
@@ -145,12 +188,18 @@ public final class SparkMappingPathExecutor {
                   + "."
                   + relation.targetColumn());
         }
-        current = addNullResource(current, targetPath, relation.targetResource(), aliases);
+        current =
+            addNullResource(
+                current,
+                targetPath,
+                relation.targetResource(),
+                aliases,
+                projectRequiredColumns ? requiredFields : null);
         metrics.add(
             RelationExecutionMetrics.skipped(
                 relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
-        rememberPrefix(mapping, relationIndex, current, aliases, metrics);
+        rememberPrefix(mapping, relationIndex, current, aliases, metrics, !projectRequiredColumns);
         continue;
       }
 
@@ -189,8 +238,15 @@ public final class SparkMappingPathExecutor {
               : filteredTarget;
 
       Map<FieldRef, String> targetAliases = new LinkedHashMap<>();
-      Dataset<Row> target = aliasResource(cardinalityTarget, targetPath, targetAliases);
-      String targetAlias = targetAliases.get(targetPath.field(relation.targetColumn()));
+      Dataset<Row> target =
+          aliasResource(
+              cardinalityTarget,
+              targetPath,
+              targetAliases,
+              projectRequiredColumns ? requiredFields : null);
+      String targetAlias =
+          targetAliases.get(
+              targetPath.field(useNestedContextLink ? nestedContextLink : relation.targetColumn()));
 
       Dataset<Row> parent = current.withColumn(INTERNAL_PARENT_ID, monotonically_increasing_id());
       Dataset<Row> joined =
@@ -245,7 +301,7 @@ public final class SparkMappingPathExecutor {
       current = joined;
       aliases.putAll(targetAliases);
       currentPath = targetPath;
-      rememberPrefix(mapping, relationIndex, current, aliases, metrics);
+      rememberPrefix(mapping, relationIndex, current, aliases, metrics, !projectRequiredColumns);
     }
 
     metricsCollector.record(mapping.name(), metrics);
@@ -315,7 +371,11 @@ public final class SparkMappingPathExecutor {
       int relationIndex,
       Dataset<Row> dataset,
       Map<FieldRef, String> aliases,
-      List<RelationExecutionMetrics> metrics) {
+      List<RelationExecutionMetrics> metrics,
+      boolean enabled) {
+    if (!enabled) {
+      return;
+    }
     prefixCache.remember(
         mapping.sourceResource(),
         mapping.relations().subList(0, relationIndex + 1),
@@ -335,7 +395,11 @@ public final class SparkMappingPathExecutor {
   }
 
   private Dataset<Row> addNullResource(
-      Dataset<Row> dataset, SchemaPath path, String resource, Map<FieldRef, String> aliases) {
+      Dataset<Row> dataset,
+      SchemaPath path,
+      String resource,
+      Map<FieldRef, String> aliases,
+      Set<FieldRef> requiredFields) {
     SchemaResource schemaResource =
         graph
             .resource(resource)
@@ -349,6 +413,11 @@ public final class SparkMappingPathExecutor {
         new java.util.HashSet<>(java.util.Arrays.asList(dataset.columns()));
     for (String raw : schemaResource.fields().keySet()) {
       FieldRef ref = path.field(raw);
+      if (requiredFields != null
+          && !requiredFields.contains(ref)
+          && !SparkInternalColumns.isNestedContextLink(raw)) {
+        continue;
+      }
       String alias = SparkSchemaPathExecutor.physicalAlias(ref);
       aliases.put(ref, alias);
       if (!existing.contains(alias)) {
@@ -363,16 +432,44 @@ public final class SparkMappingPathExecutor {
   }
 
   private Dataset<Row> aliasResource(
-      Dataset<Row> dataset, SchemaPath path, Map<FieldRef, String> aliases) {
-    Column[] selected = new Column[dataset.columns().length];
-    for (int i = 0; i < dataset.columns().length; i++) {
-      String raw = dataset.columns()[i];
+      Dataset<Row> dataset,
+      SchemaPath path,
+      Map<FieldRef, String> aliases,
+      Set<FieldRef> requiredFields) {
+    List<Column> selected = new ArrayList<>();
+    for (String raw : dataset.columns()) {
       FieldRef ref = path.field(raw);
+      if (requiredFields != null
+          && !requiredFields.contains(ref)
+          && !SparkInternalColumns.isNestedContextLink(raw)) {
+        continue;
+      }
       String alias = SparkSchemaPathExecutor.physicalAlias(ref);
       aliases.put(ref, alias);
-      selected[i] = dataset.col(quote(raw)).as(alias);
+      selected.add(dataset.col(quote(raw)).as(alias));
     }
-    return dataset.select(selected);
+    if (selected.isEmpty()) {
+      throw new IllegalStateException(
+          "Required-column projection selected no fields for path " + path.currentResource());
+    }
+    return dataset.select(selected.toArray(Column[]::new));
+  }
+
+  private Set<FieldRef> requiredPathFields(Mapping mapping, Set<FieldRef> terminalRequiredFields) {
+    Set<FieldRef> required = new LinkedHashSet<>(terminalRequiredFields);
+    SchemaPath path = SchemaPath.root(mapping.sourceResource());
+    for (RelationStep step : mapping.relations()) {
+      SchemaRelation relation = SchemaRelationResolver.resolve(graph, path.currentResource(), step);
+      required.add(path.field(relation.sourceColumn()));
+      SchemaPath targetPath = path.append(relation);
+      required.add(targetPath.field(relation.targetColumn()));
+      step.cardinalityStrategy()
+          .filter(CardinalityStrategy.Select.class::isInstance)
+          .map(CardinalityStrategy.Select.class::cast)
+          .ifPresent(select -> required.add(targetPath.field(select.selector())));
+      path = targetPath;
+    }
+    return Set.copyOf(required);
   }
 
   private static Dataset<Row> loadRequired(TableLoader loader, String resource) {

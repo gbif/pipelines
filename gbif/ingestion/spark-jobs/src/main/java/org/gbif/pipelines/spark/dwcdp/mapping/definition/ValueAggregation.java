@@ -9,12 +9,6 @@ public interface ValueAggregation {
 
   record ExactlyOne() implements ValueAggregation {}
 
-  record FirstOrUrnFallback(String urn) implements ValueAggregation {
-    public FirstOrUrnFallback {
-      Objects.requireNonNull(urn, "urn");
-    }
-  }
-
   record Delimited(String delimiter, boolean distinct) implements ValueAggregation {
     public Delimited {
       Objects.requireNonNull(delimiter, "delimiter");
@@ -47,10 +41,6 @@ public interface ValueAggregation {
 
   static ValueAggregation exactlyOne() {
     return new ExactlyOne();
-  }
-
-  static ValueAggregation firstOrUrnFallback(String urn) {
-    return new FirstOrUrnFallback(urn);
   }
 
   static ValueAggregation pipeDelimited() {

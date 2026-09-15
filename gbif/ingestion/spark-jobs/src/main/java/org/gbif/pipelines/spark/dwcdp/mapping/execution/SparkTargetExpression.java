@@ -9,13 +9,11 @@ import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.filter;
 import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.flatten;
-import static org.apache.spark.sql.functions.length;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.size;
 import static org.apache.spark.sql.functions.sort_array;
 import static org.apache.spark.sql.functions.struct;
 import static org.apache.spark.sql.functions.transform;
-import static org.apache.spark.sql.functions.trim;
 import static org.apache.spark.sql.functions.when;
 
 import java.util.ArrayList;
@@ -33,7 +31,6 @@ final class SparkTargetExpression {
 
   private SparkTargetExpression() {}
 
-
   static Column row(CompiledTargetProducer target, Function<FieldRef, Column> fields) {
     if (target.expressionValue()) {
       return SparkValueExpression.build(target.expression(), fields);
@@ -50,18 +47,6 @@ final class SparkTargetExpression {
     }
     if (target.aggregation() instanceof ValueAggregation.ExactlyOne && sources.size() == 1) {
       return sources.get(0);
-    }
-    if (target.aggregation() instanceof ValueAggregation.FirstOrUrnFallback fallback) {
-      if (sources.size() != 2) {
-        throw new IllegalArgumentException(
-            "FirstOrUrnFallback["
-                + fallback.urn()
-                + "] aggregation must have two sources for "
-                + target.targetTerm());
-      }
-      Column naturalId = sources.get(0);
-      return when(naturalId.isNotNull().and(length(trim(naturalId)).gt(0)), naturalId)
-          .otherwise(concat(lit(fallback.urn()), sources.get(1)));
     }
     if (target.aggregation() instanceof ValueAggregation.LabeledOrFallback labeled) {
       if (sources.size() < 3) {
@@ -114,27 +99,27 @@ final class SparkTargetExpression {
       Optional<Column> orderBy) {
     if (target.expressionValue()) {
       throw new UnsupportedOperationException(
-          "Row-level ValueExpression cannot be used as an aggregate target: " + target.targetTerm());
+          "Row-level ValueExpression cannot be aggregated directly for target "
+              + target.targetTerm()
+              + ". Evaluate it row-wise first with SparkTargetExpression.row(...) and apply the "
+              + "enclosing aggregation to that result (for example first(..., true) for a "
+              + "FirstNonNull merge).");
     }
     if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
         && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
       return first(coalesce(sources.toArray(Column[]::new)), true);
     }
 
-    if (target.aggregation() instanceof ValueAggregation.FirstOrUrnFallback fallback) {
-      if (sources.size() != 2) {
-        throw new IllegalArgumentException(
-            "FirstOrUrnFallback["
-                + fallback.urn()
-                + "] aggregation must have two sources for "
-                + target.targetTerm());
-      }
-      Column naturalId = sources.get(0);
-      Column nonBlankNaturalId =
-          when(naturalId.isNotNull().and(length(trim(naturalId)).gt(0)), naturalId);
-      return coalesce(
-          first(nonBlankNaturalId, true), concat(lit(fallback.urn()), first(sources.get(1), true)));
+    // These aggregations define how one physical row is composed into a target value.
+    // Fragment materialization may still need to collapse multiple physical rows to one
+    // (parent,row) contribution, so evaluate the row semantics first and then take the first
+    // non-null composed value.
+    if (target.aggregation() instanceof ValueAggregation.ExactlyOne
+        || target.aggregation() instanceof ValueAggregation.LabeledOrFallback
+        || target.aggregation() instanceof ValueAggregation.PreferredLabeledOrFallback) {
+      return first(row(target, sources), true);
     }
+
     if (target.aggregation() instanceof ValueAggregation.Delimited delimited) {
       Column values;
       if (contributionIdentity.isPresent() || orderBy.isPresent()) {
@@ -177,6 +162,19 @@ final class SparkTargetExpression {
     }
 
     throw new UnsupportedOperationException(
-        "Unsupported target aggregation for " + target.targetTerm() + ": " + target.aggregation());
+        "Spark aggregate execution does not support target producer "
+            + target.owner()
+            + " -> "
+            + target.targetTerm()
+            + " [sourceMode="
+            + target.sourceMode()
+            + ", aggregation="
+            + target.aggregation()
+            + ", aggregationType="
+            + target.aggregation().getClass().getSimpleName()
+            + "]. The mapping compiled successfully, but this aggregation has no Spark aggregate "
+            + "implementation. If the aggregation describes row-value composition, implement it "
+            + "in row(...) and reduce that result explicitly; if it describes multi-row reduction, "
+            + "add corresponding aggregate(...) semantics.");
   }
 }

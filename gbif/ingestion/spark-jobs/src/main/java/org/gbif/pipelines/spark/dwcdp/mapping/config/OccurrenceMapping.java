@@ -8,7 +8,6 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 
@@ -31,19 +30,21 @@ public final class OccurrenceMapping {
             .rowIdentity(occurrence.field("occurrence_pk"));
     DirectFieldMappings.from(graph, "occurrence", occurrence).addTo(builder);
     builder.field(
-        TargetFieldMapping.oneOf(
+        TargetFieldMapping.expression(
             DwcTerm.occurrenceID.qualifiedName(),
-            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
-            occurrence.field("occurrenceID"),
-            occurrence.field("occurrence_pk")));
+            ValueExpression.firstNonBlank(
+                ValueExpression.field(occurrence.field("occurrenceID")),
+                ValueExpression.concat(
+                    ValueExpression.literal("gbif:dwcdp:occurrence:occurrence_pk:"),
+                    ValueExpression.field(occurrence.field("occurrence_pk"))))));
 
     return builder.build();
   }
 
   /**
    * Copies the owning Event identity onto an Event-core Occurrence extension row. The publisher
-   * eventID wins when present; otherwise the Event structural primary key supplies the same URN
-   * fallback used by Event core identity.
+   * eventID wins when present; otherwise the Event structural primary key supplies the same
+   * generated fallback ID used by Event core identity.
    */
   public static ExtensionFragment eventIdentity(SchemaGraph graph) {
     MappingPath occurrence = MappingPath.root(graph, "occurrence");
@@ -52,11 +53,13 @@ public final class OccurrenceMapping {
         .scopeKey("event_fk")
         .rowMatch(occurrence.field("occurrence_pk"))
         .field(
-            TargetFieldMapping.oneOf(
+            TargetFieldMapping.expression(
                 DwcTerm.eventID.qualifiedName(),
-                ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
-                event.field("eventID"),
-                event.field("event_pk")))
+                ValueExpression.firstNonBlank(
+                    ValueExpression.field(event.field("eventID")),
+                    ValueExpression.concat(
+                        ValueExpression.literal("gbif:dwcdp:event:event_pk:"),
+                        ValueExpression.field(event.field("event_pk"))))))
         .build();
   }
 
@@ -165,8 +168,7 @@ public final class OccurrenceMapping {
         .field(
             TargetFieldMapping.expression(
                 DwcTerm.basisOfRecord.qualifiedName(),
-                BasisOfRecordMapping.materialExpression(
-                    material.field("materialEntityCategory"))))
+                BasisOfRecordMapping.materialExpression(material.field("materialEntityCategory"))))
         .build();
   }
 
