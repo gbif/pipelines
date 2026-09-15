@@ -426,7 +426,9 @@ public class OccurrenceHdfsRecordConverter {
       map.put(
           DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
           usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : null);
-
+      map.put(
+          DwcTerm.infragenericEpithet.simpleName().toLowerCase(),
+          usage.getInfragenericEpithet() != null ? usage.getInfragenericEpithet() : null);
       map.put(
           DwcTerm.taxonRank.simpleName().toLowerCase(),
           usage.getRank() != null ? usage.getRank() : null);
@@ -562,6 +564,7 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setSpecificepithet(taxonRecord.getUsage().getSpecificEpithet());
       occurrenceHdfsRecord.setInfraspecificepithet(
           taxonRecord.getUsage().getInfraspecificEpithet());
+      occurrenceHdfsRecord.setInfragenericepithet(taxonRecord.getUsage().getInfragenericEpithet());
     }
 
     setCreatedIfGreater(occurrenceHdfsRecord, taxonRecord.getCreated());
