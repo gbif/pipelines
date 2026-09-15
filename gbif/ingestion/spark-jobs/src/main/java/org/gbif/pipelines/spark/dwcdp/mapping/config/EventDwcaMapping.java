@@ -8,6 +8,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
@@ -226,9 +227,11 @@ public final class EventDwcaMapping {
     SchemaPath event = SchemaPath.root("event");
     return mappingPlan(name, CoreType.EVENT, "event")
         .coreIdentity(
-            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
-            event.field("eventID"),
-            event.field("event_pk"))
+            ValueExpression.firstNonBlank(
+                ValueExpression.field(event.field("eventID")),
+                ValueExpression.concat(
+                    ValueExpression.literal("gbif:dwcdp:event:event_pk:"),
+                    ValueExpression.field(event.field("event_pk")))))
         .coreField(
             TargetFieldMapping.oneOf(
                 DwcTerm.eventID.qualifiedName(),

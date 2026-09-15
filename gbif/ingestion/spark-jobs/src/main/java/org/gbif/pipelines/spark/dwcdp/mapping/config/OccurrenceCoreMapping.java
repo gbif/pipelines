@@ -104,8 +104,7 @@ public final class OccurrenceCoreMapping {
         .field(
             TargetFieldMapping.expression(
                 DwcTerm.basisOfRecord.qualifiedName(),
-                BasisOfRecordMapping.materialExpression(
-                    material.field("materialEntityCategory"))))
+                BasisOfRecordMapping.materialExpression(material.field("materialEntityCategory"))))
         .build();
   }
 

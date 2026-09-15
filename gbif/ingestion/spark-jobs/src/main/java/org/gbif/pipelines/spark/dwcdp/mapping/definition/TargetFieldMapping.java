@@ -110,16 +110,21 @@ public record TargetFieldMapping(
     throw new IllegalStateException("Target field is not expression-backed: " + targetTerm);
   }
 
-  /** Identity of the logical contribution, used to deduplicate the same linked record across paths. */
+  /**
+   * Identity of the logical contribution, used to deduplicate the same linked record across paths.
+   */
   public TargetFieldMapping contributionIdentity(FieldRef field) {
     aggregatedValue();
     return new TargetFieldMapping(targetTerm, value, origin, Optional.of(field), orderBy);
   }
 
-  /** Field used to deterministically order this producer's contributions before target aggregation. */
+  /**
+   * Field used to deterministically order this producer's contributions before target aggregation.
+   */
   public TargetFieldMapping orderBy(FieldRef field) {
     aggregatedValue();
-    return new TargetFieldMapping(targetTerm, value, origin, contributionIdentity, Optional.of(field));
+    return new TargetFieldMapping(
+        targetTerm, value, origin, contributionIdentity, Optional.of(field));
   }
 
   private TargetValue.Aggregated aggregatedValue() {

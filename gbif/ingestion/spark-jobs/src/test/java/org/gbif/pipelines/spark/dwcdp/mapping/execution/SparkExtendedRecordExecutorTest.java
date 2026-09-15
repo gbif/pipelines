@@ -19,10 +19,12 @@ import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
@@ -112,9 +114,8 @@ class SparkExtendedRecordExecutorTest {
     MappingPlan plan =
         MappingPlanBuilder.mappingPlan("event-core", CoreType.EVENT, "event")
             .coreIdentity(
-                ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
-                eventPath.field("eventID"),
-                eventPath.field("event_pk"))
+                fallbackIdExpression(
+                    "event", "event_pk", eventPath.field("eventID"), eventPath.field("event_pk")))
             .coreField(
                 TargetFieldMapping.oneOf(
                     DwcTerm.eventID.qualifiedName(),
@@ -174,7 +175,7 @@ class SparkExtendedRecordExecutorTest {
 
     assertEquals(1, records.size());
     ExtendedRecord record = records.get(0);
-    assertEquals("urn:gbif:dwcdp:event:E1", record.getId());
+    assertEquals("gbif:dwcdp:event:event_pk:E1", record.getId());
     assertFalse(record.getCoreTerms().containsKey(DwcTerm.eventID.qualifiedName()));
     assertEquals(1, record.getExtensions().get(IdentifierMapping.ROW_TYPE_IDENTIFIER).size());
   }
@@ -187,7 +188,7 @@ class SparkExtendedRecordExecutorTest {
             .collectAsList();
 
     assertEquals(1, records.size());
-    assertEquals("urn:gbif:dwcdp:event:E1", records.get(0).getId());
+    assertEquals("gbif:dwcdp:event:event_pk:E1", records.get(0).getId());
     assertFalse(records.get(0).getCoreTerms().containsKey(DwcTerm.eventID.qualifiedName()));
   }
 
@@ -208,7 +209,7 @@ class SparkExtendedRecordExecutorTest {
     assertNotNull(occurrences);
     assertEquals(1, occurrences.size());
     assertEquals(
-        "urn:gbif:dwcdp:occurrence:O1",
+        "gbif:dwcdp:occurrence:occurrence_pk:O1",
         occurrences.get(0).get(DwcTerm.occurrenceID.qualifiedName()));
   }
 
@@ -228,7 +229,7 @@ class SparkExtendedRecordExecutorTest {
     assertNotNull(occurrences);
     assertEquals(1, occurrences.size());
     assertEquals(
-        "urn:gbif:dwcdp:occurrence:O1",
+        "gbif:dwcdp:occurrence:occurrence_pk:O1",
         occurrences.get(0).get(DwcTerm.occurrenceID.qualifiedName()));
   }
 
@@ -245,7 +246,7 @@ class SparkExtendedRecordExecutorTest {
 
     assertEquals(1, records.size());
     ExtendedRecord record = records.get(0);
-    assertEquals("urn:gbif:dwcdp:occurrence:O1", record.getId());
+    assertEquals("gbif:dwcdp:occurrence:occurrence_pk:O1", record.getId());
     assertFalse(record.getCoreTerms().containsKey(DwcTerm.occurrenceID.qualifiedName()));
     assertEquals(1, record.getExtensions().get(IdentifierMapping.ROW_TYPE_IDENTIFIER).size());
   }
@@ -260,16 +261,15 @@ class SparkExtendedRecordExecutorTest {
             .collectAsList();
 
     assertEquals(1, records.size());
-    assertEquals("urn:gbif:dwcdp:occurrence:O1", records.get(0).getId());
+    assertEquals("gbif:dwcdp:occurrence:occurrence_pk:O1", records.get(0).getId());
   }
 
   private MappingPlan eventOccurrenceFallbackPlan() {
     SchemaPath event = SchemaPath.root("event");
     return MappingPlanBuilder.mappingPlan("event-occurrence-fallback", CoreType.EVENT, "event")
         .coreIdentity(
-            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
-            event.field("eventID"),
-            event.field("event_pk"))
+            fallbackIdExpression(
+                "event", "event_pk", event.field("eventID"), event.field("event_pk")))
         .coreField(
             TargetFieldMapping.oneOf(
                 DwcTerm.eventID.qualifiedName(),
@@ -285,9 +285,8 @@ class SparkExtendedRecordExecutorTest {
     SchemaPath event = SchemaPath.root("event");
     return MappingPlanBuilder.mappingPlan("event-identity", CoreType.EVENT, "event")
         .coreIdentity(
-            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
-            event.field("eventID"),
-            event.field("event_pk"))
+            fallbackIdExpression(
+                "event", "event_pk", event.field("eventID"), event.field("event_pk")))
         .coreField(
             TargetFieldMapping.oneOf(
                 DwcTerm.eventID.qualifiedName(),
@@ -302,9 +301,11 @@ class SparkExtendedRecordExecutorTest {
     SchemaPath occurrence = SchemaPath.root("occurrence");
     return MappingPlanBuilder.mappingPlan("occurrence-identity", CoreType.OCCURRENCE, "occurrence")
         .coreIdentity(
-            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
-            occurrence.field("occurrenceID"),
-            occurrence.field("occurrence_pk"))
+            fallbackIdExpression(
+                "occurrence",
+                "occurrence_pk",
+                occurrence.field("occurrenceID"),
+                occurrence.field("occurrence_pk")))
         .coreField(
             TargetFieldMapping.oneOf(
                 DwcTerm.occurrenceID.qualifiedName(),
@@ -431,5 +432,14 @@ class SparkExtendedRecordExecutorTest {
         new StructType()
             .add("agent_pk", DataTypes.StringType)
             .add("preferredAgentName", DataTypes.StringType));
+  }
+
+  private static ValueExpression fallbackIdExpression(
+      String resource, String fallbackField, FieldRef naturalId, FieldRef fallback) {
+    return ValueExpression.firstNonBlank(
+        ValueExpression.field(naturalId),
+        ValueExpression.concat(
+            ValueExpression.literal("gbif:dwcdp:" + resource + ":" + fallbackField + ":"),
+            ValueExpression.field(fallback)));
   }
 }

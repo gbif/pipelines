@@ -299,11 +299,15 @@ public final class CompiledMappingDatasetPruner {
     List<CompiledSourceField> sources = pruneSources(producer, scope, available);
     boolean expression = producer.expressionValue();
     boolean positional = !expression && fixedSourcePrefix(producer.aggregation()) > 0;
-    if ((expression && sources.stream().anyMatch(source -> !available.test(source.field())))
-        || (!expression
-            && (sources.isEmpty()
-                || (!positional
-                    && sources.stream().noneMatch(source -> available.test(source.field())))))) {
+    // Expression dependencies are nullable at execution time: SparkPathResult.columnOrNull
+    // supplies null for physically unavailable fields. Keep the expression producer so row-level
+    // fallback semantics (for example firstNonBlank(naturalId, generatedId)) can still evaluate
+    // from the surviving dependencies. Aggregation-backed producers retain their stricter source
+    // availability rules below.
+    if (!expression
+        && (sources.isEmpty()
+            || (!positional
+                && sources.stream().noneMatch(source -> available.test(source.field()))))) {
       return Optional.empty();
     }
     if (producer.contributionIdentity().isPresent()
@@ -357,9 +361,7 @@ public final class CompiledMappingDatasetPruner {
   private static int fixedSourcePrefix(ValueAggregation aggregation) {
     return aggregation instanceof ValueAggregation.PreferredLabeledOrFallback
         ? 4
-        : aggregation instanceof ValueAggregation.LabeledOrFallback
-            ? 3
-            : aggregation instanceof ValueAggregation.FirstOrUrnFallback ? 2 : 0;
+        : aggregation instanceof ValueAggregation.LabeledOrFallback ? 3 : 0;
   }
 
   private static boolean supportsCoreFragmentStructure(

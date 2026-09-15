@@ -7,6 +7,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
@@ -92,9 +93,11 @@ public final class OccurrenceDwcaMapping {
     MappingPlanBuilder builder =
         mappingPlan(name, CoreType.OCCURRENCE, "occurrence")
             .coreIdentity(
-                ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
-                occurrence.field("occurrenceID"),
-                occurrence.field("occurrence_pk"));
+                ValueExpression.firstNonBlank(
+                    ValueExpression.field(occurrence.field("occurrenceID")),
+                    ValueExpression.concat(
+                        ValueExpression.literal("gbif:dwcdp:occurrence:occurrence_pk:"),
+                        ValueExpression.field(occurrence.field("occurrence_pk")))));
     DirectFieldMappings.from(graph, "occurrence", occurrence).addTo(builder);
     return builder
         .importCoreFragment(OccurrenceCoreMapping.recordedBy(graph))

@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -127,11 +128,22 @@ public final class SparkExtensionMaterializer {
       }
     }
 
+    Map<String, CompiledTargetMerge> singletonMerges =
+        extension.targetMerges().stream()
+            .filter(merge -> merge.producers().size() == 1)
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    CompiledTargetMerge::targetTerm,
+                    merge -> merge,
+                    (left, right) -> left,
+                    LinkedHashMap::new));
     Set<String> mergeTerms =
         extension.targetMerges().stream()
+            .filter(merge -> merge.producers().size() > 1)
             .map(CompiledTargetMerge::targetTerm)
             .collect(java.util.stream.Collectors.toCollection(HashSet::new));
-    FragmentResult materializedBase = materializeFragment(loader, base, true, false, mergeTerms);
+    FragmentResult materializedBase =
+        materializeFragment(loader, base, true, false, mergeTerms, singletonMerges);
     Dataset<Row> current = materializedBase.dataset();
     Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
     Map<String, List<MaterializedTarget>> mergeContributions = new LinkedHashMap<>();
@@ -141,22 +153,26 @@ public final class SparkExtensionMaterializer {
       if (fragment == base) {
         continue;
       }
+      if (!contributesOrdinaryTarget(fragment, mergeTerms)) {
+        // Merge-backed targets are materialized independently from their raw contribution paths
+        // below. Joining a fragment that contributes only merge targets duplicates that path in
+        // the logical plan without adding any payload columns. This is especially expensive for
+        // nested-context fragments, where the source already contains ownership discovery joins.
+        continue;
+      }
       if (fragment.rowIdentity().isPresent()) {
         throw new IllegalArgumentException(
             "Only one row-defining fragment is supported for ENRICH composition: "
                 + fragment.name());
       }
 
-      FragmentResult enrichment = materializeFragment(loader, fragment, false, false, mergeTerms);
+      FragmentResult enrichment =
+          materializeFragment(loader, fragment, false, false, mergeTerms, singletonMerges);
       ensureNoDuplicateTargets(targets, enrichment.targets(), mergeTerms);
 
       Dataset<Row> enrichmentForJoin = enrichment.dataset();
       Column joinCondition =
-          current.col(COL_PARENT_KEY).equalTo(enrichmentForJoin.col(COL_PARENT_KEY));
-      if (fragment.rowMatch().isPresent()) {
-        joinCondition =
-            joinCondition.and(current.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY)));
-      }
+          keyedJoinCondition(current, enrichmentForJoin, fragment.rowMatch().isPresent());
       current =
           current
               .join(enrichmentForJoin, joinCondition, "left_outer")
@@ -168,13 +184,15 @@ public final class SparkExtensionMaterializer {
     Map<String, String> targetColumns = new LinkedHashMap<>();
     targets.forEach((term, target) -> targetColumns.put(term, target.physicalColumn()));
     for (CompiledTargetMerge merge : extension.targetMerges()) {
+      if (merge.producers().size() == 1) {
+        // A singleton merge carries enclosing reduction semantics for expression-backed producers,
+        // but does not require a separate relational merge branch. The owning fragment has already
+        // materialized the target using that reduction.
+        continue;
+      }
       Dataset<Row> merged = materializeExtensionTargetMerge(loader, extension, merge);
       String alias = targetAlias(merge.targetTerm());
-      Column joinCondition =
-          current
-              .col(COL_PARENT_KEY)
-              .equalTo(merged.col(COL_PARENT_KEY))
-              .and(current.col(COL_ROW_KEY).equalTo(merged.col(COL_ROW_KEY)));
+      Column joinCondition = keyedJoinCondition(current, merged, true);
       current =
           current
               .join(merged, joinCondition, "left_outer")
@@ -204,7 +222,8 @@ public final class SparkExtensionMaterializer {
       if (loader.load(fragment.sourceResource()).isEmpty()) {
         continue;
       }
-      FragmentResult materialized = materializeFragment(loader, fragment, true, true, Set.of());
+      FragmentResult materialized =
+          materializeFragment(loader, fragment, true, true, Set.of(), Map.of());
       if (fragment.rowIdentity().isPresent()) {
         materialized =
             new FragmentResult(
@@ -245,20 +264,16 @@ public final class SparkExtensionMaterializer {
       if (loader.load(fragment.sourceResource()).isEmpty()) {
         continue;
       }
-      FragmentResult enrichment = materializeFragment(loader, fragment, false, false, Set.of());
+      FragmentResult enrichment =
+          materializeFragment(loader, fragment, false, false, Set.of(), Map.of());
       ensureNoDuplicateTargets(targets, enrichment.targets(), Set.of());
 
       Dataset<Row> enrichmentForJoin = enrichment.dataset();
-      Column joinCondition = combined.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY));
-      // When an enrichment is scoped by the same logical field it matches, row identity alone is
-      // sufficient. Otherwise keep the enrichment parent-scoped to avoid cross-parent matches.
-      if (!fragment.scopeKey().equals(fragment.rowMatch().orElseThrow())) {
-        joinCondition =
-            combined
-                .col(COL_PARENT_KEY)
-                .equalTo(enrichmentForJoin.col(COL_PARENT_KEY))
-                .and(joinCondition);
-      }
+      boolean parentScoped = !fragment.scopeKey().equals(fragment.rowMatch().orElseThrow());
+      Column joinCondition =
+          parentScoped
+              ? keyedJoinCondition(combined, enrichmentForJoin, true)
+              : combined.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY));
       combined =
           combined
               .join(enrichmentForJoin, joinCondition, "left_outer")
@@ -287,17 +302,39 @@ public final class SparkExtensionMaterializer {
         combined, COL_PARENT_KEY, rows.get(0).parentKeySource(), COL_ROW_KEY, targetColumns);
   }
 
+  /**
+   * Temporary diagnostic join mode. Direct equality between the independently attributed parent/row
+   * key columns lets Catalyst build large transitive equivalence classes during
+   * InferFiltersFromConstraints. A single struct equality preserves exact composite-key semantics
+   * without exposing each key as an independent AttributeReference equality.
+   */
+  private static Column keyedJoinCondition(
+      Dataset<Row> left, Dataset<Row> right, boolean includeRowKey) {
+    if (includeRowKey && Boolean.getBoolean("dwcdp.spark.compositeKeyJoins")) {
+      Column keysPresent =
+          left.col(COL_PARENT_KEY)
+              .isNotNull()
+              .and(left.col(COL_ROW_KEY).isNotNull())
+              .and(right.col(COL_PARENT_KEY).isNotNull())
+              .and(right.col(COL_ROW_KEY).isNotNull());
+      return keysPresent.and(
+          struct(left.col(COL_PARENT_KEY), left.col(COL_ROW_KEY))
+              .equalTo(struct(right.col(COL_PARENT_KEY), right.col(COL_ROW_KEY))));
+    }
+    Column condition = left.col(COL_PARENT_KEY).equalTo(right.col(COL_PARENT_KEY));
+    return includeRowKey
+        ? condition.and(left.col(COL_ROW_KEY).equalTo(right.col(COL_ROW_KEY)))
+        : condition;
+  }
+
   private static Dataset<Row> filterEmptyPayloadRows(
       Dataset<Row> rows, List<String> targetColumns) {
     if (targetColumns.isEmpty()) {
       return rows.limit(0);
     }
-    Column hasPayload = null;
-    for (String targetColumn : targetColumns) {
-      Column present = col(targetColumn).isNotNull();
-      hasPayload = hasPayload == null ? present : hasPayload.or(present);
-    }
-    return rows.filter(hasPayload);
+    Column[] payload =
+        targetColumns.stream().map(org.apache.spark.sql.functions::col).toArray(Column[]::new);
+    return rows.filter(org.apache.spark.sql.functions.coalesce(payload).isNotNull());
   }
 
   /**
@@ -340,7 +377,8 @@ public final class SparkExtensionMaterializer {
       CompiledFragment fragment,
       boolean rowProducing,
       boolean filterEmptyPayload,
-      Set<String> mergeTerms) {
+      Set<String> mergeTerms,
+      Map<String, CompiledTargetMerge> singletonMerges) {
     graph
         .resource(fragment.sourceResource())
         .orElseThrow(
@@ -355,7 +393,8 @@ public final class SparkExtensionMaterializer {
             fragment.relations().stream().map(r -> r.toRelationStep()).toList(),
             List.of(),
             Projection.none());
-    MappingExecutionResult execution = pathExecutor.execute(loader, mapping);
+    MappingExecutionResult execution =
+        pathExecutor.execute(loader, mapping, requiredFields(fragment, fragment.targets()));
     if (!execution.completePath()) {
       Dataset<Row> empty =
           execution
@@ -386,7 +425,10 @@ public final class SparkExtensionMaterializer {
       }
       if (!mergeTerms.contains(target.targetTerm())
           && !(rowProducing && fragment.rowIdentity().isEmpty())) {
-        aggregates.add(aggregateExpression(target, pathResult).as(alias));
+        aggregates.add(
+            fragmentAggregateExpression(
+                    target, pathResult, singletonReduction(target, singletonMerges))
+                .as(alias));
       }
     }
 
@@ -460,7 +502,41 @@ public final class SparkExtensionMaterializer {
           filterEmptyPayloadRows(
               grouped, targets.values().stream().map(MaterializedTarget::physicalColumn).toList());
     }
-    return new FragmentResult(grouped, parentKeySource, targets);
+    return isolateFragmentResult(new FragmentResult(grouped, parentKeySource, targets));
+  }
+
+  /**
+   * Truncates one fully evaluated fragment before extension composition. A fragment is a semantic
+   * contribution boundary; downstream joins and target merges should consume its keyed result, not
+   * inherit the complete aggregate/projection lineage that produced its target columns.
+   *
+   * <p>Eager local checkpointing is deliberately the conservative execution policy for now. It
+   * bounds Catalyst planning complexity at the cost of an additional materialization boundary. A
+   * later physical planner can selectively inline simple fragments without changing mapping
+   * semantics.
+   */
+  private static FragmentResult isolateFragmentResult(FragmentResult result) {
+    return new FragmentResult(
+        result.dataset().localCheckpoint(true), result.parentKeySource(), result.targets());
+  }
+
+  /**
+   * Physical dependencies needed from one fragment path. Relation join/cardinality keys are added
+   * by {@link SparkMappingPathExecutor}; this set contains only fragment semantics and target
+   * producer dependencies.
+   */
+  private static Set<FieldRef> requiredFields(
+      CompiledFragment fragment, List<CompiledTargetProducer> producers) {
+    Set<FieldRef> required = new LinkedHashSet<>();
+    required.add(fragment.scopeKey());
+    fragment.rowIdentity().ifPresent(required::add);
+    fragment.rowMatch().ifPresent(required::add);
+    for (CompiledTargetProducer producer : producers) {
+      producer.sources().forEach(source -> required.add(source.field()));
+      producer.contributionIdentity().ifPresent(source -> required.add(source.field()));
+      producer.orderBy().ifPresent(source -> required.add(source.field()));
+    }
+    return Set.copyOf(required);
   }
 
   private static MaterializedTarget bindTarget(
@@ -489,6 +565,39 @@ public final class SparkExtensionMaterializer {
     return SparkTargetExpression.aggregate(target, sources, contributionIdentity, orderBy);
   }
 
+  private Column fragmentAggregateExpression(
+      CompiledTargetProducer target,
+      SparkPathResult pathResult,
+      Optional<ValueAggregation> enclosingReduction) {
+    if (!target.expressionValue()) {
+      return aggregateExpression(target, pathResult);
+    }
+    ValueAggregation reduction = enclosingReduction.orElseGet(ValueAggregation::firstNonNull);
+    if (reduction instanceof ValueAggregation.FirstNonNull) {
+      return first(rowExpression(target, pathResult), true);
+    }
+    throw new UnsupportedOperationException(
+        "Expression-backed fragment target does not support enclosing reduction: target="
+            + target.targetTerm()
+            + ", owner="
+            + target.owner()
+            + ", reduction="
+            + reduction
+            + ", value="
+            + target.value());
+  }
+
+  private static Optional<ValueAggregation> singletonReduction(
+      CompiledTargetProducer target, Map<String, CompiledTargetMerge> singletonMerges) {
+    CompiledTargetMerge merge = singletonMerges.get(target.targetTerm());
+    if (merge == null
+        || merge.producers().size() != 1
+        || !merge.producers().get(0).owner().equals(target.owner())) {
+      return Optional.empty();
+    }
+    return Optional.of(merge.aggregation());
+  }
+
   private Column firstNonNullMergeExpression(
       CompiledTargetProducer target, SparkPathResult pathResult) {
     if (target.expressionValue()) {
@@ -510,6 +619,12 @@ public final class SparkExtensionMaterializer {
         throw duplicateTargetException(entry.getKey(), previous, entry.getValue());
       }
     }
+  }
+
+  private static boolean contributesOrdinaryTarget(
+      CompiledFragment fragment, Set<String> mergeTerms) {
+    return fragment.targets().stream()
+        .anyMatch(target -> !mergeTerms.contains(target.targetTerm()));
   }
 
   private static void collectTargets(
@@ -554,7 +669,10 @@ public final class SparkExtensionMaterializer {
               fragment.relations().stream().map(r -> r.toRelationStep()).toList(),
               List.of(),
               Projection.none());
-      SparkPathResult pathResult = pathExecutor.execute(loader, mapping).pathResult();
+      SparkPathResult pathResult =
+          pathExecutor
+              .execute(loader, mapping, requiredFields(fragment, List.of(producer)))
+              .pathResult();
       FieldRef parentKey = fragment.scopeKey();
       FieldRef rowKey =
           fragment.rowIdentity().orElseGet(() -> fragment.rowMatch().orElse(parentKey));
@@ -583,6 +701,11 @@ public final class SparkExtensionMaterializer {
 
     if (contributions == null) {
       throw emptyMergeInvariant(extension, merge);
+    }
+    if (merge.producers().size() == 1) {
+      return contributions
+          .drop("__dwca_merge_producer_order")
+          .withColumnRenamed("__dwca_merge_value", targetAlias(merge.targetTerm()));
     }
     Column ordered =
         sort_array(
@@ -622,7 +745,10 @@ public final class SparkExtensionMaterializer {
               fragment.relations().stream().map(r -> r.toRelationStep()).toList(),
               List.of(),
               Projection.none());
-      SparkPathResult pathResult = pathExecutor.execute(loader, mapping).pathResult();
+      SparkPathResult pathResult =
+          pathExecutor
+              .execute(loader, mapping, requiredFields(fragment, List.of(producer)))
+              .pathResult();
       FieldRef parentKey = fragment.scopeKey();
       FieldRef rowKey =
           fragment.rowIdentity().orElseGet(() -> fragment.rowMatch().orElse(parentKey));

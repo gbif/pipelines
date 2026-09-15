@@ -37,6 +37,11 @@ public final class MappingPlanBuilder {
     return this;
   }
 
+  public MappingPlanBuilder coreIdentity(ValueExpression expression) {
+    coreIdentity = Optional.of(TargetFieldMapping.expression("__dwca_core_id", expression));
+    return this;
+  }
+
   public MappingPlanBuilder coreField(TargetFieldMapping field) {
     coreFields.add(field);
     return this;
