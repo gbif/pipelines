@@ -1,16 +1,19 @@
 package org.gbif.pipelines.spark;
 
 import static org.gbif.pipelines.spark.dwcdp.DataPackageConverter.DATAPACKAGE_SUBDIR;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.dp.common.descriptor.JacksonDataPackageParser;
 import org.gbif.dp.descriptor.DataPackageDescriptor;
-import org.gbif.dp.descriptor.JacksonDataPackageParser;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -70,13 +73,15 @@ class DataPackageConversionPipelineTest {
     DataPackageConversionPipeline.runCopy(
         createPipeline(inputBasePath, outputBasePath, "tsv-package", 0));
 
+    Path descriptorPath =
+        destination
+            .resolve("tsv-package/0")
+            .resolve(DATAPACKAGE_SUBDIR)
+            .resolve("datapackage.json");
+
+    // DataPackageParser is intentionally storage-agnostic: parse descriptor content, not a path.
     DataPackageDescriptor out =
-        new JacksonDataPackageParser()
-            .parse(
-                destination
-                    .resolve("tsv-package/0")
-                    .resolve(DATAPACKAGE_SUBDIR)
-                    .resolve("datapackage.json"));
+        new JacksonDataPackageParser().parse(Files.readString(descriptorPath));
 
     assertFalse(out.resources().isEmpty());
     assertNull(out.resources().get(0).dialect());

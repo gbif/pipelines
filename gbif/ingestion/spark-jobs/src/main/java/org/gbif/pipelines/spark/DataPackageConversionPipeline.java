@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.SparkSession;
-import org.gbif.dp.descriptor.JacksonDataPackageParser;
+import org.gbif.dp.common.descriptor.JacksonDataPackageParser;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.dwcdp.DataPackageConverter;
 import org.gbif.pipelines.spark.util.MapperUtil;
