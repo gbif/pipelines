@@ -17,16 +17,20 @@ public class VocabularyService implements Serializable {
   @Singular private final Map<String, VocabularyLookup> vocabularyLookups;
 
   public Optional<VocabularyLookup> get(Term term) {
-    if (!Terms.getVocabularyBackedTerms().contains(term)) {
-      throw new IllegalArgumentException("Vocabulary-backed term not supported: " + term);
-    }
-
     if (term instanceof DwcTerm
         && ((DwcTerm) term).getGroup().equals(DwcTerm.GROUP_GEOLOGICALCONTEXT)) {
       return Optional.ofNullable(vocabularyLookups.get(DwcTerm.GROUP_GEOLOGICALCONTEXT));
     }
 
-    return Optional.ofNullable(vocabularyLookups.get(term.qualifiedName()));
+    Optional<VocabularyLookup> lookup =
+        Optional.ofNullable(vocabularyLookups.get(term.qualifiedName()));
+    // Allow registered lookups even when dwc-api has not annotated the term @Vocabulary yet
+    // (occurrenceStatus).
+    if (lookup.isPresent() || Terms.getVocabularyBackedTerms().contains(term)) {
+      return lookup;
+    }
+
+    throw new IllegalArgumentException("Vocabulary-backed term not supported: " + term);
   }
 
   public void close() {
