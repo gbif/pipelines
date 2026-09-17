@@ -265,7 +265,7 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
           JsonPath.<List<String>>read(json, "$.nonTaxonomicIssues"));
 
       assertEquals("occ-123456", JsonPath.read(json, "$.occurrenceId"));
-      assertEquals("PRESENT", JsonPath.read(json, "$.occurrenceStatus"));
+      assertEquals("DETECTED", JsonPath.read(json, "$.occurrenceStatus"));
       assertEquals(0, JsonPath.<List<?>>read(json, "$.otherCatalogNumbers").size());
       assertEquals(0, JsonPath.<List<?>>read(json, "$.preparations").size());
       assertEquals(List.of("nlbif2022.015"), JsonPath.<List<String>>read(json, "$.projectId"));

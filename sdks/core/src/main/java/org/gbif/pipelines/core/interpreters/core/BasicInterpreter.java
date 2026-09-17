@@ -184,8 +184,12 @@ public class BasicInterpreter {
       boolean isCountGreaterZero = parsedCount != null && parsedCount > 0;
 
       boolean isOccNull = rawOccStatus == null;
-      boolean isOccPresent = parsedOccStatus == OccurrenceStatus.PRESENT;
-      boolean isOccAbsent = parsedOccStatus == OccurrenceStatus.ABSENT;
+      boolean isOccPresent =
+          parsedOccStatus == OccurrenceStatus.DETECTED
+              || parsedOccStatus == OccurrenceStatus.PRESENT;
+      boolean isOccAbsent =
+          parsedOccStatus == OccurrenceStatus.NOT_DETECTED
+              || parsedOccStatus == OccurrenceStatus.ABSENT;
       boolean isOccRubbish = parsedOccStatus == null;
 
       // https://github.com/gbif/pipelines/issues/392
@@ -202,51 +206,51 @@ public class BasicInterpreter {
       // rawCount === null
       if (isCountNull) {
         if (isOccNull || isOccPresent) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
         } else if (isOccAbsent) {
-          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.NOT_DETECTED.name());
         } else if (isOccRubbish) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
           addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
         }
       } else if (isCountRubbish) {
         if (isOccNull || isOccPresent) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
         } else if (isOccAbsent) {
-          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.NOT_DETECTED.name());
         } else if (isOccRubbish) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
           addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
         }
         addIssue(br, INDIVIDUAL_COUNT_INVALID);
       } else if (isCountZero) {
         if (isOccNull && isSpecimen) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
           addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD);
         } else if (isOccNull) {
-          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.NOT_DETECTED.name());
           addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
         } else if (isOccPresent) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
           addIssue(br, INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS);
         } else if (isOccAbsent) {
-          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.NOT_DETECTED.name());
         } else if (isOccRubbish) {
-          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.NOT_DETECTED.name());
           addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
           addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
         }
       } else if (isCountGreaterZero) {
         if (isOccNull) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
           addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
         } else if (isOccPresent) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
         } else if (isOccAbsent) {
-          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.NOT_DETECTED.name());
           addIssue(br, INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS);
         } else if (isOccRubbish) {
-          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          br.setOccurrenceStatus(OccurrenceStatus.DETECTED.name());
           addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
           addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
         }

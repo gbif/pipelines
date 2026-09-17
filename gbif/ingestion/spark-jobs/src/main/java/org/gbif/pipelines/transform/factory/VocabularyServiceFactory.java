@@ -68,6 +68,9 @@ public class VocabularyServiceFactory {
                     .vocabularyLookup(
                         DwcTerm.sex.qualifiedName(),
                         InMemoryVocabularyLookup.newBuilder().from(url, "Sex").build())
+                    .vocabularyLookup(
+                        DwcTerm.occurrenceStatus.qualifiedName(),
+                        InMemoryVocabularyLookup.newBuilder().from(url, "OccurrenceStatus").build())
                     .build();
           } else if (config != null
               && config.getVocabularyConfig() != null

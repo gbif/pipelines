@@ -68,6 +68,7 @@ vocabularyConfig:
   vocabulariesNames:
     http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: degreeOfEstablishment
     http://rs.tdwg.org/dwc/terms/Sex: Sex
+    http://rs.tdwg.org/dwc/terms/occurrenceStatus: OccurrenceStatus
 processingConfigs:
   "100_000 > recordCount <= 10_000_000":
     description: "100k to 10 million"
