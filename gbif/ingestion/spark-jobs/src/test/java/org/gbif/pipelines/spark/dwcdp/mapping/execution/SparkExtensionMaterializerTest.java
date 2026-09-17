@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Optional;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -37,6 +38,7 @@ class SparkExtensionMaterializerTest {
   private static final String TERM_SITE_COUNT = "http://rs.tdwg.org/eco/terms/siteCount";
   private static final String TERM_TARGET = "http://rs.tdwg.org/eco/terms/targetDescription";
   private static final String TERM_COLLECTORS = "http://example.org/collectorNames";
+  private static final String TERM_MIXED_TEXT = "http://example.org/mixedText";
 
   private SparkSession spark;
   private SchemaGraph graph;
@@ -51,6 +53,123 @@ class SparkExtensionMaterializerTest {
   @AfterAll
   void teardown() {
     spark.stop();
+  }
+
+  @Test
+  void unionIdentificationRowsWithBooleanAndStringPayloadReproduceMixedTypeFiltering() {
+    SchemaPath identificationPath = SchemaPath.root("identification");
+    ExtensionFragment identificationRows =
+        ExtensionFragmentBuilder.extensionFragment(
+                "typed-identification-rows",
+                "http://rs.tdwg.org/dwc/terms/Identification",
+                "identification")
+            .scopeKey("occurrence_fk")
+            .rowIdentity(identificationPath.field("identification_pk"))
+            .field(
+                TargetFieldMapping.oneOf(
+                    "http://rs.tdwg.org/dwc/terms/identificationID",
+                    ValueAggregation.firstNonNull(),
+                    identificationPath.field("identificationID")))
+            .field(
+                TargetFieldMapping.oneOf(
+                    "isAcceptedIdentification",
+                    ValueAggregation.firstNonNull(),
+                    identificationPath.field("isAcceptedIdentification")))
+            .build();
+
+    Dataset<Row> typedIdentifications =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("I1", "O1", "identification-1", true),
+                RowFactory.create("I2", "O1", "identification-2", false)),
+            new StructType()
+                .add("identification_pk", DataTypes.StringType)
+                .add("occurrence_fk", DataTypes.StringType)
+                .add("identificationID", DataTypes.StringType)
+                .add("isAcceptedIdentification", DataTypes.BooleanType));
+
+    ExtensionMapping extension =
+        new ExtensionMapping(
+            "http://rs.tdwg.org/dwc/terms/Identification",
+            ExtensionRowComposition.UNION,
+            Optional.empty(),
+            List.of(),
+            List.of(identificationRows));
+
+    ExtensionMaterializationResult result =
+        new SparkExtensionMaterializer(graph)
+            .materialize(TestTableLoader.of("identification", typedIdentifications), extension);
+
+    // Materialization must be analyzable even when one extension payload is boolean and another is
+    // string. Current filterEmptyPayloadRows() coalesces all payload columns, which Spark rejects
+    // for this production-shaped UNION branch with DATATYPE_MISMATCH.DATA_DIFF_TYPES.
+    List<Row> rows = result.dataset().orderBy(result.rowKeyColumn()).collectAsList();
+    assertEquals(2, rows.size());
+
+    Row first = rows.get(0);
+    String firstId =
+        first.getAs(result.columnName("http://rs.tdwg.org/dwc/terms/identificationID"));
+    Boolean firstAccepted = first.getAs(result.columnName("isAcceptedIdentification"));
+    assertEquals("identification-1", firstId);
+    assertEquals(true, firstAccepted);
+  }
+
+  @Test
+  void mixedNumericAndStringPayloadColumnsCanBeFilteredForEmptyRows() {
+    SchemaPath surveyPath = SchemaPath.root("survey");
+    ExtensionFragment mixedPayload =
+        ExtensionFragmentBuilder.extensionFragment("mixed-payload", HUMBOLDT, "survey")
+            .scopeKey("survey_pk")
+            .rowIdentity(surveyPath.field("survey_pk"))
+            .field(
+                TargetFieldMapping.oneOf(
+                    TERM_SITE_COUNT,
+                    ValueAggregation.firstNonNull(),
+                    surveyPath.field("siteCount")))
+            .field(
+                TargetFieldMapping.oneOf(
+                    TERM_MIXED_TEXT, ValueAggregation.firstNonNull(), surveyPath.field("event_fk")))
+            .build();
+
+    Dataset<Row> typedSurvey =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("S1", "text-1", 3),
+                RowFactory.create("S2", null, 5),
+                RowFactory.create("S3", "text-3", null),
+                RowFactory.create("S4", null, null)),
+            new StructType()
+                .add("survey_pk", DataTypes.StringType)
+                .add("event_fk", DataTypes.StringType)
+                .add("siteCount", DataTypes.IntegerType));
+
+    ExtensionMaterializationResult result =
+        new SparkExtensionMaterializer(graph)
+            .materialize(
+                TestTableLoader.of("survey", typedSurvey),
+                new ExtensionMapping(HUMBOLDT, List.of(mixedPayload)));
+
+    List<Row> rows = result.dataset().orderBy(result.parentKeyColumn()).collectAsList();
+    assertEquals(3, rows.size(), "only the row with no target payload should be filtered out");
+
+    String numericColumn = result.columnName(TERM_SITE_COUNT);
+    String textColumn = result.columnName(TERM_MIXED_TEXT);
+
+    String firstParent = rows.get(0).getAs(result.parentKeyColumn());
+    Integer firstNumeric = rows.get(0).getAs(numericColumn);
+    String firstText = rows.get(0).getAs(textColumn);
+    String secondParent = rows.get(1).getAs(result.parentKeyColumn());
+    Integer secondNumeric = rows.get(1).getAs(numericColumn);
+    String thirdParent = rows.get(2).getAs(result.parentKeyColumn());
+    String thirdText = rows.get(2).getAs(textColumn);
+
+    assertEquals("S1", firstParent);
+    assertEquals(3, firstNumeric);
+    assertEquals("text-1", firstText);
+    assertEquals("S2", secondParent);
+    assertEquals(5, secondNumeric);
+    assertEquals("S3", thirdParent);
+    assertEquals("text-3", thirdText);
   }
 
   @Test

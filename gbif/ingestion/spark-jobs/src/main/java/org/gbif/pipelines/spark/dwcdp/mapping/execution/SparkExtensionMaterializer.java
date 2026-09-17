@@ -332,9 +332,12 @@ public final class SparkExtensionMaterializer {
     if (targetColumns.isEmpty()) {
       return rows.limit(0);
     }
-    Column[] payload =
-        targetColumns.stream().map(org.apache.spark.sql.functions::col).toArray(Column[]::new);
-    return rows.filter(org.apache.spark.sql.functions.coalesce(payload).isNotNull());
+    Column hasPayload =
+        targetColumns.stream()
+            .map(name -> col(name).isNotNull())
+            .reduce(Column::or)
+            .orElse(lit(false));
+    return rows.filter(hasPayload);
   }
 
   /**
