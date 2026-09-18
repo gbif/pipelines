@@ -67,6 +67,12 @@ public class FragmenterPipeline {
   private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
   public static final String FRAGMENT_COLUMN_FAMILY = "fragment";
 
+  // HBase/Zookeeper operations (e.g. "Zookeeper GET could not be completed in 30000 ms") can hit
+  // transient timeouts against a busy cluster; HBase itself deliberately does not retry these
+  // (DoNotRetryIOException), so retry at this level rather than failing the whole attempt.
+  private static final int HBASE_MAX_ATTEMPTS = 3;
+  private static final long HBASE_RETRY_BACKOFF_MS = 5_000L;
+
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {
 
@@ -163,11 +169,15 @@ public class FragmenterPipeline {
       hbaseConf.addResource(new Path(config.getCoreSiteConfig()));
     }
 
-    try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
-        Admin admin = connection.getAdmin();
-        Table table = connection.getTable(TableName.valueOf(config.getFragmentsTable()));
-        RegionLocator regionLocator =
-            connection.getRegionLocator(TableName.valueOf(config.getFragmentsTable()))) {
+    try (HbaseResources hbase =
+        retryOnIOException(
+            "opening HBase connection for fragmenter table " + config.getFragmentsTable(),
+            () -> new HbaseResources(hbaseConf, config.getFragmentsTable()))) {
+
+      Connection connection = hbase.connection;
+      Admin admin = hbase.admin;
+      Table table = hbase.table;
+      RegionLocator regionLocator = hbase.regionLocator;
 
       // read verbatim records
       Dataset<ExtendedRecord> verbatim =
@@ -251,7 +261,12 @@ public class FragmenterPipeline {
               hbaseConf);
 
       LoadIncrementalHFiles loader = new LoadIncrementalHFiles(hbaseConf);
-      loader.doBulkLoad(new Path(hfilePath), admin, table, regionLocator);
+      retryOnIOException(
+          "bulk loading fragmenter HFiles from " + hfilePath,
+          () -> {
+            loader.doBulkLoad(new Path(hfilePath), admin, table, regionLocator);
+            return null;
+          });
 
       writeMetricsYaml(
           fileSystem,
@@ -268,6 +283,85 @@ public class FragmenterPipeline {
       ThreadContext.remove("attempt");
       ThreadContext.remove("step");
     }
+  }
+
+  /**
+   * Holds the HBase resources needed by the fragmenter so they can be opened as one retryable unit
+   * and closed together, in reverse-acquisition order.
+   */
+  private static class HbaseResources implements AutoCloseable {
+    final Connection connection;
+    final Admin admin;
+    final Table table;
+    final RegionLocator regionLocator;
+
+    HbaseResources(Configuration hbaseConf, String fragmentsTable) throws IOException {
+      connection = ConnectionFactory.createConnection(hbaseConf);
+      try {
+        admin = connection.getAdmin();
+        table = connection.getTable(TableName.valueOf(fragmentsTable));
+        regionLocator = connection.getRegionLocator(TableName.valueOf(fragmentsTable));
+      } catch (IOException | RuntimeException ex) {
+        connection.close();
+        throw ex;
+      }
+    }
+
+    @Override
+    public void close() throws IOException {
+      IOException firstError = null;
+      for (java.io.Closeable c :
+          new java.io.Closeable[] {regionLocator, table, admin, connection}) {
+        try {
+          c.close();
+        } catch (IOException ex) {
+          firstError = firstError == null ? ex : firstError;
+        }
+      }
+      if (firstError != null) {
+        throw firstError;
+      }
+    }
+  }
+
+  @FunctionalInterface
+  private interface IoSupplier<T> {
+    T get() throws IOException;
+  }
+
+  /**
+   * Retries transient HBase/Zookeeper failures (e.g. "Zookeeper GET could not be completed in 30000
+   * ms") a few times with linear backoff. HBase itself throws these as DoNotRetryIOException, i.e.
+   * it deliberately leaves retrying up to the caller.
+   */
+  private static <T> T retryOnIOException(String description, IoSupplier<T> operation)
+      throws IOException {
+    IOException lastError = null;
+    for (int attempt = 1; attempt <= HBASE_MAX_ATTEMPTS; attempt++) {
+      try {
+        return operation.get();
+      } catch (IOException ex) {
+        lastError = ex;
+        if (attempt == HBASE_MAX_ATTEMPTS) {
+          break;
+        }
+        long backoffMs = HBASE_RETRY_BACKOFF_MS * attempt;
+        log.warn(
+            "Attempt {}/{} failed while {}: {}. Retrying in {} ms",
+            attempt,
+            HBASE_MAX_ATTEMPTS,
+            description,
+            ex.getMessage(),
+            backoffMs);
+        try {
+          Thread.sleep(backoffMs);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          throw new IOException("Interrupted while retrying " + description, ie);
+        }
+      }
+    }
+    throw lastError;
   }
 
   @NotNull
