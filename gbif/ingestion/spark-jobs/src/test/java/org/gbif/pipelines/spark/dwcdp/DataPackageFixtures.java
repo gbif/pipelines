@@ -272,6 +272,37 @@ class DataPackageFixtures {
             "surveyTarget_pk", "surveyTargetDescription"));
   }
 
+  static DataPackage withBasisOfRecordDiscoveryMatrix() {
+    return build(
+        resource("event", "data/event.parquet", "event_pk", "eventID", "eventType"),
+        resource(
+            "occurrence", "data/occurrence.parquet", "occurrence_pk", "occurrenceID", "event_fk"),
+        resource(
+            "material",
+            "data/material.parquet",
+            "materialEntity_pk",
+            "collectionEvent_fk",
+            "evidenceForOccurrenceID",
+            "materialEntityCategory",
+            "catalogNumber"),
+        resource(
+            "identification",
+            "data/identification.parquet",
+            "identification_pk",
+            "materialEntity_fk",
+            "nucleotideAnalysis_fk",
+            "nucleotideSequence_fk",
+            "occurrence_fk"),
+        resource(
+            "nucleotide-analysis",
+            "data/nucleotide-analysis.parquet",
+            "nucleotideAnalysis_pk",
+            "materialEntity_fk",
+            "nucleotideSequence_fk"),
+        resource(
+            "nucleotide-sequence", "data/nucleotide-sequence.parquet", "nucleotideSequence_pk"));
+  }
+
   // ---- internals ----
 
   static DataPackage withEventAndAssertion() {

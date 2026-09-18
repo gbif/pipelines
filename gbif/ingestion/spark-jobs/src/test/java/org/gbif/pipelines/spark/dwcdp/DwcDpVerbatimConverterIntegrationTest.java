@@ -297,6 +297,181 @@ class DwcDpVerbatimConverterIntegrationTest {
     assertEquals("OCC002", expandedList.get(1).getId());
   }
 
+  @Test
+  void avroWrite_mixedOccurrenceDiscoveryPreservesBasisOfRecordPrecedence(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID", "eventType"),
+        List.of(
+            RowFactory.create("E-OBS", "EVT-OBS", "Observation"),
+            RowFactory.create("E-MACHINE", "EVT-MACHINE", "Sensor"),
+            RowFactory.create("E-ANALYSIS", "EVT-ANALYSIS", "NucleotideAnalysis"),
+            RowFactory.create("E-DEFAULT", "EVT-DEFAULT", "Other"),
+            RowFactory.create("E-SAMPLE", "EVT-SAMPLE", "Observation"),
+            RowFactory.create("E-PRESERVED", "EVT-PRESERVED", "Sensor"),
+            RowFactory.create("E-FOSSIL", "EVT-FOSSIL", "Observation"),
+            RowFactory.create("E-LIVING", "EVT-LIVING", "Sensor"),
+            RowFactory.create("E-AMBIG", "EVT-AMBIG", "Sensor")));
+
+    // The directly event-owned rows also include O-AMBIG, whose two evidence Materials deliberately
+    // make Material enrichment ambiguous. The three final discovery-only rows omit event_fk and
+    // must be discovered through Material -> Identification, Material -> Analysis ->
+    // Identification, and Material -> Analysis -> Sequence -> Identification respectively.
+    writeParquet(
+        dir,
+        "data/occurrence.parquet",
+        schema("occurrence_pk", "occurrenceID", "event_fk"),
+        List.of(
+            RowFactory.create("O-OBS", "occ-observation", "E-OBS"),
+            RowFactory.create("O-MACHINE", "occ-machine", "E-MACHINE"),
+            RowFactory.create("O-ANALYSIS", "occ-analysis", "E-ANALYSIS"),
+            RowFactory.create("O-DEFAULT", "occ-default", "E-DEFAULT"),
+            RowFactory.create("O-SAMPLE", "occ-sample", "E-SAMPLE"),
+            RowFactory.create("O-AMBIG", "occ-ambiguous", "E-AMBIG"),
+            RowFactory.create("O-PRESERVED", "occ-preserved", null),
+            RowFactory.create("O-FOSSIL", "occ-fossil", null),
+            RowFactory.create("O-LIVING", "occ-living", null)));
+
+    writeParquet(
+        dir,
+        "data/material.parquet",
+        schema(
+            "materialEntity_pk",
+            "collectionEvent_fk",
+            "evidenceForOccurrenceID",
+            "materialEntityCategory",
+            "catalogNumber"),
+        List.of(
+            // Direct occurrence -> evidence Material discovery. Material must override Event.
+            RowFactory.create("M-SAMPLE", "E-SAMPLE", "occ-sample", "DNA extract", "CAT-SAMPLE"),
+            // Two Materials cite the same Occurrence. Material enrichment requires exactly one
+            // evidence Material, so neither category/catalogNumber may be selected for O-AMBIG.
+            RowFactory.create("M-AMBIG-A", "E-AMBIG", "occ-ambiguous", "preserved", "CAT-AMBIG-A"),
+            RowFactory.create("M-AMBIG-B", "E-AMBIG", "occ-ambiguous", "fossilized", "CAT-AMBIG-B"),
+            // Event -> Material -> Identification -> Occurrence discovery.
+            RowFactory.create("M-PRESERVED", "E-PRESERVED", null, "preserved", "CAT-PRESERVED"),
+            // Event -> Material -> Analysis -> Identification -> Occurrence discovery.
+            RowFactory.create("M-FOSSIL", "E-FOSSIL", null, "fossilized", "CAT-FOSSIL"),
+            // Event -> Material -> Analysis -> Sequence -> Identification -> Occurrence discovery.
+            RowFactory.create("M-LIVING", "E-LIVING", null, "living", "CAT-LIVING")));
+
+    writeParquet(
+        dir,
+        "data/identification.parquet",
+        schema(
+            "identification_pk",
+            "materialEntity_fk",
+            "nucleotideAnalysis_fk",
+            "nucleotideSequence_fk",
+            "occurrence_fk"),
+        List.of(
+            // O-SAMPLE/M-SAMPLE is intentionally discoverable through both the direct
+            // Event -> Occurrence -> evidence Material route and the indirect
+            // Event -> Material -> Identification -> Occurrence route. It must still
+            // materialize as one occurrence in one material context.
+            RowFactory.create("I-SAMPLE", "M-SAMPLE", null, null, "O-SAMPLE"),
+            RowFactory.create("I-PRESERVED", "M-PRESERVED", null, null, "O-PRESERVED"),
+            RowFactory.create("I-FOSSIL", null, "A-FOSSIL", null, "O-FOSSIL"),
+            RowFactory.create("I-LIVING", null, null, "S-LIVING", "O-LIVING")));
+
+    writeParquet(
+        dir,
+        "data/nucleotide-analysis.parquet",
+        schema("nucleotideAnalysis_pk", "materialEntity_fk", "nucleotideSequence_fk"),
+        List.of(
+            RowFactory.create("A-FOSSIL", "M-FOSSIL", null),
+            RowFactory.create("A-LIVING", "M-LIVING", "S-LIVING")));
+
+    writeParquet(
+        dir,
+        "data/nucleotide-sequence.parquet",
+        schema("nucleotideSequence_pk"),
+        List.of(RowFactory.create("S-LIVING")));
+
+    DataPackage dp = DataPackageFixtures.withBasisOfRecordDiscoveryMatrix();
+    String basePath = "file://" + dir;
+    String partsPath = basePath + "/verbatim.avro.parts";
+    String verbatimPath = basePath + "/verbatim.avro";
+
+    DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, basePath)
+        .coalesce(1)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .format("avro")
+        .option("avroSchema", DwcDpVerbatimConverter.extendedRecordSchemaJson())
+        .save(partsPath);
+
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    DwcDpVerbatimConverter.mergeToSingleFile(fs, partsPath, verbatimPath);
+
+    Dataset<ExtendedRecord> eventRecords =
+        spark.read().format("avro").load(verbatimPath).as(Encoders.bean(ExtendedRecord.class));
+    Dataset<ExtendedRecord> occurrences =
+        org.gbif.pipelines.spark.IdentifiersPipeline.checkExtensionsForOccurrence(
+            spark, eventRecords, basePath + "/identifier-output");
+
+    List<ExtendedRecord> occurrenceRecords = occurrences.collectAsList();
+    assertEquals(
+        9, occurrenceRecords.size(), "Every discovered occurrence should survive extraction");
+
+    Map<String, String> basisOfRecordByOccurrence =
+        occurrenceRecords.stream()
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    ExtendedRecord::getId,
+                    record -> record.getCoreTerms().get(DwcTerm.basisOfRecord.qualifiedName())));
+    assertEquals(
+        Map.of(
+            "occ-observation", "HumanObservation",
+            "occ-machine", "MachineObservation",
+            "occ-analysis", "MaterialSample",
+            "occ-default", "Occurrence",
+            "occ-sample", "MaterialSample",
+            "occ-ambiguous", "MachineObservation",
+            "occ-preserved", "PreservedSpecimen",
+            "occ-fossil", "FossilSpecimen",
+            "occ-living", "LivingSpecimen"),
+        basisOfRecordByOccurrence);
+
+    // Cross-event ownership is part of this regression: indirect discoveries must attach to the
+    // Material's Event and must not leak into another Event's occurrence extension.
+    Map<String, String> ownerByOccurrence =
+        occurrenceRecords.stream()
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    ExtendedRecord::getId, ExtendedRecord::getCoreId));
+    assertEquals(
+        Map.of(
+            "occ-observation", "EVT-OBS",
+            "occ-machine", "EVT-MACHINE",
+            "occ-analysis", "EVT-ANALYSIS",
+            "occ-default", "EVT-DEFAULT",
+            "occ-sample", "EVT-SAMPLE",
+            "occ-ambiguous", "EVT-AMBIG",
+            "occ-preserved", "EVT-PRESERVED",
+            "occ-fossil", "EVT-FOSSIL",
+            "occ-living", "EVT-LIVING"),
+        ownerByOccurrence);
+
+    Map<String, String> catalogByOccurrence =
+        occurrenceRecords.stream()
+            .filter(
+                record -> record.getCoreTerms().get(DwcTerm.catalogNumber.qualifiedName()) != null)
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    ExtendedRecord::getId,
+                    record -> record.getCoreTerms().get(DwcTerm.catalogNumber.qualifiedName())));
+    assertEquals(
+        Map.of(
+            "occ-sample", "CAT-SAMPLE",
+            "occ-preserved", "CAT-PRESERVED",
+            "occ-fossil", "CAT-FOSSIL",
+            "occ-living", "CAT-LIVING"),
+        catalogByOccurrence);
+  }
+
   // ---- helpers ----
 
   private void writeParquet(Path dir, String relativePath, StructType schema, List<Row> rows) {
