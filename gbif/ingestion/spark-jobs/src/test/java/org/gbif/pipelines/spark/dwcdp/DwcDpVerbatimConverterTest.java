@@ -1421,7 +1421,8 @@ class DwcDpVerbatimConverterTest {
         Optional.empty(),
         branchMetrics);
 
-    String report = readTextFile(fs, datasetBasePath + "/conversion-report.txt");
+    String report =
+        readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.STATISTICS_REPORT);
 
     assertTrue(report.contains("mapping branches (execution funnels):"), report);
     assertTrue(report.contains("extension-fragment:event-occurrences"), report);
@@ -1465,12 +1466,25 @@ class DwcDpVerbatimConverterTest {
         readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.INGEST_PLAN_COMPACT);
     String detailed =
         readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.INGEST_PLAN_DETAILED);
+    String compactJson =
+        readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.INGEST_PLAN_COMPACT_JSON);
+    String detailedJson =
+        readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.INGEST_PLAN_DETAILED_JSON);
 
     assertTrue(compact.contains("View: dataset / compact"), compact);
     assertTrue(compact.contains("Target: " + DwcTerm.eventID.qualifiedName()), compact);
     assertTrue(detailed.contains("View: dataset / detailed"), detailed);
     assertTrue(detailed.contains("Target: " + DwcTerm.eventID.qualifiedName()), detailed);
     assertTrue(detailed.contains("Producer:"), detailed);
+
+    var compactTree = MapperUtil.MAPPER.readTree(compactJson);
+    assertEquals("dataset", compactTree.get("view").asText());
+    assertEquals("compact", compactTree.get("detail").asText());
+    assertTrue(compactTree.get("scopes").isArray(), compactJson);
+
+    var detailedTree = MapperUtil.MAPPER.readTree(detailedJson);
+    assertEquals("detailed", detailedTree.get("detail").asText());
+    assertTrue(detailedTree.toString().contains(DwcTerm.eventID.qualifiedName()), detailedJson);
   }
 
   @Test
@@ -1514,7 +1528,8 @@ class DwcDpVerbatimConverterTest {
         spark, dp, datasetBasePath, fs, "test-dataset", Optional.of(records));
 
     org.apache.hadoop.fs.Path reportPath =
-        new org.apache.hadoop.fs.Path(datasetBasePath + "/conversion-report.txt");
+        new org.apache.hadoop.fs.Path(
+            datasetBasePath + "/" + DwcDpVerbatimConverter.STATISTICS_REPORT);
     String report;
     try (var reader =
         new BufferedReader(new InputStreamReader(fs.open(reportPath), StandardCharsets.UTF_8))) {
@@ -1534,6 +1549,13 @@ class DwcDpVerbatimConverterTest {
     assertTrue(multimediaLine.contains("rows=2"), multimediaLine);
     assertTrue(multimediaLine.contains("records-with-this-ext=1"), multimediaLine);
     assertEquals(2L, extractTrailingLong(report, "core records written:"));
+
+    String statisticsJson =
+        readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.STATISTICS_REPORT_JSON);
+    var statisticsTree = MapperUtil.MAPPER.readTree(statisticsJson);
+    assertEquals("test-dataset", statisticsTree.get("datasetId").asText());
+    assertEquals(2L, statisticsTree.get("output").get("coreRecordsWritten").asLong());
+    assertEquals(2L, statisticsTree.get("output").get("extensions").get(0).get("rows").asLong());
   }
 
   // ---- helpers ----
