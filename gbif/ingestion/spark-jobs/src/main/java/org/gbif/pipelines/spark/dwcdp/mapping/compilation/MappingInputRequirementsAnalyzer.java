@@ -3,6 +3,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.compilation;
 import java.util.Objects;
 import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.NestedExtensionContext;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 
@@ -51,7 +52,37 @@ public final class MappingInputRequirementsAnalyzer {
               extension.fragments().forEach(fragment -> addExtensionFragment(out, core, fragment));
             });
 
+    mapping.nestedExtensionContexts().forEach(context -> addNestedContext(out, context));
+
     return out.build();
+  }
+
+  private void addNestedContext(
+      MappingInputRequirements.Builder out, NestedExtensionContext context) {
+    use(out, context.parentResource());
+    use(out, context.rowResource());
+    use(out, context.contextResource());
+    addField(out, context.parentIdentity());
+    addField(out, context.rowIdentity());
+    addField(out, context.rowParentKey());
+    addField(out, context.rowContextLink());
+    addField(out, context.contextIdentity());
+    addField(out, context.contextRowLink());
+
+    context
+        .discoveryFragments()
+        .forEach(
+            fragment -> {
+              use(out, fragment.path().rootResource());
+              fragment
+                  .path()
+                  .schemaPath()
+                  .relations()
+                  .forEach(relation -> addSchemaRelation(out, relation));
+              addField(out, fragment.parentIdentity());
+              addField(out, fragment.rowIdentity());
+              fragment.contextIdentity().ifPresent(field -> addField(out, field));
+            });
   }
 
   private void addCoreFragment(

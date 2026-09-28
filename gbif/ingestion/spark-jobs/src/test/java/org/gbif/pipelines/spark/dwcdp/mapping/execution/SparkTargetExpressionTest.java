@@ -17,6 +17,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledSourceField;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.jupiter.api.AfterAll;
@@ -78,7 +79,7 @@ class SparkTargetExpressionTest {
   }
 
   @Test
-  void firstOrUrnFallbackUsesNaturalIdAndFallsBackForNullOrBlank() {
+  void firstNonBlankExpressionUsesNaturalIdAndComposedFallbackForNullOrBlank() {
     Dataset<Row> rows =
         spark.createDataFrame(
             Arrays.asList(
@@ -89,9 +90,14 @@ class SparkTargetExpressionTest {
                 .add("naturalId", DataTypes.StringType)
                 .add("primaryKey", DataTypes.StringType));
 
-    CompiledTargetProducer target = firstOrUrnFallbackTarget();
-    Column value =
-        SparkTargetExpression.row(target, List.of(rows.col("naturalId"), rows.col("primaryKey")));
+    SchemaPath source = SchemaPath.root("source");
+    ValueExpression expression =
+        ValueExpression.firstNonBlank(
+            ValueExpression.field(source.field("naturalId")),
+            ValueExpression.concat(
+                ValueExpression.literal("gbif:dwcdp:source:primaryKey:"),
+                ValueExpression.field(source.field("primaryKey"))));
+    Column value = SparkValueExpression.build(expression, field -> rows.col(field.column()));
 
     List<String> values =
         rows.select(value.as("value")).collectAsList().stream()
@@ -99,53 +105,8 @@ class SparkTargetExpressionTest {
             .toList();
 
     assertEquals(
-        List.of("OCC-1", "urn:gbif:dwcdp:occurrence:PK-2", "urn:gbif:dwcdp:occurrence:PK-3"),
+        List.of("OCC-1", "gbif:dwcdp:source:primaryKey:PK-2", "gbif:dwcdp:source:primaryKey:PK-3"),
         values);
-  }
-
-  @Test
-  void firstOrUrnFallbackAggregationUsesNaturalIdAndFallsBackForNullOrBlank() {
-    Dataset<Row> rows =
-        spark.createDataFrame(
-            Arrays.asList(
-                RowFactory.create("a", "OCC-1", "PK-1"),
-                RowFactory.create("b", null, "PK-2"),
-                RowFactory.create("c", "   ", "PK-3")),
-            new StructType()
-                .add("group", DataTypes.StringType)
-                .add("naturalId", DataTypes.StringType)
-                .add("primaryKey", DataTypes.StringType));
-
-    CompiledTargetProducer target = firstOrUrnFallbackTarget();
-    Column value =
-        SparkTargetExpression.aggregate(
-            target,
-            List.of(rows.col("naturalId"), rows.col("primaryKey")),
-            Optional.empty(),
-            Optional.empty());
-
-    List<String> values =
-        rows.groupBy("group").agg(value.as("value")).orderBy("group").collectAsList().stream()
-            .map(row -> (String) row.getAs("value"))
-            .toList();
-
-    assertEquals(
-        List.of("OCC-1", "urn:gbif:dwcdp:occurrence:PK-2", "urn:gbif:dwcdp:occurrence:PK-3"),
-        values);
-  }
-
-  private static CompiledTargetProducer firstOrUrnFallbackTarget() {
-    return new CompiledTargetProducer(
-        "technicalId",
-        "test",
-        TargetFieldMapping.SourceMode.ONE_OF,
-        ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:occurrence:"),
-        List.of(
-            new CompiledSourceField(SchemaPath.root("source").field("naturalId")),
-            new CompiledSourceField(SchemaPath.root("source").field("primaryKey"))),
-        TargetFieldMapping.Origin.EXPLICIT,
-        Optional.empty(),
-        Optional.empty());
   }
 
   private static CompiledTargetProducer delimitedTarget(String... sourceColumns) {

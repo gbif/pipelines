@@ -464,7 +464,7 @@ class DwcDpVerbatimConverterTest {
 
     assertEquals(1, records.size());
     ExtendedRecord event = records.get(0);
-    String expectedEventId = "urn:gbif:dwcdp:event:EPK-001";
+    String expectedEventId = "gbif:dwcdp:event:event_pk:EPK-001";
     assertEquals(expectedEventId, event.getId());
 
     List<Map<String, String>> occurrences =

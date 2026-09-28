@@ -100,6 +100,8 @@ public record MappingDatasetScope(Map<String, Set<String>> columnsByResource) {
    * A producer can contribute when at least one of its declared source alternatives is reachable.
    */
   public boolean supports(CompiledTargetProducer producer) {
-    return producer.sources().stream().anyMatch(this::supports);
+    return producer.expressionValue()
+        ? producer.sources().stream().allMatch(this::supports)
+        : producer.sources().stream().anyMatch(this::supports);
   }
 }

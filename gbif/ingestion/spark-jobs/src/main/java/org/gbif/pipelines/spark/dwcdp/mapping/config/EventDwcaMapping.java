@@ -8,6 +8,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
@@ -45,6 +46,7 @@ public final class EventDwcaMapping {
             .importCoreFragment(EventCoreMapping.eventProvenance(graph));
 
     builder
+        .nestedExtensionContext(EventOccurrenceNestedContextMapping.context(graph))
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
         .mergeTarget(DwcTerm.recordedBy.qualifiedName(), ValueAggregation.firstNonNull())
         .mergeTarget(DwcTerm.identifiedBy.qualifiedName(), ValueAggregation.firstNonNull())
@@ -72,6 +74,7 @@ public final class EventDwcaMapping {
         .mergeTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("occurrenceID"), ValueAggregation.firstNonNull())
         .mergeTarget(DwcTerm.eventID.qualifiedName(), ValueAggregation.firstNonNull())
+        .mergeTarget(DwcTerm.basisOfRecord.qualifiedName(), ValueAggregation.firstNonNull())
         .importFragment(OccurrenceMapping.directOccurrence(graph))
         .importFragment(OccurrenceMapping.eventIdentity(graph))
         .importFragment(OccurrenceMapping.recordedBy(graph))
@@ -80,6 +83,9 @@ public final class EventDwcaMapping {
         .importFragment(OccurrenceMapping.acceptedIdentification(graph))
         .importFragment(OccurrenceMapping.acceptedIdentificationAgent(graph))
         .importFragment(OccurrenceMapping.material(graph))
+        .importFragment(OccurrenceMapping.materialBasisOfRecord(graph))
+        .importFragment(OccurrenceMapping.eventBasisOfRecord(graph))
+        .importFragment(OccurrenceMapping.defaultBasisOfRecord(graph))
         .importFragment(OccurrenceMapping.acceptedIdentificationTaxon(graph))
         .importFragment(OccurrenceMapping.acceptedIdentificationAgentRoles(graph))
         .importFragment(OccurrenceMapping.materialCollectedBy(graph))
@@ -221,9 +227,11 @@ public final class EventDwcaMapping {
     SchemaPath event = SchemaPath.root("event");
     return mappingPlan(name, CoreType.EVENT, "event")
         .coreIdentity(
-            ValueAggregation.firstOrUrnFallback("urn:gbif:dwcdp:event:"),
-            event.field("eventID"),
-            event.field("event_pk"))
+            ValueExpression.firstNonBlank(
+                ValueExpression.field(event.field("eventID")),
+                ValueExpression.concat(
+                    ValueExpression.literal("gbif:dwcdp:event:event_pk:"),
+                    ValueExpression.field(event.field("event_pk")))))
         .coreField(
             TargetFieldMapping.oneOf(
                 DwcTerm.eventID.qualifiedName(),

@@ -2,14 +2,18 @@ package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 
 import static org.apache.spark.sql.functions.array_distinct;
 import static org.apache.spark.sql.functions.array_join;
+import static org.apache.spark.sql.functions.coalesce;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
 import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.filter;
+import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.sort_array;
+import static org.apache.spark.sql.functions.split;
 import static org.apache.spark.sql.functions.struct;
 import static org.apache.spark.sql.functions.transform;
+import static org.apache.spark.sql.functions.when;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -17,12 +21,15 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Column;
@@ -33,15 +40,18 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledCoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledExtension;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledTargetProducer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.NestedExtensionContext;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.Projection;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
@@ -60,6 +70,7 @@ import org.gbif.pipelines.spark.util.TableLoader;
  */
 public final class SparkExtendedRecordExecutor {
   private static final String CORE_ID = "__dwca_core_id";
+  private static final String NESTED_PARENT_KEY = "__dwcdp_nested_parent_key";
 
   private final SchemaGraph graph;
   private final SparkExtensionMaterializer extensionMaterializer;
@@ -128,27 +139,21 @@ public final class SparkExtendedRecordExecutor {
         continue;
       }
 
-      ExtensionMaterializationResult materialized =
-          extensionMaterializer.materialize(loader, extension);
-      if (materialized.targetColumns().isEmpty()) {
+      Optional<NestedExtensionContext> nestedContext =
+          plan.nestedExtensionContexts().stream()
+              .filter(context -> context.extensionRowType().equals(extension.rowType()))
+              .findFirst();
+      AttachedExtension attachedExtension =
+          nestedContext.isPresent()
+              ? materializeNestedExtension(loader, plan, extension, nestedContext.get())
+              : materializeAndAttachExtension(loader, plan, extension, corePk);
+      if (attachedExtension.targetColumns().isEmpty()) {
         continue;
       }
-      String attachmentSourceResource = materialized.parentKeySource().path().rootResource();
-      Dataset<Row> bridge =
-          attachmentBridge(
-              loader, plan, attachmentSourceResource, materialized.parentKeySource(), corePk);
-      Dataset<Row> attached =
-          bridge
-              .join(
-                  materialized.dataset(),
-                  bridge
-                      .col("__dwca_source_pk")
-                      .equalTo(materialized.dataset().col(materialized.parentKeyColumn())),
-                  "inner")
-              .drop(materialized.dataset().col(materialized.parentKeyColumn()));
+      Dataset<Row> attached = attachedExtension.dataset();
 
       List<TermColumn> terms =
-          materialized.targetColumns().entrySet().stream()
+          attachedExtension.targetColumns().entrySet().stream()
               .sorted(Map.Entry.comparingByKey())
               .map(e -> new TermColumn(e.getKey(), e.getValue()))
               .toList();
@@ -170,6 +175,8 @@ public final class SparkExtendedRecordExecutor {
 
     String coreRowType = coreRowType(plan.coreType());
     Map<String, String> coreTargetColumns = coreProjection.targetColumns();
+
+    SparkPlanComplexityGuard.check(assembled, plan.name());
 
     return assembled
         .map(
@@ -224,6 +231,299 @@ public final class SparkExtendedRecordExecutor {
                 },
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) record -> record != null);
+  }
+
+  private AttachedExtension materializeAndAttachExtension(
+      TableLoader loader, CompiledMapping plan, CompiledExtension extension, String corePk) {
+    ExtensionMaterializationResult materialized =
+        extensionMaterializer.materialize(loader, extension);
+    if (materialized.targetColumns().isEmpty()) {
+      return new AttachedExtension(materialized.dataset(), Map.of());
+    }
+
+    String attachmentSourceResource = materialized.parentKeySource().path().rootResource();
+    Dataset<Row> bridge =
+        attachmentBridge(
+            loader, plan, attachmentSourceResource, materialized.parentKeySource(), corePk);
+    Dataset<Row> attached =
+        bridge
+            .join(
+                materialized.dataset(),
+                bridge
+                    .col("__dwca_source_pk")
+                    .equalTo(materialized.dataset().col(materialized.parentKeyColumn())),
+                "inner")
+            .drop(materialized.dataset().col(materialized.parentKeyColumn()));
+    return new AttachedExtension(attached, materialized.targetColumns());
+  }
+
+  private AttachedExtension materializeNestedExtension(
+      TableLoader loader,
+      CompiledMapping plan,
+      CompiledExtension extension,
+      NestedExtensionContext context) {
+    SparkNestedContextDiscovery.Result discovery =
+        new SparkNestedContextDiscovery(graph, context).discover(loader);
+    TableLoader scopedLoader =
+        SparkNestedContextLoader.loader(loader, context, discovery)
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Nested extension row resource is unavailable: "
+                            + context.rowResource()
+                            + " for extension "
+                            + extension.rowType()));
+
+    // The scoped loader already rewrites the nested row's parent/context links from discovery and
+    // exposes only the unique contextual resource for that (parent,row). Materialize the original
+    // compiled extension once against that scoped view so normal and contextual fragments share one
+    // row set and one set of target-merge semantics. Splitting the extension and joining a second
+    // contextual materialization back in is both redundant and produces a pathological optimizer
+    // shape for even a single expression-backed contextual target.
+    ExtensionMaterializationResult nested =
+        extensionMaterializer.materialize(scopedLoader, extension);
+    Dataset<Row> attached = attachNestedRows(loader, plan, nested, discovery.ownership(), context);
+    Map<String, String> targetColumns = new LinkedHashMap<>(nested.targetColumns());
+
+    if (context.parentIdentityTargetTerm().isPresent()) {
+      String column = targetColumns.get(context.parentIdentityTargetTerm().get());
+      if (column != null) {
+        attached = attached.withColumn(column, col(CORE_ID));
+      }
+    }
+    return new AttachedExtension(attached, targetColumns);
+  }
+
+  private Dataset<Row> attachNestedRows(
+      TableLoader loader,
+      CompiledMapping plan,
+      ExtensionMaterializationResult nested,
+      Dataset<Row> ownership,
+      NestedExtensionContext context) {
+    Dataset<Row> rows = nested.dataset().alias("row");
+    Dataset<Row> own = ownership.alias("own");
+
+    List<Column> selected = new ArrayList<>();
+    for (String name : nested.dataset().columns()) {
+      selected.add(col("row." + name).as(name));
+    }
+    selected.add(col("own." + SparkNestedContextDiscovery.COL_PARENT).as(NESTED_PARENT_KEY));
+
+    Column sameParent =
+        col("row." + nested.parentKeyColumn())
+            .equalTo(col("own." + SparkNestedContextDiscovery.COL_PARENT));
+    Column sameRow =
+        col("row." + nested.rowKeyColumn())
+            .equalTo(col("own." + SparkNestedContextDiscovery.COL_ROW));
+
+    Dataset<Row> owned =
+        rows.join(own, sameParent.and(sameRow), "inner").select(selected.toArray(Column[]::new));
+
+    Dataset<Row> core = loader.load(plan.coreSourceResource()).orElseThrow().alias("core");
+    Dataset<Row> bridge =
+        core.select(
+            coreIdentityExpression(plan.coreIdentity().orElseThrow(), core).as(CORE_ID),
+            col("core." + context.parentIdentity().column()).cast("string").as(NESTED_PARENT_KEY));
+
+    return owned
+        .join(bridge, owned.col(NESTED_PARENT_KEY).equalTo(bridge.col(NESTED_PARENT_KEY)), "inner")
+        .drop(bridge.col(NESTED_PARENT_KEY));
+  }
+
+  private CompiledExtension withoutContextualFragments(
+      CompiledExtension extension, NestedExtensionContext context) {
+    FieldRef nestedRowIdentity = context.rowIdentity();
+    List<CompiledFragment> fragments =
+        extension.fragments().stream()
+            .filter(fragment -> !context.contextualFragmentNames().contains(fragment.name()))
+            .map(
+                fragment ->
+                    new CompiledFragment(
+                        fragment.name(),
+                        fragment.rowType(),
+                        fragment.sourceResource(),
+                        fragment.path(),
+                        fragment.relations(),
+                        nestedRowIdentity,
+                        fragment.rowIdentity(),
+                        fragment.rowMatch(),
+                        fragment.targets()))
+            .toList();
+    List<CompiledTargetMerge> merges =
+        extension.targetMerges().stream()
+            .flatMap(
+                merge -> {
+                  List<CompiledTargetProducer> producers =
+                      merge.producers().stream()
+                          .filter(
+                              producer ->
+                                  !context.contextualFragmentNames().contains(producer.owner()))
+                          .toList();
+                  return producers.isEmpty()
+                      ? Stream.empty()
+                      : Stream.of(
+                          new CompiledTargetMerge(
+                              merge.targetTerm(), merge.aggregation(), producers));
+                })
+            .toList();
+    return new CompiledExtension(
+        extension.rowType(),
+        extension.rowComposition(),
+        extension.maxRowsPerParent(),
+        merges,
+        fragments,
+        extension.decisions());
+  }
+
+  private CompiledExtension contextualExtension(
+      CompiledExtension extension, NestedExtensionContext context) {
+    CompiledFragment base =
+        new CompiledFragment(
+            "nested-context-base",
+            extension.rowType(),
+            context.rowResource(),
+            SchemaPath.root(context.rowResource()),
+            List.of(),
+            context.rowParentKey(),
+            Optional.of(context.rowIdentity()),
+            Optional.empty(),
+            List.of());
+
+    Set<String> contextualNames = context.contextualFragmentNames();
+    List<CompiledFragment> fragments = new ArrayList<>();
+    fragments.add(base);
+    extension.fragments().stream()
+        .filter(fragment -> contextualNames.contains(fragment.name()))
+        .forEach(fragments::add);
+
+    List<CompiledTargetMerge> merges =
+        extension.targetMerges().stream()
+            .flatMap(
+                merge -> {
+                  List<CompiledTargetProducer> producers =
+                      merge.producers().stream()
+                          .filter(producer -> contextualNames.contains(producer.owner()))
+                          .toList();
+                  return producers.isEmpty()
+                      ? Stream.empty()
+                      : Stream.of(
+                          new CompiledTargetMerge(
+                              merge.targetTerm(), merge.aggregation(), producers));
+                })
+            .toList();
+
+    return new CompiledExtension(
+        extension.rowType(),
+        ExtensionRowComposition.ENRICH,
+        Optional.empty(),
+        merges,
+        fragments,
+        extension.decisions());
+  }
+
+  private Set<String> contextualContributionTerms(
+      CompiledExtension extension, NestedExtensionContext context) {
+    Set<String> terms = new HashSet<>();
+    extension.fragments().stream()
+        .filter(fragment -> context.contextualFragmentNames().contains(fragment.name()))
+        .flatMap(fragment -> fragment.targets().stream())
+        .map(CompiledTargetProducer::targetTerm)
+        .forEach(terms::add);
+    extension.targetMerges().stream()
+        .filter(
+            merge ->
+                merge.producers().stream()
+                    .anyMatch(
+                        producer -> context.contextualFragmentNames().contains(producer.owner())))
+        .map(CompiledTargetMerge::targetTerm)
+        .forEach(terms::add);
+    return terms;
+  }
+
+  private ContextEnrichment mergeNestedContext(
+      Dataset<Row> attached,
+      Map<String, String> currentTargetColumns,
+      ExtensionMaterializationResult contextual,
+      CompiledExtension original,
+      Set<String> allowedTerms) {
+    Map<String, CompiledTargetMerge> merges =
+        original.targetMerges().stream()
+            .collect(Collectors.toMap(CompiledTargetMerge::targetTerm, merge -> merge));
+
+    List<String> terms =
+        contextual.targetColumns().keySet().stream()
+            .filter(allowedTerms::contains)
+            .sorted()
+            .toList();
+    if (terms.isEmpty()) {
+      return new ContextEnrichment(attached, new LinkedHashMap<>(currentTargetColumns));
+    }
+
+    Dataset<Row> context = contextual.dataset().alias("ctx");
+    List<Column> contextColumns = new ArrayList<>();
+    contextColumns.add(col("ctx." + contextual.parentKeyColumn()).as("__dwcdp_context_parent"));
+    contextColumns.add(col("ctx." + contextual.rowKeyColumn()).as("__dwcdp_context_row"));
+    Map<String, String> contextAliases = new LinkedHashMap<>();
+    int index = 0;
+    for (String term : terms) {
+      String alias = "__dwcdp_nested_context_" + index++;
+      contextAliases.put(term, alias);
+      contextColumns.add(col("ctx." + contextual.columnName(term)).as(alias));
+    }
+    context = context.select(contextColumns.toArray(Column[]::new));
+
+    Dataset<Row> mergedDataset =
+        attached
+            .join(
+                context,
+                attached
+                    .col(NESTED_PARENT_KEY)
+                    .equalTo(context.col("__dwcdp_context_parent"))
+                    .and(
+                        attached
+                            .col(SparkExtensionMaterializer.COL_ROW_KEY)
+                            .equalTo(context.col("__dwcdp_context_row"))),
+                "left_outer")
+            .drop(context.col("__dwcdp_context_parent"))
+            .drop(context.col("__dwcdp_context_row"));
+
+    Map<String, String> targetColumns = new LinkedHashMap<>(currentTargetColumns);
+    for (String term : terms) {
+      String contextAlias = contextAliases.get(term);
+      String currentAlias = targetColumns.get(term);
+      if (currentAlias == null) {
+        targetColumns.put(term, contextAlias);
+        continue;
+      }
+
+      CompiledTargetMerge merge = merges.get(term);
+      Column combined =
+          merge == null
+              ? coalesce(col(currentAlias), col(contextAlias))
+              : combineMergedTarget(col(currentAlias), col(contextAlias), merge);
+      mergedDataset = mergedDataset.withColumn(currentAlias, combined);
+    }
+
+    return new ContextEnrichment(mergedDataset, targetColumns);
+  }
+
+  private static Column combineMergedTarget(
+      Column current, Column contextual, CompiledTargetMerge merge) {
+    if (merge.aggregation() instanceof ValueAggregation.FirstNonNull) {
+      return coalesce(current, contextual);
+    }
+    if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      Column combined = concat_ws(delimited.delimiter(), current, contextual);
+      if (delimited.distinct()) {
+        combined =
+            concat_ws(
+                delimited.delimiter(),
+                array_distinct(split(combined, Pattern.quote(delimited.delimiter()))));
+      }
+      return when(current.isNull().and(contextual.isNull()), lit(null)).otherwise(combined);
+    }
+    throw new UnsupportedOperationException(
+        "Unsupported nested-context merge for " + merge.targetTerm() + ": " + merge.aggregation());
   }
 
   private CoreProjection projectCore(
@@ -351,7 +651,7 @@ public final class SparkExtendedRecordExecutor {
             rawCore
                 .groupBy(rawCore.col(corePk).cast("string").as("__dwca_merge_core_pk"))
                 .agg(
-                    coreAggregateExpression(producer, rawCore)
+                    coreFirstNonNullMergeExpression(producer, rawCore)
                         .cast("string")
                         .as("__dwca_merge_value"));
       } else {
@@ -385,7 +685,7 @@ public final class SparkExtendedRecordExecutor {
                 .groupBy(
                     pathResult.dataset().col(corePkAlias).cast("string").as("__dwca_merge_core_pk"))
                 .agg(
-                    coreAggregateExpression(producer, pathResult)
+                    coreFirstNonNullMergeExpression(producer, pathResult)
                         .cast("string")
                         .as("__dwca_merge_value"));
       }
@@ -413,6 +713,19 @@ public final class SparkExtendedRecordExecutor {
     return contributions
         .groupBy("__dwca_merge_core_pk")
         .agg(ordered.getItem(0).getField("value").as(targetAlias(merge.targetTerm())));
+  }
+
+  private Column coreFirstNonNullMergeExpression(CompiledTargetProducer target, Dataset<Row> root) {
+    return target.expressionValue()
+        ? first(coreTargetExpression(target, root), true)
+        : coreAggregateExpression(target, root);
+  }
+
+  private Column coreFirstNonNullMergeExpression(
+      CompiledTargetProducer target, SparkPathResult pathResult) {
+    return target.expressionValue()
+        ? first(coreTargetExpression(target, pathResult), true)
+        : coreAggregateExpression(target, pathResult);
   }
 
   private Column coreAggregateExpression(CompiledTargetProducer target, Dataset<Row> root) {
@@ -603,23 +916,11 @@ public final class SparkExtendedRecordExecutor {
   }
 
   private Column coreTargetExpression(CompiledTargetProducer target, Dataset<Row> root) {
-    List<Column> sources =
-        target.sources().stream()
-            .map(
-                source ->
-                    hasColumn(root, source.field().column())
-                        ? root.col(source.field().column()).cast("string")
-                        : lit(null).cast("string"))
-            .toList();
-    return combineCoreSources(target, sources);
+    return SparkTargetExpression.row(target, field -> columnOrNull(root, field));
   }
 
   private Column coreTargetExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
-    List<Column> sources =
-        target.sources().stream()
-            .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
-            .toList();
-    return combineCoreSources(target, sources);
+    return SparkTargetExpression.row(target, pathResult::columnOrNull);
   }
 
   private static boolean hasColumn(Dataset<Row> dataset, String column) {
@@ -735,24 +1036,18 @@ public final class SparkExtendedRecordExecutor {
 
   private static Column coreIdentityExpression(
       CompiledTargetProducer identity, Dataset<Row> dataset) {
-    List<Column> sources =
-        identity.sources().stream()
-            .map(
-                source ->
-                    hasColumn(dataset, source.field().column())
-                        ? dataset.col(source.field().column()).cast("string")
-                        : lit(null).cast("string"))
-            .toList();
-    return SparkTargetExpression.row(identity, sources);
+    return SparkTargetExpression.row(
+        identity,
+        field ->
+            hasColumn(dataset, field.column())
+                ? dataset.col(field.column()).cast("string")
+                : lit(null).cast("string"));
   }
 
   private static Column coreIdentityExpression(
       CompiledTargetProducer identity, SparkPathResult pathResult) {
-    List<Column> sources =
-        identity.sources().stream()
-            .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
-            .toList();
-    return SparkTargetExpression.row(identity, sources);
+    return SparkTargetExpression.row(
+        identity, field -> pathResult.columnOrNull(field).cast("string"));
   }
 
   private static String coreRowType(CoreType coreType) {
@@ -799,6 +1094,10 @@ public final class SparkExtendedRecordExecutor {
   }
 
   private record CoreProjection(Dataset<Row> dataset, Map<String, String> targetColumns) {}
+
+  private record AttachedExtension(Dataset<Row> dataset, Map<String, String> targetColumns) {}
+
+  private record ContextEnrichment(Dataset<Row> dataset, Map<String, String> targetColumns) {}
 
   private record TermColumn(String term, String column) implements Serializable {}
 
