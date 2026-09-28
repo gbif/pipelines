@@ -28,13 +28,14 @@ execution layer.
 7. [Compilation and validation](#7-compilation-and-validation)
 8. [Spark execution](#8-spark-execution)
 9. [Core and extension target merges](#9-core-and-extension-target-merges)
-10. [Core identity and structural keys](#10-core-identity-and-structural-keys)
-11. [Occurrence as core and as Event extension](#11-occurrence-as-core-and-as-event-extension)
-12. [Configuration entry points](#12-configuration-entry-points)
-13. [Adding or changing a mapping](#13-adding-or-changing-a-mapping)
-14. [Testing](#14-testing)
-15. [Lossy conversion rules](#15-lossy-conversion-rules)
-16. [Deferred and intentionally separate work](#16-deferred-and-intentionally-separate-work)
+10. [Nested extension contexts](#10-nested-extension-contexts)
+11. [Core identity and structural keys](#11-core-identity-and-structural-keys)
+12. [Occurrence as core and as Event extension](#12-occurrence-as-core-and-as-event-extension)
+13. [Configuration entry points](#13-configuration-entry-points)
+14. [Adding or changing a mapping](#14-adding-or-changing-a-mapping)
+15. [Testing](#15-testing)
+16. [Lossy conversion rules](#16-lossy-conversion-rules)
+17. [Deferred and intentionally separate work](#17-deferred-and-intentionally-separate-work)
 
 ---
 
@@ -77,6 +78,10 @@ Mapping configuration                  │
 │  SparkTargetExpression                         │
 │      source combination                        │
 │      aggregation semantics                     │
+│                                                │
+│  SparkNestedContextDiscovery / Loader         │
+│      nested parent/row/context discovery       │
+│      unique contextual-resource scoping        │
 │                                                │
 │  SparkExtensionMaterializer                    │
 │      extension row construction                │
@@ -165,7 +170,7 @@ identifier is missing.
 
 When the DwC-A core requires an identifier and the public identifier is absent, the executor creates
 a deterministic internal/public fallback from the structural primary key; see
-[§10](#10-core-identity-and-structural-keys).
+[§11](#11-core-identity-and-structural-keys).
 
 ### 2.5 Target meaning is shared across output envelopes
 
@@ -398,10 +403,40 @@ Spark row order.
 
 ## 6. Fragments, extensions, and mapping plans
 
+A useful way to read the mapping model is:
+
+```text
+MappingPath
+    = how do I reach the source data?
+
+CoreFragment / ExtensionFragment
+    = what can that path contribute to an output row?
+
+TargetFieldMapping
+    = which DwC-A term does that contribution produce?
+
+TargetMerge
+    = how are intentional competing contributions to one target combined?
+
+NestedExtensionContext
+    = when an extension row has indirect ownership, which parent/row/context belong together?
+```
+
+Fragments are therefore **value producers**, not an execution-order mechanism. If several fragments
+produce the same target, precedence or combination is stated separately through an explicit target
+merge. Nested contexts are orthogonal: they establish row ownership/context before ordinary fragment
+semantics are evaluated.
+
 ### 6.1 Core fragments
 
-A `CoreFragment` contributes fields to the DwC-A core row. It has a source/path and a set of target
-producers, but does not create a separate extension row set.
+A `CoreFragment` contributes fields to an already-known DwC-A core row. It has a source/path and a
+set of target producers, but does not create a separate row set. The executor evaluates the fragment
+path, projects its target contributions, and joins them back to the core by structural core identity.
+
+A fragment should be read as an independent producer. For example, Occurrence-core `basisOfRecord`
+can have separate producers for Material classification, Event classification, and the final
+`Occurrence` fallback. The fragment boundary keeps those paths isolated; the target merge defines
+their precedence.
 
 Examples include:
 
@@ -411,7 +446,9 @@ Examples include:
 
 ### 6.2 Extension fragments
 
-An `ExtensionFragment` contributes rows or enrichment to one DwC-A extension row type.
+An `ExtensionFragment` is the corresponding producer abstraction for a DwC-A extension row type.
+Unlike a core fragment, it must also identify which logical extension row receives the contribution
+or whether the fragment creates a new row.
 
 An extension fragment declares the structural information needed to materialize those rows:
 
@@ -458,7 +495,18 @@ or references sourced from several domain objects.
 Visible extension payload is used for UNION deduplication; synthetic Spark row identity must not make
 two otherwise identical extension rows appear different.
 
-### 6.4 `MappingPlan`
+### 6.4 Nested extension contexts
+
+Some extension rows cannot be attached to their output parent from one direct foreign key. For
+example, with Event as core an Occurrence may be reachable through
+`Event → Material → Identification → Occurrence`, while Material fields should still enrich that
+specific Occurrence. `NestedExtensionContext` declares how those parent/row/context identities are
+discovered and normalized before the ordinary extension fragments run.
+
+Nested contexts do not replace fragments or target merges. They answer a different question:
+**which logical rows belong together?** See [§10](#10-nested-extension-contexts).
+
+### 6.5 `MappingPlan`
 
 A `MappingPlan` is the complete declarative mapping for one chosen DwC-A core type. It combines:
 
@@ -467,7 +515,8 @@ A `MappingPlan` is the complete declarative mapping for one chosen DwC-A core ty
 - imported core fragments;
 - core target merges;
 - extension definitions and fragments;
-- extension target merges and row-composition policies.
+- extension target merges and row-composition policies; and
+- nested extension contexts where indirect extension ownership must be resolved.
 
 `EventDwcaMapping.current(graph)` and `OccurrenceDwcaMapping.current(graph)` are the canonical current
 configurations which assemble these plans.
@@ -620,7 +669,31 @@ Core and extension execution resolve their columns differently, but both delegat
 combination and producer aggregation semantics here. This prevents the same mapping declaration from
 behaving differently simply because its target happens to be on the core rather than an extension.
 
-### 8.4 `SparkExtensionMaterializer`
+### 8.4 `SparkNestedContextDiscovery` and `SparkNestedContextLoader`
+
+Nested context execution runs before contextual extension fragments are materialized.
+
+`SparkNestedContextDiscovery` executes each configured discovery path and reduces the source graph to
+logical identity relations:
+
+```text
+parent identity | nested-row identity | optional context identity
+```
+
+It deliberately separates **ownership** from **context**. Parent/row ownership is retained whenever it
+is discovered. A contextual resource is usable only when exactly one context identity is resolved for
+that `(parent,row)` pair. Zero or multiple contextual matches therefore keep the nested row but expose
+no contextual resource.
+
+`SparkNestedContextLoader` then builds scoped physical views for that resolved relation. The nested
+row and its unique contextual resource receive a shared execution-only context link. Downstream
+contextual fragments can consequently use their normal schema-backed paths without re-executing the
+full discovery DAG or accidentally joining to a context belonging to another parent.
+
+The scoped relation is intentionally checkpointed before contextual fragments consume it, truncating
+the potentially large discovery lineage.
+
+### 8.5 `SparkExtensionMaterializer`
 
 `SparkExtensionMaterializer` materializes one compiled DwC-A extension independently of the final
 core attachment.
@@ -655,7 +728,7 @@ When an extension declares a maximum number of rows per parent, the materializer
 stable visible target payload rather than from Spark physical identity. This keeps the cap stable
 across retries and partitions.
 
-### 8.5 `SparkExtendedRecordExecutor`
+### 8.6 `SparkExtendedRecordExecutor`
 
 `SparkExtendedRecordExecutor` owns the outer DwC-A-shaped record assembly.
 
@@ -666,10 +739,12 @@ It:
 3. projects direct core targets;
 4. executes core enrichment fragments;
 5. executes core target merges;
-6. asks `SparkExtensionMaterializer` to materialize each configured extension;
-7. bridges each extension's logical parent scope back to the core;
-8. groups extension rows onto the core; and
-9. creates `ExtendedRecord` values.
+6. resolves configured nested extension contexts where needed;
+7. asks `SparkExtensionMaterializer` to materialize each configured extension against the normal or
+   scoped loader;
+8. bridges each extension's logical parent scope back to the core;
+9. groups extension rows onto the core; and
+10. creates `ExtendedRecord` values.
 
 The class should therefore remain distinct from `SparkExtensionMaterializer`: one owns whole-record
 assembly and core attachment, while the other owns the internal row semantics of a single extension.
@@ -713,11 +788,164 @@ combining incompatible semantics.
 
 ---
 
-## 10. Core identity and structural keys
+## 10. Nested extension contexts
+
+Nested contexts handle the case where a DwC-A extension row belongs to a core parent through more
+than one possible DwC-DP ownership path, and where enrichment must retain the contextual object that
+identified that relationship.
+
+The current principal example is **Occurrence as an Event extension**. The logical scope is:
+
+```text
+parent resource   = event
+row resource      = occurrence
+context resource  = material
+
+resolved identity = (event, occurrence, optional unique material)
+```
+
+This is distinct from ordinary fragment execution. Nested-context discovery determines **which rows
+belong together**; extension fragments and target merges determine **which values those rows
+produce**.
+
+### 10.1 Discovery paths
+
+`EventOccurrenceNestedContextMapping` declares several independent ways an Occurrence can be
+discovered beneath an Event. Conceptually these include:
+
+```text
+Event → Occurrence
+
+Event → Occurrence → Material
+
+Event → Material → Identification → Occurrence
+
+Event → Material → NucleotideAnalysis → Identification → Occurrence
+
+Event → Material → NucleotideAnalysis → NucleotideSequence
+      → Identification → Occurrence
+```
+
+Each `NestedContextDiscoveryFragment` contributes only identities:
+
+```text
+(parent, row, optional context)
+```
+
+For example, two different paths may both discover:
+
+```text
+(E1, O1, M1)
+```
+
+Those are the same logical context, not two Occurrence extension rows. Conversely, if `O1` is
+discovered beneath different Events, parent identity remains part of the scope so those ownerships do
+not cross-product during attachment.
+
+### 10.2 Ownership and context are intentionally different
+
+Discovery preserves parent/row ownership even when the contextual resource is absent or ambiguous.
+For example:
+
+```text
+E1 / O1 / M1
+E1 / O1 / M2
+```
+
+means that `O1` is known to belong under `E1`, but no single Material can safely be flattened onto
+that row. The resolved context therefore becomes:
+
+```text
+parent = E1
+row    = O1
+context = null
+```
+
+Material-dependent fragments contribute no value, while non-Material fallbacks may still contribute.
+This is the nested-context form of the engine's general rule that ambiguity should produce no arbitrary
+selection.
+
+### 10.3 Scoped execution
+
+After discovery, `SparkNestedContextLoader` rewrites the relevant physical views so the nested row and
+its unique contextual resource share an execution-only context link. Contextual fragments then execute
+against that scoped loader.
+
+This turns a potentially complicated ownership chain such as:
+
+```text
+Event E1 → Material M1 → Identification I1 → Occurrence O1
+```
+
+into a compact execution scope equivalent to:
+
+```text
+parent  = E1
+nested row = O1
+context = M1
+```
+
+The contextual fragments do not need to know which discovery route produced that scope. This keeps
+domain mapping paths reusable and prevents every enrichment fragment from rebuilding the ownership
+logic independently.
+
+### 10.4 Worked `basisOfRecord` example
+
+For Event core, the Occurrence extension has independent `basisOfRecord` producers:
+
+```text
+materialBasisOfRecord ─────┐
+                           │
+eventBasisOfRecord ────────┼── FirstNonNull ──> basisOfRecord
+                           │
+defaultBasisOfRecord ──────┘
+```
+
+Suppose discovery resolves:
+
+```text
+parent Event    E1, eventType = Sensor
+Occurrence      O1
+context Material M1, materialEntityCategory = preserved
+```
+
+The fragments contribute:
+
+```text
+Material producer → PreservedSpecimen
+Event producer    → MachineObservation
+default producer  → Occurrence
+```
+
+The explicit `FirstNonNull` target merge therefore emits `PreservedSpecimen`. The fragments themselves
+do not encode execution-order precedence; the merge does.
+
+If two Materials instead resolve for `(E1,O1)`, the contextual Material is ambiguous and suppressed.
+The contributions become:
+
+```text
+Material producer → null
+Event producer    → MachineObservation
+default producer  → Occurrence
+```
+
+and the same merge emits `MachineObservation`.
+
+This separation is intentional:
+
+```text
+nested context  → establishes parent / row / contextual identity
+fragments       → independently produce target candidates
+target merge    → combines those candidates according to declared semantics
+```
+
+---
+
+## 11. Core identity and structural keys
 
 DwC-DP structural keys and DwC identifiers have different jobs.
 
-### 10.1 Structural primary key
+### 11.1 Structural primary key
 
 The resource primary key (`event_pk`, `occurrence_pk`, etc.) is used for:
 
@@ -728,7 +956,7 @@ The resource primary key (`event_pk`, `occurrence_pk`, etc.) is used for:
 
 It is not directly copied into a DwC target term.
 
-### 10.2 Public/natural core identifier
+### 11.2 Public/natural core identifier
 
 For the two supported DwC-A core types the preferred IDs are:
 
@@ -749,7 +977,7 @@ was publisher-supplied DwC data.
 
 ---
 
-## 11. Occurrence as core and as Event extension
+## 12. Occurrence as core and as Event extension
 
 Occurrence semantics are needed in two different output envelopes:
 
@@ -788,7 +1016,7 @@ differences behind a generic builder abstraction.
 
 ---
 
-## 12. Configuration entry points
+## 13. Configuration entry points
 
 The canonical current plans are assembled by:
 
@@ -837,7 +1065,7 @@ code.
 
 ---
 
-## 13. Adding or changing a mapping
+## 14. Adding or changing a mapping
 
 A normal mapping change should follow this order.
 
@@ -885,7 +1113,16 @@ Decide whether the mapping contributes to:
 
 For extension mappings, define the logical parent `scopeKey` explicitly.
 
-### Step 5 — add it to the canonical plan
+### Step 5 — decide whether nested ownership discovery is required
+
+Most extension mappings should use ordinary `scopeKey`, `rowIdentity`, and `rowMatch` semantics. Add a
+`NestedExtensionContext` only when the extension row's parent/context cannot be represented reliably by
+a direct row-parent relationship and several schema-backed discovery routes must be normalized first.
+
+When a nested context is needed, keep discovery focused on identities. Do not move target-value
+calculation into discovery; contextual fields should still be produced by ordinary extension fragments.
+
+### Step 6 — add it to the canonical plan
 
 Wire the fragment into `EventDwcaMapping.current(graph)` and/or
 `OccurrenceDwcaMapping.current(graph)` as appropriate.
@@ -893,12 +1130,12 @@ Wire the fragment into `EventDwcaMapping.current(graph)` and/or
 If the same domain rule is used in both core and extension envelopes, share the domain/path/target
 semantics rather than duplicating them, while keeping each envelope's structural builder code visible.
 
-### Step 6 — compile-time tests first
+### Step 7 — compile-time tests first
 
 Where the issue can be detected from the schema/configuration, test compiler or mapping-definition
 behavior rather than relying only on Spark execution failures.
 
-### Step 7 — execution tests for behavioral semantics
+### Step 8 — execution tests for behavioral semantics
 
 Use Spark execution tests for semantics which only become meaningful during dataset operations, such
 as:
@@ -912,7 +1149,7 @@ as:
 
 ---
 
-## 14. Testing
+## 15. Testing
 
 The test suite should preserve **behavioral contracts**, not internal implementation shape.
 
@@ -951,6 +1188,17 @@ In particular:
 - `UNION` preserves independent row sets and deduplicates visible duplicate payload;
 - row limits are deterministic and do not depend on synthetic Spark identity.
 
+### Nested contexts
+
+- all configured discovery routes can establish the same logical parent/row ownership;
+- duplicate discovery of the same `(parent,row,context)` does not duplicate extension rows;
+- parent identity participates in attachment so the same nested row cannot cross-product between
+  different parents;
+- exactly one contextual resource is exposed to contextual fragments;
+- zero or ambiguous contextual resources preserve parent/row ownership but suppress contextual
+  enrichment;
+- contextual target precedence is still expressed through ordinary target merges.
+
 ### Core identity
 
 - natural Event/Occurrence IDs win when present;
@@ -959,12 +1207,12 @@ In particular:
 
 ---
 
-## 15. Lossy conversion rules
+## 16. Lossy conversion rules
 
 DwC-DP → DwC-A is intentionally lossy in places where the target model cannot faithfully preserve
 DwC-DP structure or where the source relationship is ambiguous.
 
-### 15.1 Exactly-one enrichment
+### 16.1 Exactly-one enrichment
 
 When flattening a related object onto a core/extension row requires one unambiguous owner, mappings
 use `EXACTLY_ONE` rather than choosing an arbitrary match.
@@ -977,7 +1225,7 @@ Examples include:
 
 Zero or multiple matches contribute no flattened value.
 
-### 15.2 Event-core media promotion
+### 16.2 Event-core media promotion
 
 When Event is core, DwC-A cannot represent a Multimedia extension nested beneath an Occurrence
 extension row. Occurrence- and Material-owned media that are mapped in that scenario are therefore
@@ -985,18 +1233,18 @@ promoted to the Event's top-level Multimedia extension.
 
 The original nested ownership is not fully representable in DwC-A.
 
-### 15.3 Deterministic list flattening
+### 16.3 Deterministic list flattening
 
 Where multiple related records legitimately become one list-valued DwC target, the mapping uses
 explicit aggregation, contribution identity, and ordering where available. Unordered output is
 stabilized so Spark partition/encounter order does not become visible output semantics.
 
-### 15.4 Taxonomic fallback
+### 16.4 Taxonomic fallback
 
 Identification-taxon fallback uses one unambiguous `identification-taxon` row. Multiple taxon-formula
 components are not flattened by arbitrarily selecting one component.
 
-### 15.5 References follow ownership junctions
+### 16.5 References follow ownership junctions
 
 Bibliographic resources are reached through the domain-specific `*-reference` junction and then
 `bibliographic-resource`. A domain object is not treated as directly owning a bibliographic resource
@@ -1004,24 +1252,10 @@ through an invented shortcut relation.
 
 ---
 
-## 16. Deferred and intentionally separate work
+## 17. Deferred and intentionally separate work
 
 This document is not intended to be a manually maintained table-by-table coverage ledger. The
 mapping configuration and compiler are the source of truth for what is currently wired.
-
-Known areas can still be tracked here when they represent a design question rather than ordinary
-configuration work. Current examples include:
-
-- remaining AgentRole ownerships where the correct DwC-A representation needs to be chosen;
-- remaining bibliography/ownership paths where mapping policy has not yet been selected;
-- virtual Occurrence synthesis for Material records without a local evidence Occurrence.
-
-Virtual Material Occurrence synthesis is intentionally a separate design problem. It changes the
-row model by creating Occurrence rows rather than merely mapping another field/path and should not be
-folded into ordinary mapping-completeness work.
-
-When future coverage auditing is needed, prefer deriving the audit from the current schema graph and
-canonical mapping plans rather than maintaining a large static table which can silently become stale.
 
 ---
 
@@ -1052,6 +1286,8 @@ Compilation
 Execution
   SparkMappingPathExecutor
   SparkTargetExpression
+  SparkNestedContextDiscovery
+  SparkNestedContextLoader
   SparkExtensionMaterializer
   SparkExtendedRecordExecutor
 ```
