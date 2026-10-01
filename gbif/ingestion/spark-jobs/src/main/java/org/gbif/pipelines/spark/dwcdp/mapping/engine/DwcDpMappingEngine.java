@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.engine;
 
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.spark.sql.Dataset;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
@@ -12,6 +13,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingInputRequiremen
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingTraceRenderer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.TargetMappingPlanRenderer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.TargetMappingPlanRenderer.Detail;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.TargetMappingPlanReport;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.execution.ExecutionMetricsCollector;
 import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingExecutionOutput;
@@ -68,26 +70,49 @@ public final class DwcDpMappingEngine {
     return MappingTraceRenderer.render(compile(plan));
   }
 
+  /** Structured compact target-first report across the complete official schema. */
+  public TargetMappingPlanReport targetPlanReport(MappingPlan plan) {
+    return TargetMappingPlanReport.from(compile(plan), Optional.empty(), Detail.COMPACT);
+  }
+
+  /** Structured detailed target-first report across the complete official schema. */
+  public TargetMappingPlanReport targetPlanDetailedReport(MappingPlan plan) {
+    return TargetMappingPlanReport.from(compile(plan), Optional.empty(), Detail.DETAILED);
+  }
+
   /** Target-first compact view across the complete official schema. */
   public String targetPlan(MappingPlan plan) {
-    return TargetMappingPlanRenderer.render(compile(plan), Detail.COMPACT);
+    return TargetMappingPlanRenderer.render(targetPlanReport(plan));
   }
 
   /** Target-first detailed view across the complete official schema. */
   public String targetPlanDetailed(MappingPlan plan) {
-    return TargetMappingPlanRenderer.render(compile(plan), Detail.DETAILED);
+    return TargetMappingPlanRenderer.render(targetPlanDetailedReport(plan));
+  }
+
+  /** Structured compact target-first report pruned to one datapackage.json. */
+  public TargetMappingPlanReport targetPlanReport(MappingPlan plan, DataPackage dataPackage) {
+    MappingDatasetScope scope = MappingDatasetScope.from(dataPackage);
+    return TargetMappingPlanReport.from(
+        compile(plan, dataPackage), Optional.of(scope), Detail.COMPACT);
+  }
+
+  /** Structured detailed target-first report pruned to one datapackage.json. */
+  public TargetMappingPlanReport targetPlanDetailedReport(
+      MappingPlan plan, DataPackage dataPackage) {
+    MappingDatasetScope scope = MappingDatasetScope.from(dataPackage);
+    return TargetMappingPlanReport.from(
+        compile(plan, dataPackage), Optional.of(scope), Detail.DETAILED);
   }
 
   /** Target-first compact view pruned to resources and fields declared by one datapackage.json. */
   public String targetPlan(MappingPlan plan, DataPackage dataPackage) {
-    return TargetMappingPlanRenderer.render(
-        compile(plan, dataPackage), MappingDatasetScope.from(dataPackage), Detail.COMPACT);
+    return TargetMappingPlanRenderer.render(targetPlanReport(plan, dataPackage));
   }
 
   /** Target-first detailed view pruned to resources and fields declared by one datapackage.json. */
   public String targetPlanDetailed(MappingPlan plan, DataPackage dataPackage) {
-    return TargetMappingPlanRenderer.render(
-        compile(plan, dataPackage), MappingDatasetScope.from(dataPackage), Detail.DETAILED);
+    return TargetMappingPlanRenderer.render(targetPlanDetailedReport(plan, dataPackage));
   }
 
   /** Physical resources and columns required by the compiled canonical plan. */
