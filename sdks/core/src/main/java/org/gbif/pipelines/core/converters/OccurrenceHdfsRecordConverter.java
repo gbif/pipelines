@@ -548,13 +548,14 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getUsage().getKey());
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getUsage().getName());
       occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getUsage().getKey());
+      Optional.ofNullable(taxonRecord.getUsage().getRank())
+          .ifPresent(occurrenceHdfsRecord::setTaxonrank);
     }
 
     if (Objects.nonNull(taxonRecord.getUsage())) {
       occurrenceHdfsRecord.setTaxonkey(taxonRecord.getUsage().getKey());
       occurrenceHdfsRecord.setScientificname(taxonRecord.getUsage().getName());
-      Optional.ofNullable(taxonRecord.getUsage().getRank())
-          .ifPresent(occurrenceHdfsRecord::setTaxonrank);
+
       occurrenceHdfsRecord.setTaxonomicstatus(
           taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : null);
 
