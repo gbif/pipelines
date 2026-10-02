@@ -11,6 +11,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
@@ -20,6 +21,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
@@ -27,6 +29,10 @@ import org.gbif.pipelines.core.config.model.EsConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
+import org.gbif.pipelines.spark.records.IndexSchema;
+import org.gbif.pipelines.spark.records.RecordsTableWriter;
+import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordType;
+import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordsLoad;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 
@@ -189,10 +195,33 @@ public class IndexingPipeline {
     // Read parquet files
     Dataset<T> df = spark.read().parquet(inputPath).as(Encoders.bean(recordClass));
 
-    String esMappingId = recordClass.equals(OccurrenceJsonRecord.class) ? "gbifId" : "internalId";
+    boolean occurrence = recordClass.equals(OccurrenceJsonRecord.class);
+    String esMappingId = occurrence ? "gbifId" : "internalId";
+
+    // Write the records served by the API to HBase, before the index can return their keys
+    RecordsLoad recordsLoad;
+    try {
+      recordsLoad =
+          RecordsTableWriter.load(
+              spark,
+              fileSystem,
+              config,
+              RecordsTableWriter.hbaseConfiguration(config),
+              occurrence ? RecordType.OCCURRENCE : RecordType.EVENT,
+              datasetId,
+              attempt,
+              spark.read().parquet(inputPath));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+
+    // the index only returns keys, fields that aren't indexed aren't sent
+    Dataset<Row> documents =
+        df.drop(IndexSchema.unindexedFields(esSchemaPath).toArray(new String[0]));
 
     // Write to Elasticsearch
-    df.write()
+    documents
+        .write()
         .format("org.elasticsearch.spark.sql")
         .option("es.resource", esIndexName)
         .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
@@ -205,6 +234,12 @@ public class IndexingPipeline {
 
     EsIndexUtils.updateAlias(options, indices, config.getIndexLock());
     EsIndexUtils.refreshIndex(options);
+
+    try {
+      recordsLoad.commit();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
 
     long indexCount = df.count();
 

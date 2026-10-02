@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RecordsTableConfig implements Serializable {
 
-  /** When false, records are not written to HBase during indexing */
-  private boolean enabled = false;
-
-  /** HBase table name, e.g. "occurrence" */
+  /** HBase table holding occurrence records, keyed by salted gbifId */
   private String occurrenceTable;
+
+  /** HBase table holding event records, keyed by internalId */
+  private String eventTable;
 
   /**
    * Directory holding one manifest per dataset with the keys loaded into HBase, used to delete

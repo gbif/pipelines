@@ -1,12 +1,6 @@
 {
   "_source": {
-    "excludes": [
-      "derivedMetadata.taxonomicCoverage",
-      "all",
-      "index_name",
-      "datasetKey",
-      "count"
-    ]
+    "enabled": false
   },
   "dynamic_templates": [
     {
