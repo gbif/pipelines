@@ -5,12 +5,14 @@ import static org.gbif.pipelines.spark.IdentifiersPipeline.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.OptionalInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -55,7 +57,10 @@ public class CompareIdentifiersTest {
   @Test
   public void testNewAndRemoved() throws Exception {
 
-    String root = Files.createTempDirectory("compare-identifiers").toString();
+    URL testRootUrl = getClass().getResource("/");
+    assert testRootUrl != null;
+    String testResourcesRoot = testRootUrl.getFile();
+    String root = testResourcesRoot + "/compare-identifiers";
 
     // attempt 1 & 2 completed, attempt 3 has no identifiers, attempt 5 is above the current
     identifiers("1").write().parquet(root + "/1/" + IDENTIFIERS);
@@ -75,12 +80,17 @@ public class CompareIdentifiersTest {
     assertEquals(Long.valueOf(4), metrics.get(CURRENT_IDENTIFIERS_COUNT));
     assertEquals(Long.valueOf(2), metrics.get(NEW_IDENTIFIERS_COUNT));
     assertEquals(Long.valueOf(1), metrics.get(REMOVED_IDENTIFIERS_COUNT));
+
+    FileUtil.fullyDelete(new java.io.File(root));
   }
 
   @Test
   public void testNoPreviousAttempt() throws Exception {
 
-    String root = Files.createTempDirectory("compare-identifiers").toString();
+    URL testRootUrl = getClass().getResource("/");
+    assert testRootUrl != null;
+    String testResourcesRoot = testRootUrl.getFile();
+    String root = testResourcesRoot + "/compare-identifiers";
 
     Map<String, Long> metrics =
         compareWithPreviousAttempt(spark, fs, root, 1, identifiers("1", "2"));
@@ -88,5 +98,7 @@ public class CompareIdentifiersTest {
     assertEquals(Long.valueOf(2), metrics.get(CURRENT_IDENTIFIERS_COUNT));
     assertFalse(metrics.containsKey(NEW_IDENTIFIERS_COUNT));
     assertFalse(metrics.containsKey(REMOVED_IDENTIFIERS_COUNT));
+
+    FileUtil.fullyDelete(new java.io.File(root));
   }
 }
