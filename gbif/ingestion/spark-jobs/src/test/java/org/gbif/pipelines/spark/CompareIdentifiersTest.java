@@ -6,7 +6,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.OptionalInt;
