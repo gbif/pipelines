@@ -239,7 +239,7 @@ public class FullTableBuildPipeline {
                 generateSelectColumns(tblSchema, hdfsColumnList),
                 sourceTable);
 
-        log.info("Inserting data into {} table: {}", coreDwcTerm, insertEbirdQuery);
+        log.debug("Inserting data into {} table: {}", coreDwcTerm, insertEbirdQuery);
 
         // Execute the insert
         spark.sql(insertEbirdQuery);
@@ -261,7 +261,7 @@ public class FullTableBuildPipeline {
               generateSelectColumns(tblSchema, hdfsColumnList),
               sourceTable);
 
-      log.info("Inserting data into {} table: {}", coreDwcTerm, insertAllElseQuery);
+      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertAllElseQuery);
 
       // Execute the insert
       spark.sql(insertAllElseQuery);

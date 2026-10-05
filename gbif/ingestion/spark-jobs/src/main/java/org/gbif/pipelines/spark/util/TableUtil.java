@@ -768,9 +768,7 @@ public class TableUtil {
         .map(
             structField -> {
               HdfsColumn hdfsColumn = hdfsColumnList.get(structField.name());
-              if (structField.name().toLowerCase().endsWith("infragenericepithet")) {
-                return "NULL AS `" + structField.name() + "`";
-              } else if (hdfsColumn != null) {
+              if (hdfsColumn != null) {
                 return hdfsColumn.getSelect();
               } else {
                 // Column not found in HDFS, select NULL with alias
