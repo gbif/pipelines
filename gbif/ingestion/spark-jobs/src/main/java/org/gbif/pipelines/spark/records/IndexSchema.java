@@ -2,9 +2,12 @@ package org.gbif.pipelines.spark.records;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +29,8 @@ public final class IndexSchema {
    */
   public static List<String> unindexedFields(String schemaPath) {
     JsonNode schema;
-    try {
-      schema = MAPPER.readTree(Files.readString(Paths.get(schemaPath)));
+    try (InputStream in = open(schemaPath)) {
+      schema = MAPPER.readTree(in);
     } catch (IOException e) {
       throw new UncheckedIOException("Can't read index schema " + schemaPath, e);
     }
@@ -44,5 +47,21 @@ public final class IndexSchema {
               }
             });
     return fields;
+  }
+
+  /**
+   * The schema is a file when the path is absolute, otherwise a classpath resource, as when the
+   * index is created ({@code HttpRequestBuilder.loadFile})
+   */
+  private static InputStream open(String schemaPath) throws IOException {
+    Path path = Paths.get(schemaPath);
+    if (path.isAbsolute()) {
+      return Files.newInputStream(path);
+    }
+    InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(schemaPath);
+    if (in == null) {
+      throw new FileNotFoundException("Index schema not found on the classpath: " + schemaPath);
+    }
+    return in;
   }
 }

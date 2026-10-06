@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import org.gbif.pipelines.core.config.model.IndexConfig;
 import org.junit.Test;
 
 public class IndexSchemaTest {
@@ -29,6 +30,16 @@ public class IndexSchemaTest {
     assertEquals(
         List.of("multimediaItems", "verbatim"), IndexSchema.unindexedFields(OCCURRENCE_SCHEMA));
     assertEquals(List.of("verbatim"), IndexSchema.unindexedFields(EVENT_SCHEMA));
+  }
+
+  /** The default paths of the configuration are classpath resources, as with spark-submit */
+  @Test
+  public void defaultSchemasAreReadFromTheClasspath() {
+    IndexConfig defaults = new IndexConfig();
+    assertEquals(
+        List.of("multimediaItems", "verbatim"),
+        IndexSchema.unindexedFields(defaults.getOccurrenceSchemaPath()));
+    assertEquals(List.of("verbatim"), IndexSchema.unindexedFields(defaults.getEventSchemaPath()));
   }
 
   private static String schemaPath(String name) {
