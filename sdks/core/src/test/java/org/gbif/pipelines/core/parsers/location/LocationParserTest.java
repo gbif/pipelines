@@ -303,7 +303,7 @@ public class LocationParserTest {
             .id(TEST_ID)
             .country(Country.ECUADOR.getTitle())
             .countryCode(Country.ECUADOR.getIso2LetterCode())
-            // coordinates are swapped
+            // latitude should be negated to match with Ecuador
             .decimalLatitude("2.391647")
             .decimalLongitude("-80.594588")
             .build();
