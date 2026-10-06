@@ -18,8 +18,12 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FilterFileSystem;
@@ -289,6 +293,100 @@ public class RecordsTableWriterTest {
     for (long key : new long[] {5L, 42L, 43L}) {
       assertTrue(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(key)).isEmpty());
     }
+  }
+
+  /** Incremental indexing loads several datasets at the same time, sharing the manifest root */
+  @Test
+  public void concurrentLoadsKeepTheirManifests() throws Exception {
+    int datasets = 4;
+    ExecutorService executor = Executors.newFixedThreadPool(datasets);
+    try {
+      List<Future<Long>> commits = new ArrayList<>();
+      for (int i = 0; i < datasets; i++) {
+        String dataset = "5d6e7f80-0000-4000-8000-00000000000" + i;
+        long first = 1000L + i * 100;
+        commits.add(
+            executor.submit(
+                () ->
+                    load(fileSystem, dataset, 1, occurrences(dataset, first, first + 1, first + 2))
+                        .commit()));
+      }
+      for (Future<Long> commit : commits) {
+        assertEquals(0L, (long) commit.get());
+      }
+    } finally {
+      executor.shutdown();
+    }
+
+    for (int i = 0; i < datasets; i++) {
+      String dataset = "5d6e7f80-0000-4000-8000-00000000000" + i;
+      long first = 1000L + i * 100;
+      Path manifest =
+          RecordsTableWriter.manifestPath(
+              config.getRecordsTableConfig(), RecordType.OCCURRENCE, dataset);
+      List<String> expected = new ArrayList<>();
+      for (long key = first; key < first + 3; key++) {
+        expected.add(RecordsTableKey.occurrenceRowKey(key));
+      }
+      List<String> keys = new ArrayList<>(manifestKeys(manifest));
+      Collections.sort(keys);
+      Collections.sort(expected);
+      assertEquals(dataset, expected, keys);
+    }
+  }
+
+  /** As in production: manifests, HFiles and the HBase root on HDFS */
+  @Test
+  public void manifestsOnHdfs() throws Exception {
+    FileSystem hdfs = HBASE_SERVER.getDfs();
+    String root = hdfs.getUri() + "/records-table";
+    RecordsTableConfig tableConfig = new RecordsTableConfig();
+    tableConfig.setOccurrenceTable(OCCURRENCE_TABLE);
+    tableConfig.setEventTable(EVENT_TABLE);
+    tableConfig.setManifestPath(root + "/manifests");
+    PipelinesConfig hdfsConfig = new PipelinesConfig();
+    hdfsConfig.setOutputPath(root + "/data");
+    hdfsConfig.setRecordsTableConfig(tableConfig);
+    Configuration hdfsHbaseConf =
+        new Configuration(HBASE_SERVER.getConnection().getConfiguration());
+
+    String dataset = "c4e8a1f2-7b3d-4e6a-9f05-1d2b3c4e5f60";
+    Path manifest = RecordsTableWriter.manifestPath(tableConfig, RecordType.OCCURRENCE, dataset);
+
+    // loaded, replaced, then a failed run whose keys are removed by the next one
+    assertEquals(0, hdfsLoad(hdfs, hdfsConfig, hdfsHbaseConf, dataset, 1, 6L, 60L).commit());
+    assertEquals(1, hdfsLoad(hdfs, hdfsConfig, hdfsHbaseConf, dataset, 2, 6L).commit());
+    hdfsLoad(hdfs, hdfsConfig, hdfsHbaseConf, dataset, 3, 6L, 61L);
+    assertEquals(1, hdfsLoad(hdfs, hdfsConfig, hdfsHbaseConf, dataset, 4, 6L).commit());
+
+    assertTrue(hdfs.exists(manifest));
+    assertEquals(List.of(RecordsTableKey.occurrenceRowKey(6L)), manifestKeys(manifest));
+    for (long key : new long[] {60L, 61L}) {
+      assertTrue(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(key)).isEmpty());
+    }
+    assertEquals(
+        1,
+        RecordsTableWriter.deleteDataset(
+            spark, hdfs, hdfsConfig, hdfsHbaseConf, RecordType.OCCURRENCE, dataset));
+  }
+
+  private static RecordsLoad hdfsLoad(
+      FileSystem hdfs,
+      PipelinesConfig hdfsConfig,
+      Configuration hdfsHbaseConf,
+      String datasetKey,
+      int attempt,
+      long... keys)
+      throws Exception {
+    return RecordsTableWriter.load(
+        spark,
+        hdfs,
+        hdfsConfig,
+        hdfsHbaseConf,
+        RecordType.OCCURRENCE,
+        datasetKey,
+        attempt,
+        occurrences(datasetKey, keys));
   }
 
   private static RecordsLoad load(int attempt, Dataset<Row> documents) throws Exception {

@@ -74,14 +74,14 @@ In the HBase shell:
 
 ```ruby
 # Occurrences: 100 regions, one per salt bucket ("00:" ... "99:")
-create 'prod_occurrence',
-  {NAME => 'o', VERSIONS => 1, COMPRESSION => 'ZSTD', DATA_BLOCK_ENCODING => 'FAST_DIFF',
+create 'lab_occurrence',
+  {NAME => 'o', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
    BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
   {NUMREGIONS => 100, SPLITALGO => 'DecimalStringSplit'}
 
 # Events: 16 regions, one per first hex character of the SHA-1
 create 'prod_event',
-  {NAME => 'o', VERSIONS => 1, COMPRESSION => 'ZSTD', DATA_BLOCK_ENCODING => 'FAST_DIFF',
+  {NAME => 'o', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
    BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
   {NUMREGIONS => 16, SPLITALGO => 'HexStringSplit'}
 ```

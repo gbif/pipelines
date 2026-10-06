@@ -91,6 +91,10 @@ public final class RecordsTableWriter {
   static final String PREVIOUS = "_previous";
   static final String STALE = "_stale";
   private static final String STAGING = "-staging";
+  /**
+   * Where a load writes its keys, in its working directory, before moving them to the pending root
+   */
+  private static final String LOAD_MANIFESTS = "records-manifests";
 
   private static final String LOAD_DATASET_KEY = "__datasetKey";
   private static final String LOAD_ATTEMPT = "__attempt";
@@ -196,6 +200,8 @@ public final class RecordsTableWriter {
         if (fileSystem.exists(manifest)) {
           // a previous manifest next to the manifest is a leftover of a completed commit
           fileSystem.delete(previous, true);
+          // HDFS doesn't create the parent directories of a rename target
+          fileSystem.mkdirs(previous.getParent());
           if (!fileSystem.rename(manifest, previous)) {
             throw new IOException("Can't move manifest " + manifest + " to " + previous);
           }
@@ -289,11 +295,13 @@ public final class RecordsTableWriter {
     for (String datasetKey : datasetKeys) {
       keepStale(fileSystem, tableConfig, type, datasetKey);
     }
-    rowKeys(datasetDocuments, converter)
-        .write()
-        .mode(SaveMode.Append)
-        .partitionBy(MANIFEST_PARTITION)
-        .parquet(manifestRoot(tableConfig, type, PENDING).toString());
+    writePendingManifests(
+        fileSystem,
+        tableConfig,
+        type,
+        datasetKeys,
+        rowKeys(datasetDocuments, converter),
+        new Path(workingDirectory, LOAD_MANIFESTS));
 
     long loaded =
         readKeys(spark, pendingManifests(fileSystem, tableConfig, type, datasetKeys)).count();
@@ -384,6 +392,38 @@ public final class RecordsTableWriter {
       }
     }
     return result;
+  }
+
+  /**
+   * Writes the keys of each dataset as its pending manifest. Spark stages a write under the target
+   * directory and removes the staging when the job ends, so loads running at the same time can't
+   * write to the shared pending root: the keys are written in the working directory of the load,
+   * and each dataset is then moved to the pending root on its own.
+   */
+  private static void writePendingManifests(
+      FileSystem fileSystem,
+      RecordsTableConfig config,
+      RecordType type,
+      List<String> datasetKeys,
+      Dataset<Row> rowKeys,
+      Path loadManifests)
+      throws IOException {
+    rowKeys
+        .write()
+        .mode(SaveMode.Overwrite)
+        .partitionBy(MANIFEST_PARTITION)
+        .parquet(loadManifests.toString());
+
+    fileSystem.mkdirs(manifestRoot(config, type, PENDING));
+    for (String datasetKey : datasetKeys) {
+      Path written = new Path(loadManifests, MANIFEST_PARTITION + "=" + datasetKey);
+      Path pending = manifestPath(config, type, datasetKey, PENDING);
+      // a dataset without documents has no keys
+      if (fileSystem.exists(written) && !fileSystem.rename(written, pending)) {
+        throw new IOException("Can't move manifest " + written + " to " + pending);
+      }
+    }
+    fileSystem.delete(loadManifests, true);
   }
 
   /**
