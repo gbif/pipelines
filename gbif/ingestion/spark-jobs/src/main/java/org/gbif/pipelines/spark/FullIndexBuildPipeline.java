@@ -335,6 +335,11 @@ public class FullIndexBuildPipeline {
       }
     }
 
+    if (args.switchOnSuccess) {
+      EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
+    }
+
+    // deletes the removed records, once the swapped indices no longer return them
     recordsLoad.commit();
 
     if (args.deleteTempParquetOnSuccess) {
@@ -344,10 +349,6 @@ public class FullIndexBuildPipeline {
     fileSystem.close();
     spark.stop();
     spark.close();
-
-    if (args.switchOnSuccess) {
-      EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
-    }
 
     log.info("Full index build completed");
   }

@@ -8,11 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
-import lombok.Value;
 import org.gbif.api.ws.mixin.Mixins;
 
 /**
@@ -25,7 +25,7 @@ import org.gbif.api.ws.mixin.Mixins;
  */
 public abstract class RecordsConverter implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
@@ -35,13 +35,10 @@ public abstract class RecordsConverter implements Serializable {
   private static final ObjectMapper SOURCE_MAPPER = new ObjectMapper();
 
   /** API JSON representations of a record, keyed by its HBase row key */
-  @Value
-  public static class ApiRecord implements Serializable {
-    private static final long serialVersionUID = 1L;
+  public record ApiRecord(String rowKey, String interpreted, String verbatim)
+      implements Serializable {
 
-    String rowKey;
-    String interpreted;
-    String verbatim;
+    @Serial private static final long serialVersionUID = 1L;
   }
 
   public static RecordsConverter forOccurrences() {

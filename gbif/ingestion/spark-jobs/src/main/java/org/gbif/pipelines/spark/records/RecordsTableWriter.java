@@ -13,6 +13,7 @@ import static org.gbif.pipelines.spark.records.RecordsTableKey.VERBATIM_COLUMN;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,12 +27,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Connection;
@@ -41,7 +42,7 @@ import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
-import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.hbase.tool.BulkLoadHFiles;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.spark.Partitioner;
@@ -66,10 +67,13 @@ import scala.Tuple2;
  *
  * <p>The keys loaded for each dataset are kept in a manifest, outside the dataset attempt
  * directories, at {@code <manifestPath>/<type>/datasetKey=<datasetKey>}. A load compares the
- * manifests of the datasets it loads with the new keys to find the removed records, and replaces
- * the manifests only once {@link RecordsLoad#commit()} is called, after the index has been updated.
- * A failed run therefore leaves the previous manifests in place and the next run repeats the
- * deletes.
+ * manifests of the datasets it loads with the new keys to find the removed records, and deletes
+ * them and replaces the manifests only once {@link RecordsLoad#commit()} is called, after the index
+ * no longer returns the removed keys. A failed run therefore leaves the removed records and the
+ * previous manifests in place, and the next run repeats the deletes.
+ *
+ * <p>The keys a failed run loaded aren't in any manifest. The next load keeps its pending manifest
+ * as a stale one, and commits delete the stale keys that aren't in the new load too.
  *
  * <p>A single dataset (incremental indexing) and many datasets (full index build) are loaded the
  * same way, in one bulk load.
@@ -83,8 +87,9 @@ public final class RecordsTableWriter {
 
   private static final String ROW_KEY = "rowKey";
   private static final String MANIFEST_PARTITION = "datasetKey";
-  private static final String PENDING = "_pending";
-  private static final String PREVIOUS = "_previous";
+  static final String PENDING = "_pending";
+  static final String PREVIOUS = "_previous";
+  static final String STALE = "_stale";
   private static final String STAGING = "-staging";
 
   private static final String LOAD_DATASET_KEY = "__datasetKey";
@@ -110,47 +115,93 @@ public final class RecordsTableWriter {
     }
   }
 
-  /** Result of a load, the manifests of the loaded datasets are replaced on commit */
+  /**
+   * Result of a load, the removed records are deleted and the manifests of the loaded datasets are
+   * replaced on commit
+   */
   @Getter
   public static class RecordsLoad {
     private final long loaded;
-    private final long removed;
+    /** Records removed from the datasets, known once committed */
+    private long removed;
+
+    private final transient SparkSession spark;
     private final transient FileSystem fileSystem;
+    private final transient Configuration hbaseConf;
     private final transient RecordsTableConfig config;
     private final transient RecordType type;
     private final transient List<String> datasetKeys;
 
     private RecordsLoad(
         long loaded,
-        long removed,
+        SparkSession spark,
         FileSystem fileSystem,
+        Configuration hbaseConf,
         RecordsTableConfig config,
         RecordType type,
         List<String> datasetKeys) {
       this.loaded = loaded;
-      this.removed = removed;
+      this.spark = spark;
       this.fileSystem = fileSystem;
+      this.hbaseConf = hbaseConf;
       this.config = config;
       this.type = type;
       this.datasetKeys = datasetKeys;
     }
 
-    /** Replaces the manifests of the loaded datasets with the keys of this load */
-    public void commit() throws IOException {
+    /**
+     * Deletes the records no longer in the loaded datasets and replaces their manifests with the
+     * keys of this load. Call it once the index no longer returns the removed keys, as it can't be
+     * undone.
+     *
+     * @return the number of records removed
+     */
+    public long commit() throws IOException {
+      TableName tableName = TableName.valueOf(type.table(config));
+      List<String> manifests = existingManifests(fileSystem, config, type, datasetKeys);
+      manifests.addAll(staleManifests(fileSystem, config, type, datasetKeys));
+      if (!manifests.isEmpty()) {
+        Dataset<String> removedKeys =
+            readKeys(spark, manifests)
+                .except(readKeys(spark, pendingManifests(fileSystem, config, type, datasetKeys)));
+        removed = delete(removedKeys, hbaseConf, tableName, config.getDeleteBatchSize());
+      }
+      log.info(
+          "Removed {} {} records of {} datasets from {}",
+          removed,
+          type,
+          datasetKeys.size(),
+          tableName);
+
+      // the manifests are replaced last, if the deletes fail the next run repeats them
+      replaceManifests();
+      for (String datasetKey : datasetKeys) {
+        fileSystem.delete(manifestPath(config, type, datasetKey, STALE), true);
+      }
+      return removed;
+    }
+
+    private void replaceManifests() throws IOException {
       for (String datasetKey : datasetKeys) {
         Path manifest = manifestPath(config, type, datasetKey, "");
         Path pending = manifestPath(config, type, datasetKey, PENDING);
         Path previous = manifestPath(config, type, datasetKey, PREVIOUS);
 
-        fileSystem.delete(previous, true);
         if (!fileSystem.exists(pending)) {
           // no records left in the dataset, they were all removed
           fileSystem.delete(manifest, true);
+          fileSystem.delete(previous, true);
           continue;
         }
-        if (fileSystem.exists(manifest) && !fileSystem.rename(manifest, previous)) {
-          throw new IOException("Can't move manifest " + manifest + " to " + previous);
+        if (fileSystem.exists(manifest)) {
+          // a previous manifest next to the manifest is a leftover of a completed commit
+          fileSystem.delete(previous, true);
+          if (!fileSystem.rename(manifest, previous)) {
+            throw new IOException("Can't move manifest " + manifest + " to " + previous);
+          }
         }
+        // without a manifest, the previous one of an interrupted commit is the last manifest of the
+        // dataset, kept until the new one is in place
         fileSystem.mkdirs(manifest.getParent());
         if (!fileSystem.rename(pending, manifest)) {
           throw new IOException("Can't move manifest " + pending + " to " + manifest);
@@ -201,8 +252,9 @@ public final class RecordsTableWriter {
   }
 
   /**
-   * Loads the records of the given datasets and deletes the ones loaded by previous runs that are
-   * no longer present. Call {@link RecordsLoad#commit()} once the index has been updated.
+   * Loads the records of the given datasets. The ones loaded by previous runs that are no longer
+   * present are deleted by {@link RecordsLoad#commit()}, to call once the index no longer returns
+   * them.
    *
    * @param datasetAttempts the datasets to load and the attempt each one comes from. A dataset
    *     without documents has all its records removed.
@@ -235,8 +287,7 @@ public final class RecordsTableWriter {
 
     // the new keys are written first as pending manifests, and read back from there
     for (String datasetKey : datasetKeys) {
-      // stale pending manifests of a failed run must not be committed
-      fileSystem.delete(manifestPath(tableConfig, type, datasetKey, PENDING), true);
+      keepStale(fileSystem, tableConfig, type, datasetKey);
     }
     rowKeys(datasetDocuments, converter)
         .write()
@@ -244,61 +295,30 @@ public final class RecordsTableWriter {
         .partitionBy(MANIFEST_PARTITION)
         .parquet(manifestRoot(tableConfig, type, PENDING).toString());
 
-    List<String> pendingManifests = new ArrayList<>();
-    for (String datasetKey : datasetKeys) {
-      Path pending = manifestPath(tableConfig, type, datasetKey, PENDING);
-      if (fileSystem.exists(pending)) {
-        pendingManifests.add(pending.toString());
-      }
-    }
-    Dataset<String> rowKeys =
-        pendingManifests.isEmpty()
-            ? spark.emptyDataset(Encoders.STRING())
-            : spark
-                .read()
-                .parquet(pendingManifests.toArray(new String[0]))
-                .select(ROW_KEY)
-                .as(Encoders.STRING());
-    long loaded = rowKeys.count();
+    long loaded =
+        readKeys(spark, pendingManifests(fileSystem, tableConfig, type, datasetKeys)).count();
 
     if (loaded > 0) {
       try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
-          Admin admin = connection.getAdmin();
           Table table = connection.getTable(tableName);
           RegionLocator regionLocator = connection.getRegionLocator(tableName)) {
         // HFileOutputFormat2 stages its partitions file there, keep it with the job outputs
         Configuration loadConf = new Configuration(hbaseConf);
         loadConf.set("hbase.fs.tmp.dir", stagingPath.toString());
+        // the tables are created pre-split beforehand, fail instead of creating a default one
+        loadConf.set(BulkLoadHFiles.CREATE_TABLE_CONF_KEY, "no");
 
         fileSystem.delete(hfilePath, true);
         writeHFiles(prepared, converter, loadConf, table, regionLocator, hfilePath);
-        new LoadIncrementalHFiles(loadConf).doBulkLoad(hfilePath, admin, table, regionLocator);
+        BulkLoadHFiles.create(loadConf).bulkLoad(tableName, hfilePath);
         fileSystem.delete(hfilePath, true);
         fileSystem.delete(stagingPath, true);
       }
     }
 
-    long removed = 0;
-    List<String> previousManifests = existingManifests(fileSystem, tableConfig, type, datasetKeys);
-    if (!previousManifests.isEmpty()) {
-      Dataset<String> removedKeys =
-          spark
-              .read()
-              .parquet(previousManifests.toArray(new String[0]))
-              .select(ROW_KEY)
-              .as(Encoders.STRING())
-              .except(rowKeys);
-      removed = delete(removedKeys, hbaseConf, tableName, tableConfig.getDeleteBatchSize());
-    }
-
     log.info(
-        "Loaded {} {} records of {} datasets into {}, removed {}",
-        loaded,
-        type,
-        datasetKeys.size(),
-        tableName,
-        removed);
-    return new RecordsLoad(loaded, removed, fileSystem, tableConfig, type, datasetKeys);
+        "Loaded {} {} records of {} datasets into {}", loaded, type, datasetKeys.size(), tableName);
+    return new RecordsLoad(loaded, spark, fileSystem, hbaseConf, tableConfig, type, datasetKeys);
   }
 
   /** Deletes all records of a dataset and its manifest */
@@ -312,14 +332,17 @@ public final class RecordsTableWriter {
       throws IOException {
 
     RecordsTableConfig tableConfig = config.getRecordsTableConfig();
-    List<String> manifests = existingManifests(fileSystem, tableConfig, type, List.of(datasetKey));
+    List<String> datasetKeys = List.of(datasetKey);
+    // the keys of failed runs too
+    List<String> manifests = existingManifests(fileSystem, tableConfig, type, datasetKeys);
+    manifests.addAll(staleManifests(fileSystem, tableConfig, type, datasetKeys));
+    manifests.addAll(pendingManifests(fileSystem, tableConfig, type, datasetKeys));
     if (manifests.isEmpty()) {
       log.warn("No {} records manifest for dataset {}, nothing to delete", type, datasetKey);
       return 0;
     }
 
-    Dataset<String> keys =
-        spark.read().parquet(manifests.get(0)).select(ROW_KEY).as(Encoders.STRING());
+    Dataset<String> keys = readKeys(spark, manifests).distinct();
     long deleted =
         delete(
             keys,
@@ -327,7 +350,7 @@ public final class RecordsTableWriter {
             TableName.valueOf(type.table(tableConfig)),
             tableConfig.getDeleteBatchSize());
 
-    for (String state : new String[] {"", PENDING, PREVIOUS}) {
+    for (String state : new String[] {"", PENDING, PREVIOUS, STALE}) {
       fileSystem.delete(manifestPath(tableConfig, type, datasetKey, state), true);
     }
     log.info("Deleted {} {} records of dataset {}", deleted, type, datasetKey);
@@ -338,7 +361,7 @@ public final class RecordsTableWriter {
     return manifestPath(config, type, datasetKey, "");
   }
 
-  private static Path manifestPath(
+  static Path manifestPath(
       RecordsTableConfig config, RecordType type, String datasetKey, String state) {
     return new Path(manifestRoot(config, type, state), MANIFEST_PARTITION + "=" + datasetKey);
   }
@@ -347,6 +370,69 @@ public final class RecordsTableWriter {
     String root =
         Objects.requireNonNull(config.getManifestPath(), "No records manifest path configured");
     return new Path(root + "/" + type.manifestDirectory() + state);
+  }
+
+  /** The pending manifests of the datasets that have records in the load */
+  private static List<String> pendingManifests(
+      FileSystem fileSystem, RecordsTableConfig config, RecordType type, List<String> datasetKeys)
+      throws IOException {
+    List<String> result = new ArrayList<>();
+    for (String datasetKey : datasetKeys) {
+      Path pending = manifestPath(config, type, datasetKey, PENDING);
+      if (fileSystem.exists(pending)) {
+        result.add(pending.toString());
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Keeps the pending manifest of a failed run as a stale manifest, its keys were loaded but aren't
+   * in any manifest. Several failed runs can leave one each.
+   */
+  private static void keepStale(
+      FileSystem fileSystem, RecordsTableConfig config, RecordType type, String datasetKey)
+      throws IOException {
+    Path pending = manifestPath(config, type, datasetKey, PENDING);
+    if (!fileSystem.exists(pending)) {
+      return;
+    }
+    Path staleDir = manifestPath(config, type, datasetKey, STALE);
+    Path stale = new Path(staleDir, "run=" + System.currentTimeMillis());
+    fileSystem.mkdirs(staleDir);
+    if (!fileSystem.rename(pending, stale)) {
+      throw new IOException("Can't move manifest " + pending + " to " + stale);
+    }
+    log.info("Kept the {} manifest of a failed run of dataset {} as {}", type, datasetKey, stale);
+  }
+
+  /** The stale manifests of failed runs of the datasets */
+  private static List<String> staleManifests(
+      FileSystem fileSystem, RecordsTableConfig config, RecordType type, List<String> datasetKeys)
+      throws IOException {
+    List<String> result = new ArrayList<>();
+    for (String datasetKey : datasetKeys) {
+      Path staleDir = manifestPath(config, type, datasetKey, STALE);
+      if (fileSystem.exists(staleDir)) {
+        for (FileStatus stale : fileSystem.listStatus(staleDir)) {
+          if (stale.isDirectory()) {
+            result.add(stale.getPath().toString());
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  /** Row keys of the given manifests */
+  private static Dataset<String> readKeys(SparkSession spark, List<String> manifests) {
+    return manifests.isEmpty()
+        ? spark.emptyDataset(Encoders.STRING())
+        : spark
+            .read()
+            .parquet(manifests.toArray(new String[0]))
+            .select(ROW_KEY)
+            .as(Encoders.STRING());
   }
 
   /** The manifest of each dataset, or the previous one when a commit was interrupted */
@@ -430,15 +516,14 @@ public final class RecordsTableWriter {
                   String datasetKey = row.getAs(LOAD_DATASET_KEY);
                   String attempt = String.valueOf((Integer) row.getAs(LOAD_ATTEMPT));
                   RecordsConverter.ApiRecord record = converter.convert(row.getAs(LOAD_JSON));
-                  String rowKey = record.getRowKey();
+                  String rowKey = record.rowKey();
                   List<Tuple2<Tuple2<String, String>, String>> result = new ArrayList<>(4);
                   result.add(new Tuple2<>(new Tuple2<>(rowKey, ATTEMPT_COLUMN), attempt));
                   result.add(new Tuple2<>(new Tuple2<>(rowKey, DATASET_KEY_COLUMN), datasetKey));
                   result.add(
-                      new Tuple2<>(
-                          new Tuple2<>(rowKey, INTERPRETED_COLUMN), record.getInterpreted()));
+                      new Tuple2<>(new Tuple2<>(rowKey, INTERPRETED_COLUMN), record.interpreted()));
                   result.add(
-                      new Tuple2<>(new Tuple2<>(rowKey, VERBATIM_COLUMN), record.getVerbatim()));
+                      new Tuple2<>(new Tuple2<>(rowKey, VERBATIM_COLUMN), record.verbatim()));
                   return result.iterator();
                 })
             .repartitionAndSortWithinPartitions(
@@ -493,7 +578,8 @@ public final class RecordsTableWriter {
 
   /** Sends each row to the partition of the HBase region holding it, so HFiles align to regions */
   static class RegionPartitioner extends Partitioner {
-    private static final long serialVersionUID = 1L;
+
+    @Serial private static final long serialVersionUID = 1L;
 
     private final String[] startKeys;
 
@@ -519,7 +605,8 @@ public final class RecordsTableWriter {
 
   /** Orders cells by row key and column, as HFiles require */
   static class CellComparator implements Comparator<Tuple2<String, String>>, Serializable {
-    private static final long serialVersionUID = 1L;
+
+    @Serial private static final long serialVersionUID = 1L;
 
     @Override
     public int compare(Tuple2<String, String> o1, Tuple2<String, String> o2) {
@@ -530,7 +617,8 @@ public final class RecordsTableWriter {
 
   /** Hadoop configurations aren't serializable, this ships one to the executors */
   static class SerializableConfiguration implements Serializable {
-    private static final long serialVersionUID = 1L;
+
+    @Serial private static final long serialVersionUID = 1L;
 
     private transient Configuration configuration;
 
@@ -542,11 +630,13 @@ public final class RecordsTableWriter {
       return configuration;
     }
 
+    @Serial
     private void writeObject(ObjectOutputStream out) throws IOException {
       out.defaultWriteObject();
       configuration.write(out);
     }
 
+    @Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
       in.defaultReadObject();
       configuration = new Configuration(false);

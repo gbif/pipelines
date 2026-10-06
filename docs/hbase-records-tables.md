@@ -50,55 +50,71 @@ salted.
 ## Creating the tables
 
 Create the tables pre-split, so every region gets a share of the keys from the first load. The
-writer partitions the HFiles along the regions of the table, whatever they are.
+writer partitions the HFiles along the regions of the table, whatever they are. The tables must
+exist before the first load: the bulk load is configured not to create them.
 
-Check first that ZSTD is available to HBase (on a node with the HBase configuration):
+They must be dedicated tables, never the keygen `occurrenceTable` (or any other table): the writer
+bulk loads into them and removes records with whole-row deletes, which would also remove any other
+cells stored under the same row key.
 
-```shell
-hbase org.apache.hadoop.hbase.util.CompressionTest hdfs:///tmp/compression-test zstd
-```
+The tables are compressed with ZSTD, and the codec has to be available on both sides:
 
-If it isn't, use `SNAPPY` in the commands below.
+- HBase, to read the HFiles. Check it on a node with the HBase configuration:
 
-In the HBase shell (it's JRuby, so the split points can be generated):
+  ```shell
+  hbase org.apache.hadoop.hbase.util.CompressionTest hdfs:///tmp/compression-test zstd
+  ```
+
+- The Spark executors, which write the HFiles with the compression of the column family
+  (`HFileOutputFormat2.configureIncrementalLoad`). They need the native `libzstd` of Hadoop on the
+  YARN nodes, or `org.apache.hbase:hbase-compression-zstd` on the job classpath. Without it the job
+  fails writing the HFiles, before anything is loaded.
+
+In the HBase shell:
 
 ```ruby
-# Occurrences: 100 regions, one per salt bucket: "01:", "02:", ... "99:"
-create 'prod_occurrence',
-  {NAME => 'o', COMPRESSION => 'ZSTD', BLOOMFILTER => 'ROW', BLOCKSIZE => '32768', VERSIONS => 1},
-  {SPLITS => (1..99).map { |i| format('%02d:', i) }}
+# Occurrences: 100 regions, one per salt bucket ("00:" ... "99:")
+create 'prod_records_occurrence',
+  {NAME => 'o', VERSIONS => 1, COMPRESSION => 'ZSTD', DATA_BLOCK_ENCODING => 'FAST_DIFF',
+   BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
+  {NUMREGIONS => 100, SPLITALGO => 'DecimalStringSplit'}
 
-# Events: 16 regions, one per first hex character: "1", "2", ... "f"
-create 'prod_event',
-  {NAME => 'o', COMPRESSION => 'ZSTD', BLOOMFILTER => 'ROW', BLOCKSIZE => '32768', VERSIONS => 1},
-  {SPLITS => (1..15).map { |i| i.to_s(16) }}
+# Events: 16 regions, one per first hex character of the SHA-1
+create 'prod_records_event',
+  {NAME => 'o', VERSIONS => 1, COMPRESSION => 'ZSTD', DATA_BLOCK_ENCODING => 'FAST_DIFF',
+   BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
+  {NUMREGIONS => 16, SPLITALGO => 'HexStringSplit'}
 ```
 
-- `BLOOMFILTER => 'ROW'`: a `Get` skips the HFiles that don't hold the row.
+- `NUMREGIONS`/`SPLITALGO`: `DecimalStringSplit` splits `00000000`-`99999999`, so the split points
+  are `01000000`, `02000000`, ... `99000000`. A salted key such as `01:1234567` sorts between
+  `01000000` and `02000000` (`:` sorts after `0`), so each salt bucket gets its own region.
+  `HexStringSplit` splits at `10000000`, `20000000`, ... `f0000000`, matching the lowercase SHA-1s.
+- `BLOOMFILTER => 'ROW'`: every dataset load adds HFiles to the regions, a `Get` skips the ones
+  that don't hold the row.
 - `BLOCKSIZE => '32768'`: reads are random `Get`s, smaller blocks than the 64KB default mean less
   data read and decompressed per record.
+- `DATA_BLOCK_ENCODING => 'FAST_DIFF'`: the cells of a row repeat its key, the encoding stores the
+  differences only.
 - `VERSIONS => 1`: each load replaces the record, older versions aren't needed.
 
 As the tables grow, HBase splits the regions further, and the writer follows whatever regions
-exist. To start the event table with more regions, use two hex characters, e.g. 256 regions:
-
-```ruby
-{SPLITS => (1..255).map { |i| format('%02x', i) }}
-```
+exist. To start the event table with more regions, use e.g. `{NUMREGIONS => 256, SPLITALGO =>
+'HexStringSplit'}`.
 
 Check the tables:
 
 ```ruby
-describe 'prod_occurrence'
-list_regions 'prod_occurrence'
+describe 'prod_records_occurrence'
+list_regions 'prod_records_occurrence'
 ```
 
 ## Configuration
 
 ```yaml
 recordsTableConfig:
-  occurrenceTable: prod_occurrence
-  eventTable: prod_event
+  occurrenceTable: prod_records_occurrence
+  eventTable: prod_records_event
   # one manifest per dataset with the keys loaded, used to delete the records removed from a dataset.
   # Must be outside the dataset/attempt directories, which are cleaned up after each run.
   manifestPath: hdfs://ha-nn/data/ingest/records-manifests
@@ -115,8 +131,9 @@ to connect to HBase.
 The keys loaded for each dataset are kept in
 `<manifestPath>/<occurrence|event>/datasetKey=<datasetKey>`. When a dataset is indexed again, the
 keys of its previous manifest that aren't in the new load are deleted from HBase, and the manifest
-is replaced once the index has been updated (`_pending` and `_previous` directories hold the
-manifests during a run).
+is replaced, once the index no longer returns them (`_pending` and `_previous` directories hold the
+manifests during a run). The keys loaded by a failed run are kept in a `_stale` directory, and the
+next commit deletes the ones that aren't in its load too.
 
 ## Building from scratch
 
@@ -126,8 +143,8 @@ The tables and the indices are built together, with indexing stopped:
 2. Empty the tables keeping their splits, and remove the manifests:
 
    ```ruby
-   truncate_preserve 'prod_occurrence'
-   truncate_preserve 'prod_event'
+   truncate_preserve 'prod_records_occurrence'
+   truncate_preserve 'prod_records_event'
    ```
 
    ```shell

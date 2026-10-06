@@ -25,7 +25,7 @@ import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
-import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.hbase.tool.BulkLoadHFiles;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.SnappyCodec;
@@ -164,7 +164,6 @@ public class FragmenterPipeline {
     }
 
     try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
-        Admin admin = connection.getAdmin();
         Table table = connection.getTable(TableName.valueOf(config.getFragmentsTable()));
         RegionLocator regionLocator =
             connection.getRegionLocator(TableName.valueOf(config.getFragmentsTable()))) {
@@ -250,8 +249,8 @@ public class FragmenterPipeline {
               HFileOutputFormat2.class,
               hbaseConf);
 
-      LoadIncrementalHFiles loader = new LoadIncrementalHFiles(hbaseConf);
-      loader.doBulkLoad(new Path(hfilePath), admin, table, regionLocator);
+      BulkLoadHFiles.create(hbaseConf)
+          .bulkLoad(TableName.valueOf(config.getFragmentsTable()), new Path(hfilePath));
 
       writeMetricsYaml(
           fileSystem,

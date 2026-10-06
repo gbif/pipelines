@@ -43,10 +43,10 @@ public class RecordsConverterTest {
     SearchHitOccurrenceConverter wsConverter =
         new SearchHitOccurrenceConverter(OccurrenceEsField.buildFieldMapper(), true);
 
-    assertEquals("01:1", record.getRowKey());
-    assertEquals(API_MAPPER.writeValueAsString(wsConverter.apply(hit)), record.getInterpreted());
+    assertEquals("01:1", record.rowKey());
+    assertEquals(API_MAPPER.writeValueAsString(wsConverter.apply(hit)), record.interpreted());
     assertEquals(
-        API_MAPPER.writeValueAsString(wsConverter.toVerbatimOccurrence(hit)), record.getVerbatim());
+        API_MAPPER.writeValueAsString(wsConverter.toVerbatimOccurrence(hit)), record.verbatim());
   }
 
   @Test
@@ -68,9 +68,9 @@ public class RecordsConverterTest {
     SearchHitEventConverter wsConverter =
         new SearchHitEventConverter(EventEsField.buildFieldMapper(), true);
 
-    assertEquals(EVENT_INTERNAL_ID, record.getRowKey());
-    assertEquals(API_MAPPER.writeValueAsString(wsConverter.apply(hit)), record.getInterpreted());
-    assertEquals(API_MAPPER.writeValueAsString(wsConverter.toVerbatim(hit)), record.getVerbatim());
+    assertEquals(EVENT_INTERNAL_ID, record.rowKey());
+    assertEquals(API_MAPPER.writeValueAsString(wsConverter.apply(hit)), record.interpreted());
+    assertEquals(API_MAPPER.writeValueAsString(wsConverter.toVerbatim(hit)), record.verbatim());
   }
 
   @Test
@@ -78,13 +78,13 @@ public class RecordsConverterTest {
     ApiRecord occurrence =
         RecordsConverter.forOccurrences()
             .convert(readResource("/records/occurrence-es-source.json"));
-    assertRoundTrip(occurrence.getInterpreted(), Occurrence.class);
-    assertRoundTrip(occurrence.getVerbatim(), VerbatimOccurrence.class);
+    assertRoundTrip(occurrence.interpreted(), Occurrence.class);
+    assertRoundTrip(occurrence.verbatim(), VerbatimOccurrence.class);
 
     ApiRecord event =
         RecordsConverter.forEvents().convert(readResource("/records/event-es-source.json"));
-    assertRoundTrip(event.getInterpreted(), Event.class);
-    assertRoundTrip(event.getVerbatim(), VerbatimOccurrence.class);
+    assertRoundTrip(event.interpreted(), Event.class);
+    assertRoundTrip(event.verbatim(), VerbatimOccurrence.class);
   }
 
   @Test
@@ -93,7 +93,7 @@ public class RecordsConverterTest {
         RecordsConverter.forOccurrences()
             .convert(readResource("/records/occurrence-es-source.json"));
 
-    String interpreted = record.getInterpreted();
+    String interpreted = record.interpreted();
     assertEquals(1, (int) JsonPath.read(interpreted, "$.key"));
     assertEquals(DATASET_KEY, JsonPath.read(interpreted, "$.datasetKey"));
     assertEquals("HUMAN_OBSERVATION", JsonPath.read(interpreted, "$.basisOfRecord"));
@@ -105,7 +105,7 @@ public class RecordsConverterTest {
     // full-text field is not part of the record
     assertFalse(interpreted.contains("\"all\""));
 
-    String verbatim = record.getVerbatim();
+    String verbatim = record.verbatim();
     assertEquals(1, (int) JsonPath.read(verbatim, "$.key"));
     assertEquals("1", JsonPath.read(verbatim, "$['http://rs.gbif.org/terms/1.0/gbifID']"));
     assertTrue(
@@ -118,17 +118,16 @@ public class RecordsConverterTest {
     ApiRecord record =
         RecordsConverter.forEvents().convert(readResource("/records/event-es-source.json"));
 
-    assertEquals(EVENT_INTERNAL_ID, JsonPath.read(record.getInterpreted(), "$.id"));
-    assertEquals(EVENT_DATASET_KEY, JsonPath.read(record.getInterpreted(), "$.datasetKey"));
-    assertEquals("EVT-001", JsonPath.read(record.getInterpreted(), "$.eventID"));
-    assertEquals("EVT-000", JsonPath.read(record.getInterpreted(), "$.parentEventID"));
-    assertFalse(record.getInterpreted().contains("\"all\""));
+    assertEquals(EVENT_INTERNAL_ID, JsonPath.read(record.interpreted(), "$.id"));
+    assertEquals(EVENT_DATASET_KEY, JsonPath.read(record.interpreted(), "$.datasetKey"));
+    assertEquals("EVT-001", JsonPath.read(record.interpreted(), "$.eventID"));
+    assertEquals("EVT-000", JsonPath.read(record.interpreted(), "$.parentEventID"));
+    assertFalse(record.interpreted().contains("\"all\""));
     assertEquals(
-        "EVT-001",
-        JsonPath.read(record.getVerbatim(), "$['http://rs.tdwg.org/dwc/terms/eventID']"));
+        "EVT-001", JsonPath.read(record.verbatim(), "$['http://rs.tdwg.org/dwc/terms/eventID']"));
     assertEquals(
         "EVT-000",
-        JsonPath.read(record.getVerbatim(), "$['http://rs.tdwg.org/dwc/terms/parentEventID']"));
+        JsonPath.read(record.verbatim(), "$['http://rs.tdwg.org/dwc/terms/parentEventID']"));
   }
 
   @Test(expected = IllegalArgumentException.class)

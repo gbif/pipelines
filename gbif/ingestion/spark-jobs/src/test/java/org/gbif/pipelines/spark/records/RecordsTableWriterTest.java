@@ -8,10 +8,12 @@ import static org.gbif.pipelines.spark.records.RecordsTableKey.VERBATIM_COLUMN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FilterFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
@@ -48,8 +51,8 @@ public class RecordsTableWriterTest {
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
-  private static final String OCCURRENCE_TABLE = "test_records_occurrence";
-  private static final String EVENT_TABLE = "test_records_event";
+  private static final String OCCURRENCE_TABLE = "test_occurrence";
+  private static final String EVENT_TABLE = "test_event";
   private static final String OCCURRENCE_DATASET = "7683cc47-cb13-4bad-9614-387c66aa8df0";
   private static final String EVENT_DATASET = "8d5fe649-f85e-43cc-a19c-2a9979a741ac";
   private static final String EVENT_INTERNAL_ID = "cbf64c0df611eae2fc0c2a3234f0eeac8f423071";
@@ -96,8 +99,7 @@ public class RecordsTableWriterTest {
     // attempt 1: three records spread over the three regions
     RecordsLoad first = load(1, occurrences(1L, 20L, 75L));
     assertEquals(3, first.getLoaded());
-    assertEquals(0, first.getRemoved());
-    first.commit();
+    assertEquals(0, first.commit());
 
     for (long key : new long[] {1L, 20L, 75L}) {
       Result row = get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(key));
@@ -110,18 +112,19 @@ public class RecordsTableWriterTest {
     // attempt 2: record 20 is no longer in the dataset
     RecordsLoad second = load(2, occurrences(1L, 75L));
     assertEquals(2, second.getLoaded());
-    assertEquals(1, second.getRemoved());
-
-    assertTrue(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(20L)).isEmpty());
     assertEquals(
         "2", value(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(1L)), ATTEMPT_COLUMN));
 
-    // until committed, the previous manifest is kept so a failed run repeats the deletes
+    // until committed, the index can still return record 20, so it's kept, and so is the previous
+    // manifest, so a failed run repeats the deletes
+    assertFalse(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(20L)).isEmpty());
     Path manifest =
         RecordsTableWriter.manifestPath(
             config.getRecordsTableConfig(), RecordType.OCCURRENCE, OCCURRENCE_DATASET);
     assertEquals(3, manifestKeys(manifest).size());
-    second.commit();
+
+    assertEquals(1, second.commit());
+    assertTrue(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(20L)).isEmpty());
     assertEquals(2, manifestKeys(manifest).size());
 
     // the dataset is deleted
@@ -214,6 +217,80 @@ public class RecordsTableWriterTest {
             spark, fileSystem, config, hbaseConf, RecordType.OCCURRENCE, "unknown-dataset"));
   }
 
+  @Test
+  public void previousManifestIsKeptUntilReplaced() throws Exception {
+    String dataset = "3f2c1e6a-9d4b-4c8e-a1f7-5b0e2d9c7a13";
+    Path manifest =
+        RecordsTableWriter.manifestPath(
+            config.getRecordsTableConfig(), RecordType.OCCURRENCE, dataset);
+    Path previous =
+        RecordsTableWriter.manifestPath(
+            config.getRecordsTableConfig(),
+            RecordType.OCCURRENCE,
+            dataset,
+            RecordsTableWriter.PREVIOUS);
+
+    load(fileSystem, dataset, 1, occurrences(dataset, 2L, 30L)).commit();
+
+    // a commit interrupted once the manifest was moved away leaves only the previous manifest
+    assertTrue(fileSystem.rename(manifest, previous));
+
+    // the next commit fails to promote its manifest
+    FileSystem failingPromotion =
+        new FilterFileSystem(fileSystem) {
+          @Override
+          public boolean rename(Path src, Path dst) throws IOException {
+            return !src.getParent().getName().endsWith(RecordsTableWriter.PENDING)
+                && super.rename(src, dst);
+          }
+        };
+    RecordsLoad second = load(failingPromotion, dataset, 2, occurrences(dataset, 2L));
+    assertThrows(IOException.class, second::commit);
+    assertEquals(1, second.getRemoved());
+    assertTrue(fileSystem.exists(previous));
+
+    // so the following run still knows the keys of the dataset
+    assertEquals(1, load(fileSystem, dataset, 3, occurrences(dataset, 2L)).commit());
+    assertEquals(List.of(RecordsTableKey.occurrenceRowKey(2L)), manifestKeys(manifest));
+    assertFalse(fileSystem.exists(previous));
+  }
+
+  @Test
+  public void keysOfFailedRunsAreRemoved() throws Exception {
+    String dataset = "9a7e4b21-6c3d-4f05-8e1a-2d4c6b8f0e57";
+    RecordsTableConfig tableConfig = config.getRecordsTableConfig();
+    Path manifest = RecordsTableWriter.manifestPath(tableConfig, RecordType.OCCURRENCE, dataset);
+    Path stale =
+        RecordsTableWriter.manifestPath(
+            tableConfig, RecordType.OCCURRENCE, dataset, RecordsTableWriter.STALE);
+
+    load(fileSystem, dataset, 1, occurrences(dataset, 5L, 40L)).commit();
+
+    // attempt 2 fails after loading 41 and 42, its keys aren't in the manifest
+    load(fileSystem, dataset, 2, occurrences(dataset, 5L, 41L, 42L));
+    assertFalse(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(41L)).isEmpty());
+
+    // attempt 3 no longer has 40 (in the manifest) nor 41 (only loaded by the failed run)
+    RecordsLoad third = load(fileSystem, dataset, 3, occurrences(dataset, 5L, 42L));
+    assertTrue(fileSystem.exists(stale));
+    assertEquals(2, third.commit());
+    assertTrue(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(40L)).isEmpty());
+    assertTrue(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(41L)).isEmpty());
+    assertFalse(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(42L)).isEmpty());
+    assertFalse(fileSystem.exists(stale));
+    assertEquals(2, manifestKeys(manifest).size());
+
+    // deleting the dataset also deletes the keys of a run that wasn't committed
+    load(fileSystem, dataset, 4, occurrences(dataset, 5L, 43L));
+    assertEquals(
+        3,
+        RecordsTableWriter.deleteDataset(
+            spark, fileSystem, config, hbaseConf, RecordType.OCCURRENCE, dataset));
+    for (long key : new long[] {5L, 42L, 43L}) {
+      assertTrue(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(key)).isEmpty());
+    }
+  }
+
   private static RecordsLoad load(int attempt, Dataset<Row> documents) throws Exception {
     return RecordsTableWriter.load(
         spark,
@@ -224,6 +301,12 @@ public class RecordsTableWriterTest {
         OCCURRENCE_DATASET,
         attempt,
         documents);
+  }
+
+  private static RecordsLoad load(
+      FileSystem fs, String datasetKey, int attempt, Dataset<Row> documents) throws Exception {
+    return RecordsTableWriter.load(
+        spark, fs, config, hbaseConf, RecordType.OCCURRENCE, datasetKey, attempt, documents);
   }
 
   /** Copies of the occurrence fixture with the given keys */
