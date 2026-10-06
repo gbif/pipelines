@@ -59,7 +59,6 @@ public class LocationInterpreterTest {
     store.put(GeocodeRequest.create(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
     store.put(GeocodeRequest.create(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
     store.put(GeocodeRequest.create(-2.391647, -80.594588), toGeocodeResponse(Country.ECUADOR));
-    store.put(GeocodeRequest.create(2.391647, -80.594588), toGeocodeResponse(Country.BOLIVIA));
     store.put(
         GeocodeRequest.create(41.89, 12.45), toGeocodeCentroidResponse(Country.VATICAN, 1110.7));
     KEY_VALUE_STORE = GeocodeKvStore.create(store);
