@@ -127,7 +127,7 @@ public class PostprocessValidation {
     boolean isValid = true;
     String validationMessage = "No identifier issues";
     if (config.isIdThresholdSkip()) {
-      validationMessage = "Current configured to skip ID threshold validation";
+      validationMessage = "Currently configured to skip ID threshold validation for all datasets";
     } else if (previousAttempt == null || previousCount == 0) {
       validationMessage = "Skip ID validation: no identifiers from a previous attempt to compare";
     } else {

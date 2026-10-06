@@ -350,6 +350,16 @@ public class IdentifiersPipeline {
     for (int i = candidates.length - 1; i >= 0; i--) {
       Path success = new Path(root, candidates[i] + "/" + IDENTIFIERS + "/_SUCCESS");
       if (fs.exists(success)) {
+        // check that the interpretation happened as well, otherwise the identifiers may be
+        // incomplete
+        Path interpretationSuccess =
+            new Path(root, candidates[i] + "/" + OCCURRENCE_JSON + "/_SUCCESS");
+        if (!fs.exists(interpretationSuccess)) {
+          log.warn(
+              "Previous attempt {} has identifiers but no interpretation, skipping it",
+              candidates[i]);
+          continue;
+        }
         return OptionalInt.of(candidates[i]);
       }
     }
