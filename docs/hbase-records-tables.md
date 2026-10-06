@@ -74,13 +74,13 @@ In the HBase shell:
 
 ```ruby
 # Occurrences: 100 regions, one per salt bucket ("00:" ... "99:")
-create 'prod_records_occurrence',
+create 'prod_occurrence',
   {NAME => 'o', VERSIONS => 1, COMPRESSION => 'ZSTD', DATA_BLOCK_ENCODING => 'FAST_DIFF',
    BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
   {NUMREGIONS => 100, SPLITALGO => 'DecimalStringSplit'}
 
 # Events: 16 regions, one per first hex character of the SHA-1
-create 'prod_records_event',
+create 'prod_event',
   {NAME => 'o', VERSIONS => 1, COMPRESSION => 'ZSTD', DATA_BLOCK_ENCODING => 'FAST_DIFF',
    BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
   {NUMREGIONS => 16, SPLITALGO => 'HexStringSplit'}
@@ -105,16 +105,16 @@ exist. To start the event table with more regions, use e.g. `{NUMREGIONS => 256,
 Check the tables:
 
 ```ruby
-describe 'prod_records_occurrence'
-list_regions 'prod_records_occurrence'
+describe 'prod_occurrence'
+list_regions 'prod_occurrence'
 ```
 
 ## Configuration
 
 ```yaml
 recordsTableConfig:
-  occurrenceTable: prod_records_occurrence
-  eventTable: prod_records_event
+  occurrenceTable: prod_occurrence
+  eventTable: prod_event
   # one manifest per dataset with the keys loaded, used to delete the records removed from a dataset.
   # Must be outside the dataset/attempt directories, which are cleaned up after each run.
   manifestPath: hdfs://ha-nn/data/ingest/records-manifests
@@ -143,8 +143,8 @@ The tables and the indices are built together, with indexing stopped:
 2. Empty the tables keeping their splits, and remove the manifests:
 
    ```ruby
-   truncate_preserve 'prod_records_occurrence'
-   truncate_preserve 'prod_records_event'
+   truncate_preserve 'prod_occurrence'
+   truncate_preserve 'prod_event'
    ```
 
    ```shell
