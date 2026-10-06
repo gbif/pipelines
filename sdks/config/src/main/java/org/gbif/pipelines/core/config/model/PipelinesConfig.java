@@ -130,4 +130,6 @@ public class PipelinesConfig implements Serializable {
   private DnaConfig dnaConfig = new DnaConfig();
 
   private TableBuildConfig tableBuildConfig = new TableBuildConfig();
+
+  private Set<String> datasetsThatSkipCoordinatesSwapping;
 }

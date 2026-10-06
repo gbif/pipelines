@@ -67,7 +67,9 @@ public class LocationTransform implements Serializable {
             .build();
 
     // Sequentially apply interpreters
-    LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr).accept(source, record);
+    LocationInterpreter.interpretCountryAndCoordinates(
+            geocodeKvStore, mdr, skipCoordinatesSwapping(mdr))
+        .accept(source, record);
     LocationInterpreter.interpretContinent(geocodeKvStore).accept(source, record);
     LocationInterpreter.interpretGadm(geocodeKvStore).accept(source, record);
     LocationInterpreter.interpretWaterBody(source, record);
@@ -93,5 +95,10 @@ public class LocationTransform implements Serializable {
     LocationInterpreter.setParentEventId(source, record);
 
     return record;
+  }
+
+  private boolean skipCoordinatesSwapping(MetadataRecord mdr) {
+    return config.getDatasetsThatSkipCoordinatesSwapping() != null
+        && config.getDatasetsThatSkipCoordinatesSwapping().contains(mdr.getDatasetKey());
   }
 }

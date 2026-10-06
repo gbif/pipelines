@@ -82,6 +82,11 @@ public class CoordinateParseUtils {
    */
   public static ParsedField<GeocodeRequest> parseLatLng(
       final String latitude, final String longitude) {
+    return parseLatLng(latitude, longitude, true);
+  }
+
+  public static ParsedField<GeocodeRequest> parseLatLng(
+      final String latitude, final String longitude, final boolean allowCoordinatesSwap) {
     if (Strings.isNullOrEmpty(latitude) || Strings.isNullOrEmpty(longitude)) {
       return ParsedField.fail();
     }
@@ -97,7 +102,7 @@ public class CoordinateParseUtils {
       }
     }
 
-    return validateAndRound(lat, lng);
+    return validateAndRound(lat, lng, allowCoordinatesSwap);
   }
 
   private static boolean inRange(double lat, double lon) {
@@ -129,10 +134,10 @@ public class CoordinateParseUtils {
       double c2 = coordFromMatcher(m, 5, 6, 7, dir2);
       // now see what order the coords are in:
       if (isLat(dir1) && !isLat(dir2)) {
-        return validateAndRound(c1, c2);
+        return validateAndRound(c1, c2, true);
 
       } else if (!isLat(dir1) && isLat(dir2)) {
-        return validateAndRound(c2, c1);
+        return validateAndRound(c2, c1, true);
 
       } else {
         return ParsedField.fail(COORDINATE_INVALID.name());
@@ -168,7 +173,7 @@ public class CoordinateParseUtils {
       // assume WKT order (longitude, latitude)
       Double lng = NumberParser.parseDouble(m.group(1));
       Double lat = NumberParser.parseDouble(m.group(2));
-      ParsedField<GeocodeRequest> result = validateAndRound(lat, lng);
+      ParsedField<GeocodeRequest> result = validateAndRound(lat, lng, true);
       if (result.isSuccessful()) {
         return result;
       }
@@ -177,7 +182,8 @@ public class CoordinateParseUtils {
     return ParsedField.fail();
   }
 
-  private static ParsedField<GeocodeRequest> validateAndRound(double lat, double lon) {
+  private static ParsedField<GeocodeRequest> validateAndRound(
+      double lat, double lon, boolean allowCoordinatesSwap) {
     // collecting issues for result
     Set<String> issues = new TreeSet<>();
 
@@ -211,7 +217,9 @@ public class CoordinateParseUtils {
     // appear in
     // search results and maps etc. however, this is logic decision, that goes above the
     // capabilities of this method
-    if ((Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) && inRange(lon, lat)) {
+    if (allowCoordinatesSwap
+        && (Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0)
+        && inRange(lon, lat)) {
       issues.add(PRESUMED_SWAPPED_COORDINATE.name());
       return ParsedField.success(GeocodeRequest.create(lon, lat), issues);
     }

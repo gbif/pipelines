@@ -42,6 +42,18 @@ public class LocationParser {
 
   public static ParsedField<ParsedLocation> parse(
       ExtendedRecord er, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
+    return parse(er, kvStore, true);
+  }
+
+  public static ParsedField<ParsedLocation> parseWithoutCoordinatesSwap(
+      ExtendedRecord er, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
+    return parse(er, kvStore, false);
+  }
+
+  private static ParsedField<ParsedLocation> parse(
+      ExtendedRecord er,
+      KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore,
+      boolean allowCoordinatesSwap) {
     ModelUtils.checkNullOrEmpty(er);
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
@@ -69,7 +81,7 @@ public class LocationParser {
     Country countryMatched = countryCode.orElseGet(() -> countryName.orElse(null));
 
     // Parse coordinates
-    ParsedField<GeocodeRequest> coordsParsed = parseLatLng(er);
+    ParsedField<GeocodeRequest> coordsParsed = parseLatLng(er, allowCoordinatesSwap);
 
     // Add issues from coordinates parsing
     issues.addAll(coordsParsed.getIssues());
@@ -82,6 +94,14 @@ public class LocationParser {
 
     // Set current parsed values
     ParsedLocation parsedLocation = new ParsedLocation(countryMatched, coordsParsed.getResult());
+
+    if (!allowCoordinatesSwap) {
+      return ParsedField.<ParsedLocation>builder()
+          .successful(countryMatched != null)
+          .result(parsedLocation)
+          .issues(issues)
+          .build();
+    }
 
     // If the coords parsing was successful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
@@ -139,8 +159,10 @@ public class LocationParser {
     return Optional.ofNullable(field.getResult());
   }
 
-  private static ParsedField<GeocodeRequest> parseLatLng(ExtendedRecord er) {
-    ParsedField<GeocodeRequest> parsedLatLon = CoordinatesParser.parseCoords(er);
+  private static ParsedField<GeocodeRequest> parseLatLng(
+      ExtendedRecord er, boolean allowCoordinatesSwap) {
+    ParsedField<GeocodeRequest> parsedLatLon =
+        CoordinatesParser.parseCoords(er, allowCoordinatesSwap);
     Term datum = DwcTerm.geodeticDatum;
 
     if (!parsedLatLon.isSuccessful()) {

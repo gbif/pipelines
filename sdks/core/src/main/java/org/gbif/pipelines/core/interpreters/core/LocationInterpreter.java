@@ -66,16 +66,26 @@ public class LocationInterpreter {
         .orElse(false);
   }
 
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
+      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore, MetadataRecord mdr) {
+    return interpretCountryAndCoordinates(geocodeKvStore, mdr, false);
+  }
+
   /**
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore, MetadataRecord mdr) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore,
+      MetadataRecord mdr,
+      boolean skipCoordinatesSwap) {
     return (er, lr) -> {
       if (geocodeKvStore != null) {
         // parse the terms
-        ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, geocodeKvStore);
+        ParsedField<ParsedLocation> parsedResult =
+            skipCoordinatesSwap
+                ? LocationParser.parseWithoutCoordinatesSwap(er, geocodeKvStore)
+                : LocationParser.parse(er, geocodeKvStore);
 
         // set values in the location record
         ParsedLocation parsedLocation = parsedResult.getResult();

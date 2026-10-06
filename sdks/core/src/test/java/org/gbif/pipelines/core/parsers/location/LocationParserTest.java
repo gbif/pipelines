@@ -295,4 +295,26 @@ public class LocationParserTest {
     // When
     LocationParser.parse(new ExtendedRecord(), null);
   }
+
+  @Test
+  public void parseWithoutCoordinatesSwapKeepsOriginalCoordinatesTest() {
+    ExtendedRecord extendedRecord =
+        ExtendedRecordBuilder.create()
+            .id(TEST_ID)
+            .country(Country.ECUADOR.getTitle())
+            .countryCode(Country.ECUADOR.getIso2LetterCode())
+            // coordinates are swapped
+            .decimalLatitude("2.391647")
+            .decimalLongitude("-80.594588")
+            .build();
+
+    ParsedField<ParsedLocation> result =
+        LocationParser.parseWithoutCoordinatesSwap(extendedRecord, getGeocodeKvStore());
+
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertEquals(Country.ECUADOR, result.getResult().getCountry());
+    Assert.assertEquals(2.391647, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(-80.594588, result.getResult().getLatLng().getLng(), 0);
+    Assert.assertTrue(result.getIssues().isEmpty());
+  }
 }

@@ -6,6 +6,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
+import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LATITUDE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LONGITUDE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
 import static org.gbif.pipelines.core.interpreters.core.LocationInterpreter.hasGeospatialIssues;
@@ -57,6 +58,8 @@ public class LocationInterpreterTest {
     store.put(GeocodeRequest.create(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
     store.put(GeocodeRequest.create(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
     store.put(GeocodeRequest.create(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
+    store.put(GeocodeRequest.create(-2.391647, -80.594588), toGeocodeResponse(Country.ECUADOR));
+    store.put(GeocodeRequest.create(2.391647, -80.594588), toGeocodeResponse(Country.BOLIVIA));
     store.put(
         GeocodeRequest.create(41.89, 12.45), toGeocodeCentroidResponse(Country.VATICAN, 1110.7));
     KEY_VALUE_STORE = GeocodeKvStore.create(store);
@@ -123,13 +126,19 @@ public class LocationInterpreterTest {
     return record;
   }
 
-  private static LocationRecord interpret(ExtendedRecord source) {
+  private static LocationRecord interpret(ExtendedRecord source, boolean skipCoordinatesSwap) {
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
     return Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-        .via(LocationInterpreter.interpretCountryAndCoordinates(KEY_VALUE_STORE, mdr))
+        .via(
+            LocationInterpreter.interpretCountryAndCoordinates(
+                KEY_VALUE_STORE, mdr, skipCoordinatesSwap))
         .getOfNullable()
         .orElse(null);
+  }
+
+  private static LocationRecord interpret(ExtendedRecord source) {
+    return interpret(source, false);
   }
 
   @Test
@@ -498,5 +507,36 @@ public class LocationInterpreterTest {
     // Should
     assertEquals("EUROPE", record.getGbifRegion());
     assertEquals("EUROPE", record.getPublishedByGbifRegion());
+  }
+
+  @Test
+  public void notSwappingCoordinatesTest() {
+
+    // State
+    ExtendedRecord source = createEr(null, "Ecuador", "2.391647", "-80.594588", null, null);
+    LocationRecord expected =
+        createLr(Country.ECUADOR, 2.391647, -80.594588, GEODETIC_DATUM_ASSUMED_WGS84);
+
+    // When
+    LocationRecord result = interpret(source, true);
+
+    // Should
+    assertEquals(expected, result);
+
+    // test the opposite case to check the skipCoordinatesSwap changes the behaviour
+    // state
+    expected =
+        createLr(
+            Country.ECUADOR,
+            -2.391647,
+            -80.594588,
+            GEODETIC_DATUM_ASSUMED_WGS84,
+            PRESUMED_NEGATED_LATITUDE);
+
+    // When
+    result = interpret(source, false);
+
+    // Should
+    assertEquals(expected, result);
   }
 }

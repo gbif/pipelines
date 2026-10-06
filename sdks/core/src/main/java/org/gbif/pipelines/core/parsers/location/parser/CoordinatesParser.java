@@ -2,8 +2,6 @@ package org.gbif.pipelines.core.parsers.location.parser;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
@@ -42,11 +40,6 @@ class CoordinatesParser {
           CoordinateParseUtils.parseVerbatimCoordinates(
               extractValue(er, DwcTerm.verbatimCoordinates)));
 
-  // list with all the parsing functions
-  private static final List<Function<ExtendedRecord, ParsedField<GeocodeRequest>>>
-      PARSING_FUNCTIONS =
-          Arrays.asList(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
-
   /**
    * Parses the coordinates fields of a {@link ExtendedRecord}.
    *
@@ -62,18 +55,37 @@ class CoordinatesParser {
    * @return {@link ParsedField< GeocodeRequest >} for the coordinates parsed.
    */
   static ParsedField<GeocodeRequest> parseCoords(ExtendedRecord extendedRecord) {
+    return parseCoords(extendedRecord, true);
+  }
+
+  static ParsedField<GeocodeRequest> parseCoords(
+      ExtendedRecord extendedRecord, boolean allowCoordinatesSwap) {
     Set<String> issues = new TreeSet<>();
-    for (Function<ExtendedRecord, ParsedField<GeocodeRequest>> parsingFunction :
-        PARSING_FUNCTIONS) {
-      ParsedField<GeocodeRequest> result = parsingFunction.apply(extendedRecord);
-
-      if (result.isSuccessful()) {
-        // return the first successful result
-        return result;
-      }
-
-      issues.addAll(result.getIssues());
+    ParsedField<GeocodeRequest> result =
+        CoordinateParseUtils.parseLatLng(
+            extractValue(extendedRecord, DwcTerm.decimalLatitude),
+            extractValue(extendedRecord, DwcTerm.decimalLongitude),
+            allowCoordinatesSwap);
+    if (result.isSuccessful()) {
+      return result;
     }
+    issues.addAll(result.getIssues());
+
+    result =
+        CoordinateParseUtils.parseLatLng(
+            extractValue(extendedRecord, DwcTerm.verbatimLatitude),
+            extractValue(extendedRecord, DwcTerm.verbatimLongitude),
+            allowCoordinatesSwap);
+    if (result.isSuccessful()) {
+      return result;
+    }
+    issues.addAll(result.getIssues());
+
+    result = VERBATIM_COORDS_FN.apply(extendedRecord);
+    if (result.isSuccessful()) {
+      return result;
+    }
+    issues.addAll(result.getIssues());
 
     return ParsedField.fail(issues);
   }
