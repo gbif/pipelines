@@ -51,8 +51,8 @@ public class RecordsTableWriterTest {
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
-  private static final String OCCURRENCE_TABLE = "test_occurrence";
-  private static final String EVENT_TABLE = "test_event";
+  private static final String OCCURRENCE_TABLE = "test_records_occurrence";
+  private static final String EVENT_TABLE = "test_records_event";
   private static final String OCCURRENCE_DATASET = "7683cc47-cb13-4bad-9614-387c66aa8df0";
   private static final String EVENT_DATASET = "8d5fe649-f85e-43cc-a19c-2a9979a741ac";
   private static final String EVENT_INTERNAL_ID = "cbf64c0df611eae2fc0c2a3234f0eeac8f423071";
