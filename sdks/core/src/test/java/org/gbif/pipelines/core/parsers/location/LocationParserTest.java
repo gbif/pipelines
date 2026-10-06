@@ -315,6 +315,7 @@ public class LocationParserTest {
     Assert.assertEquals(Country.ECUADOR, result.getResult().getCountry());
     Assert.assertEquals(2.391647, result.getResult().getLatLng().getLat(), 0);
     Assert.assertEquals(-80.594588, result.getResult().getLatLng().getLng(), 0);
-    Assert.assertTrue(result.getIssues().isEmpty());
+    Assert.assertEquals(1, result.getIssues().size());
+    Assert.assertEquals(GEODETIC_DATUM_ASSUMED_WGS84.name(), result.getIssues().iterator().next());
   }
 }
