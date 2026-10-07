@@ -310,7 +310,7 @@ public class LocationParserTest {
             .build();
 
     ParsedField<ParsedLocation> result =
-        LocationParser.parseWithoutCoordinatesFlipping(extendedRecord, getGeocodeKvStore());
+        LocationParser.parse(extendedRecord, getGeocodeKvStore(), false);
 
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.ECUADOR, result.getResult().getCountry());
