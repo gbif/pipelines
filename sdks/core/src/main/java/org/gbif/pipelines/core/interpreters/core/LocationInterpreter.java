@@ -68,7 +68,7 @@ public class LocationInterpreter {
 
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
       KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore, MetadataRecord mdr) {
-    return interpretCountryAndCoordinates(geocodeKvStore, mdr, false);
+    return interpretCountryAndCoordinates(geocodeKvStore, mdr, true);
   }
 
   /**
@@ -78,14 +78,14 @@ public class LocationInterpreter {
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
       KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore,
       MetadataRecord mdr,
-      boolean skipCoordinatesSwap) {
+      boolean allowCoordinatesFlipping) {
     return (er, lr) -> {
       if (geocodeKvStore != null) {
         // parse the terms
         ParsedField<ParsedLocation> parsedResult =
-            skipCoordinatesSwap
-                ? LocationParser.parseWithoutCoordinatesSwap(er, geocodeKvStore)
-                : LocationParser.parse(er, geocodeKvStore);
+            allowCoordinatesFlipping
+                ? LocationParser.parse(er, geocodeKvStore)
+                : LocationParser.parseWithoutCoordinatesFlipping(er, geocodeKvStore);
 
         // set values in the location record
         ParsedLocation parsedLocation = parsedResult.getResult();

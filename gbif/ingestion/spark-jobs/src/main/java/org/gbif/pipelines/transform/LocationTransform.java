@@ -16,6 +16,8 @@ package org.gbif.pipelines.transform;
 import java.io.Serializable;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -98,7 +100,11 @@ public class LocationTransform implements Serializable {
   }
 
   private boolean skipCoordinatesSwapping(MetadataRecord mdr) {
-    return config.getDatasetsThatSkipCoordinatesSwapping() != null
-        && config.getDatasetsThatSkipCoordinatesSwapping().contains(mdr.getDatasetKey());
+    return mdr.getMachineTags().stream()
+        .anyMatch(
+            mt ->
+                mt.getNamespace().equals(TagNamespace.PIPELINES.name())
+                    && mt.getName().equals(TagName.ALLOW_COORDINATES_FLIPPING.name())
+                    && mt.getValue().equalsIgnoreCase("true"));
   }
 }

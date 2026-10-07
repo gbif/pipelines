@@ -59,13 +59,13 @@ class CoordinatesParser {
   }
 
   static ParsedField<GeocodeRequest> parseCoords(
-      ExtendedRecord extendedRecord, boolean allowCoordinatesSwap) {
+      ExtendedRecord extendedRecord, boolean allowCoordinatesFlipping) {
     Set<String> issues = new TreeSet<>();
     ParsedField<GeocodeRequest> result =
         CoordinateParseUtils.parseLatLng(
             extractValue(extendedRecord, DwcTerm.decimalLatitude),
             extractValue(extendedRecord, DwcTerm.decimalLongitude),
-            allowCoordinatesSwap);
+            allowCoordinatesFlipping);
     if (result.isSuccessful()) {
       return result;
     }
@@ -75,7 +75,7 @@ class CoordinatesParser {
         CoordinateParseUtils.parseLatLng(
             extractValue(extendedRecord, DwcTerm.verbatimLatitude),
             extractValue(extendedRecord, DwcTerm.verbatimLongitude),
-            allowCoordinatesSwap);
+            allowCoordinatesFlipping);
     if (result.isSuccessful()) {
       return result;
     }

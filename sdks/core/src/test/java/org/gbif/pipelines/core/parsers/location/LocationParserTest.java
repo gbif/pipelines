@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.parsers.location;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_ROUNDED;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
@@ -309,13 +310,14 @@ public class LocationParserTest {
             .build();
 
     ParsedField<ParsedLocation> result =
-        LocationParser.parseWithoutCoordinatesSwap(extendedRecord, getGeocodeKvStore());
+        LocationParser.parseWithoutCoordinatesFlipping(extendedRecord, getGeocodeKvStore());
 
-    Assert.assertTrue(result.isSuccessful());
+    Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.ECUADOR, result.getResult().getCountry());
     Assert.assertEquals(2.391647, result.getResult().getLatLng().getLat(), 0);
     Assert.assertEquals(-80.594588, result.getResult().getLatLng().getLng(), 0);
-    Assert.assertEquals(1, result.getIssues().size());
-    Assert.assertEquals(GEODETIC_DATUM_ASSUMED_WGS84.name(), result.getIssues().iterator().next());
+    Assert.assertEquals(2, result.getIssues().size());
+    Assert.assertTrue(result.getIssues().contains(GEODETIC_DATUM_ASSUMED_WGS84.name()));
+    Assert.assertTrue(result.getIssues().contains(COUNTRY_COORDINATE_MISMATCH.name()));
   }
 }

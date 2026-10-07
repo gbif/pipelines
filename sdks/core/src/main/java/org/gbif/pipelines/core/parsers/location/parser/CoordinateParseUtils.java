@@ -4,6 +4,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_ROUNDED;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.SUSPECTED_SWAPPED_COORDINATE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 
 import com.google.common.base.Strings;
@@ -86,7 +87,7 @@ public class CoordinateParseUtils {
   }
 
   public static ParsedField<GeocodeRequest> parseLatLng(
-      final String latitude, final String longitude, final boolean allowCoordinatesSwap) {
+      final String latitude, final String longitude, final boolean allowCoordinatesFlipping) {
     if (Strings.isNullOrEmpty(latitude) || Strings.isNullOrEmpty(longitude)) {
       return ParsedField.fail();
     }
@@ -102,7 +103,7 @@ public class CoordinateParseUtils {
       }
     }
 
-    return validateAndRound(lat, lng, allowCoordinatesSwap);
+    return validateAndRound(lat, lng, allowCoordinatesFlipping);
   }
 
   private static boolean inRange(double lat, double lon) {
@@ -120,8 +121,13 @@ public class CoordinateParseUtils {
     return POSITIVE.contains(direction.toUpperCase()) ? 1 : -1;
   }
 
-  // 02° 49' 52" N	131° 47' 03" E
   public static ParsedField<GeocodeRequest> parseVerbatimCoordinates(final String coordinates) {
+    return parseVerbatimCoordinates(coordinates, true);
+  }
+
+  // 02° 49' 52" N	131° 47' 03" E
+  public static ParsedField<GeocodeRequest> parseVerbatimCoordinates(
+      final String coordinates, final boolean allowCoordinatesFlipping) {
     if (Strings.isNullOrEmpty(coordinates)) {
       return ParsedField.fail();
     }
@@ -134,10 +140,10 @@ public class CoordinateParseUtils {
       double c2 = coordFromMatcher(m, 5, 6, 7, dir2);
       // now see what order the coords are in:
       if (isLat(dir1) && !isLat(dir2)) {
-        return validateAndRound(c1, c2, true);
+        return validateAndRound(c1, c2, allowCoordinatesFlipping);
 
       } else if (!isLat(dir1) && isLat(dir2)) {
-        return validateAndRound(c2, c1, true);
+        return validateAndRound(c2, c1, allowCoordinatesFlipping);
 
       } else {
         return ParsedField.fail(COORDINATE_INVALID.name());
@@ -150,7 +156,7 @@ public class CoordinateParseUtils {
         if (cnt == 1) {
           String[] latlon = StringUtils.split(coordinates, delim);
           if (latlon.length == 2) {
-            return parseLatLng(latlon[0], latlon[1]);
+            return parseLatLng(latlon[0], latlon[1], allowCoordinatesFlipping);
           }
         }
       }
@@ -183,7 +189,7 @@ public class CoordinateParseUtils {
   }
 
   private static ParsedField<GeocodeRequest> validateAndRound(
-      double lat, double lon, boolean allowCoordinatesSwap) {
+      double lat, double lon, boolean allowCoordinatesFlipping) {
     // collecting issues for result
     Set<String> issues = new TreeSet<>();
 
@@ -217,11 +223,14 @@ public class CoordinateParseUtils {
     // appear in
     // search results and maps etc. however, this is logic decision, that goes above the
     // capabilities of this method
-    if (allowCoordinatesSwap
-        && (Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0)
-        && inRange(lon, lat)) {
-      issues.add(PRESUMED_SWAPPED_COORDINATE.name());
-      return ParsedField.success(GeocodeRequest.create(lon, lat), issues);
+    if ((Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) && inRange(lon, lat)) {
+      if (allowCoordinatesFlipping) {
+        issues.add(PRESUMED_SWAPPED_COORDINATE.name());
+        return ParsedField.success(GeocodeRequest.create(lon, lat), issues);
+      } else {
+        issues.add(SUSPECTED_SWAPPED_COORDINATE.name());
+        return ParsedField.success(GeocodeRequest.create(lat, lon), issues);
+      }
     }
 
     // then something is out of range

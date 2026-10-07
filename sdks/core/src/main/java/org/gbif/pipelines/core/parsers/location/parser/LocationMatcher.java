@@ -38,6 +38,7 @@ public class LocationMatcher {
   private final Country country;
   private final KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore;
   private final List<UnaryOperator<GeocodeRequest>> alternativeTransformations = new ArrayList<>();
+  private final boolean allowCoordinatesFlipping;
 
   public LocationMatcher additionalTransform(UnaryOperator<GeocodeRequest> transformation) {
     alternativeTransformations.add(transformation);
@@ -94,8 +95,14 @@ public class LocationMatcher {
       if (countriesFound.filter(x -> x.contains(country)).isPresent()) {
         // country found
         // Add issues from the transformation
-        return success(
-            country, latLngTransformed, CoordinatesFunction.getIssueTypes(transformation));
+        Set<String> issues =
+            CoordinatesFunction.getIssueTypes(transformation, allowCoordinatesFlipping);
+        if (allowCoordinatesFlipping) {
+          return success(country, latLngTransformed, issues);
+        } else {
+          // coords not changed
+          return success(country, latLng, issues);
+        }
       }
     }
 
