@@ -21,6 +21,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.InMemorySchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
@@ -158,11 +159,13 @@ class MappingCompilerTest {
                 TargetFieldMapping.inferredOneOf(
                     target, ValueAggregation.firstNonNull(), event.field("eventID")))
             .field(
-                TargetFieldMapping.oneOf(
+                TargetFieldMapping.expression(
                     target,
-                    ValueAggregation.firstOrUrnFallback("urn:test:event:"),
-                    event.field("eventID"),
-                    event.field("event_pk")))
+                    ValueExpression.firstNonBlank(
+                        ValueExpression.field(event.field("eventID")),
+                        ValueExpression.concat(
+                            ValueExpression.literal("gbif:dwcdp:event:event_pk:"),
+                            ValueExpression.field(event.field("event_pk"))))))
             .build();
     ExtensionMapping extension =
         new ExtensionMapping(
@@ -176,9 +179,7 @@ class MappingCompilerTest {
 
     assertEquals(1, compiled.targetMerges().size());
     assertEquals(1, compiled.targetMerges().get(0).producers().size());
-    assertTrue(
-        compiled.targetMerges().get(0).producers().get(0).aggregation()
-            instanceof ValueAggregation.FirstOrUrnFallback);
+    assertTrue(compiled.targetMerges().get(0).producers().get(0).expressionValue());
     assertEquals(1, compiled.fragments().get(0).targets().size());
   }
 }

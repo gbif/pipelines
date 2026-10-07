@@ -32,6 +32,7 @@ vocabularyConfig:
     GeologicalContext: GeoTime
     http://rs.tdwg.org/dwc/terms/typeStatus: TypeStatus
     http://rs.tdwg.org/dwc/terms/sex: Sex
+    http://rs.tdwg.org/dwc/terms/occurrenceStatus: OccurrenceStatus
     http://rs.gbif.org/terms/1.0/DNADerivedData: target_gene
 derivedMetadataConfig:
   maxTaxonCoveragePerEvent: 2000

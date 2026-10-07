@@ -19,6 +19,7 @@ public final class MappingPlanBuilder {
   private final Map<String, ExtensionRowComposition> extensionCompositions = new LinkedHashMap<>();
   private final Map<String, Integer> extensionRowLimits = new LinkedHashMap<>();
   private final Map<String, Map<String, TargetMerge>> extensionTargetMerges = new LinkedHashMap<>();
+  private final List<NestedExtensionContext> nestedExtensionContexts = new ArrayList<>();
 
   private MappingPlanBuilder(String name, CoreType coreType, String coreSourceResource) {
     this.name = name;
@@ -33,6 +34,11 @@ public final class MappingPlanBuilder {
 
   public MappingPlanBuilder coreIdentity(ValueAggregation aggregation, FieldRef... sources) {
     coreIdentity = Optional.of(TargetFieldMapping.oneOf("__dwca_core_id", aggregation, sources));
+    return this;
+  }
+
+  public MappingPlanBuilder coreIdentity(ValueExpression expression) {
+    coreIdentity = Optional.of(TargetFieldMapping.expression("__dwca_core_id", expression));
     return this;
   }
 
@@ -54,6 +60,11 @@ public final class MappingPlanBuilder {
       throw new IllegalArgumentException(
           "Conflicting merge semantics for core target: " + targetTerm);
     }
+    return this;
+  }
+
+  public MappingPlanBuilder nestedExtensionContext(NestedExtensionContext context) {
+    nestedExtensionContexts.add(context);
     return this;
   }
 
@@ -83,7 +94,8 @@ public final class MappingPlanBuilder {
         coreFields,
         coreFragments,
         new ArrayList<>(coreTargetMerges.values()),
-        builtExtensions);
+        builtExtensions,
+        nestedExtensionContexts);
   }
 
   public static final class ExtensionBuilder {

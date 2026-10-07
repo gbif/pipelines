@@ -37,7 +37,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueEmpty(br);
   }
 
@@ -57,7 +57,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueEmpty(br);
   }
 
@@ -77,7 +77,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.NOT_DETECTED.name(), br.getOccurrenceStatus());
     assertIssueEmpty(br);
   }
 
@@ -97,7 +97,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE, br);
   }
@@ -118,7 +118,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
   }
@@ -139,7 +139,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueEmpty(br);
   }
 
@@ -159,7 +159,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.NOT_DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS, br);
   }
@@ -180,7 +180,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 2);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE, br);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
@@ -202,7 +202,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.NOT_DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
   }
@@ -224,7 +224,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD, br);
   }
@@ -245,7 +245,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD, br);
   }
@@ -266,7 +266,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD, br);
   }
@@ -287,7 +287,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS, br);
   }
@@ -308,7 +308,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.NOT_DETECTED.name(), br.getOccurrenceStatus());
     assertIssueEmpty(br);
   }
 
@@ -328,7 +328,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.NOT_DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 2);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE, br);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
@@ -350,7 +350,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID, br);
   }
@@ -371,7 +371,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID, br);
   }
@@ -392,7 +392,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.NOT_DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID, br);
   }
@@ -413,7 +413,7 @@ public class InterpretOccurrenceStatusTest {
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
-    assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertEquals(OccurrenceStatus.DETECTED.name(), br.getOccurrenceStatus());
     assertIssueSize(br, 2);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID, br);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE, br);
@@ -426,8 +426,10 @@ public class InterpretOccurrenceStatusTest {
     private static final Map<String, OccurrenceStatus> MAP = new HashMap<>();
 
     static {
-      MAP.put(OccurrenceStatus.ABSENT.name(), OccurrenceStatus.ABSENT);
-      MAP.put(OccurrenceStatus.PRESENT.name(), OccurrenceStatus.PRESENT);
+      MAP.put(OccurrenceStatus.ABSENT.name(), OccurrenceStatus.NOT_DETECTED);
+      MAP.put(OccurrenceStatus.PRESENT.name(), OccurrenceStatus.DETECTED);
+      MAP.put(OccurrenceStatus.NOT_DETECTED.name(), OccurrenceStatus.NOT_DETECTED);
+      MAP.put(OccurrenceStatus.DETECTED.name(), OccurrenceStatus.DETECTED);
     }
 
     @Override

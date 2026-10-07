@@ -1,0 +1,121 @@
+{
+  "metadata" : {
+    "createdDate" : "2026-09-17T00:00:00.000",
+    "version" : "2.0.0"
+  },
+  "vocabulary" : {
+    "key" : 2,
+    "name" : "OccurrenceStatus",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2020-07-15T08:22:47.067248",
+    "createdBy" : "mlopezg",
+    "modified" : "2026-09-17T00:00:00.000",
+    "modifiedBy" : "test",
+    "namespace" : null,
+    "definition" : {
+      "en" : "A statement about the presence or absence of a Taxon at a Location."
+    },
+    "label" : {
+      "en" : "Occurrence status"
+    }
+  },
+  "concepts" : [ {
+    "key" : 100,
+    "name" : "Detected",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-09-17T00:00:00.000",
+    "createdBy" : "test",
+    "modified" : "2026-09-17T00:00:00.000",
+    "modifiedBy" : "test",
+    "vocabularyKey" : 2,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "The taxon was detected at the location."
+    },
+    "label" : {
+      "en" : "Detected"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "DETECTED", "detected" ],
+    "tags" : [ ]
+  }, {
+    "key" : 101,
+    "name" : "NotDetected",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-09-17T00:00:00.000",
+    "createdBy" : "test",
+    "modified" : "2026-09-17T00:00:00.000",
+    "modifiedBy" : "test",
+    "vocabularyKey" : 2,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "The taxon was not detected at the location."
+    },
+    "label" : {
+      "en" : "Not detected"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "NOT_DETECTED", "not detected", "notdetected" ],
+    "tags" : [ ]
+  }, {
+    "key" : 40,
+    "name" : "Present",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : 100,
+    "deprecated" : "2026-09-01T00:00:00",
+    "deprecatedBy" : "test",
+    "created" : "2020-07-15T08:19:04.777513",
+    "createdBy" : "mlopezg",
+    "modified" : "2026-09-17T00:00:00.000",
+    "modifiedBy" : "test",
+    "vocabularyKey" : 2,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Present"
+    },
+    "alternativeLabels" : {
+      "en" : [ "reported", "collected", "presence" ]
+    },
+    "hiddenLabels" : [ "PRESENT", "present", "abundant", "common", "observed" ],
+    "tags" : [ ]
+  }, {
+    "key" : 41,
+    "name" : "Absent",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : 101,
+    "deprecated" : "2026-09-01T00:00:00",
+    "deprecatedBy" : "test",
+    "created" : "2020-07-15T07:51:40.898037",
+    "createdBy" : "mlopezg",
+    "modified" : "2026-09-17T00:00:00.000",
+    "modifiedBy" : "test",
+    "vocabularyKey" : 2,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Absent"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "ABSENT", "absent", "extirpated" ],
+    "tags" : [ ]
+  } ]
+}

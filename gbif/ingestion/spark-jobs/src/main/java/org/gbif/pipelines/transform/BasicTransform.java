@@ -15,13 +15,13 @@ package org.gbif.pipelines.transform;
 
 import java.io.Serializable;
 import java.time.Instant;
-import lombok.NoArgsConstructor;
+import java.util.Locale;
 import org.gbif.api.vocabulary.OccurrenceStatus;
-import org.gbif.common.parsers.OccurrenceStatusParser;
-import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.interpreters.core.*;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transform.factory.VocabularyServiceFactory;
 
@@ -67,7 +67,8 @@ public class BasicTransform implements Serializable {
     CoreInterpreter.interpretLicense(source, record::setLicense);
     BasicInterpreter.interpretIdentifiedByIds(source, record);
     BasicInterpreter.interpretRecordedByIds(source, record);
-    BasicInterpreter.interpretOccurrenceStatus(OccurrenceStatusParserKvStore.create())
+    BasicInterpreter.interpretOccurrenceStatus(
+            OccurrenceStatusVocabularyKvStore.create(vocabService))
         .accept(source, record);
     VocabularyInterpreter.interpretEstablishmentMeans(vocabService).accept(source, record);
     VocabularyInterpreter.interpretLifeStage(vocabService).accept(source, record);
@@ -100,22 +101,48 @@ public class BasicTransform implements Serializable {
     return record;
   }
 
-  // This versions will be replaced by vocabulary server in the future
-  @NoArgsConstructor(staticName = "create")
-  public static class OccurrenceStatusParserKvStore
+  /** Vocabulary lookup adapter: concept names → {@link OccurrenceStatus} enum. */
+  static final class OccurrenceStatusVocabularyKvStore
       implements KeyValueStore<String, OccurrenceStatus>, Serializable {
 
-    private final OccurrenceStatusParser parser = OccurrenceStatusParser.getInstance();
+    private final VocabularyService vocabularyService;
+
+    private OccurrenceStatusVocabularyKvStore(VocabularyService vocabularyService) {
+      this.vocabularyService = vocabularyService;
+    }
+
+    static OccurrenceStatusVocabularyKvStore create(VocabularyService vocabularyService) {
+      return new OccurrenceStatusVocabularyKvStore(vocabularyService);
+    }
 
     @Override
-    public OccurrenceStatus get(String s) {
-      ParseResult<OccurrenceStatus> parse = parser.parse(s);
-      return parse.isSuccessful() ? parse.getPayload() : null;
+    public OccurrenceStatus get(String value) {
+      if (value == null || vocabularyService == null) {
+        return null;
+      }
+      return vocabularyService
+          .get(DwcTerm.occurrenceStatus)
+          .flatMap(lookup -> lookup.lookup(value))
+          .map(c -> toOccurrenceStatus(c.getConcept().getName()))
+          .orElse(null);
+    }
+
+    static OccurrenceStatus toOccurrenceStatus(String conceptName) {
+      if (conceptName == null || conceptName.isBlank()) {
+        return null;
+      }
+      String normalized =
+          conceptName.replace("-", "").replace("_", "").replace(" ", "").toUpperCase(Locale.ROOT);
+      return switch (normalized) {
+        case "DETECTED", "PRESENT" -> OccurrenceStatus.DETECTED;
+        case "NOTDETECTED", "ABSENT" -> OccurrenceStatus.NOT_DETECTED;
+        default -> null;
+      };
     }
 
     @Override
     public void close() {
-      // NOP
+      // VocabularyService is a shared singleton
     }
   }
 }

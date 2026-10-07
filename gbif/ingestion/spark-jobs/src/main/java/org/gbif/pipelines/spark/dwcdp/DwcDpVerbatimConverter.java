@@ -6,7 +6,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -32,6 +31,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.TargetMappingPlanRenderer;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.AssertionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping;
@@ -41,9 +41,9 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingBranchExecutionMetrics;
 import org.gbif.pipelines.spark.dwcdp.mapping.execution.MappingExecutionOutput;
-import org.gbif.pipelines.spark.dwcdp.mapping.execution.RelationExecutionMetrics;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageResource;
+import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.PathUtil;
 import org.gbif.pipelines.spark.util.TableLoader;
 
@@ -82,8 +82,13 @@ public class DwcDpVerbatimConverter {
 
   private static final org.apache.avro.Schema EXTENDED_RECORD_SCHEMA = loadExtendedRecordSchema();
   static final String AVRO_EXTENDED_RECORD_AVSC = "avro/extended-record.avsc";
-  static final String INGEST_PLAN_COMPACT = "dwcdp-ingest-plan-compact.txt";
-  static final String INGEST_PLAN_DETAILED = "dwcdp-ingest-plan-detailed.txt";
+  static final String REPORT_DIRECTORY = "dwcdp-to-verbatim-report";
+  static final String INGEST_PLAN_COMPACT = REPORT_DIRECTORY + "/compact.txt";
+  static final String INGEST_PLAN_COMPACT_JSON = REPORT_DIRECTORY + "/compact.json";
+  static final String INGEST_PLAN_DETAILED = REPORT_DIRECTORY + "/detailed.txt";
+  static final String INGEST_PLAN_DETAILED_JSON = REPORT_DIRECTORY + "/detailed.json";
+  static final String STATISTICS_REPORT = REPORT_DIRECTORY + "/statistics.txt";
+  static final String STATISTICS_REPORT_JSON = REPORT_DIRECTORY + "/statistics.json";
 
   private DwcDpVerbatimConverter() {}
 
@@ -252,18 +257,24 @@ public class DwcDpVerbatimConverter {
       DwcDpMappingEngine mappingEngine,
       MappingPlan plan,
       DataPackage dataPackage) {
+    var compact = mappingEngine.targetPlanReport(plan, dataPackage);
+    var detailed = mappingEngine.targetPlanDetailedReport(plan, dataPackage);
+
     writeTextFile(
         fileSystem,
         workspacePath + "/" + INGEST_PLAN_COMPACT,
-        mappingEngine.targetPlan(plan, dataPackage));
+        TargetMappingPlanRenderer.render(compact));
+    writeJsonFile(fileSystem, workspacePath + "/" + INGEST_PLAN_COMPACT_JSON, compact);
     writeTextFile(
         fileSystem,
         workspacePath + "/" + INGEST_PLAN_DETAILED,
-        mappingEngine.targetPlanDetailed(plan, dataPackage));
+        TargetMappingPlanRenderer.render(detailed));
+    writeJsonFile(fileSystem, workspacePath + "/" + INGEST_PLAN_DETAILED_JSON, detailed);
   }
 
   private static void writeTextFile(FileSystem fileSystem, String path, String content) {
     org.apache.hadoop.fs.Path outputPath = new org.apache.hadoop.fs.Path(path);
+    ensureParentDirectory(fileSystem, outputPath);
     try (BufferedWriter writer =
         new BufferedWriter(
             new OutputStreamWriter(fileSystem.create(outputPath, true), StandardCharsets.UTF_8))) {
@@ -272,7 +283,30 @@ public class DwcDpVerbatimConverter {
         writer.newLine();
       }
     } catch (IOException e) {
-      throw new IllegalStateException("Failed to write DwC-DP ingest plan " + path, e);
+      throw new IllegalStateException("Failed to write DwC-DP report " + path, e);
+    }
+  }
+
+  private static void writeJsonFile(FileSystem fileSystem, String path, Object value) {
+    org.apache.hadoop.fs.Path outputPath = new org.apache.hadoop.fs.Path(path);
+    ensureParentDirectory(fileSystem, outputPath);
+    try (var writer =
+        new OutputStreamWriter(fileSystem.create(outputPath, true), StandardCharsets.UTF_8)) {
+      MapperUtil.MAPPER.writerWithDefaultPrettyPrinter().writeValue(writer, value);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to write DwC-DP JSON report " + path, e);
+    }
+  }
+
+  private static void ensureParentDirectory(
+      FileSystem fileSystem, org.apache.hadoop.fs.Path outputPath) {
+    try {
+      org.apache.hadoop.fs.Path parent = outputPath.getParent();
+      if (parent != null && !fileSystem.exists(parent) && !fileSystem.mkdirs(parent)) {
+        throw new IOException("Failed to create report directory " + parent);
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to create DwC-DP report directory", e);
     }
   }
 
@@ -349,109 +383,43 @@ public class DwcDpVerbatimConverter {
       Map<String, Long> sourceCounts,
       Optional<Dataset<ExtendedRecord>> verbatimDataset,
       List<MappingBranchExecutionMetrics> branchMetrics) {
-    List<String> lines = new ArrayList<>();
-    lines.add("DwC-DP conversion report: " + datasetId);
-    lines.add("");
-    lines.add("source tables (raw row counts):");
-    sourceCounts.forEach((resource, count) -> lines.add("  " + resource + ": " + count));
+    DwcDpVerbatimStatisticsReport.Output output = outputStatistics(verbatimDataset);
+    DwcDpVerbatimStatisticsReport report =
+        new DwcDpVerbatimStatisticsReport(
+            datasetId, sourceCounts, DwcDpVerbatimStatisticsReport.branches(branchMetrics), output);
 
-    lines.add("");
-    lines.add("mapping branches (execution funnels):");
-    if (branchMetrics.isEmpty()) {
-      lines.add("  (execution metrics not supplied)");
-    } else {
-      appendBranchMetrics(lines, branchMetrics);
-    }
-
-    lines.add("");
-    lines.add("output extensions (rows actually written):");
-    if (verbatimDataset.isPresent()) {
-      Dataset<ExtendedRecord> records = verbatimDataset.get();
-      long coreRecords = records.count();
-      lines.add("  core records written: " + coreRecords);
-
-      Dataset<Row> extensionStats =
-          records
-              .toDF()
-              .selectExpr("explode(extensions) as (rowType, rows)")
-              .groupBy("rowType")
-              .agg(
-                  functions.sum(functions.size(functions.col("rows"))).alias("rows"),
-                  functions.count(functions.lit(1)).alias("records"))
-              .orderBy("rowType");
-
-      for (Row row : extensionStats.collectAsList()) {
-        lines.add(
-            "  "
-                + row.getAs("rowType")
-                + ": rows="
-                + row.getAs("rows")
-                + ", records-with-this-ext="
-                + row.getAs("records"));
-      }
-    } else {
-      lines.add("  core records written: 0");
-      lines.add("  (output dataset not supplied)");
-    }
-
-    org.apache.hadoop.fs.Path reportPath =
-        new org.apache.hadoop.fs.Path(datasetBasePath + "/conversion-report.txt");
-    try (BufferedWriter writer =
-        new BufferedWriter(
-            new OutputStreamWriter(fileSystem.create(reportPath, true), StandardCharsets.UTF_8))) {
-      for (String line : lines) {
-        writer.write(line);
-        writer.newLine();
-      }
-    } catch (IOException e) {
-      throw new IllegalStateException("Failed to write DwC-DP conversion report", e);
-    }
+    writeTextFile(fileSystem, datasetBasePath + "/" + STATISTICS_REPORT, report.renderText());
+    writeJsonFile(fileSystem, datasetBasePath + "/" + STATISTICS_REPORT_JSON, report);
   }
 
-  private static void appendBranchMetrics(
-      List<String> lines, List<MappingBranchExecutionMetrics> branchMetrics) {
-    for (MappingBranchExecutionMetrics branch : branchMetrics) {
-      lines.add("  " + branch.branchName());
-      int relationNumber = 1;
-      for (RelationExecutionMetrics relation : branch.relations()) {
-        long singleMatch =
-            Math.max(0L, relation.matchedParentRows() - relation.multipleMatchParentRows());
-        lines.add(
-            "    "
-                + relationNumber++
-                + ". "
-                + relation.sourceResource()
-                + " -> "
-                + relation.targetResource()
-                + " ["
-                + relation.cardinality()
-                + ", "
-                + relation.requirement()
-                + (relation.filtered() ? ", FILTERED" : "")
-                + (relation.skipped() ? ", SKIPPED" : "")
-                + "]");
-        lines.add(
-            "       parents: input="
-                + relation.inputRows()
-                + ", key-present="
-                + relation.sourceKeyPresentRows()
-                + ", matched="
-                + relation.matchedParentRows()
-                + ", single-match="
-                + singleMatch
-                + ", multi-match="
-                + relation.multipleMatchParentRows()
-                + ", unmatched="
-                + relation.unmatchedParentRows());
-        lines.add(
-            "       target: before-filter="
-                + relation.targetRowsBeforeFilter()
-                + ", after-filter="
-                + relation.targetRowsAfterFilter()
-                + ", output-rows="
-                + relation.outputRows());
-      }
+  private static DwcDpVerbatimStatisticsReport.Output outputStatistics(
+      Optional<Dataset<ExtendedRecord>> verbatimDataset) {
+    if (verbatimDataset.isEmpty()) {
+      return new DwcDpVerbatimStatisticsReport.Output(0L, false, List.of());
     }
+
+    Dataset<ExtendedRecord> records = verbatimDataset.get();
+    long coreRecords = records.count();
+    Dataset<Row> extensionStats =
+        records
+            .toDF()
+            .selectExpr("explode(extensions) as (rowType, rows)")
+            .groupBy("rowType")
+            .agg(
+                functions.sum(functions.size(functions.col("rows"))).alias("rows"),
+                functions.count(functions.lit(1)).alias("records"))
+            .orderBy("rowType");
+
+    List<DwcDpVerbatimStatisticsReport.Extension> extensions =
+        extensionStats.collectAsList().stream()
+            .map(
+                row ->
+                    new DwcDpVerbatimStatisticsReport.Extension(
+                        row.getAs("rowType"),
+                        ((Number) row.getAs("rows")).longValue(),
+                        ((Number) row.getAs("records")).longValue()))
+            .toList();
+    return new DwcDpVerbatimStatisticsReport.Output(coreRecords, true, extensions);
   }
 
   static void mergeToSingleFile(FileSystem fileSystem, String tempPath, String targetPath)

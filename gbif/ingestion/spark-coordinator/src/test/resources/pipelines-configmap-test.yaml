@@ -33,6 +33,7 @@ vocabularyConfig:
     GeologicalContext: GeoTime
     http://rs.tdwg.org/dwc/terms/typeStatus: TypeStatus
     http://rs.tdwg.org/dwc/terms/sex: Sex
+    http://rs.tdwg.org/dwc/terms/occurrenceStatus: OccurrenceStatus
 grscicollLookup:
   numOfKeyBuckets: 5
   zkConnectionString:

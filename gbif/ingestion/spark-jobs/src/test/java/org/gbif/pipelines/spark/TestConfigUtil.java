@@ -58,6 +58,7 @@ public class TestConfigUtil {
               "http://rs.tdwg.org/dwc/terms/establishmentMeans", "EstablishmentMeans",
               "http://rs.tdwg.org/dwc/terms/pathway", "Pathway",
               "http://rs.tdwg.org/dwc/terms/eventType", "EventType",
+              "http://rs.tdwg.org/dwc/terms/occurrenceStatus", "OccurrenceStatus",
               "https://w3id.org/mixs/0000044", "target_gene"
               // #    http://rs.tdwg.org/dwc/terms/typeStatus: TypeStatus.json
               // #    http://rs.tdwg.org/dwc/terms/sex: Sex.json

@@ -44,6 +44,14 @@ public final class SparkSchemaPathExecutor {
 
       String sourceAlias = aliases.get(currentPath.field(relation.sourceColumn()));
       String targetAlias = targetAliases.get(targetPath.field(relation.targetColumn()));
+      String nestedContextLink =
+          SparkInternalColumns.nestedContextLink(relation.sourceColumn(), relation.targetColumn());
+      String nestedSourceAlias = aliases.get(currentPath.field(nestedContextLink));
+      String nestedTargetAlias = targetAliases.get(targetPath.field(nestedContextLink));
+      if (nestedSourceAlias != null && nestedTargetAlias != null) {
+        sourceAlias = nestedSourceAlias;
+        targetAlias = nestedTargetAlias;
+      }
       if (sourceAlias == null) {
         throw new IllegalArgumentException(
             "Loaded dataset "
