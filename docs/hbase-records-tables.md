@@ -57,18 +57,18 @@ They must be dedicated tables, never the keygen `occurrenceTable` (or any other 
 bulk loads into them and removes records with whole-row deletes, which would also remove any other
 cells stored under the same row key.
 
-The tables are compressed with ZSTD, and the codec has to be available on both sides:
+The tables are compressed with SNAPPY until the cluster is updated to support ZSTD. The codec has
+to be available on both sides:
 
 - HBase, to read the HFiles. Check it on a node with the HBase configuration:
 
   ```shell
-  hbase org.apache.hadoop.hbase.util.CompressionTest hdfs:///tmp/compression-test zstd
+  hbase org.apache.hadoop.hbase.util.CompressionTest hdfs:///tmp/compression-test snappy
   ```
 
 - The Spark executors, which write the HFiles with the compression of the column family
-  (`HFileOutputFormat2.configureIncrementalLoad`). They need the native `libzstd` of Hadoop on the
-  YARN nodes, or `org.apache.hbase:hbase-compression-zstd` on the job classpath. Without it the job
-  fails writing the HFiles, before anything is loaded.
+  (`HFileOutputFormat2.configureIncrementalLoad`). Without the codec the job fails writing the
+  HFiles, before anything is loaded.
 
 In the HBase shell:
 
@@ -80,7 +80,7 @@ create 'lab_occurrence',
   {NUMREGIONS => 100, SPLITALGO => 'DecimalStringSplit'}
 
 # Events: 16 regions, one per first hex character of the SHA-1
-create 'prod_event',
+create 'lab_event',
   {NAME => 'o', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
    BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
   {NUMREGIONS => 16, SPLITALGO => 'HexStringSplit'}
@@ -108,6 +108,27 @@ Check the tables:
 describe 'prod_occurrence'
 list_regions 'prod_occurrence'
 ```
+
+### Moving to ZSTD
+
+ZSTD compresses the JSON of the records better than SNAPPY. Once the cluster supports it:
+
+1. Check the codec on HBase (`CompressionTest ... zstd`) and on the executors: they need the native
+   `libzstd` of Hadoop on the YARN nodes, or `org.apache.hbase:hbase-compression-zstd` on the job
+   classpath.
+2. Change the column family, it applies to the HFiles written from then on:
+
+   ```ruby
+   alter 'prod_occurrence', {NAME => 'o', COMPRESSION => 'ZSTD'}
+   alter 'prod_event', {NAME => 'o', COMPRESSION => 'ZSTD'}
+   ```
+
+3. Rewrite the existing HFiles with a major compaction (or rebuild the tables):
+
+   ```ruby
+   major_compact 'prod_occurrence'
+   major_compact 'prod_event'
+   ```
 
 ## Configuration
 
