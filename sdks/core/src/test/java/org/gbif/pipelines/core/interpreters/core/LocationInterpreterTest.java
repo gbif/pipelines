@@ -562,7 +562,7 @@ public class LocationInterpreterTest {
     // Should
     assertEquals(expected, result);
 
-    // test the opposite case to check the skipCoordinatesSwap changes the behaviour
+    // test the opposite case to check the allowCoordindatesFlipping changes the behaviour
     // state
     expected =
         createLr(
