@@ -70,7 +70,7 @@ public class LocationTransform implements Serializable {
 
     // Sequentially apply interpreters
     LocationInterpreter.interpretCountryAndCoordinates(
-            geocodeKvStore, mdr, skipCoordinatesSwapping(mdr))
+            geocodeKvStore, mdr, allowCoordinatesFlipping(mdr))
         .accept(source, record);
     LocationInterpreter.interpretContinent(geocodeKvStore).accept(source, record);
     LocationInterpreter.interpretGadm(geocodeKvStore).accept(source, record);
@@ -99,12 +99,13 @@ public class LocationTransform implements Serializable {
     return record;
   }
 
-  private boolean skipCoordinatesSwapping(MetadataRecord mdr) {
-    return mdr.getMachineTags().stream()
-        .anyMatch(
-            mt ->
-                mt.getNamespace().equals(TagNamespace.PIPELINES.name())
-                    && mt.getName().equals(TagName.ALLOW_COORDINATES_FLIPPING.name())
-                    && mt.getValue().equalsIgnoreCase("true"));
+  private boolean allowCoordinatesFlipping(MetadataRecord mdr) {
+    return mdr.getMachineTags() != null
+        && mdr.getMachineTags().stream()
+            .anyMatch(
+                mt ->
+                    mt.getNamespace().equals(TagNamespace.PIPELINES.name())
+                        && mt.getName().equals(TagName.ALLOW_COORDINATES_FLIPPING.name())
+                        && mt.getValue().equalsIgnoreCase("true"));
   }
 }
