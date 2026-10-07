@@ -127,7 +127,7 @@ public class RecordsTableWriterTest {
     // manifest, so a failed run repeats the deletes
     assertFalse(get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(20L)).isEmpty());
     Path manifest =
-        RecordsTableWriter.manifestPath(
+        RecordsManifests.path(
             config.getRecordsTableConfig(), RecordType.OCCURRENCE, OCCURRENCE_DATASET);
     assertEquals(3, manifestKeys(manifest).size());
 
@@ -173,8 +173,8 @@ public class RecordsTableWriterTest {
     assertEquals("4", value(b, ATTEMPT_COLUMN));
 
     RecordsTableConfig tableConfig = config.getRecordsTableConfig();
-    Path manifestA = RecordsTableWriter.manifestPath(tableConfig, RecordType.OCCURRENCE, datasetA);
-    Path manifestB = RecordsTableWriter.manifestPath(tableConfig, RecordType.OCCURRENCE, datasetB);
+    Path manifestA = RecordsManifests.path(tableConfig, RecordType.OCCURRENCE, datasetA);
+    Path manifestB = RecordsManifests.path(tableConfig, RecordType.OCCURRENCE, datasetB);
     assertEquals(2, manifestKeys(manifestA).size());
     assertEquals(1, manifestKeys(manifestB).size());
 
@@ -229,14 +229,13 @@ public class RecordsTableWriterTest {
   public void previousManifestIsKeptUntilReplaced() throws Exception {
     String dataset = "3f2c1e6a-9d4b-4c8e-a1f7-5b0e2d9c7a13";
     Path manifest =
-        RecordsTableWriter.manifestPath(
-            config.getRecordsTableConfig(), RecordType.OCCURRENCE, dataset);
+        RecordsManifests.path(config.getRecordsTableConfig(), RecordType.OCCURRENCE, dataset);
     Path previous =
-        RecordsTableWriter.manifestPath(
+        RecordsManifests.path(
             config.getRecordsTableConfig(),
             RecordType.OCCURRENCE,
             dataset,
-            RecordsTableWriter.PREVIOUS);
+            RecordsManifests.PREVIOUS);
 
     load(fileSystem, dataset, 1, occurrences(dataset, 2L, 30L)).commit();
 
@@ -248,7 +247,7 @@ public class RecordsTableWriterTest {
         new FilterFileSystem(fileSystem) {
           @Override
           public boolean rename(Path src, Path dst) throws IOException {
-            return !src.getParent().getName().endsWith(RecordsTableWriter.PENDING)
+            return !src.getParent().getName().endsWith(RecordsManifests.PENDING)
                 && super.rename(src, dst);
           }
         };
@@ -267,10 +266,9 @@ public class RecordsTableWriterTest {
   public void keysOfFailedRunsAreRemoved() throws Exception {
     String dataset = "9a7e4b21-6c3d-4f05-8e1a-2d4c6b8f0e57";
     RecordsTableConfig tableConfig = config.getRecordsTableConfig();
-    Path manifest = RecordsTableWriter.manifestPath(tableConfig, RecordType.OCCURRENCE, dataset);
+    Path manifest = RecordsManifests.path(tableConfig, RecordType.OCCURRENCE, dataset);
     Path stale =
-        RecordsTableWriter.manifestPath(
-            tableConfig, RecordType.OCCURRENCE, dataset, RecordsTableWriter.STALE);
+        RecordsManifests.path(tableConfig, RecordType.OCCURRENCE, dataset, RecordsManifests.STALE);
 
     load(fileSystem, dataset, 1, occurrences(dataset, 5L, 40L)).commit();
 
@@ -326,8 +324,7 @@ public class RecordsTableWriterTest {
       String dataset = "5d6e7f80-0000-4000-8000-00000000000" + i;
       long first = 1000L + i * 100;
       Path manifest =
-          RecordsTableWriter.manifestPath(
-              config.getRecordsTableConfig(), RecordType.OCCURRENCE, dataset);
+          RecordsManifests.path(config.getRecordsTableConfig(), RecordType.OCCURRENCE, dataset);
       List<String> expected = new ArrayList<>();
       for (long key = first; key < first + 3; key++) {
         expected.add(RecordsTableKey.occurrenceRowKey(key));
@@ -357,7 +354,7 @@ public class RecordsTableWriterTest {
         new Configuration(HBASE_SERVER.getConnection().getConfiguration());
 
     String dataset = "c4e8a1f2-7b3d-4e6a-9f05-1d2b3c4e5f60";
-    Path manifest = RecordsTableWriter.manifestPath(tableConfig, RecordType.OCCURRENCE, dataset);
+    Path manifest = RecordsManifests.path(tableConfig, RecordType.OCCURRENCE, dataset);
 
     // loaded, replaced, then a failed run whose keys are removed by the next one
     assertEquals(0, hdfsLoad(hdfs, hdfsConfig, hdfsHbaseConf, dataset, 1, 6L, 60L).commit());
@@ -473,10 +470,9 @@ public class RecordsTableWriterTest {
     }
     for (String state :
         new String[] {
-          "", RecordsTableWriter.PENDING, RecordsTableWriter.PREVIOUS, RecordsTableWriter.STALE
+          "", RecordsManifests.PENDING, RecordsManifests.PREVIOUS, RecordsManifests.STALE
         }) {
-      Path manifest =
-          RecordsTableWriter.manifestPath(tableConfig, RecordType.OCCURRENCE, dataset, state);
+      Path manifest = RecordsManifests.path(tableConfig, RecordType.OCCURRENCE, dataset, state);
       assertFalse(fileSystem.exists(manifest.getParent()));
     }
 
