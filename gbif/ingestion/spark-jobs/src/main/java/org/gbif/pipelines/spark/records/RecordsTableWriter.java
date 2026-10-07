@@ -33,11 +33,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
@@ -76,7 +78,8 @@ import scala.Tuple2;
  * as a stale one, and commits delete the stale keys that aren't in the new load too.
  *
  * <p>A single dataset (incremental indexing) and many datasets (full index build) are loaded the
- * same way, in one bulk load.
+ * same way. Loads of more than {@link RecordsTableConfig#getBulkLoadIfRecordsMoreThan()} records
+ * are written as HFiles and bulk loaded, smaller ones with Puts.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -109,7 +112,7 @@ public final class RecordsTableWriter {
       return this == OCCURRENCE ? RecordsConverter.forOccurrences() : RecordsConverter.forEvents();
     }
 
-    String table(RecordsTableConfig config) {
+    public String table(RecordsTableConfig config) {
       String table = this == OCCURRENCE ? config.getOccurrenceTable() : config.getEventTable();
       return Objects.requireNonNull(table, "No HBase records table configured for " + this);
     }
@@ -306,7 +309,10 @@ public final class RecordsTableWriter {
     long loaded =
         readKeys(spark, pendingManifests(fileSystem, tableConfig, type, datasetKeys)).count();
 
-    if (loaded > 0) {
+    if (loaded > 0 && loaded <= tableConfig.getBulkLoadIfRecordsMoreThan()) {
+      // a bulk load would add small HFiles to every region it touches, to compact later
+      writePuts(prepared, converter, hbaseConf, tableName);
+    } else if (loaded > 0) {
       try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
           Table table = connection.getTable(tableName);
           RegionLocator regionLocator = connection.getRegionLocator(tableName)) {
@@ -363,6 +369,53 @@ public final class RecordsTableWriter {
     }
     log.info("Deleted {} {} records of dataset {}", deleted, type, datasetKey);
     return deleted;
+  }
+
+  /**
+   * Empties the table of a record type, keeping its regions, and removes all its manifests, to
+   * build the table from scratch. The table is emptied first: if removing the manifests fails, they
+   * only list keys that are no longer in the table.
+   */
+  public static void truncate(
+      FileSystem fileSystem, PipelinesConfig config, Configuration hbaseConf, RecordType type)
+      throws IOException {
+
+    RecordsTableConfig tableConfig = config.getRecordsTableConfig();
+    String table = type.table(tableConfig);
+    if (sharedTables(config).contains(table)) {
+      throw new IllegalArgumentException(
+          "Records table " + table + " is also the keygen or fragments table, not truncating it");
+    }
+
+    TableName tableName = TableName.valueOf(table);
+    try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
+        Admin admin = connection.getAdmin()) {
+      if (!admin.tableExists(tableName)) {
+        throw new IOException("Records table " + tableName + " doesn't exist");
+      }
+      if (admin.isTableEnabled(tableName)) {
+        admin.disableTable(tableName);
+      }
+      // the table is enabled again once truncated
+      admin.truncateTable(tableName, true);
+    }
+
+    for (String state : new String[] {"", PENDING, PREVIOUS, STALE}) {
+      fileSystem.delete(manifestRoot(tableConfig, type, state), true);
+    }
+    log.info("Truncated {} and removed its {} manifests", tableName, type);
+  }
+
+  /** Tables of other components, never to be used as records tables */
+  private static List<String> sharedTables(PipelinesConfig config) {
+    List<String> tables = new ArrayList<>();
+    tables.add(config.getFragmentsTable());
+    if (config.getKeygen() != null) {
+      tables.add(config.getKeygen().getOccurrenceTable());
+      tables.add(config.getKeygen().getLookupTable());
+      tables.add(config.getKeygen().getCounterTable());
+    }
+    return tables;
   }
 
   static Path manifestPath(RecordsTableConfig config, RecordType type, String datasetKey) {
@@ -535,6 +588,46 @@ public final class RecordsTableWriter {
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.STRING()))
         .toDF(MANIFEST_PARTITION, ROW_KEY);
+  }
+
+  /** Writes the records with Puts, for loads too small to be worth HFiles */
+  private static void writePuts(
+      Dataset<Row> prepared,
+      RecordsConverter converter,
+      Configuration hbaseConf,
+      TableName tableName) {
+    SerializableConfiguration conf = new SerializableConfiguration(hbaseConf);
+    String table = tableName.getNameAsString();
+    prepared
+        .javaRDD()
+        .foreachPartition(
+            rows -> {
+              byte[] family = Bytes.toBytes(COLUMN_FAMILY);
+              try (Connection connection = ConnectionFactory.createConnection(conf.get());
+                  BufferedMutator mutator =
+                      connection.getBufferedMutator(TableName.valueOf(table))) {
+                while (rows.hasNext()) {
+                  Row row = rows.next();
+                  RecordsConverter.ApiRecord record = converter.convert(row.getAs(LOAD_JSON));
+                  Put put = new Put(Bytes.toBytes(record.rowKey()));
+                  put.addColumn(
+                      family,
+                      Bytes.toBytes(ATTEMPT_COLUMN),
+                      Bytes.toBytes(String.valueOf((Integer) row.getAs(LOAD_ATTEMPT))));
+                  put.addColumn(
+                      family,
+                      Bytes.toBytes(DATASET_KEY_COLUMN),
+                      Bytes.toBytes((String) row.getAs(LOAD_DATASET_KEY)));
+                  put.addColumn(
+                      family,
+                      Bytes.toBytes(INTERPRETED_COLUMN),
+                      Bytes.toBytes(record.interpreted()));
+                  put.addColumn(
+                      family, Bytes.toBytes(VERBATIM_COLUMN), Bytes.toBytes(record.verbatim()));
+                  mutator.mutate(put);
+                }
+              }
+            });
   }
 
   private static void writeHFiles(

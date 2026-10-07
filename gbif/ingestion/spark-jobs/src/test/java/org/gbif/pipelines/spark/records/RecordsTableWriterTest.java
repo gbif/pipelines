@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
@@ -40,6 +41,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.RecordsTableConfig;
 import org.gbif.pipelines.spark.HbaseServer;
@@ -85,6 +87,8 @@ public class RecordsTableWriterTest {
     tableConfig.setOccurrenceTable(OCCURRENCE_TABLE);
     tableConfig.setEventTable(EVENT_TABLE);
     tableConfig.setManifestPath(root + "/manifests");
+    // the fixtures are small, bulk load them anyway, see smallLoadsAreWrittenWithPuts
+    tableConfig.setBulkLoadIfRecordsMoreThan(0);
 
     config = new PipelinesConfig();
     config.setOutputPath(root + "/data");
@@ -344,6 +348,8 @@ public class RecordsTableWriterTest {
     tableConfig.setOccurrenceTable(OCCURRENCE_TABLE);
     tableConfig.setEventTable(EVENT_TABLE);
     tableConfig.setManifestPath(root + "/manifests");
+    // the fixtures are small, bulk load them anyway, see smallLoadsAreWrittenWithPuts
+    tableConfig.setBulkLoadIfRecordsMoreThan(0);
     PipelinesConfig hdfsConfig = new PipelinesConfig();
     hdfsConfig.setOutputPath(root + "/data");
     hdfsConfig.setRecordsTableConfig(tableConfig);
@@ -368,6 +374,156 @@ public class RecordsTableWriterTest {
         1,
         RecordsTableWriter.deleteDataset(
             spark, hdfs, hdfsConfig, hdfsHbaseConf, RecordType.OCCURRENCE, dataset));
+  }
+
+  @Test
+  public void smallLoadsAreWrittenWithPuts() throws Exception {
+    String table = "test_records_puts";
+    String dataset = "5b2f6a71-0c3e-4f8d-8e2a-6d4c1b9a3e57";
+    createTable(table, "10:", "50:");
+    PipelinesConfig putsConfig = copyConfig(table);
+    putsConfig.getRecordsTableConfig().setBulkLoadIfRecordsMoreThan(10);
+    Path hfiles = new Path(config.getOutputPath() + "/" + dataset + "/1/records-hfile");
+
+    RecordsLoad first =
+        RecordsTableWriter.load(
+            spark,
+            fileSystem,
+            putsConfig,
+            hbaseConf,
+            RecordType.OCCURRENCE,
+            dataset,
+            1,
+            occurrences(dataset, 3L, 33L, 83L));
+    assertEquals(3, first.getLoaded());
+    assertEquals(0, first.commit());
+    assertFalse(fileSystem.exists(hfiles));
+
+    for (long key : new long[] {3L, 33L, 83L}) {
+      Result row = get(table, RecordsTableKey.occurrenceRowKey(key));
+      assertEquals(dataset, value(row, DATASET_KEY_COLUMN));
+      assertEquals("1", value(row, ATTEMPT_COLUMN));
+      assertEquals(key, MAPPER.readTree(value(row, INTERPRETED_COLUMN)).path("key").asLong());
+      assertEquals(key, MAPPER.readTree(value(row, VERBATIM_COLUMN)).path("key").asLong());
+    }
+
+    // replaced and removed as with a bulk load
+    assertEquals(
+        1,
+        RecordsTableWriter.load(
+                spark,
+                fileSystem,
+                putsConfig,
+                hbaseConf,
+                RecordType.OCCURRENCE,
+                dataset,
+                2,
+                occurrences(dataset, 3L, 83L))
+            .commit());
+    assertEquals("2", value(get(table, RecordsTableKey.occurrenceRowKey(3L)), ATTEMPT_COLUMN));
+    assertTrue(get(table, RecordsTableKey.occurrenceRowKey(33L)).isEmpty());
+  }
+
+  @Test
+  public void truncateEmptiesTheTableKeepingItsRegions() throws Exception {
+    String table = "test_records_truncate";
+    String dataset = "1d0e1a3c-5f2b-4d2a-9a51-2f3c6b9e7d10";
+    createTable(table, "10:", "50:");
+    PipelinesConfig truncateConfig = copyConfig(table);
+    RecordsTableConfig tableConfig = truncateConfig.getRecordsTableConfig();
+
+    RecordsTableWriter.load(
+            spark,
+            fileSystem,
+            truncateConfig,
+            hbaseConf,
+            RecordType.OCCURRENCE,
+            dataset,
+            1,
+            occurrences(dataset, 1L, 20L, 75L))
+        .commit();
+    // a failed run leaves a pending manifest, kept as stale by the next load
+    RecordsTableWriter.load(
+        spark,
+        fileSystem,
+        truncateConfig,
+        hbaseConf,
+        RecordType.OCCURRENCE,
+        dataset,
+        2,
+        occurrences(dataset, 1L, 30L));
+    RecordsTableWriter.load(
+        spark,
+        fileSystem,
+        truncateConfig,
+        hbaseConf,
+        RecordType.OCCURRENCE,
+        dataset,
+        3,
+        occurrences(dataset, 1L));
+
+    RecordsTableWriter.truncate(fileSystem, truncateConfig, hbaseConf, RecordType.OCCURRENCE);
+
+    for (long key : new long[] {1L, 20L, 30L, 75L}) {
+      assertTrue(get(table, RecordsTableKey.occurrenceRowKey(key)).isEmpty());
+    }
+    try (RegionLocator locator =
+        HBASE_SERVER.getConnection().getRegionLocator(TableName.valueOf(table))) {
+      assertEquals(3, locator.getStartKeys().length);
+    }
+    for (String state :
+        new String[] {
+          "", RecordsTableWriter.PENDING, RecordsTableWriter.PREVIOUS, RecordsTableWriter.STALE
+        }) {
+      Path manifest =
+          RecordsTableWriter.manifestPath(tableConfig, RecordType.OCCURRENCE, dataset, state);
+      assertFalse(fileSystem.exists(manifest.getParent()));
+    }
+
+    // built again from scratch, nothing to remove
+    RecordsLoad rebuilt =
+        RecordsTableWriter.load(
+            spark,
+            fileSystem,
+            truncateConfig,
+            hbaseConf,
+            RecordType.OCCURRENCE,
+            dataset,
+            4,
+            occurrences(dataset, 5L));
+    assertEquals(0, rebuilt.commit());
+    assertEquals("4", value(get(table, RecordsTableKey.occurrenceRowKey(5L)), ATTEMPT_COLUMN));
+  }
+
+  @Test
+  public void truncateRefusesTheKeygenTable() throws Exception {
+    PipelinesConfig keygenConfig = copyConfig(HbaseServer.CFG.getOccurrenceTable());
+    KeygenConfig keygen = new KeygenConfig();
+    keygen.setOccurrenceTable(HbaseServer.CFG.getOccurrenceTable());
+    keygenConfig.setKeygen(keygen);
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            RecordsTableWriter.truncate(
+                fileSystem, keygenConfig, hbaseConf, RecordType.OCCURRENCE));
+    try (Admin admin = HBASE_SERVER.getConnection().getAdmin()) {
+      assertTrue(admin.isTableEnabled(TableName.valueOf(HbaseServer.CFG.getOccurrenceTable())));
+    }
+  }
+
+  /** The test configuration with another occurrence table and its own manifests */
+  private static PipelinesConfig copyConfig(String occurrenceTable) throws Exception {
+    RecordsTableConfig tableConfig = new RecordsTableConfig();
+    tableConfig.setOccurrenceTable(occurrenceTable);
+    tableConfig.setEventTable(EVENT_TABLE);
+    tableConfig.setManifestPath(
+        "file://" + Files.createTempDirectory("records-manifests").toAbsolutePath());
+
+    PipelinesConfig copy = new PipelinesConfig();
+    copy.setOutputPath(config.getOutputPath());
+    copy.setRecordsTableConfig(tableConfig);
+    return copy;
   }
 
   private static RecordsLoad hdfsLoad(

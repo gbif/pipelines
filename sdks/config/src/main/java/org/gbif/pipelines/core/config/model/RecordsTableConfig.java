@@ -31,6 +31,12 @@ public class RecordsTableConfig implements Serializable {
   /** Directory name (relative to the dataset/attempt output) used to stage HFiles */
   private String hfilePath = "records-hfile";
 
+  /**
+   * Loads with more records are written as HFiles and bulk loaded, smaller ones with Puts, as the
+   * HFiles of a small load add store files to the regions for little gain
+   */
+  private long bulkLoadIfRecordsMoreThan = 50_000;
+
   /** Number of Delete mutations sent per batch when removing records */
   private int deleteBatchSize = 1_000;
 }
