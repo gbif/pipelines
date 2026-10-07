@@ -52,12 +52,10 @@ class CoordinatesParser {
    * </ol>
    *
    * @param extendedRecord {@link ExtendedRecord} with the fields to parse.
+   * @param allowCoordinatesFlipping true if coordinates flipping to fix suspected wrong coordinates
+   *     is allowed, false otherwise
    * @return {@link ParsedField< GeocodeRequest >} for the coordinates parsed.
    */
-  static ParsedField<GeocodeRequest> parseCoords(ExtendedRecord extendedRecord) {
-    return parseCoords(extendedRecord, true);
-  }
-
   static ParsedField<GeocodeRequest> parseCoords(
       ExtendedRecord extendedRecord, boolean allowCoordinatesFlipping) {
     Set<String> issues = new TreeSet<>();

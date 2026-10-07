@@ -41,16 +41,6 @@ public class LocationParser {
   public static final double COORDINATE_PRECISION_UPPER_BOUND = 1d;
 
   public static ParsedField<ParsedLocation> parse(
-      ExtendedRecord er, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
-    return parse(er, kvStore, true);
-  }
-
-  public static ParsedField<ParsedLocation> parseWithoutCoordinatesFlipping(
-      ExtendedRecord er, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
-    return parse(er, kvStore, false);
-  }
-
-  private static ParsedField<ParsedLocation> parse(
       ExtendedRecord er,
       KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore,
       boolean allowCoordinatesFlipping) {
