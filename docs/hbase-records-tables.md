@@ -9,8 +9,8 @@ the records from these tables.
 | occurrence records | occurrences       | salted `gbifId`            | `occurrence/{key}`, `occurrence/{key}/verbatim` |
 | event records      | events            | `internalId`               | `event/{key}`                                   |
 
-Both tables are written by `IndexingPipeline` (one dataset) and `FullIndexBuildPipeline` (all
-datasets) before the documents are indexed, and the records of a dataset are removed by
+Both tables are written by `IndexingPipeline` (one dataset), `FullIndexBuildPipeline` (all
+datasets) and `FullRecordsTableBuildPipeline` (all datasets, tables only) before the documents are indexed, and the records of a dataset are removed by
 `DatasetDeleteCallback`. See `gbif/ingestion/spark-jobs/src/main/java/org/gbif/pipelines/spark/records`.
 
 ## Layout
@@ -120,8 +120,13 @@ recordsTableConfig:
   manifestPath: hdfs://ha-nn/data/ingest/records-manifests
   # optional
   hfilePath: records-hfile
+  bulkLoadIfRecordsMoreThan: 50000
   deleteBatchSize: 1000
 ```
+
+A load of more than `bulkLoadIfRecordsMoreThan` records (a big dataset, or a full build) is written
+as HFiles and bulk loaded. Smaller ones, most incremental loads, are written with `Put`s: the
+HFiles of a small load would add a small store file to every region it touches, to compact later.
 
 `hbaseSiteConfig`, `coreSiteConfig` and `hdfsSiteConfig` from the pipelines configuration are used
 to connect to HBase.
@@ -155,6 +160,31 @@ The tables and the indices are built together, with indexing stopped:
    manifests and builds the new indices.
 4. Swap the aliases (or use `--switchOnSuccess`) and deploy the web services reading from HBase.
 5. Restart the indexing.
+
+### Rebuilding the tables only
+
+`FullRecordsTableBuildPipeline` rebuilds a table from the last successful interpretation of every
+dataset (the `json` parquet, as `FullIndexBuildPipeline`), without touching Elasticsearch. It
+loads all the datasets in one bulk load and writes their manifests.
+
+```shell
+# in place: empties the table (keeping its regions) and its manifests, then loads it
+FullRecordsTableBuildPipeline --config=pipelines.yaml --datasetType=OCCURRENCE --truncate=true
+
+# next to the live table: create the new table pre-split first, as above
+FullRecordsTableBuildPipeline --config=pipelines.yaml --datasetType=SAMPLING_EVENT \
+  --table=prod_event_20261007 \
+  --manifestPath=hdfs://ha-nn/data/ingest/records-manifests-20261007
+```
+
+- In place, the API serves no records from the table until the load completes. Without
+  `--truncate`, the records are replaced and the ones no longer in the datasets are deleted, but
+  the records of datasets no longer interpreted (e.g. deleted ones) stay.
+- Next to the live table, the manifests must be new too, as they describe the keys of one table.
+  Once built, point `recordsTableConfig` (table and `manifestPath`) and the web services at the new
+  table. Stop the indexing during the build, or the datasets indexed meanwhile are only in the old
+  table.
+- `truncate` refuses the keygen and fragments tables.
 
 ## Reading a record
 
