@@ -16,6 +16,8 @@ package org.gbif.pipelines.transform;
 import java.io.Serializable;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.TagName;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -67,7 +69,9 @@ public class LocationTransform implements Serializable {
             .build();
 
     // Sequentially apply interpreters
-    LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr).accept(source, record);
+    LocationInterpreter.interpretCountryAndCoordinates(
+            geocodeKvStore, mdr, allowCoordinatesFlipping(mdr))
+        .accept(source, record);
     LocationInterpreter.interpretContinent(geocodeKvStore).accept(source, record);
     LocationInterpreter.interpretGadm(geocodeKvStore).accept(source, record);
     LocationInterpreter.interpretWaterBody(source, record);
@@ -93,5 +97,15 @@ public class LocationTransform implements Serializable {
     LocationInterpreter.setParentEventId(source, record);
 
     return record;
+  }
+
+  private boolean allowCoordinatesFlipping(MetadataRecord mdr) {
+    return mdr.getMachineTags() != null
+        && mdr.getMachineTags().stream()
+            .anyMatch(
+                mt ->
+                    mt.getNamespace().equals(TagNamespace.PIPELINES.name())
+                        && mt.getName().equals(TagName.ALLOW_COORDINATES_FLIPPING.name())
+                        && mt.getValue().equalsIgnoreCase("true"));
   }
 }

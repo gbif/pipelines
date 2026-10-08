@@ -42,6 +42,13 @@ public class LocationParser {
 
   public static ParsedField<ParsedLocation> parse(
       ExtendedRecord er, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
+    return parse(er, kvStore, true);
+  }
+
+  public static ParsedField<ParsedLocation> parse(
+      ExtendedRecord er,
+      KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore,
+      boolean allowCoordinatesFlipping) {
     ModelUtils.checkNullOrEmpty(er);
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
@@ -69,7 +76,7 @@ public class LocationParser {
     Country countryMatched = countryCode.orElseGet(() -> countryName.orElse(null));
 
     // Parse coordinates
-    ParsedField<GeocodeRequest> coordsParsed = parseLatLng(er);
+    ParsedField<GeocodeRequest> coordsParsed = parseLatLng(er, allowCoordinatesFlipping);
 
     // Add issues from coordinates parsing
     issues.addAll(coordsParsed.getIssues());
@@ -85,7 +92,11 @@ public class LocationParser {
 
     // If the coords parsing was successful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), kvStore)
+        LocationMatcher.create(
+                parsedLocation.getLatLng(),
+                parsedLocation.getCountry(),
+                kvStore,
+                allowCoordinatesFlipping)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -139,11 +150,14 @@ public class LocationParser {
     return Optional.ofNullable(field.getResult());
   }
 
-  private static ParsedField<GeocodeRequest> parseLatLng(ExtendedRecord er) {
-    ParsedField<GeocodeRequest> parsedLatLon = CoordinatesParser.parseCoords(er);
+  private static ParsedField<GeocodeRequest> parseLatLng(
+      ExtendedRecord er, boolean allowCoordinatesFlipping) {
+    ParsedField<GeocodeRequest> parsedLatLon =
+        CoordinatesParser.parseCoords(er, allowCoordinatesFlipping);
     Term datum = DwcTerm.geodeticDatum;
 
-    if (!parsedLatLon.isSuccessful()) {
+    if (!parsedLatLon.isSuccessful()
+        || parsedLatLon.getIssues().contains(SUSPECTED_SWAPPED_COORDINATE.name())) {
       // coords parsing failed, try the footprintWKT
       ParsedField<GeocodeRequest> parsedFootprint = CoordinatesParser.parseFootprint(er);
       if (parsedFootprint.isSuccessful()) {
