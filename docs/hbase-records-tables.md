@@ -154,12 +154,105 @@ to connect to HBase.
 
 ### Manifests
 
-The keys loaded for each dataset are kept in
-`<manifestPath>/<occurrence|event>/datasetKey=<datasetKey>`. When a dataset is indexed again, the
-keys of its previous manifest that aren't in the new load are deleted from HBase, and the manifest
-is replaced, once the index no longer returns them (`_pending` and `_previous` directories hold the
-manifests during a run). The keys loaded by a failed run are kept in a `_stale` directory, and the
-next commit deletes the ones that aren't in its load too.
+HBase can't list the rows of a dataset without scanning the whole table, so the row keys loaded for
+each dataset are kept in a manifest, a parquet with one `rowKey` column. When a dataset is indexed
+again, the keys in its old manifest that aren't in the new load are the records removed from the
+dataset, and they are deleted from HBase (see `RecordsManifests` and `RecordsTableWriter`).
+
+A manifest is in one of four states. The state is a suffix of the record type directory, not a
+subdirectory:
+
+```
+<manifestPath>/
+  occurrence/datasetKey=<key>/                    current: keys of the last committed load
+  occurrence_pending/datasetKey=<key>/            keys of the running load, written before its records
+  occurrence_previous/datasetKey=<key>/           the current manifest while a commit replaces it
+  occurrence_stale/datasetKey=<key>/run=<millis>/ pending manifests of failed runs, one per run
+  event/...                                       the same for events
+```
+
+A run has two steps:
+
+1. **Load** (`RecordsTableWriter.load`), before indexing. A pending manifest left by an earlier run
+   means that run failed before committing: it is moved to `_stale`. Then the keys of the new
+   documents are written to `_pending` and the records are written to HBase. Nothing is deleted
+   yet, so the old records are still served while the index still returns them.
+2. **Commit** (`RecordsLoad.commit`), once the index no longer returns the removed keys. Deletes
+   from HBase:
+
+   ```
+   (current, or previous if there is no current)  ∪  every stale manifest  −  pending
+   ```
+
+   and then replaces the manifests: `current` → `_previous`, `_pending` → `current`, and removes
+   `_previous` and `_stale`. The manifests are moved after the deletes, so if the deletes fail the
+   next run repeats them. Deleting a row that doesn't exist does nothing, so repeating them is safe.
+
+#### Examples
+
+Dataset `A`, indexed for the first time with records `1 2 3`:
+
+| Step   | HBase       | current | pending | stale | Deleted |
+|--------|-------------|---------|---------|-------|---------|
+| load   | `1 2 3`     | –       | `1 2 3` | –     |         |
+| commit | `1 2 3`     | `1 2 3` | –       | –     | nothing |
+
+**Records removed.** `A` is indexed again with `2 3 4`, record `1` was removed from the dataset:
+
+| Step   | HBase       | current | pending | stale | Deleted                    |
+|--------|-------------|---------|---------|-------|----------------------------|
+| load   | `1 2 3 4`   | `1 2 3` | `2 3 4` | –     |                            |
+| commit | `2 3 4`     | `2 3 4` | –       | –     | `{1 2 3} − {2 3 4}` = `1`  |
+
+Between the load and the commit, `1` is still in HBase: the old index can still return it, and the
+API can still serve it.
+
+**Failed run.** `A` (current `2 3 4`) is crawled with `2 3 4 5`, but indexing fails after the load,
+so there is no commit. `5` is in HBase but in no committed manifest. The next run has `2 3 4`:
+
+| Step           | HBase       | current | pending   | stale       | Deleted                                    |
+|----------------|-------------|---------|-----------|-------------|--------------------------------------------|
+| load (fails)   | `2 3 4 5`   | `2 3 4` | `2 3 4 5` | –           |                                            |
+| next load      | `2 3 4 5`   | `2 3 4` | `2 3 4`   | `2 3 4 5`   |                                            |
+| next commit    | `2 3 4`     | `2 3 4` | –         | –           | `{2 3 4} ∪ {2 3 4 5} − {2 3 4}` = `5`      |
+
+Without the stale manifest, `5` would stay in HBase forever. Several failed runs in a row leave one
+`run=<millis>` directory each, and the next commit takes all of them into account.
+
+**Commit interrupted.** The job dies after moving `current` → `_previous`, but before moving
+`_pending` → `current`. The deletes have already happened (`4` was removed). On disk there is
+`_previous` (`2 3 4`), `_pending` (`2 3`) and no `current`. The next run, again with `2 3`, moves
+`_pending` to `_stale` as for a failed run, and reads `_previous` as the last committed manifest.
+Its commit deletes `{2 3 4} ∪ {2 3} − {2 3}` = `4` again, which does nothing, then moves its own
+`_pending` to `current` and removes `_previous`.
+
+**Dataset now empty.** `A` (current `2 3 4`) is indexed with no records. No pending manifest is
+written, so the commit deletes `{2 3 4} − {}`, all of them, and removes every manifest of `A`.
+
+**Dataset deleted** (`DatasetDeleteCallback`). After removing the dataset from Elasticsearch, it
+deletes every key in any manifest of the dataset (current or previous, stale and pending), and
+then removes the manifests in all four states.
+
+#### What removes the manifests
+
+The `datasetKey=<key>` directories are kept for as long as the dataset has records in HBase. They
+are removed by:
+
+| What                                         | Removes                                                     |
+|----------------------------------------------|-------------------------------------------------------------|
+| A commit                                     | `_previous` and `_stale`, plus `current` if the load was empty |
+| `DatasetDeleteCallback` (dataset deleted)    | All four states of the dataset, after deleting its records  |
+| `FullRecordsTableBuildPipeline --truncate`   | All manifests of the record type, after emptying the table  |
+| Manually (building from scratch, see below)  | Everything under `manifestPath`                             |
+
+A load first writes the keys to `<workingDirectory>/records-manifests`, then moves each dataset to
+`_pending` and removes that directory.
+
+Nothing else removes them. If a dataset is deleted and its delete message is never processed
+successfully, its manifests and its records stay until the message is replayed or the table is
+rebuilt with `--truncate`. A rebuild without `--truncate` only commits the datasets it loads, so it
+doesn't remove them either. The empty `<type>_pending`, `_previous` and `_stale` root directories
+stay after their datasets are committed. They take no space.
 
 ## Building from scratch
 
