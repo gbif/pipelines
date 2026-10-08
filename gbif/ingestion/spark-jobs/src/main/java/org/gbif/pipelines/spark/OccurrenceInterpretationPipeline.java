@@ -140,7 +140,7 @@ public class OccurrenceInterpretationPipeline {
               ? OccurrenceInterpretType.fromString(args.interpretTypes.get(0))
               : Optional.empty();
 
-      if (interpretTypeOpt.isPresent()) {
+      if (interpretTypeOpt.isPresent() && interpretTypeOpt.get() != OccurrenceInterpretType.ALL) {
         OccurrenceInterpretType it = interpretTypeOpt.get();
         switch (it) {
           case MULTI_TAXONOMY:
