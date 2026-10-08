@@ -73,15 +73,21 @@ public class PostprocessValidation {
               .build());
 
   public IdentifierValidationResult validate() throws IOException {
+    ValidationMetrics validationMetrics = getValidationMetrics();
     if (useThresholdSkipTagValue() || ignoreChecklists() || skipInstallationKey()) {
       String validationMessage = "Skip validation because machine tag id_threshold_skip=true";
-      return new IdentifierValidationResult(0d, 0d, true, validationMessage);
+      return new IdentifierValidationResult(
+          validationMetrics.totalCount,
+          validationMetrics.absentIdCount,
+          validationMetrics.duplicateCount,
+          true,
+          validationMessage);
     } else {
       return validateThreshold();
     }
   }
 
-  private IdentifierValidationResult validateThreshold() throws IOException {
+  public ValidationMetrics getValidationMetrics() throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = IdentifiersPipeline.METRICS_FILENAME;
@@ -103,15 +109,27 @@ public class PostprocessValidation {
         };
 
     long totalCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT);
+
+    // absentIdCount is the number of records in this new attempt that do not yet have
+    // an assigned numeric ID from HBase
     long absentIdCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.ABSENT_GBIF_ID_COUNT);
     long existingCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT);
+    long duplicateCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT);
+    return new ValidationMetrics(
+        threshold, totalCount, absentIdCount, existingCount, duplicateCount);
+  }
 
-    if (totalCount == 0d) {
-      log.error("Interpreted totalCount {}, invalid absentIdCount {}", totalCount, absentIdCount);
+  private IdentifierValidationResult validateThreshold() throws IOException {
+    ValidationMetrics result = getValidationMetrics();
+    if (result.totalCount() == 0d) {
+      log.error(
+          "Interpreted totalCount {}, invalid absentIdCount {}",
+          result.totalCount(),
+          result.absentIdCount());
       throw new IllegalArgumentIOException("No records with valid GBIF ID!");
     }
 
-    double absentPercent = (double) absentIdCount * 100 / totalCount;
+    double absentPercent = (double) result.absentIdCount() * 100 / result.totalCount();
     long apiRecords = getApiRecords();
 
     boolean isValid = true;
@@ -120,17 +138,17 @@ public class PostprocessValidation {
       validationMessage = "Current configured to skip ID threshold validation";
     } else {
       if (absentPercent > 0d && apiRecords > 0) {
-        if (absentPercent > threshold && existingCount != apiRecords) {
+        if (absentPercent > result.threshold() && result.existingCount() != apiRecords) {
           validationMessage =
               String.format(
                   "GBIF ID problems exceed %.0f%% threshold: %.0f%% duplicates; %d total records; %d absent records",
-                  threshold, absentPercent, totalCount, absentIdCount);
+                  result.threshold(), absentPercent, result.totalCount(), result.absentIdCount());
           isValid = false;
         } else {
           validationMessage =
               String.format(
                   "GBIF ID problems within %.0f%% threshold: %.0f%% duplicates; %d total records; %d absent records",
-                  threshold, absentPercent, totalCount, absentIdCount);
+                  result.threshold(), absentPercent, result.totalCount(), result.absentIdCount());
         }
       } else if (absentPercent == 100d) {
         validationMessage = "Skip ID validation: dataset has no API records and all IDs are new";
@@ -141,8 +159,20 @@ public class PostprocessValidation {
         isValid = false;
       }
     }
-    return new IdentifierValidationResult(totalCount, absentIdCount, isValid, validationMessage);
+    return new IdentifierValidationResult(
+        result.totalCount(),
+        result.absentIdCount(),
+        result.duplicateCount(),
+        isValid,
+        validationMessage);
   }
+
+  public record ValidationMetrics(
+      Double threshold,
+      long totalCount,
+      long absentIdCount,
+      long existingCount,
+      long duplicateCount) {}
 
   /**
    * Reads a yaml file and returns value by key
