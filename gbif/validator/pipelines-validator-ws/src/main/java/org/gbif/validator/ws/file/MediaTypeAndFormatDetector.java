@@ -10,10 +10,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -71,13 +71,15 @@ public class MediaTypeAndFormatDetector {
     if (COMPRESS_CONTENT_TYPE.contains(detectedContentType)) {
       List<Path> content;
       try (Stream<Path> list = Files.list(dataFilePath)) {
-        content = list.collect(Collectors.toList());
+        content = list.toList();
       }
       if (content.size() == 1) {
         contentType = MediaTypeAndFormatDetector.detectMediaType(content.get(0));
       } else {
         if (content.stream().anyMatch(c -> isNameColDPFile(c.getFileName().toString()))) {
           return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.COLDP));
+        } else if (content.stream().anyMatch(MediaTypeAndFormatDetector::isDwCDatapackage)) {
+          return  Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCDP));
         } else {
           return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCA));
         }
@@ -92,6 +94,10 @@ public class MediaTypeAndFormatDetector {
       return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.SPREADSHEET));
     }
     return Optional.empty();
+  }
+
+  private static boolean isDwCDatapackage(Path c) {
+    return c.getFileName().toString().toLowerCase(Locale.ROOT).endsWith("datapackage.json");
   }
 
   static boolean isNameColDPFile(String filName) {
