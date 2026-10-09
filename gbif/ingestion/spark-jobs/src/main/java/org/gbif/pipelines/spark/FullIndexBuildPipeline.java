@@ -26,6 +26,10 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsService;
+import org.gbif.pipelines.spark.records.IndexSchema;
+import org.gbif.pipelines.spark.records.RecordsTableWriter;
+import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordType;
+import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordsLoad;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
 import org.gbif.pipelines.spark.util.IndexSettings;
@@ -262,8 +266,26 @@ public class FullIndexBuildPipeline {
       }
     }
 
+    // Write the records served by the API to HBase, before the indices can return their keys
+    RecordsLoad recordsLoad =
+        RecordsTableWriter.load(
+            spark,
+            fileSystem,
+            config,
+            RecordsTableWriter.hbaseConfiguration(config),
+            isOccurrence ? RecordType.OCCURRENCE : RecordType.EVENT,
+            scanResult.datasetAttemptMap(),
+            hdfs,
+            config.getRebuildPath());
+
+    // with the _source disabled the indices only return keys, fields that aren't indexed aren't
+    // sent
+    Dataset<Row> documents =
+        hdfs.drop(IndexSchema.fieldsNotSent(schemaPath, config.getIndexConfig().isSourceEnabled()));
+
     // datasetId + "_" + attempt + "_" + indexVersion + "_" + timestamp;
-    hdfs.join(broadcast(datasetCountsDF), "datasetkey")
+    documents
+        .join(broadcast(datasetCountsDF), "datasetkey")
         .withColumn(
             "index_name",
             when(
@@ -314,6 +336,13 @@ public class FullIndexBuildPipeline {
       }
     }
 
+    if (args.switchOnSuccess) {
+      EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
+    }
+
+    // deletes the removed records, once the swapped indices no longer return them
+    recordsLoad.commit();
+
     if (args.deleteTempParquetOnSuccess) {
       fileSystem.delete(new org.apache.hadoop.fs.Path(config.getRebuildPath() + "/elastic"), true);
     }
@@ -321,10 +350,6 @@ public class FullIndexBuildPipeline {
     fileSystem.close();
     spark.stop();
     spark.close();
-
-    if (args.switchOnSuccess) {
-      EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
-    }
 
     log.info("Full index build completed");
   }
