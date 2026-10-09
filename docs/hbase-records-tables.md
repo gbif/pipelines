@@ -346,3 +346,22 @@ String json = Bytes.toString(result.getValue(Bytes.toBytes("o"), Bytes.toBytes("
 For a page of search results, send one `table.get(List<Get>)` with the keys returned by
 Elasticsearch, keep the Elasticsearch order, and skip missing rows: a record can be deleted after
 the search was answered.
+
+## Testing on lab
+
+`gbif/ingestion/spark-jobs/scripts/records_test.py` is an end-to-end test on lab with a dataset
+registered for it. It crawls three versions of a generated archive (records added, removed and
+rewritten) and after each load checks the index, the HBase rows, the manifests, and the
+Elasticsearch documents against `indexConfig.sourceEnabled` (`verbatim` kept in the `_source`, or
+not sent and the index of the dataset created with the `_source` disabled). It needs `kubectl`
+access to the lab and test namespaces and Python 3; see its docstring (`--help`) for the steps.
+
+```shell
+python3 gbif/ingestion/spark-jobs/scripts/records_test.py build --records 200000
+python3 gbif/ingestion/spark-jobs/scripts/records_test.py run --records 200000 --org <key> \
+    --installation <key> --archives-url <url of the archives>
+# set indexConfig.sourceEnabled: false, restart the indexing, and crawl v3 again
+python3 gbif/ingestion/spark-jobs/scripts/records_test.py run --records 200000 --from-step 3 \
+    --archives-url <url of the archives>
+python3 gbif/ingestion/spark-jobs/scripts/records_test.py delete
+```
