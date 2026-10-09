@@ -62,6 +62,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private final ObjectMapper objectMapper;
 
+  private final StepResolverService stepResolverService;
+
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
 
@@ -309,7 +311,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
           Optional.ofNullable(validationMapper.get(key))
               .orElse(newValidationInstance(key, dataFile, Status.QUEUED));
 
-      Set<StepType> pipelinesSteps = getPipelineSteps(dataFile);
+      Set<StepType> pipelinesSteps = stepResolverService.resolve(dataFile.getFileFormat());
 
       // Set future steps
       v.setStatus(Status.QUEUED);
@@ -389,31 +391,4 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     messagePublisher.send(message);
   }
 
-  private Set<StepType> getPipelineSteps(DataFile dataFile) {
-    if (dataFile.getFileFormat() == FileFormat.COLDP) {
-      return Set.of(StepType.VALIDATOR_VALIDATE_ARCHIVE);
-    }
-
-    StepType stepType;
-    if (dataFile.getFileFormat() == FileFormat.DWCA
-        || dataFile.getFileFormat() == FileFormat.TABULAR
-        || dataFile.getFileFormat() == FileFormat.SPREADSHEET) {
-      stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM;
-    } else if (dataFile.getFileFormat() == FileFormat.XML) {
-      stepType = StepType.VALIDATOR_XML_TO_VERBATIM;
-    } else {
-      throw new IllegalArgumentException(
-          dataFile.getFileFormat()
-              + " file format is not supported, file name: "
-              + dataFile.getSourceFileName());
-    }
-
-    return new LinkedHashSet<>(
-        List.of(
-            StepType.VALIDATOR_VALIDATE_ARCHIVE,
-            stepType,
-            StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
-            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
-            StepType.VALIDATOR_COLLECT_METRICS));
-  }
 }

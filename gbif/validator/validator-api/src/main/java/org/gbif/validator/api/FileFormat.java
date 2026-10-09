@@ -6,7 +6,8 @@ public enum FileFormat {
   XML(false),
   TABULAR(true),
   SPREADSHEET(false),
-  COLDP(true);
+  COLDP(true),
+  DWCDP(true);
 
   final boolean tabularBased;
 
