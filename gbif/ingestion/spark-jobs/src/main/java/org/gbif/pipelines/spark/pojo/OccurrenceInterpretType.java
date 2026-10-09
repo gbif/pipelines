@@ -9,7 +9,8 @@ public enum OccurrenceInterpretType {
   CLUSTERING,
   REGEN_OUTPUTS,
   REGEN_JSON_OUTPUTS,
-  REGEN_HDFS_OUTPUTS;
+  REGEN_HDFS_OUTPUTS,
+  ALL;
 
   /**
    * Parse a string into an {@link OccurrenceInterpretType} in a case-insensitive manner.

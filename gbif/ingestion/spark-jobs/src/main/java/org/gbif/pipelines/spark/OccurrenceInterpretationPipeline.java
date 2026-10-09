@@ -140,7 +140,7 @@ public class OccurrenceInterpretationPipeline {
               ? OccurrenceInterpretType.fromString(args.interpretTypes.get(0))
               : Optional.empty();
 
-      if (interpretTypeOpt.isPresent()) {
+      if (interpretTypeOpt.isPresent() && interpretTypeOpt.get() != OccurrenceInterpretType.ALL) {
         OccurrenceInterpretType it = interpretTypeOpt.get();
         switch (it) {
           case MULTI_TAXONOMY:
@@ -907,6 +907,7 @@ public class OccurrenceInterpretationPipeline {
                   element_at(classification, lit("specificepithet")).as("specificepithet"),
                   element_at(classification, lit("infraspecificepithet"))
                       .as("infraspecificepithet"),
+                  element_at(classification, lit("infragenericepithet")).as("infragenericepithet"),
                   element_at(classification, lit("taxonrank")).as("taxonrank"),
                   element_at(classification, lit("kingdomkey")).as("kingdomkey"),
                   element_at(classification, lit("phylumkey")).as("phylumkey"),

@@ -3,6 +3,9 @@ package org.gbif.pipelines.core.parsers.location.parser;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LATITUDE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LONGITUDE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.SUSPECTED_NEGATED_LATITUDE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.SUSPECTED_NEGATED_LONGITUDE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.SUSPECTED_SWAPPED_COORDINATE;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,19 +36,29 @@ public class CoordinatesFunction {
       latLng ->
           GeocodeRequest.create(latLng.getLng(), latLng.getLat(), latLng.getUncertaintyMeters());
 
-  public static Set<String> getIssueTypes(UnaryOperator<GeocodeRequest> transformation) {
+  public static Set<String> getIssueTypes(
+      UnaryOperator<GeocodeRequest> transformation, boolean allowCoordinatesFlipping) {
     if (transformation == NEGATED_LAT_FN) {
-      return Collections.singleton(PRESUMED_NEGATED_LATITUDE.name());
+      return allowCoordinatesFlipping
+          ? Collections.singleton(PRESUMED_NEGATED_LATITUDE.name())
+          : Collections.singleton(SUSPECTED_NEGATED_LATITUDE.name());
     }
     if (transformation == NEGATED_LNG_FN) {
-      return Collections.singleton(PRESUMED_NEGATED_LONGITUDE.name());
+      return allowCoordinatesFlipping
+          ? Collections.singleton(PRESUMED_NEGATED_LONGITUDE.name())
+          : Collections.singleton(SUSPECTED_NEGATED_LONGITUDE.name());
     }
     if (transformation == NEGATED_COORDS_FN) {
-      return new TreeSet<>(
-          Arrays.asList(PRESUMED_NEGATED_LATITUDE.name(), PRESUMED_NEGATED_LONGITUDE.name()));
+      return allowCoordinatesFlipping
+          ? new TreeSet<>(
+              Arrays.asList(PRESUMED_NEGATED_LATITUDE.name(), PRESUMED_NEGATED_LONGITUDE.name()))
+          : new TreeSet<>(
+              Arrays.asList(SUSPECTED_NEGATED_LATITUDE.name(), SUSPECTED_NEGATED_LONGITUDE.name()));
     }
     if (transformation == SWAPPED_COORDS_FN) {
-      return Collections.singleton(PRESUMED_SWAPPED_COORDINATE.name());
+      return allowCoordinatesFlipping
+          ? Collections.singleton(PRESUMED_SWAPPED_COORDINATE.name())
+          : Collections.singleton(SUSPECTED_SWAPPED_COORDINATE.name());
     }
 
     return Collections.emptySet();
