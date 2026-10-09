@@ -5,10 +5,10 @@ import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.struct;
 import static org.apache.spark.sql.functions.to_json;
 import static org.gbif.pipelines.spark.records.RecordsTableKey.ATTEMPT_COLUMN;
-import static org.gbif.pipelines.spark.records.RecordsTableKey.COLUMN_FAMILY;
 import static org.gbif.pipelines.spark.records.RecordsTableKey.DATASET_KEY_COLUMN;
 import static org.gbif.pipelines.spark.records.RecordsTableKey.INTERPRETED_COLUMN;
 import static org.gbif.pipelines.spark.records.RecordsTableKey.VERBATIM_COLUMN;
+import static org.gbif.pipelines.spark.records.RecordsTableKey.family;
 import static org.gbif.pipelines.spark.records.RecordsTableWriter.DOCUMENT_DATASET_KEY;
 
 import java.io.IOException;
@@ -178,32 +178,26 @@ class RecordsTable {
         .javaRDD()
         .foreachPartition(
             rows -> {
-              byte[] family = Bytes.toBytes(COLUMN_FAMILY);
               try (Connection connection = ConnectionFactory.createConnection(conf.get());
                   BufferedMutator mutator =
                       connection.getBufferedMutator(TableName.valueOf(table))) {
                 while (rows.hasNext()) {
                   Row row = rows.next();
                   RecordsConverter.ApiRecord record = converter.convert(row.getAs(LOAD_JSON));
+                  // both families in the same Put, the row is written atomically
                   Put put = new Put(Bytes.toBytes(record.rowKey()));
-                  put.addColumn(
-                      family,
-                      Bytes.toBytes(ATTEMPT_COLUMN),
-                      Bytes.toBytes(String.valueOf((Integer) row.getAs(LOAD_ATTEMPT))));
-                  put.addColumn(
-                      family,
-                      Bytes.toBytes(DATASET_KEY_COLUMN),
-                      Bytes.toBytes((String) row.getAs(LOAD_DATASET_KEY)));
-                  put.addColumn(
-                      family,
-                      Bytes.toBytes(INTERPRETED_COLUMN),
-                      Bytes.toBytes(record.interpreted()));
-                  put.addColumn(
-                      family, Bytes.toBytes(VERBATIM_COLUMN), Bytes.toBytes(record.verbatim()));
+                  addColumn(put, ATTEMPT_COLUMN, String.valueOf((Integer) row.getAs(LOAD_ATTEMPT)));
+                  addColumn(put, DATASET_KEY_COLUMN, row.getAs(LOAD_DATASET_KEY));
+                  addColumn(put, INTERPRETED_COLUMN, record.interpreted());
+                  addColumn(put, VERBATIM_COLUMN, record.verbatim());
                   mutator.mutate(put);
                 }
               }
             });
+  }
+
+  private static void addColumn(Put put, String column, String value) {
+    put.addColumn(Bytes.toBytes(family(column)), Bytes.toBytes(column), Bytes.toBytes(value));
   }
 
   private void bulkLoad(Dataset<Row> prepared, FileSystem fileSystem, String workingDirectory)
@@ -237,8 +231,6 @@ class RecordsTable {
       Path hfilePath)
       throws IOException {
 
-    byte[] family = Bytes.toBytes(COLUMN_FAMILY);
-
     JavaPairRDD<Tuple2<String, String>, String> cells =
         prepared
             .javaRDD()
@@ -271,8 +263,13 @@ class RecordsTable {
         .mapToPair(
             cell -> {
               byte[] row = Bytes.toBytes(cell._1._1);
+              String column = cell._1._2;
               KeyValue kv =
-                  new KeyValue(row, family, Bytes.toBytes(cell._1._2), Bytes.toBytes(cell._2));
+                  new KeyValue(
+                      row,
+                      Bytes.toBytes(family(column)),
+                      Bytes.toBytes(column),
+                      Bytes.toBytes(cell._2));
               return new Tuple2<>(new ImmutableBytesWritable(row), kv);
             })
         .saveAsNewAPIHadoopFile(
@@ -310,7 +307,7 @@ class RecordsTable {
     }
   }
 
-  /** Orders cells by row key and column, as HFiles require */
+  /** Orders cells by row key, family and column, as HFiles require */
   static class CellComparator implements Comparator<Tuple2<String, String>>, Serializable {
 
     @Serial private static final long serialVersionUID = 1L;
@@ -318,7 +315,11 @@ class RecordsTable {
     @Override
     public int compare(Tuple2<String, String> o1, Tuple2<String, String> o2) {
       int byRow = o1._1.compareTo(o2._1);
-      return byRow != 0 ? byRow : o1._2.compareTo(o2._2);
+      if (byRow != 0) {
+        return byRow;
+      }
+      int byFamily = family(o1._2).compareTo(family(o2._2));
+      return byFamily != 0 ? byFamily : o1._2.compareTo(o2._2);
     }
   }
 

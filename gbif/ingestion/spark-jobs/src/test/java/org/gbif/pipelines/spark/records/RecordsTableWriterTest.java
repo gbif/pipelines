@@ -1,9 +1,10 @@
 package org.gbif.pipelines.spark.records;
 
 import static org.gbif.pipelines.spark.records.RecordsTableKey.ATTEMPT_COLUMN;
-import static org.gbif.pipelines.spark.records.RecordsTableKey.COLUMN_FAMILY;
 import static org.gbif.pipelines.spark.records.RecordsTableKey.DATASET_KEY_COLUMN;
+import static org.gbif.pipelines.spark.records.RecordsTableKey.DATA_FAMILY;
 import static org.gbif.pipelines.spark.records.RecordsTableKey.INTERPRETED_COLUMN;
+import static org.gbif.pipelines.spark.records.RecordsTableKey.METADATA_FAMILY;
 import static org.gbif.pipelines.spark.records.RecordsTableKey.VERBATIM_COLUMN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -21,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -45,6 +48,7 @@ import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.RecordsTableConfig;
 import org.gbif.pipelines.spark.HbaseServer;
+import org.gbif.pipelines.spark.records.RecordsTable.CellComparator;
 import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordType;
 import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordsLoad;
 import org.gbif.pipelines.spark.util.SparkTestSession;
@@ -52,6 +56,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import scala.Tuple2;
 
 public class RecordsTableWriterTest {
 
@@ -111,6 +116,7 @@ public class RecordsTableWriterTest {
 
     for (long key : new long[] {1L, 20L, 75L}) {
       Result row = get(OCCURRENCE_TABLE, RecordsTableKey.occurrenceRowKey(key));
+      assertFamilies(row);
       assertEquals(OCCURRENCE_DATASET, value(row, DATASET_KEY_COLUMN));
       assertEquals("1", value(row, ATTEMPT_COLUMN));
       assertEquals(key, MAPPER.readTree(value(row, INTERPRETED_COLUMN)).path("key").asLong());
@@ -373,6 +379,28 @@ public class RecordsTableWriterTest {
             spark, hdfs, hdfsConfig, hdfsHbaseConf, RecordType.OCCURRENCE, dataset));
   }
 
+  /** HFiles need the cells of a row sorted by family, then column */
+  @Test
+  public void cellsAreSortedByRowFamilyAndColumn() {
+    List<Tuple2<String, String>> cells =
+        new ArrayList<>(
+            List.of(
+                new Tuple2<>("02:2", INTERPRETED_COLUMN),
+                new Tuple2<>("01:1", DATASET_KEY_COLUMN),
+                new Tuple2<>("01:1", VERBATIM_COLUMN),
+                new Tuple2<>("01:1", ATTEMPT_COLUMN),
+                new Tuple2<>("01:1", INTERPRETED_COLUMN)));
+    cells.sort(new CellComparator());
+    assertEquals(
+        List.of(
+            new Tuple2<>("01:1", INTERPRETED_COLUMN),
+            new Tuple2<>("01:1", VERBATIM_COLUMN),
+            new Tuple2<>("01:1", ATTEMPT_COLUMN),
+            new Tuple2<>("01:1", DATASET_KEY_COLUMN),
+            new Tuple2<>("02:2", INTERPRETED_COLUMN)),
+        cells);
+  }
+
   @Test
   public void smallLoadsAreWrittenWithPuts() throws Exception {
     String table = "test_records_puts";
@@ -398,6 +426,7 @@ public class RecordsTableWriterTest {
 
     for (long key : new long[] {3L, 33L, 83L}) {
       Result row = get(table, RecordsTableKey.occurrenceRowKey(key));
+      assertFamilies(row);
       assertEquals(dataset, value(row, DATASET_KEY_COLUMN));
       assertEquals("1", value(row, ATTEMPT_COLUMN));
       assertEquals(key, MAPPER.readTree(value(row, INTERPRETED_COLUMN)).path("key").asLong());
@@ -598,7 +627,8 @@ public class RecordsTableWriterTest {
     try (Admin admin = HBASE_SERVER.getConnection().getAdmin()) {
       admin.createTable(
           TableDescriptorBuilder.newBuilder(TableName.valueOf(name))
-              .setColumnFamily(ColumnFamilyDescriptorBuilder.of(COLUMN_FAMILY))
+              .setColumnFamily(ColumnFamilyDescriptorBuilder.of(DATA_FAMILY))
+              .setColumnFamily(ColumnFamilyDescriptorBuilder.of(METADATA_FAMILY))
               .build(),
           splitKeys);
     }
@@ -611,9 +641,27 @@ public class RecordsTableWriterTest {
   }
 
   private static String value(Result row, String column) {
-    byte[] value = row.getValue(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(column));
+    byte[] value =
+        row.getValue(Bytes.toBytes(RecordsTableKey.family(column)), Bytes.toBytes(column));
     assertNotNull("missing " + column, value);
     return Bytes.toString(value);
+  }
+
+  /** The records in d, the load metadata in m, nothing else */
+  private static void assertFamilies(Result row) {
+    assertEquals(Set.of(DATA_FAMILY, METADATA_FAMILY), columns(row.getNoVersionMap().keySet()));
+    assertEquals(
+        Set.of(INTERPRETED_COLUMN, VERBATIM_COLUMN),
+        columns(row.getFamilyMap(Bytes.toBytes(DATA_FAMILY)).keySet()));
+    assertEquals(
+        Set.of(ATTEMPT_COLUMN, DATASET_KEY_COLUMN),
+        columns(row.getFamilyMap(Bytes.toBytes(METADATA_FAMILY)).keySet()));
+  }
+
+  private static Set<String> columns(Set<byte[]> names) {
+    Set<String> result = new TreeSet<>();
+    names.forEach(name -> result.add(Bytes.toString(name)));
+    return result;
   }
 
   private static String readResource(String path) throws Exception {

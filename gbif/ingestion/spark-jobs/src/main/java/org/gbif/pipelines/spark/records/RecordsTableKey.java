@@ -13,15 +13,33 @@ import org.gbif.pipelines.keygen.Keygen;
  *       with a single Get.
  *   <li>Events: the internalId, a SHA-1 hex string that is already evenly distributed.
  * </ul>
+ *
+ * <p>The records are in the {@value #DATA_FAMILY} family, read by the API with Gets. The columns
+ * describing the load are in the small {@value #METADATA_FAMILY} family, stored in their own files,
+ * so reports and checks by dataset scan it without reading the records.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RecordsTableKey {
 
-  public static final String COLUMN_FAMILY = "o";
+  public static final String DATA_FAMILY = "d";
+  public static final String METADATA_FAMILY = "m";
+
+  // d
   public static final String INTERPRETED_COLUMN = "interpreted";
   public static final String VERBATIM_COLUMN = "verbatim";
+
+  // m
   public static final String DATASET_KEY_COLUMN = "datasetKey";
   public static final String ATTEMPT_COLUMN = "attempt";
+
+  /** Family of a column */
+  public static String family(String column) {
+    return switch (column) {
+      case INTERPRETED_COLUMN, VERBATIM_COLUMN -> DATA_FAMILY;
+      case DATASET_KEY_COLUMN, ATTEMPT_COLUMN -> METADATA_FAMILY;
+      default -> throw new IllegalArgumentException("Unknown column " + column);
+    };
+  }
 
   public static String occurrenceRowKey(long gbifId) {
     return Keygen.getSaltedKey(gbifId);

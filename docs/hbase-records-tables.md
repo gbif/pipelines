@@ -30,14 +30,20 @@ of datasets), `FullIndexBuildPipeline` (all datasets) and `FullRecordsTableBuild
 
 ## Layout
 
-Both tables have a single column family, `o`, with these columns:
+Both tables have two column families, written together in the same row:
 
 | Column          | Value                                                                       |
 |-----------------|-----------------------------------------------------------------------------|
-| `o:interpreted` | JSON of the API `Occurrence` (or `Event`), as returned by the web services  |
-| `o:verbatim`    | JSON of the API `VerbatimOccurrence`                                        |
-| `o:datasetKey`  | Dataset the record belongs to                                               |
-| `o:attempt`     | Crawl attempt the record comes from                                         |
+| `d:interpreted` | JSON of the API `Occurrence` (or `Event`), as returned by the web services  |
+| `d:verbatim`    | JSON of the API `VerbatimOccurrence`                                        |
+| `m:datasetKey`  | Dataset the record belongs to                                               |
+| `m:attempt`     | Crawl attempt the record comes from                                         |
+
+- `d` (data) holds the records, read by the API with `Get`s of `d` only.
+- `m` (metadata) holds the small columns describing the load. HBase stores each family in its own
+  HFiles, so reports and checks by dataset scan `m` alone without reading the records, e.g. to
+  count the rows per dataset or to compare the table with the [manifests](#manifests). Small
+  columns to report or filter on in the future go in `m`.
 
 The JSON is serialized with the same Jackson configuration as the web services (non-null fields,
 ISO-8601 dates, GBIF mixins), so it can be returned as is or read into the API model classes.
@@ -90,14 +96,18 @@ In the HBase shell:
 ```ruby
 # Occurrences: 100 regions, one per salt bucket ("00:" ... "99:")
 create 'lab_occurrence',
-  {NAME => 'o', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
+  {NAME => 'd', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
    BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
+  {NAME => 'm', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
+   BLOOMFILTER => 'ROW'},
   {NUMREGIONS => 100, SPLITALGO => 'DecimalStringSplit'}
 
 # Events: 16 regions, one per first hex character of the SHA-1
 create 'lab_event',
-  {NAME => 'o', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
+  {NAME => 'd', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
    BLOOMFILTER => 'ROW', BLOCKSIZE => '32768'},
+  {NAME => 'm', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF',
+   BLOOMFILTER => 'ROW'},
   {NUMREGIONS => 16, SPLITALGO => 'HexStringSplit'}
 ```
 
@@ -107,11 +117,13 @@ create 'lab_event',
   `HexStringSplit` splits at `10000000`, `20000000`, ... `f0000000`, matching the lowercase SHA-1s.
 - `BLOOMFILTER => 'ROW'`: every dataset load adds HFiles to the regions, a `Get` skips the ones
   that don't hold the row.
-- `BLOCKSIZE => '32768'`: reads are random `Get`s, smaller blocks than the 64KB default mean less
-  data read and decompressed per record.
+- `BLOCKSIZE => '32768'` on `d`: reads are random `Get`s, smaller blocks than the 64KB default mean
+  less data read and decompressed per record. `m` is scanned, it keeps the default.
 - `DATA_BLOCK_ENCODING => 'FAST_DIFF'`: the cells of a row repeat its key, the encoding stores the
   differences only.
 - `VERSIONS => 1`: each load replaces the record, older versions aren't needed.
+- Two families double the HFiles of a bulk load (one per family and region), and the compactions
+  with them; the loads written with `Put`s aren't affected. Keep it to these two.
 
 As the tables grow, HBase splits the regions further, and the writer follows whatever regions
 exist. To start the event table with more regions, use e.g. `{NUMREGIONS => 256, SPLITALGO =>
@@ -131,11 +143,11 @@ ZSTD compresses the JSON of the records better than SNAPPY. Once the cluster sup
 1. Check the codec on HBase (`CompressionTest ... zstd`) and on the executors: they need the native
    `libzstd` of Hadoop on the YARN nodes, or `org.apache.hbase:hbase-compression-zstd` on the job
    classpath.
-2. Change the column family, it applies to the HFiles written from then on:
+2. Change both column families, it applies to the HFiles written from then on:
 
    ```ruby
-   alter 'prod_occurrence', {NAME => 'o', COMPRESSION => 'ZSTD'}
-   alter 'prod_event', {NAME => 'o', COMPRESSION => 'ZSTD'}
+   alter 'prod_occurrence', {NAME => 'd', COMPRESSION => 'ZSTD'}, {NAME => 'm', COMPRESSION => 'ZSTD'}
+   alter 'prod_event', {NAME => 'd', COMPRESSION => 'ZSTD'}, {NAME => 'm', COMPRESSION => 'ZSTD'}
    ```
 
 3. Rewrite the existing HFiles with a major compaction (or rebuild the tables):
@@ -338,14 +350,41 @@ long gbifId = 1234567L;
 String rowKey = String.format("%02d:%d", gbifId % 100, gbifId);  // RecordsTableKey.occurrenceRowKey
 
 Get get = new Get(Bytes.toBytes(rowKey));
-get.addColumn(Bytes.toBytes("o"), Bytes.toBytes("interpreted"));  // or "verbatim"
+get.addColumn(Bytes.toBytes("d"), Bytes.toBytes("interpreted"));  // or "verbatim"
 Result result = table.get(get);
-String json = Bytes.toString(result.getValue(Bytes.toBytes("o"), Bytes.toBytes("interpreted")));
+String json = Bytes.toString(result.getValue(Bytes.toBytes("d"), Bytes.toBytes("interpreted")));
 ```
 
 For a page of search results, send one `table.get(List<Get>)` with the keys returned by
 Elasticsearch, keep the Elasticsearch order, and skip missing rows: a record can be deleted after
 the search was answered.
+
+## Reporting by dataset
+
+The row key doesn't contain the dataset, so a report by dataset is a full scan, made light by
+reading `m` only. Run it as a Spark or MapReduce job, ideally over a snapshot
+(`TableSnapshotInputFormat`) to keep the load off the region servers:
+
+```java
+Scan scan = new Scan();
+scan.addFamily(Bytes.toBytes("m"));  // never reads the records
+scan.setCaching(1000);
+scan.setCacheBlocks(false);
+```
+
+To read the records of one dataset, filter on `m:datasetKey` on the region servers and load `d`
+only for the matching rows:
+
+```java
+SingleColumnValueFilter filter = new SingleColumnValueFilter(
+    Bytes.toBytes("m"), Bytes.toBytes("datasetKey"), CompareOperator.EQUAL, Bytes.toBytes(datasetKey));
+filter.setFilterIfMissing(true);
+Scan scan = new Scan().setFilter(filter);
+scan.setLoadColumnFamiliesOnDemand(true);
+```
+
+For the keys of a dataset (deletes, reprocessing) use its [manifest](#manifests) instead, which
+doesn't scan the table.
 
 ## Testing on lab
 

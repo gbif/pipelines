@@ -444,9 +444,9 @@ def hbase_shell(script):
 
 
 def hbase_attempts(gbif_ids):
-    """gbifId -> o:attempt of its row, None when the row doesn't exist"""
+    """gbifId -> m:attempt of its row, None when the row doesn't exist"""
     script = "".join(
-        f"puts 'KEY {g}'\nget '{TABLE}', '{row_key(g)}', 'o:attempt'\n" for g in gbif_ids
+        f"puts 'KEY {g}'\nget '{TABLE}', '{row_key(g)}', 'm:attempt'\n" for g in gbif_ids
     )
     attempts, current = {g: None for g in gbif_ids}, None
     for line in hbase_shell(script).splitlines():
@@ -461,7 +461,7 @@ def hbase_attempts(gbif_ids):
 
 
 def hbase_interpreted(gbif_id):
-    return hbase_shell(f"get '{TABLE}', '{row_key(gbif_id)}', 'o:interpreted'\n")
+    return hbase_shell(f"get '{TABLE}', '{row_key(gbif_id)}', 'd:interpreted'\n")
 
 
 # ---------------------------------------------------------------------------- pipelines configuration
@@ -698,7 +698,7 @@ def check_records(state, ids, expected, count):
 
     one = min(expected)
     if not re.search(rf"individualCount\W+{count}\b", hbase_interpreted(one)):
-        fail(f"o:interpreted of {one} doesn't have individualCount {count}")
+        fail(f"d:interpreted of {one} doesn't have individualCount {count}")
 
     keys = manifest_keys(dataset)
     if keys is not None and keys != len(ids):
