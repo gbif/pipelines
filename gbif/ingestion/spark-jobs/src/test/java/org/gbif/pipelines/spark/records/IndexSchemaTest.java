@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.records;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -16,13 +17,30 @@ public class IndexSchemaTest {
   private static final String OCCURRENCE_SCHEMA = schemaPath("es-occurrence-schema.json");
   private static final String EVENT_SCHEMA = schemaPath("es-event-schema.json");
 
+  /** Until records are served from HBase, the indices are created with the schema as is */
+  @Test
+  public void sourceEnabledKeepsTheSchema() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    for (String schemaPath : List.of(OCCURRENCE_SCHEMA, EVENT_SCHEMA)) {
+      JsonNode schema = mapper.readTree(Files.readString(Paths.get(schemaPath)));
+      assertEquals(schema, mapper.readTree(IndexSchema.mappings(schemaPath, true)));
+      assertArrayEquals(new String[0], IndexSchema.fieldsNotSent(schemaPath, true));
+    }
+  }
+
   /** Records are served from HBase, the indices only return document ids */
   @Test
-  public void sourceIsDisabled() throws Exception {
+  public void sourceDisabled() throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
     for (String schemaPath : List.of(OCCURRENCE_SCHEMA, EVENT_SCHEMA)) {
-      JsonNode schema = new ObjectMapper().readTree(Files.readString(Paths.get(schemaPath)));
-      assertFalse(schema.path("_source").path("enabled").asBoolean(true));
+      JsonNode mappings = mapper.readTree(IndexSchema.mappings(schemaPath, false));
+      assertEquals(mapper.readTree("{\"enabled\":false}"), mappings.path("_source"));
+      assertFalse(mappings.path("properties").isMissingNode());
     }
+    assertArrayEquals(
+        new String[] {"multimediaItems", "verbatim"},
+        IndexSchema.fieldsNotSent(OCCURRENCE_SCHEMA, false));
+    assertArrayEquals(new String[] {"verbatim"}, IndexSchema.fieldsNotSent(EVENT_SCHEMA, false));
   }
 
   @Test

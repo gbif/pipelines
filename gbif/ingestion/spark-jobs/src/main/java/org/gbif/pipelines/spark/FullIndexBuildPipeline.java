@@ -278,9 +278,10 @@ public class FullIndexBuildPipeline {
             hdfs,
             config.getRebuildPath());
 
-    // the indices only return keys, fields that aren't indexed aren't sent
+    // with the _source disabled the indices only return keys, fields that aren't indexed aren't
+    // sent
     Dataset<Row> documents =
-        hdfs.drop(IndexSchema.unindexedFields(schemaPath).toArray(new String[0]));
+        hdfs.drop(IndexSchema.fieldsNotSent(schemaPath, config.getIndexConfig().isSourceEnabled()));
 
     // datasetId + "_" + attempt + "_" + indexVersion + "_" + timestamp;
     documents

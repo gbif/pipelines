@@ -215,9 +215,9 @@ public class IndexingPipeline {
       throw new UncheckedIOException(e);
     }
 
-    // the index only returns keys, fields that aren't indexed aren't sent
+    // with the _source disabled the index only returns keys, fields that aren't indexed aren't sent
     Dataset<Row> documents =
-        df.drop(IndexSchema.unindexedFields(esSchemaPath).toArray(new String[0]));
+        df.drop(IndexSchema.fieldsNotSent(esSchemaPath, config.getIndexConfig().isSourceEnabled()));
 
     // Write to Elasticsearch
     documents
@@ -256,6 +256,7 @@ public class IndexingPipeline {
   @Data
   public static class ElasticOptions {
     String esSchemaPath;
+    @Builder.Default boolean sourceEnabled = true;
     String esIndexName;
     String[] esAlias;
     String[] esHosts;
@@ -295,6 +296,7 @@ public class IndexingPipeline {
               .datasetId(datasetId)
               .attempt(attempt)
               .esSchemaPath(esSchemaPath)
+              .sourceEnabled(config.getIndexConfig().isSourceEnabled())
               .esHosts(esConfig.getEsHosts().split(","));
 
       if (esConfig.getIndexRefreshInterval() != null) {

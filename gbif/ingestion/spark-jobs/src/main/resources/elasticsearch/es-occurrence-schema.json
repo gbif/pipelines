@@ -257,7 +257,7 @@
     }
   ],
   "_source": {
-    "enabled": false
+    "excludes": ["all"]
   },
   "properties": {
 

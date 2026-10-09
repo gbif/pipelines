@@ -4,13 +4,28 @@ Occurrence and event records are served by the API from HBase. Elasticsearch onl
 indices have the `_source` disabled and return document ids, which the web services use to fetch
 the records from these tables.
 
+Disabling the `_source` is controlled by `indexConfig.sourceEnabled` (default `true`), so the tables
+can be loaded and the API switched to them without a full re-index:
+
+1. With `sourceEnabled: true`, the indices keep their `_source` (as defined by the schema files)
+   and receive the full documents, while the tables are written as well.
+2. Once the API has been reading from the tables in production for a while, set
+   `sourceEnabled: false`. New indices are created with `"_source": {"enabled": false}` and the
+   fields mapped with `"enabled": false` (`verbatim`, `multimediaItems`) are no longer sent.
+   Existing indices keep their mappings until they are rebuilt (e.g. by `FullIndexBuildPipeline`).
+
+```yaml
+indexConfig:
+  sourceEnabled: false
+```
+
 | Table              | Holds             | Row key                    | API endpoints                                   |
 |--------------------|-------------------|----------------------------|-------------------------------------------------|
 | occurrence records | occurrences       | salted `gbifId`            | `occurrence/{key}`, `occurrence/{key}/verbatim` |
 | event records      | events            | `internalId`               | `event/{key}`                                   |
 
-Both tables are written by `IndexingPipeline` (one dataset), `FullIndexBuildPipeline` (all
-datasets) and `FullRecordsTableBuildPipeline` (all datasets, tables only) before the documents are indexed, and the records of a dataset are removed by
+Both tables are written by `IndexingPipeline` (one dataset), `DatasetsIndexBuildPipeline` (a list
+of datasets), `FullIndexBuildPipeline` (all datasets) and `FullRecordsTableBuildPipeline` (all datasets, tables only) before the documents are indexed, and the records of a dataset are removed by
 `DatasetDeleteCallback`. See `gbif/ingestion/spark-jobs/src/main/java/org/gbif/pipelines/spark/records`.
 
 ## Layout
@@ -274,6 +289,22 @@ The tables and the indices are built together, with indexing stopped:
    manifests and builds the new indices.
 4. Swap the aliases (or use `--switchOnSuccess`) and deploy the web services reading from HBase.
 5. Restart the indexing.
+
+### Re-indexing some datasets
+
+`DatasetsIndexBuildPipeline` fixes a few datasets without a full build. Each dataset is indexed
+from its last successful interpretation as when it's crawled (`IndexingPipeline`): its records are
+loaded into the table, it's indexed into the live alias (its own index or the default one, by
+size), and its previous documents, indices and removed records are deleted. The other datasets
+aren't touched. A dataset that fails doesn't stop the others; the job fails at the end listing them.
+
+```shell
+DatasetsIndexBuildPipeline --config=pipelines.yaml --datasetType=OCCURRENCE \
+  --datasetKeys=50c9509d-22c7-4a22-a47d-8c48425ef4a7,7e380070-f762-11e1-a439-00145eb45e9a
+```
+
+`FullIndexBuildPipeline` can't be used for this: `--switchOnSuccess` points the live alias to the
+rebuilt indices only, which would hold just those datasets.
 
 ### Rebuilding the tables only
 
