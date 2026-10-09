@@ -23,6 +23,7 @@
     <module>validator-integration-tests</module>
     <module>validator-mail</module>
     <module>validator-eml</module>
+    <module>validator-orchestrator</module>
   </modules>
 
   <properties>

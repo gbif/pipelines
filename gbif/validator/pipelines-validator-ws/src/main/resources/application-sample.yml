@@ -60,3 +60,9 @@ spring:
       location: @upload.workingDirectory@
       max-file-size: @upload.maxUploadSize@
       max-request-size: @upload.maxUploadSize@
+
+validator:
+  dwcdp:
+    messaging:
+      exchange: "occurrence"
+      routing-key: "occurrence.pipelines.dwcdp.validator.validator"
