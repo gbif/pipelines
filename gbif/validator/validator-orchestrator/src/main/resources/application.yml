@@ -1,0 +1,34 @@
+# Transport connection is independent of per-step routing.
+# Override these per deployment, including the virtual host when domains split.
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
+# Example for the first DWc-DP validation step.
+# Exchange and routing keys below are placeholders: align with the current
+# validator-ws publisher and dwcdp-analyser-service consumer/publisher settings.
+orchestrator:
+  steps:
+    VALIDATOR_VALIDATE_DWCDP:
+      request:
+        exchange: ${DWCDP_REQUEST_EXCHANGE:occurrence}
+        routing-key: ${DWCDP_REQUEST_ROUTING_KEY:validator.dwcdp.analysis}
+      completion:
+        exchange: ${DWCDP_COMPLETION_EXCHANGE:occurrence}
+        routing-key: ${DWCDP_COMPLETION_ROUTING_KEY:validator.dwcdp.analysis.finished}
+        queue: ${DWCDP_COMPLETION_QUEUE:validator_dwcdp_analysis_finished}
+        threads: 1
+
+  # URL should include the service base URL, excluding /validation.
+  validator-ws:
+    url: ${VALIDATOR_WS_URL:http://localhost:8080}
+    username: ${VALIDATOR_WS_USERNAME:}
+    password: ${VALIDATOR_WS_PASSWORD:}
+
+  # Unsafe integration switch for development only. Default OFF because validator-ws
+  # PUT + RabbitMQ publication cannot atomically claim and dispatch a next step.
+  unsafe-enable-completion-consumer: ${ORCHESTRATOR_UNSAFE_ENABLE_COMPLETION_CONSUMER:false}
