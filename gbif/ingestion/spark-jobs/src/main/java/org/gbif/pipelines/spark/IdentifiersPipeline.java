@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark;
 
+import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.sum;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.*;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_ABSENT;
@@ -15,11 +16,15 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.logging.log4j.ThreadContext;
@@ -57,6 +62,15 @@ import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 public class IdentifiersPipeline {
 
   public static final String METRICS_FILENAME = "verbatim-to-identifier.yml";
+
+  /** Metrics comparing the identifiers of this attempt with those of the previous attempt */
+  public static final String IDENTIFIER_METRICS_FILENAME = "identifier-metrics.yml";
+
+  public static final String PREVIOUS_ATTEMPT = "previousAttempt";
+  public static final String PREVIOUS_IDENTIFIERS_COUNT = "previousIdentifiersCount";
+  public static final String CURRENT_IDENTIFIERS_COUNT = "currentIdentifiersCount";
+  public static final String NEW_IDENTIFIERS_COUNT = "newIdentifiersCount";
+  public static final String REMOVED_IDENTIFIERS_COUNT = "removedIdentifiersCount";
 
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {
@@ -229,11 +243,127 @@ public class IdentifiersPipeline {
     // 4. write metrics to yaml
     writeMetricsYaml(fs, metrics, outputPath + "/" + METRICS_FILENAME);
 
+    // 5. compare with the identifiers of the previous attempt and write the metrics to yaml
+    Map<String, Long> identifierMetrics =
+        compareWithPreviousAttempt(
+            spark, fs, config.getOutputPath() + "/" + datasetID, attempt, identifiers);
+    writeMetricsYaml(fs, identifierMetrics, outputPath + "/" + IDENTIFIER_METRICS_FILENAME);
+
     // clean up
     fs.delete(new Path(outputPath + "/" + IDENTIFIERS_TRANSFORMED), true);
 
     log.info(
         timeAndRecPerSecond("identifiers", start, metrics.get(VALID_GBIF_ID_COUNT + "Attempted")));
+  }
+
+  /**
+   * Compares the identifiers of this attempt with the final identifiers of the previous attempt,
+   * counting the identifiers that are new and those that have been removed.
+   *
+   * <p>The comparison is made on the GBIF id (internalId). Records in this attempt without a GBIF
+   * id (i.e. not yet persisted to hbase) are counted as new.
+   *
+   * @param spark the spark session
+   * @param fs the filesystem
+   * @param datasetRootPath the root path of the dataset containing the attempt directories
+   * @param attempt the current attempt
+   * @param identifiers the identifiers of the current attempt
+   * @return the metrics. If there is no previous attempt, only the current count is supplied.
+   */
+  public static Map<String, Long> compareWithPreviousAttempt(
+      SparkSession spark,
+      FileSystem fs,
+      String datasetRootPath,
+      int attempt,
+      Dataset<IdentifierRecord> identifiers)
+      throws IOException {
+
+    Map<String, Long> metrics = new HashMap<>();
+
+    Dataset<Row> current = identifiers.select(col("internalId"));
+    Dataset<Row> currentIds = current.filter(col("internalId").isNotNull()).distinct();
+    long currentCount = current.count();
+    metrics.put(CURRENT_IDENTIFIERS_COUNT, currentCount);
+
+    OptionalInt previousAttempt = findPreviousAttempt(fs, datasetRootPath, attempt);
+    if (previousAttempt.isEmpty()) {
+      log.info("No previous attempt with identifiers found in {}", datasetRootPath);
+      return metrics;
+    }
+
+    String previousPath = datasetRootPath + "/" + previousAttempt.getAsInt() + "/" + IDENTIFIERS;
+    log.info("Comparing identifiers with previous attempt {}", previousPath);
+
+    Dataset<Row> previousIds =
+        spark
+            .read()
+            .parquet(previousPath)
+            .select(col("internalId"))
+            .filter(col("internalId").isNotNull())
+            .distinct();
+
+    // records without a GBIF id are not yet known to hbase, hence are new
+    long withoutGbifId = current.filter(col("internalId").isNull()).count();
+    long newCount = withoutGbifId + currentIds.except(previousIds).count();
+    long removedCount = previousIds.except(currentIds).count();
+
+    metrics.put(PREVIOUS_ATTEMPT, (long) previousAttempt.getAsInt());
+    metrics.put(PREVIOUS_IDENTIFIERS_COUNT, previousIds.count());
+    metrics.put(NEW_IDENTIFIERS_COUNT, newCount);
+    metrics.put(REMOVED_IDENTIFIERS_COUNT, removedCount);
+
+    log.info(
+        "Identifiers compared with attempt {}: new {}, removed {}",
+        previousAttempt.getAsInt(),
+        newCount,
+        removedCount);
+
+    return metrics;
+  }
+
+  /**
+   * Finds the highest attempt below the current one that has a completed identifiers directory.
+   *
+   * @param fs the filesystem
+   * @param datasetRootPath the root path of the dataset containing the attempt directories
+   * @param attempt the current attempt
+   * @return the previous attempt, or empty if there is none
+   */
+  public static OptionalInt findPreviousAttempt(FileSystem fs, String datasetRootPath, int attempt)
+      throws IOException {
+
+    Path root = new Path(datasetRootPath);
+    if (!fs.exists(root)) {
+      return OptionalInt.empty();
+    }
+
+    int[] candidates =
+        Arrays.stream(fs.listStatus(root))
+            .filter(FileStatus::isDirectory)
+            .map(status -> status.getPath().getName())
+            .filter(name -> name.matches("\\d{1,9}"))
+            .mapToInt(Integer::parseInt)
+            .filter(candidate -> candidate < attempt)
+            .sorted()
+            .toArray();
+
+    for (int i = candidates.length - 1; i >= 0; i--) {
+      Path success = new Path(root, candidates[i] + "/" + IDENTIFIERS + "/_SUCCESS");
+      if (fs.exists(success)) {
+        // check that the interpretation happened as well, otherwise the identifiers may be
+        // incomplete
+        Path interpretationSuccess =
+            new Path(root, candidates[i] + "/" + OCCURRENCE_JSON + "/_SUCCESS");
+        if (!fs.exists(interpretationSuccess)) {
+          log.warn(
+              "Previous attempt {} has identifiers but no interpretation, skipping it",
+              candidates[i]);
+          continue;
+        }
+        return OptionalInt.of(candidates[i]);
+      }
+    }
+    return OptionalInt.empty();
   }
 
   /**

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
@@ -14,6 +13,7 @@ import io.github.resilience4j.retry.RetryConfig;
 import java.io.*;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -36,8 +36,8 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.StandaloneConfig;
+import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.gbif.pipelines.spark.IdentifiersPipeline;
-import org.gbif.pipelines.util.CallbackUtil;
 
 @Slf4j
 @Builder
@@ -52,8 +52,8 @@ public class PostprocessValidation {
 
   /**
    * Validator runs use ephemeral validation UUIDs that are not registered datasets, so the registry
-   * lookups below (machine tags, installation key, indexed occurrence count) don't apply. When
-   * true, skip them and fall back to defaults.
+   * lookups below (machine tags, installation key) don't apply. When true, skip them and fall back
+   * to defaults.
    */
   private final boolean bypassRegistry;
 
@@ -104,41 +104,45 @@ public class PostprocessValidation {
 
     long totalCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT);
     long absentIdCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.ABSENT_GBIF_ID_COUNT);
-    long existingCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT);
 
     if (totalCount == 0d) {
       log.error("Interpreted totalCount {}, invalid absentIdCount {}", totalCount, absentIdCount);
       throw new IllegalArgumentIOException("No records with valid GBIF ID!");
     }
 
-    double absentPercent = (double) absentIdCount * 100 / totalCount;
-    long apiRecords = getApiRecords();
+    // metrics from the comparison with the identifiers of the previous attempt
+    String identifierMetricsPath =
+        String.join(
+            "/", outputPath, datasetId, attempt, IdentifiersPipeline.IDENTIFIER_METRICS_FILENAME);
+    log.debug("Getting removed identifiers from the file - {}", identifierMetricsPath);
+    Map<String, Long> identifierMetrics =
+        MetricsUtil.readMetricsYaml(fileSystem, identifierMetricsPath);
+
+    Long previousAttempt = identifierMetrics.get(IdentifiersPipeline.PREVIOUS_ATTEMPT);
+    long previousCount =
+        identifierMetrics.getOrDefault(IdentifiersPipeline.PREVIOUS_IDENTIFIERS_COUNT, 0L);
+    long removedCount =
+        identifierMetrics.getOrDefault(IdentifiersPipeline.REMOVED_IDENTIFIERS_COUNT, 0L);
 
     boolean isValid = true;
     String validationMessage = "No identifier issues";
     if (config.isIdThresholdSkip()) {
-      validationMessage = "Current configured to skip ID threshold validation";
+      validationMessage = "Currently configured to skip ID threshold validation for all datasets";
+    } else if (previousAttempt == null || previousCount == 0) {
+      validationMessage = "Skip ID validation: no identifiers from a previous attempt to compare";
     } else {
-      if (absentPercent > 0d && apiRecords > 0) {
-        if (absentPercent > threshold && existingCount != apiRecords) {
-          validationMessage =
-              String.format(
-                  "GBIF ID problems exceed %.0f%% threshold: %.0f%% duplicates; %d total records; %d absent records",
-                  threshold, absentPercent, totalCount, absentIdCount);
-          isValid = false;
-        } else {
-          validationMessage =
-              String.format(
-                  "GBIF ID problems within %.0f%% threshold: %.0f%% duplicates; %d total records; %d absent records",
-                  threshold, absentPercent, totalCount, absentIdCount);
-        }
-      } else if (absentPercent == 100d) {
-        validationMessage = "Skip ID validation: dataset has no API records and all IDs are new";
-      } else if (absentPercent > 0d) {
+      double removedPercent = (double) removedCount * 100 / previousCount;
+      if (removedPercent > threshold) {
         validationMessage =
             String.format(
-                "Dataset has no API records, but %.0f%% of IDs aren't new", absentPercent);
+                "GBIF ID problems exceed %.0f%% threshold: %.0f%% of identifiers removed; %d removed of %d identifiers in attempt %d",
+                threshold, removedPercent, removedCount, previousCount, previousAttempt);
         isValid = false;
+      } else if (removedCount > 0) {
+        validationMessage =
+            String.format(
+                "GBIF ID problems within %.0f%% threshold: %.0f%% of identifiers removed; %d removed of %d identifiers in attempt %d",
+                threshold, removedPercent, removedCount, previousCount, previousAttempt);
       }
     }
     return new IdentifierValidationResult(totalCount, absentIdCount, isValid, validationMessage);
@@ -202,94 +206,6 @@ public class PostprocessValidation {
 
   private boolean ignoreChecklists() {
     return message.getDatasetType() == DatasetType.CHECKLIST;
-  }
-
-  @SneakyThrows
-  private long getApiRecords() {
-    if (bypassRegistry) {
-      // Validator datasets are not indexed, so there are no API/occurrence records.
-      return 0;
-    }
-    String datasetKey = message.getDatasetUuid().toString();
-    return getIndexSize(httpClient, datasetKey);
-  }
-
-  /** Get number of record using Occurrence API */
-  @SneakyThrows
-  public long getIndexSize(HttpClient httpClient, String datasetId) {
-
-    if (CallbackUtil.simulateBackendFail()) {
-      throw new PipelinesException("Simulated backend failure for testing");
-    }
-
-    String url =
-        config.getRegistry().getWsUrl()
-            + "/occurrence/search?limit=0&datasetKey="
-            + datasetId
-            + "&_="
-            + System.nanoTime();
-
-    try {
-      HttpResponse response =
-          Retry.decorateSupplier(
-                  RETRY,
-                  () -> {
-                    try {
-                      HttpResponse httpResponse = httpClient.execute(new HttpGet(url));
-
-                      if (httpResponse == null) {
-                        throw new PipelinesException("Backend returned a null HTTP response");
-                      }
-
-                      int statusCode = httpResponse.getStatusLine().getStatusCode();
-                      if (statusCode < 200 || statusCode >= 300) {
-                        throw new PipelinesException(
-                            "Backend returned HTTP status "
-                                + statusCode
-                                + " "
-                                + httpResponse.getStatusLine().getReasonPhrase());
-                      }
-
-                      return httpResponse;
-                    } catch (IOException e) {
-                      throw new PipelinesException(
-                          "Failed to execute request to retrieve dataset count", e);
-                    }
-                  })
-              .get();
-
-      if (response.getEntity() == null) {
-        throw new PipelinesException(
-            "Backend returned an empty response while retrieving dataset count");
-      }
-
-      JsonNode root;
-      try (InputStream content = response.getEntity().getContent()) {
-        root = MAPPER.readTree(content);
-      }
-
-      if (root == null || root.isNull()) {
-        throw new PipelinesException(
-            "Backend returned an empty or invalid JSON response while retrieving dataset count");
-      }
-
-      JsonNode countNode = root.get("count");
-
-      if (countNode == null || countNode.isNull()) {
-        throw new PipelinesException("Backend response does not contain a 'count' field");
-      }
-
-      if (!countNode.isNumber()) {
-        throw new PipelinesException(
-            "Backend response contains an invalid 'count' field: " + countNode);
-      }
-
-      return countNode.asLong();
-
-    } catch (Exception e) {
-      throw new PipelinesException(
-          "Problem retrieving dataset count from index for dataset " + datasetId, e);
-    }
   }
 
   @SneakyThrows
