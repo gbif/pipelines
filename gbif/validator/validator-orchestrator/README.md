@@ -59,3 +59,15 @@ declare their own durable queues and topic bindings through `MessageListener`.
 ## Completion listener registration
 
 When `orchestrator.unsafe-enable-completion-consumer=true`, one typed completion listener is registered for every `StepRegistry` entry using its configured queue, exchange, routing key and thread count. Missing destinations fail startup before listeners are created. The DWc-DP handler no longer needs dedicated listener wiring. The flag stays disabled by default: WS updates and RabbitMQ dispatch are not atomic.
+
+## Docker image and Jenkins packaging
+
+The standalone Java 17 image uses `docker/entrypoint.sh` to launch the executable Spring Boot JAR. Runtime routing and WS connectivity are configured using the environment variables described in `src/main/resources/application.yml`; both consumer-enable flags remain **false** by default.
+
+From the repository root, after Maven packaging:
+
+```bash
+build/validator-orchestrator-docker-build.sh false <maven-version>
+```
+
+This expects `gbif/validator/validator-orchestrator/target/validator-orchestrator-<maven-version>.jar` to be an **executable** (`java -jar`) Spring Boot JAR. The repository POM was not supplied, so packaging and the precise artifact filename must be verified before enabling CI. The Jenkins stage mirrors the existing Docker stages and pushes `docker.gbif.org/validator-orchestrator:<version>`; it does not deploy or enable consumers. To use Docker Hub locally, pass `--build-arg BASE_REGISTRY=docker.io` to `docker build`.
