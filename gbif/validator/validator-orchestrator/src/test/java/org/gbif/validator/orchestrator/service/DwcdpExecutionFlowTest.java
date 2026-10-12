@@ -54,7 +54,7 @@ class DwcdpExecutionFlowTest {
   }
 
   @Test
-  void failedReportUploadDoesNotAdvanceStep() throws Exception {
+  void failedReportUploadFailsExecutionWithoutDispatchingNextStep() throws Exception {
     Fixture fixture = new Fixture();
     fixture.coordinator.handle(fixture.key, WorkflowEvent.start());
     fixture.client.setRejectReport(true);
@@ -62,9 +62,11 @@ class DwcdpExecutionFlowTest {
     assertThrows(IllegalStateException.class, () -> fixture.processor.complete(
         StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true)));
 
-    assertEquals(Validation.Status.QUEUED, fixture.step().getStatus());
+    assertEquals(Validation.Status.FAILED, fixture.step().getStatus());
+    assertEquals(Validation.Status.FAILED, fixture.client.getStoredValidation().getStatus());
+    assertEquals(0, fixture.client.getReportWrites());
     assertEquals(1, fixture.messages.size());
-    assertEquals(1, fixture.client.getStatusWrites());
+    assertEquals(2, fixture.client.getStatusWrites());
   }
 
   @Test
