@@ -43,17 +43,18 @@ The DWc-DP completion processor checks that its step is still active **before** 
 
 **Safety:** The consumer flags remain disabled by default. The existing `GET`/full-object `PUT` plus RabbitMQ publish are not atomic; single-instance processing alone does not eliminate crash windows. There are no automatic workflow retries; malformed/rejected RabbitMQ deliveries still require operational handling. The status `SKIPPED` still requires validator-api/validator-ws support before a live DAG skip can be persisted.
 
-## Thin validation worker adapters
+## Phase 1 ownership boundary
 
-`VALIDATOR_DWCDP_STAGE`, `VALIDATOR_DWCDP_TO_VERBATIM`, and
-`VALIDATOR_VERBATIM_TO_IDENTIFIER` use a proposed thin wrapper contract:
-request JSON `{ "datasetUuid": "UUID", "attempt": 1 }` and completion JSON
-`{ "datasetUuid": "UUID", "attempt": 1, "successful": true }`.
-A `successful: false` completion is interpreted as worker failure. The wrappers
-must adopt these fields (or their adapters must be changed to the actual message
-contracts) before enabling consumers. This contract is **not verified** against
-stage, to-verbatim, or identifier services. Routing values in `application.yml`
-are illustrative. No additional completion hook is registered for these steps.
+Only `VALIDATOR_VALIDATE_DWCDP` is registered with the orchestrator. The analyser
+completion report is uploaded before its step is marked finished. Subsequent
+pipeline steps are left unchanged in `validator-ws` rather than being dispatched
+using speculative message contracts. **A legacy pipeline handoff is not wired yet**;
+without it, multi-step validations stop progressing after analysis.
+
+The orchestrator does not create destination queues when it publishes requests.
+The analyser request consumer (or deployment provisioning) must declare and bind
+its request queue. The orchestrator's enabled completion and start listeners
+declare their own durable queues and topic bindings through `MessageListener`.
 
 ## Completion listener registration
 
