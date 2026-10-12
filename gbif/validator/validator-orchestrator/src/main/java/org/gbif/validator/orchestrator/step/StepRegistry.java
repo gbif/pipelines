@@ -28,6 +28,10 @@ public final class StepRegistry {
     this.registrations = Map.copyOf(collected);
   }
 
+  public boolean supports(StepType stepType) {
+    return registrations.containsKey(stepType);
+  }
+
   public StepRegistration<?> require(StepType stepType) {
     StepRegistration<?> registration = registrations.get(stepType);
 
