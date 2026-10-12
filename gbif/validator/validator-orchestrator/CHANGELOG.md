@@ -14,6 +14,7 @@
 - JUnit 5 tests for workflow decisions, step registration, report handling, and multi-component DWc-DP execution, using handwritten test doubles.
 - Reusable `RecordingValidationClient` test fake.
 - Terminal workflow failure when a required completion hook cannot finish; no automatic retry.
+- Java 17 container packaging and Jenkins Docker image publication.
 
 ### Known limitations
 
