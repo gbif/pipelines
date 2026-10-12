@@ -12,6 +12,7 @@
 - Initial validation request listener and validation state-transition coordination.
 - JUnit 5 tests for workflow decisions, step registration, report handling, and multi-component DWc-DP execution, using handwritten test doubles.
 - Reusable `RecordingValidationClient` test fake.
+- Terminal workflow failure when a required completion hook cannot finish; no automatic retry.
 
 ### Known limitations
 
