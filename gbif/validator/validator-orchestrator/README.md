@@ -43,29 +43,17 @@ The DWc-DP completion processor checks that its step is still active **before** 
 
 **Safety:** The consumer flags remain disabled by default. The existing `GET`/full-object `PUT` plus RabbitMQ publish are not atomic; single-instance processing alone does not eliminate crash windows. There are no automatic workflow retries; malformed/rejected RabbitMQ deliveries still require operational handling. The status `SKIPPED` still requires validator-api/validator-ws support before a live DAG skip can be persisted.
 
-## Thin DWc-DP worker adapters
+## Thin validation worker adapters
 
-`VALIDATOR_DWCDP_STAGE` and `VALIDATOR_DWCDP_TO_VERBATIM` use the same proposed
-wrapper contract: request JSON `{ "datasetUuid": "UUID", "attempt": 1 }` and
-completion JSON `{ "datasetUuid": "UUID", "attempt": 1, "successful": true }`.
+`VALIDATOR_DWCDP_STAGE`, `VALIDATOR_DWCDP_TO_VERBATIM`, and
+`VALIDATOR_VERBATIM_TO_IDENTIFIER` use a proposed thin wrapper contract:
+request JSON `{ "datasetUuid": "UUID", "attempt": 1 }` and completion JSON
+`{ "datasetUuid": "UUID", "attempt": 1, "successful": true }`.
 A `successful: false` completion is interpreted as worker failure. The wrappers
-must adopt these fields (or the adapters must be changed to their real message
-contracts) before enabling consumers; these were not verified against existing
-stage/to-verbatim services. Exchanges and queues in `application.yml` are
-illustrative deployment values, not confirmed RabbitMQ bindings. No report hook
-is registered for these two steps.
-
-## Thin DWc-DP worker adapters
-
-`VALIDATOR_DWCDP_STAGE` and `VALIDATOR_DWCDP_TO_VERBATIM` use the same proposed
-wrapper contract: request JSON `{ "datasetUuid": "UUID", "attempt": 1 }` and
-completion JSON `{ "datasetUuid": "UUID", "attempt": 1, "successful": true }`.
-A `successful: false` completion is interpreted as worker failure. The wrappers
-must adopt these fields (or the adapters must be changed to their real message
-contracts) before enabling consumers; these were not verified against existing
-stage/to-verbatim services. Exchanges and queues in `application.yml` are
-illustrative deployment values, not confirmed RabbitMQ bindings. No report hook
-is registered for these two steps.
+must adopt these fields (or their adapters must be changed to the actual message
+contracts) before enabling consumers. This contract is **not verified** against
+stage, to-verbatim, or identifier services. Routing values in `application.yml`
+are illustrative. No additional completion hook is registered for these steps.
 
 ## Completion listener registration
 
