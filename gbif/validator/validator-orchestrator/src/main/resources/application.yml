@@ -23,38 +23,6 @@ orchestrator:
         queue: ${DWCDP_COMPLETION_QUEUE:validator_dwcdp_analysis_finished}
         threads: 1
 
-    # Contracts for the new thin validation wrappers; align routing with their deployments.
-    VALIDATOR_DWCDP_STAGE:
-      request:
-        exchange: ${DWCDP_STAGE_REQUEST_EXCHANGE:occurrence}
-        routing-key: ${DWCDP_STAGE_REQUEST_ROUTING_KEY:validator.dwcdp.stage}
-      completion:
-        exchange: ${DWCDP_STAGE_COMPLETION_EXCHANGE:occurrence}
-        routing-key: ${DWCDP_STAGE_COMPLETION_ROUTING_KEY:validator.dwcdp.stage.finished}
-        queue: ${DWCDP_STAGE_COMPLETION_QUEUE:validator_dwcdp_stage_finished}
-        threads: 1
-
-    VALIDATOR_DWCDP_TO_VERBATIM:
-      request:
-        exchange: ${DWCDP_TO_VERBATIM_REQUEST_EXCHANGE:occurrence}
-        routing-key: ${DWCDP_TO_VERBATIM_REQUEST_ROUTING_KEY:validator.dwcdp.to-verbatim}
-      completion:
-        exchange: ${DWCDP_TO_VERBATIM_COMPLETION_EXCHANGE:occurrence}
-        routing-key: ${DWCDP_TO_VERBATIM_COMPLETION_ROUTING_KEY:validator.dwcdp.to-verbatim.finished}
-        queue: ${DWCDP_TO_VERBATIM_COMPLETION_QUEUE:validator_dwcdp_to_verbatim_finished}
-        threads: 1
-
-    # Proposed wrapper contract; not verified against the identifier worker.
-    VALIDATOR_VERBATIM_TO_IDENTIFIER:
-      request:
-        exchange: ${VERBATIM_TO_IDENTIFIER_REQUEST_EXCHANGE:occurrence}
-        routing-key: ${VERBATIM_TO_IDENTIFIER_REQUEST_ROUTING_KEY:validator.verbatim.to-identifier}
-      completion:
-        exchange: ${VERBATIM_TO_IDENTIFIER_COMPLETION_EXCHANGE:occurrence}
-        routing-key: ${VERBATIM_TO_IDENTIFIER_COMPLETION_ROUTING_KEY:validator.verbatim.to-identifier.finished}
-        queue: ${VERBATIM_TO_IDENTIFIER_COMPLETION_QUEUE:validator_verbatim_to_identifier_finished}
-        threads: 1
-
   # URL should include the service base URL, excluding /validation.
   validator-ws:
     url: ${VALIDATOR_WS_URL:http://localhost:8080}
