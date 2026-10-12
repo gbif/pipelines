@@ -1,6 +1,6 @@
 # Validator Orchestrator
 
-Application version: **4.0.43**. Archive increment: **v10**.
+Application version: **4.0.43**. Archive increment: **v15**.
 
 ## Purpose and design
 
@@ -42,3 +42,7 @@ The DWc-DP completion processor checks that its step is still active **before** 
 `DwcdpExecutionFlowTest` exercises initial dispatch, successful completion, duplicate completion, report-upload failure and invalid-data completion using an in-memory WS implementation and a recording message publisher. It is not a RabbitMQ/HTTP integration test.
 
 **Safety:** The consumer flags remain disabled by default. The existing `GET`/full-object `PUT` plus RabbitMQ publish are not atomic; single-instance processing alone does not eliminate crash windows. There are no automatic workflow retries; malformed/rejected RabbitMQ deliveries still require operational handling. The status `SKIPPED` still requires validator-api/validator-ws support before a live DAG skip can be persisted.
+
+## Completion listener registration
+
+When `orchestrator.unsafe-enable-completion-consumer=true`, one typed completion listener is registered for every `StepRegistry` entry using its configured queue, exchange, routing key and thread count. Missing destinations fail startup before listeners are created. The DWc-DP handler no longer needs dedicated listener wiring. The flag stays disabled by default: WS updates and RabbitMQ dispatch are not atomic.

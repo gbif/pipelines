@@ -1,5 +1,6 @@
 package org.gbif.validator.orchestrator.step;
 
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ public final class StepRegistry {
 
   public StepRegistry(List<StepRegistration<?>> registrations) {
     Objects.requireNonNull(registrations, "registrations must not be null");
+
     Map<StepType, StepRegistration<?>> collected = new EnumMap<>(StepType.class);
 
     for (StepRegistration<?> registration : registrations) {
@@ -34,5 +36,12 @@ public final class StepRegistry {
     }
 
     return registration;
+  }
+
+  /** Deterministic registration order for listener setup and logging. */
+  public List<StepRegistration<?>> registrations() {
+    return registrations.values().stream()
+        .sorted(Comparator.comparing(registration -> registration.stepType().name()))
+        .toList();
   }
 }
