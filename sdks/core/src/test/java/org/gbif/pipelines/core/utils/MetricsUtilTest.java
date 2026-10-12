@@ -3,6 +3,8 @@ package org.gbif.pipelines.core.utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,5 +66,56 @@ class MetricsUtilTest {
     // (Kept as a positive assertion rather than assertThrows, since the fix
     // is what we're locking in — this test documents *why* it matters.)
     assertEquals(42L, read.getOrDefault("occCount", 0L));
+  }
+
+  private static final String YAML =
+      "gbifIdRecordsCountAttempted: 187821\nduplicatedIdsCountAttempted: 5000000000\n";
+
+  private Map<String, Long> writeBytesAndRead(String name, byte[] bytes) throws IOException {
+    java.nio.file.Path file = tempDir.resolve(name);
+    Files.write(file, bytes);
+    return MetricsUtil.readMetricsYaml(FileSystem.getLocal(new Configuration()), file.toString());
+  }
+
+  private static void assertExpected(Map<String, Long> read) {
+    assertEquals(187821L, read.get("gbifIdRecordsCountAttempted"));
+    assertEquals(5_000_000_000L, read.get("duplicatedIdsCountAttempted"));
+  }
+
+  private static byte[] concat(byte[] a, byte[] b) {
+    byte[] r = java.util.Arrays.copyOf(a, a.length + b.length);
+    System.arraycopy(b, 0, r, a.length, b.length);
+    return r;
+  }
+
+  @Test
+  void readMetricsYaml_utf8() throws IOException {
+    assertExpected(writeBytesAndRead("utf8.yml", YAML.getBytes(StandardCharsets.UTF_8)));
+  }
+
+  @Test
+  void readMetricsYaml_utf8WithBom() throws IOException {
+    byte[] bom = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+    assertExpected(
+        writeBytesAndRead("utf8bom.yml", concat(bom, YAML.getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
+  void readMetricsYaml_utf16BigEndianNoBom() throws IOException {
+    // the format FsUtils.createFile produces via DataOutputStream.writeChars
+    assertExpected(writeBytesAndRead("utf16be.yml", YAML.getBytes(StandardCharsets.UTF_16BE)));
+  }
+
+  @Test
+  void readMetricsYaml_utf16WithBom() throws IOException {
+    assertExpected(writeBytesAndRead("utf16bom.yml", YAML.getBytes(StandardCharsets.UTF_16)));
+  }
+
+  @Test
+  void readMetricsYaml_utf16LittleEndian() throws IOException {
+    assertExpected(writeBytesAndRead("utf16le.yml", YAML.getBytes(StandardCharsets.UTF_16LE)));
+    byte[] bom = {(byte) 0xFF, (byte) 0xFE};
+    assertExpected(
+        writeBytesAndRead("utf16lebom.yml", concat(bom, YAML.getBytes(StandardCharsets.UTF_16LE))));
   }
 }
