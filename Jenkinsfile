@@ -130,6 +130,14 @@ pipeline {
         sh 'build/healthcheck-docker-build.sh false ${VERSION}'
       }
     }
+    stage('Build Validator Orchestrator Docker image') {
+      when {
+        expression { env.DRY_RUN == 'false' }
+      }
+      steps {
+        sh 'build/validator-orchestrator-docker-build.sh false ${VERSION}'
+      }
+    }
   }
 
   post {
