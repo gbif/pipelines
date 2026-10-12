@@ -12,6 +12,7 @@ public final class WorkflowState {
     QUEUED,
     RUNNING,
     FINISHED,
+    SKIPPED,
     FAILED,
     ABORTED
   }
