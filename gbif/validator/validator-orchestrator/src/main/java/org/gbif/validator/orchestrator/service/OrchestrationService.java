@@ -1,24 +1,28 @@
 package org.gbif.validator.orchestrator.service;
 
 import java.io.IOException;
-import org.gbif.validator.orchestrator.config.DagProperties;
-import org.gbif.validator.orchestrator.workflow.DagWorkflowEngine;
-import org.gbif.validator.orchestrator.workflow.WorkflowChange;
 import java.util.EnumMap;
-import org.gbif.validator.orchestrator.step.StepRegistry;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Metrics.ValidationStep;
+import org.gbif.validator.api.Validation;
+import org.gbif.validator.orchestrator.config.DagProperties;
+import org.gbif.validator.orchestrator.step.StepRegistry;
+import org.gbif.validator.orchestrator.workflow.DagWorkflowEngine;
 import org.gbif.validator.orchestrator.workflow.SequentialWorkflowEngine;
 import org.gbif.validator.orchestrator.workflow.ValidationWorkflowMapper;
+import org.gbif.validator.orchestrator.workflow.WorkflowChange;
 import org.gbif.validator.orchestrator.workflow.WorkflowDecision;
 import org.gbif.validator.orchestrator.workflow.WorkflowEvent;
 import org.gbif.validator.orchestrator.workflow.WorkflowState;
 import org.gbif.validator.ws.client.ValidationWsClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -29,6 +33,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class OrchestrationService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(OrchestrationService.class);
   private final ValidationWsClient client;
   private final StepDispatcher dispatcher;
   private final StepRegistry stepRegistry;
@@ -62,16 +68,37 @@ public class OrchestrationService {
     Validation validation = client.get(validationKey);
     WorkflowDecision decision = evaluate(mapper.from(validation), event, changes);
 
+    // Phase 1 owns only registered workers. Existing validation pipeline steps retain
+    // their persisted state until the legacy pipeline handoff is implemented.
+    Set<StepType> unownedDispatches = decision.actions().stream()
+        .filter(action -> action.kind() == WorkflowDecision.Kind.DISPATCH)
+        .map(WorkflowDecision.Action::step)
+        .filter(step -> !stepRegistry.supports(step))
+        .collect(Collectors.toSet());
+
+    if (!unownedDispatches.isEmpty()) {
+      LOG.info("Leaving unowned validation steps for legacy pipeline handoff: {}",
+          unownedDispatches);
+    }
+
+    List<WorkflowDecision.Action> actions = decision.actions().stream()
+        .filter(action -> !(action.kind() == WorkflowDecision.Kind.DISPATCH
+            && unownedDispatches.contains(action.step())))
+        .filter(action -> !(action.kind() == WorkflowDecision.Kind.SET_STEP_STATUS
+            && unownedDispatches.contains(action.step())
+            && action.status() == WorkflowState.Status.QUEUED))
+        .toList();
+
     // Resolve payloads up-front to avoid changing state for unsupported steps.
     Map<StepType, Object> requests = new EnumMap<>(StepType.class);
-    for (WorkflowDecision.Action action : decision.actions()) {
+    for (WorkflowDecision.Action action : actions) {
       if (action.kind() == WorkflowDecision.Kind.DISPATCH) {
         requests.put(action.step(), stepRegistry.require(action.step()).createRequest(validation));
       }
     }
 
     boolean changed = false;
-    for (WorkflowDecision.Action action : decision.actions()) {
+    for (WorkflowDecision.Action action : actions) {
       switch (action.kind()) {
         case SET_STEP_STATUS -> {
           ValidationStep step = validation.getMetrics().getStepTypes().stream()
@@ -94,7 +121,7 @@ public class OrchestrationService {
       client.update(validation);
     }
 
-    for (WorkflowDecision.Action action : decision.actions()) {
+    for (WorkflowDecision.Action action : actions) {
       if (action.kind() == WorkflowDecision.Kind.DISPATCH) {
         dispatcher.dispatch(action.step(), requests.get(action.step()));
       }

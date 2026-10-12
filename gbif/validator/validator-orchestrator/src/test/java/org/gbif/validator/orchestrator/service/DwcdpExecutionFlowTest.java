@@ -81,6 +81,21 @@ class DwcdpExecutionFlowTest {
     assertEquals(1, fixture.client.getReportWrites());
   }
 
+  @Test
+  void completesAnalysisWithoutQueuingUnmigratedSteps() throws Exception {
+    Fixture fixture = new Fixture(true);
+
+    fixture.coordinator.handle(fixture.key, WorkflowEvent.start());
+    fixture.processor.complete(StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true));
+
+    assertEquals(Validation.Status.FINISHED, fixture.step().getStatus());
+    assertEquals(null, fixture.client.getStoredValidation().getMetrics().getStepTypes()
+        .get(1).getStatus());
+    assertEquals(Validation.Status.RUNNING, fixture.client.getStoredValidation().getStatus());
+    assertEquals(1, fixture.client.getReportWrites());
+    assertEquals(1, fixture.messages.size());
+  }
+
   private static final class Fixture {
 
     private final UUID key = UUID.randomUUID();
@@ -90,14 +105,28 @@ class DwcdpExecutionFlowTest {
     private final CompletionProcessor processor;
 
     private Fixture() {
+      this(false);
+    }
+
+    private Fixture(boolean includeLegacyStep) {
       Metrics.ValidationStep first = Metrics.ValidationStep.builder()
           .stepType(StepType.VALIDATOR_VALIDATE_DWCDP.name())
           .executionOrder(1)
           .build();
+      List<Metrics.ValidationStep> steps = new ArrayList<>();
+      steps.add(first);
+
+      if (includeLegacyStep) {
+        steps.add(Metrics.ValidationStep.builder()
+            .stepType(StepType.VALIDATOR_DWCDP_STAGE.name())
+            .executionOrder(2)
+            .build());
+      }
+
       client.setValidation(Validation.builder()
           .key(key)
           .status(Validation.Status.QUEUED)
-          .metrics(Metrics.builder().stepTypes(List.of(first)).build())
+          .metrics(Metrics.builder().stepTypes(steps).build())
           .build());
 
       OrchestratorProperties properties = new OrchestratorProperties();
