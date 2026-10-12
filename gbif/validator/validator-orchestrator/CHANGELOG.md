@@ -11,6 +11,8 @@
 - DWc-DP analyser request and completion handling, including a required validation-report upload hook using string report-type identifiers.
 - Initial validation request listener and validation state-transition coordination.
 - Generic typed completion listeners registered from step definitions and configurable per-step queue bindings.
+- Configurable DWc-DP stage and to-verbatim wrapper adapters with explicit request/completion JSON contracts.
+- Configurable DWc-DP stage and to-verbatim wrapper adapters with explicit request/completion JSON contracts.
 - JUnit 5 tests for workflow decisions, step registration, report handling, and multi-component DWc-DP execution, using handwritten test doubles.
 - Reusable `RecordingValidationClient` test fake.
 - Terminal workflow failure when a required completion hook cannot finish; no automatic retry.
