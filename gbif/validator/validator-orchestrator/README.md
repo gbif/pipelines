@@ -1,54 +1,44 @@
-# Validator orchestrator
+# Validator Orchestrator
 
-## Purpose
+Application version: **4.0.43**. Archive increment: **v10**.
 
-Coordinates the **data-validation** workflow using the ordered validation steps persisted in `validator-ws`. The initial integration targets `VALIDATOR_VALIDATE_DWCDP`; the longer-term design also supports the crawling/ingestion domain with independently deployed orchestration and worker instances.
+## Purpose and design
 
-Worker code is domain-agnostic. RabbitMQ connection/vhost, exchange, routing keys and consumer queues are deployment configurable. The only hard isolation requirement for the first deployment is **distinct consumer queues**. There are no changes to `postal-api`.
+The validator orchestrator consumes a validation UUID from `validator-ws`, reads the persisted step state, evaluates workflow transitions and publishes step requests. Worker messages and completion hooks are registered by `StepType`. `postal-api` stays unchanged. RabbitMQ vhost, exchanges, routing keys and queues are deployment configuration.
 
-## Architecture
+The `DagWorkflowEngine` supports configurable dependencies, default `NON_ERROR` joins, custom join policies, parallel dispatch (opt-in; sequential default) and declarative step skips. The existing sequential workflow remains the default if `orchestrator.workflow.nodes` is not configured. DAG node keys must currently equal the persisted workflow step types.
 
-- `config/OrchestratorProperties`: `StepType` → request destination and completion consumer binding.
-- `config/MessagingConfiguration`: `postal-api` publisher/listener; the connection and virtual host come from `spring.rabbitmq.*`.
-- `config/ValidationClientConfiguration`: uses existing `ValidationWsClient`.
-- `workflow/`: pure sequential engine (`WorkflowState` + `WorkflowEvent` → `WorkflowDecision`) and mapper from persisted validation metrics.
-- `service/OrchestrationService`: retrieves state, evaluates workflow, persists status changes and publishes dispatch actions. **Not production-safe yet.**
-- `service/DwcdpAnalysisRequestFactory`: request payload adapter for the analyser.
-- `service/DwcdpCompletionInterpreter`, `DwcdpCompletionHandler`, `DwcdpCompletionCallback`: completion JSON → workflow event, routed through the engine.
-- `config/DwcdpCompletionListenerConfiguration`: optional RabbitMQ consumer registered at startup.
+## Integrations
 
-`StepSelector` and `ValidationWorkflowReader` are earlier read-only helpers. They are currently redundant with the engine's step selection and `ValidationWsClient` access within `OrchestrationService`; decide whether to remove them after validating the integration.
+- `DwcdpAnalysisStepDefinition` produces the analyser request and interprets the completion JSON.
+- A **required** `DwcdpValidationReportHook` upserts the raw analysis report via `ValidationWsClient` before workflow advancement. The `validation-ws` server **must implement** the new endpoints; otherwise completion fails.
+- Hooks may report `WorkflowChange.skip(stepType)` through `WorkflowChangeRegistration`. Required change-hook failures stop processing; optional failures are logged. Workflow changes are validated by the DAG engine. No changes are applied to active or terminal nodes.
+- `InitialValidationCallback` receives `{ "datasetUuid": "...", "attempt": 1 }` and invokes the same coordinator used by completion handling.
 
-## Configuration
+## External contracts to implement
 
-See `src/main/resources/application.yml` for the example. `orchestrator.steps.VALIDATOR_VALIDATE_DWCDP` configures outgoing request exchange/routing key and incoming completion exchange/routing key/queue/threads. These are **placeholder destinations**, not production RabbitMQ topology.
+- `gbif-api` is unchanged. Report type identifiers are local orchestrator string constants (`ValidationReportTypes`).
+- `validator-ws-client`: PUT/GET `/{key}/validationreport/{attempt}/{reportType}`; server implementation is **not included**. This is an additive endpoint proposal, not verified against the existing controller.
+- The shared validation status model must eventually support `SKIPPED` before DAG branch skips can persist; this version throws rather than silently translating it to another status.
 
-The completion listener is disabled by default. `ORCHESTRATOR_UNSAFE_ENABLE_COMPLETION_CONSUMER=true` enables the prototype consumer **only for controlled development**.
+## Safety limits
 
-## Decisions
+No automatic workflow retries are implemented. **Note:** the existing `ValidationWsClient.getInstance` still configures transport-level exponential-backoff retries; remove these separately if the no-retry policy also covers HTTP retries.
 
-- `validator-ws` remains the workflow-state source; do not resolve the steps a second time from `FileFormat`.
-- Persisted `executionOrder` determines sequencing, not enum order or config declaration order.
-- Keep transport routing independent of message contracts. Use explicit `postal-api` send/listen methods.
-- A completion listener identifies its step; messages need not contain a `StepType` field.
-- `datasetUuid` maps to the validation UUID; attempt `1` is an initial compatibility assumption.
-- For now, `valid=false` from the analyser stops the workflow. This is **provisional business policy**, not necessarily an infrastructure failure.
-- Preserve readable Java formatting, explicit imports and braces for every control-flow body.
+`GET`/full-object `PUT` + RabbitMQ send are not atomic. Only enable listeners for controlled, single-instance development (`orchestrator.unsafe-enable-start-consumer` and `orchestrator.unsafe-enable-completion-consumer`). Callback exceptions are rejected without requeue by `postal-api`. That does not itself ensure the validation is marked failed. No claims of production-safe dispatch or exactly-once processing.
 
-## Known limitations / choices pending
+Report persistence is an upsert to support duplicate completion attempts. Optional hooks should be idempotent to avoid repeated side effects. No automatic retries.
 
-1. **Atomicity/idempotency:** Full-object `ValidationWsClient.update(validation)` is not a conditional step transition. Concurrent events may overwrite state or double-dispatch. Status update then MQ publish can leave queued-but-unsent jobs after a crash. A transactional outbox or equivalent recovery strategy is needed for production.
-2. **Message failures:** Existing `postal-api` callback failures result in `basicNack(..., false, false)`; failed processing is not requeued automatically. Define a DLQ/retry policy.
-3. **Completion reporting:** `validationReport` is validated for presence but its contents are not persisted into validation metrics. Decide how the report is stored and exposed by `validator-ws`.
-4. **Analyser errors:** Distinguish unsuccessful execution from successfully determining that a datapackage is invalid. The current completion contract alone does not represent infrastructure failure clearly.
-5. **Entry-point migration:** The supplied `validator-ws` has both `ValidationMessageService` and direct `ValidationServiceImpl.notify()` publishing logic. Cut over to one orchestrator request path, never publish the initial work twice.
-6. **Other steps:** Stage, DWc-DP→verbatim, interpretation and metrics steps have no registered request adapters/listeners yet.
-7. **Build integration:** This archive does not contain or modify the Maven `pom.xml`; compile/test against actual project dependencies remains unverified.
+## Build and tests
 
-## Testing
+Run Maven tests in the parent repository with the updated string-based ws-client contract. This archive does not contain a complete multi-module Maven build and has not been compiled against that repository.
 
-`SequentialWorkflowEngineTest` covers core flow decisions. `DwcdpCompletionInterpreterTest` covers analyser completion parsing and event classification. Run the module's Maven test suite after integrating dependencies; these tests have not been executed against the full repository.
+## v12 integration reconciliation
 
-## Delivery
+The initial validation request is consumed by the orchestrator when the development-only start consumer is enabled. The existing validation UUID identifies the authoritative workflow stored by `validator-ws`. The initial DWc-DP adapter publishes the analyser request with the configurable exchange and routing key.
 
-Archive paths are relative to repository root (`gbif/validator/validator-orchestrator/`). Archive increment numbers are delivery revisions and are **not** application release versions. Project release history is in `CHANGELOG.md`.
+The DWc-DP completion processor checks that its step is still active **before** running hooks. It uploads the analyser report via `ValidationWsClient.createOrUpdateValidationReport` using the string report type `DWCDP_ANALYSIS`, then invokes the generic coordinator. The report endpoint must exist in `validator-ws`; it is not implemented by this archive. An invalid-data result is currently considered a failed workflow, after saving its report.
+
+`DwcdpExecutionFlowTest` exercises initial dispatch, successful completion, duplicate completion, report-upload failure and invalid-data completion using an in-memory WS implementation and a recording message publisher. It is not a RabbitMQ/HTTP integration test.
+
+**Safety:** The consumer flags remain disabled by default. The existing `GET`/full-object `PUT` plus RabbitMQ publish are not atomic; single-instance processing alone does not eliminate crash windows. There are no automatic workflow retries; malformed/rejected RabbitMQ deliveries still require operational handling. The status `SKIPPED` still requires validator-api/validator-ws support before a live DAG skip can be persisted.

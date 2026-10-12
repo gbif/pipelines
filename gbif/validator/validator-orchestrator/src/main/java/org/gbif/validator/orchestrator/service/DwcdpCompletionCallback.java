@@ -1,7 +1,6 @@
 package org.gbif.validator.orchestrator.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
 import java.util.Objects;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.springframework.stereotype.Component;
@@ -25,7 +24,7 @@ public class DwcdpCompletionCallback implements MessageCallback<JsonNode> {
   public void handleMessage(JsonNode message) {
     try {
       handler.handle(message);
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new OrchestrationProcessingException("Failed to process DWc-DP completion", e);
     }
   }

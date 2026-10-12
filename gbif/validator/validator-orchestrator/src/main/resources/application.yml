@@ -32,3 +32,24 @@ orchestrator:
   # Unsafe integration switch for development only. Default OFF because validator-ws
   # PUT + RabbitMQ publication cannot atomically claim and dispatch a next step.
   unsafe-enable-completion-consumer: ${ORCHESTRATOR_UNSAFE_ENABLE_COMPLETION_CONSUMER:false}
+
+  # Optional DAG activation; without nodes the coordinator uses the sequential engine.
+  # Dependency lists and per-node policies are separate from messaging routes.
+  # workflow:
+  #   parallel: false
+  #   default-join-policy: NON_ERROR
+  #   nodes:
+  #     VALIDATOR_VALIDATE_DWCDP:
+  #       dependencies: []
+  #     VALIDATOR_DWCDP_STAGE:
+  #       dependencies: [VALIDATOR_VALIDATE_DWCDP]
+  #     VALIDATOR_DWCDP_TO_VERBATIM:
+  #       dependencies: [VALIDATOR_DWCDP_STAGE]
+
+  # Initial request from validator-ws; enable only in single-instance development.
+  unsafe-enable-start-consumer: ${ORCHESTRATOR_UNSAFE_ENABLE_START_CONSUMER:false}
+  start:
+    exchange: ${VALIDATION_START_EXCHANGE:occurrence}
+    routing-key: ${VALIDATION_START_ROUTING_KEY:validator.orchestrator.start}
+    queue: ${VALIDATION_START_QUEUE:validator_orchestrator_start}
+    threads: 1
