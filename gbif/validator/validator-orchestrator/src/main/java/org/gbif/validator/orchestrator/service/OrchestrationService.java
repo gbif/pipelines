@@ -1,7 +1,11 @@
 package org.gbif.validator.orchestrator.service;
 
 import java.io.IOException;
+import org.gbif.validator.orchestrator.config.DagProperties;
+import org.gbif.validator.orchestrator.workflow.DagWorkflowEngine;
+import org.gbif.validator.orchestrator.workflow.WorkflowChange;
 import java.util.EnumMap;
+import org.gbif.validator.orchestrator.step.StepRegistry;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,20 +31,22 @@ import org.springframework.stereotype.Service;
 public class OrchestrationService {
   private final ValidationWsClient client;
   private final StepDispatcher dispatcher;
-  private final List<StepRequestFactory> factories;
+  private final StepRegistry stepRegistry;
   private final ValidationWorkflowMapper mapper = new ValidationWorkflowMapper();
-  private final SequentialWorkflowEngine engine = new SequentialWorkflowEngine();
+  private final SequentialWorkflowEngine sequentialEngine = new SequentialWorkflowEngine();
+  private final DagProperties dagProperties;
 
   public OrchestrationService(ValidationWsClient client, StepDispatcher dispatcher,
-      List<StepRequestFactory> factories) {
+      StepRegistry stepRegistry, DagProperties dagProperties) {
     this.client = Objects.requireNonNull(client);
     this.dispatcher = Objects.requireNonNull(dispatcher);
-    this.factories = List.copyOf(factories);
+    this.stepRegistry = Objects.requireNonNull(stepRegistry);
+    this.dagProperties = Objects.requireNonNull(dagProperties);
   }
 
   /** Side-effect-free plan based on the latest server snapshot. */
   public WorkflowDecision plan(UUID validationKey, WorkflowEvent event) {
-    return engine.evaluate(mapper.from(client.get(validationKey)), event);
+    return evaluate(mapper.from(client.get(validationKey)), event, List.of());
   }
 
   /**
@@ -48,17 +54,19 @@ public class OrchestrationService {
    * listener until conditional transitions and a recovery strategy are added.
    */
   public void handle(UUID validationKey, WorkflowEvent event) throws IOException {
+    handle(validationKey, event, List.of());
+  }
+
+  public void handle(
+      UUID validationKey, WorkflowEvent event, List<WorkflowChange> changes) throws IOException {
     Validation validation = client.get(validationKey);
-    WorkflowDecision decision = engine.evaluate(mapper.from(validation), event);
+    WorkflowDecision decision = evaluate(mapper.from(validation), event, changes);
 
     // Resolve payloads up-front to avoid changing state for unsupported steps.
     Map<StepType, Object> requests = new EnumMap<>(StepType.class);
     for (WorkflowDecision.Action action : decision.actions()) {
       if (action.kind() == WorkflowDecision.Kind.DISPATCH) {
-        StepRequestFactory factory = factories.stream().filter(f -> f.supports(action.step()))
-            .findFirst().orElseThrow(() -> new IllegalStateException(
-                "No message factory for step " + action.step()));
-        requests.put(action.step(), factory.create(action.step(), validation));
+        requests.put(action.step(), stepRegistry.require(action.step()).createRequest(validation));
       }
     }
 
@@ -93,11 +101,26 @@ public class OrchestrationService {
     }
   }
 
+  private WorkflowDecision evaluate(
+      WorkflowState state, WorkflowEvent event, List<WorkflowChange> changes) {
+    if (!dagProperties.getNodes().isEmpty()) {
+      return new DagWorkflowEngine(dagProperties.toDefinition()).evaluate(state, event, changes);
+    }
+
+    if (!changes.isEmpty()) {
+      throw new IllegalStateException("Workflow changes require configured DAG nodes");
+    }
+
+    return sequentialEngine.evaluate(state, event);
+  }
+
   private Validation.Status toValidationStatus(WorkflowState.Status status) {
     return switch (status) {
       case QUEUED -> Validation.Status.QUEUED;
       case RUNNING -> Validation.Status.RUNNING;
       case FINISHED -> Validation.Status.FINISHED;
+      case SKIPPED -> throw new IllegalStateException(
+          "SKIPPED requires support in validator-ws before persisting DAG decisions");
       case FAILED -> Validation.Status.FAILED;
       case ABORTED -> Validation.Status.ABORTED;
       case PENDING -> throw new IllegalArgumentException("Cannot persist pending as a status");

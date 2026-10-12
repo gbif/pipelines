@@ -1,22 +1,22 @@
 package org.gbif.validator.orchestrator.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
 import java.util.Objects;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.validator.orchestrator.step.CompletionProcessor;
 import org.springframework.stereotype.Service;
 
-/** Narrow transport-independent boundary used by the completion listener. */
+/** Thin adapter for the existing postal-api DWc-DP completion listener. */
 @Service
 public class DwcdpCompletionHandler {
-  private final OrchestrationService orchestration;
-  private final DwcdpCompletionInterpreter interpreter = new DwcdpCompletionInterpreter();
 
-  public DwcdpCompletionHandler(OrchestrationService orchestration) {
-    this.orchestration = Objects.requireNonNull(orchestration);
+  private final CompletionProcessor processor;
+
+  public DwcdpCompletionHandler(CompletionProcessor processor) {
+    this.processor = Objects.requireNonNull(processor);
   }
 
-  public void handle(JsonNode body) throws IOException {
-    var completion = interpreter.interpret(body);
-    orchestration.handle(completion.validationKey(), completion.event());
+  public void handle(JsonNode body) throws Exception {
+    processor.complete(StepType.VALIDATOR_VALIDATE_DWCDP, body);
   }
 }

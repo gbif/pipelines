@@ -1,25 +1,21 @@
 # Changelog
 
-## [4.0.43] - Unreleased
+## 4.0.43 — Initial version
 
 ### Added
 
-- Standalone Spring Boot orchestrator bootstrap and external RabbitMQ connection configuration.
-- Per-`StepType` request and completion routing configuration, including explicit consumer queue bindings.
-- Existing `ValidationWsClient` integration for reading/updating persisted validation workflow state.
-- Pure sequential workflow engine with events, decisions, status mapping and JUnit 5 behavior tests.
-- Configurable step dispatcher and initial DWc-DP analyser request factory.
-- DWc-DP completion interpreter, handler and `postal-api` callback with unchecked exception propagation.
-- Optional DWc-DP completion listener, disabled by default pending concurrency and recovery safeguards.
-
-### Changed
-
-- Consolidated earlier version-specific documentation into `README.md`.
-- Normalized Java imports, whitespace and control-flow braces in the affected implementation classes.
+- Spring Boot orchestrator with configurable RabbitMQ connections, exchanges, routing keys, and queues.
+- Integration with the existing validation web-service client for workflow state.
+- Pure sequential and DAG workflow evaluation, dependency validation, configurable join policies, and opt-in parallel scheduling.
+- Typed step definitions, step registry, completion adapters, required and optional hooks, and workflow-change proposals.
+- DWc-DP analyser request and completion handling, including a required validation-report upload hook using string report-type identifiers.
+- Initial validation request listener and validation state-transition coordination.
+- JUnit 5 tests for workflow decisions, step registration, report handling, and multi-component DWc-DP execution, using handwritten test doubles.
+- Reusable `RecordingValidationClient` test fake.
 
 ### Known limitations
 
-- No production-safe atomic step claiming or reliable dispatch recovery.
-- No persistence for the full analyser validation report yet.
-- No complete end-to-end run or Maven compilation verified against the repository.
-- Existing validation start-message migration and further step adapters are pending.
+- Automatic consumers are disabled by default pending reliable dispatch and state-persistence coordination.
+- Live end-to-end execution against RabbitMQ, the analyser, and validator-ws remains unverified.
+- `SKIPPED` persistence and deployment-specific routing require integration validation.
+- No automatic workflow retry; reruns are separate, manually invoked executions.
