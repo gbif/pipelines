@@ -112,8 +112,7 @@ public class PostprocessValidation {
 
     // metrics from the comparison with the identifiers of the previous attempt
     String identifierMetricsPath =
-        String.join(
-            "/", outputPath, datasetId, attempt, IdentifiersPipeline.IDENTIFIER_METRICS_FILENAME);
+        String.join("/", outputPath, datasetId, attempt, IdentifiersPipeline.METRICS_FILENAME);
     log.debug("Getting removed identifiers from the file - {}", identifierMetricsPath);
     Map<String, Long> identifierMetrics =
         MetricsUtil.readMetricsYaml(fileSystem, identifierMetricsPath);

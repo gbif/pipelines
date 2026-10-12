@@ -62,10 +62,6 @@ import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 public class IdentifiersPipeline {
 
   public static final String METRICS_FILENAME = "verbatim-to-identifier.yml";
-
-  /** Metrics comparing the identifiers of this attempt with those of the previous attempt */
-  public static final String IDENTIFIER_METRICS_FILENAME = "identifier-metrics.yml";
-
   public static final String PREVIOUS_ATTEMPT = "previousAttempt";
   public static final String PREVIOUS_IDENTIFIERS_COUNT = "previousIdentifiersCount";
   public static final String CURRENT_IDENTIFIERS_COUNT = "currentIdentifiersCount";
@@ -240,14 +236,16 @@ public class IdentifiersPipeline {
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + IDENTIFIERS_ABSENT);
 
-    // 4. write metrics to yaml
-    writeMetricsYaml(fs, metrics, outputPath + "/" + METRICS_FILENAME);
-
-    // 5. compare with the identifiers of the previous attempt and write the metrics to yaml
+    // 4. compare with the identifiers of the previous attempt and write the metrics to yaml
     Map<String, Long> identifierMetrics =
         compareWithPreviousAttempt(
             spark, fs, config.getOutputPath() + "/" + datasetID, attempt, identifiers);
-    writeMetricsYaml(fs, identifierMetrics, outputPath + "/" + IDENTIFIER_METRICS_FILENAME);
+
+    // combine metrics from the current attempt and the comparison with the previous attempt
+    metrics.putAll(identifierMetrics);
+
+    // 5. write metrics to yaml
+    writeMetricsYaml(fs, metrics, outputPath + "/" + METRICS_FILENAME);
 
     // clean up
     fs.delete(new Path(outputPath + "/" + IDENTIFIERS_TRANSFORMED), true);
