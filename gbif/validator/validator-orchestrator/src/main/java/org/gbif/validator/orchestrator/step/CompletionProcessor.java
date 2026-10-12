@@ -47,8 +47,22 @@ public final class CompletionProcessor {
     }
 
     // External completion artifacts must be persisted before advancing the workflow.
-    registration.runHooks(validation, payload, reporter);
-    List<WorkflowChange> changes = registration.proposeChanges(validation, payload, reporter);
+    List<WorkflowChange> changes;
+
+    try {
+      registration.runHooks(validation, payload, reporter);
+      changes = registration.proposeChanges(validation, payload, reporter);
+    } catch (Exception hookFailure) {
+      // Required hooks are part of the execution. With no automatic retries,
+      // a failed required hook must not leave its step indefinitely queued.
+      try {
+        coordinator.handle(result.validationKey(), WorkflowEvent.failed(stepType));
+      } catch (Exception transitionFailure) {
+        hookFailure.addSuppressed(transitionFailure);
+      }
+
+      throw hookFailure;
+    }
 
     WorkflowEvent event = result.successful()
         ? WorkflowEvent.completed(stepType)
