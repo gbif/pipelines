@@ -9,29 +9,19 @@ MODULE_DIR="./gbif/validator/${MODULE}"
 IMAGE="docker.gbif.org/${MODULE}:${POM_VERSION}"
 IMAGE_LATEST="docker.gbif.org/${MODULE}:latest"
 
-# Only the shaded JAR is runnable; the sibling library JAR is not a Docker artifact.
-mapfile -d '' -t JARS < <(
-  find "${MODULE_DIR}" -mindepth 3 -maxdepth 3 -type f \
-    -path "*/target/*" \
-    -name "*-${POM_VERSION}-shaded.jar" \
-    -print0
-)
+# The module produces both a library JAR and a runnable shaded JAR.
+# Only the shaded JAR should be packaged in the Docker image.
+JAR_DIR="${MODULE_DIR}/target"
+JARS=("${JAR_DIR}"/*-shaded.jar)
 
-if [[ ${#JARS[@]} -eq 0 ]]; then
-  echo >&2 "ERROR: No shaded JAR found in ${MODULE_DIR}/*/target for version ${POM_VERSION}."
-  echo >&2 "Run 'mvn package' before building the Docker image."
+if [[ ${#JARS[@]} -ne 1 || ! -f "${JARS[0]}" ]]; then
+  echo >&2 "ERROR: Expected exactly one shaded JAR in ${JAR_DIR}."
+  echo >&2 "Run 'mvn clean package' and check the module output."
   exit 1
 fi
 
-if [[ ${#JARS[@]} -gt 1 ]]; then
-  echo >&2 "ERROR: Found multiple shaded JARs:"
-  printf >&2 '  %s\n' "${JARS[@]}"
-  echo >&2 "Run 'mvn clean package' to produce an unambiguous build."
-  exit 1
-fi
-
-# Docker COPY resolves paths relative to MODULE_DIR, our build context.
-JAR_FILE="${JARS[0]#${MODULE_DIR}/}"
+# Docker COPY paths are relative to the module build context.
+JAR_FILE="target/$(basename "${JARS[0]}")"
 
 echo "Building Docker image: ${IMAGE}"
 echo "Using JAR: ${JAR_FILE}"
