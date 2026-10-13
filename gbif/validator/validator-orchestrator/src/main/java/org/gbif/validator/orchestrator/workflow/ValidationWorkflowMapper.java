@@ -8,14 +8,21 @@ import org.gbif.validator.orchestrator.workflow.WorkflowState.Status;
 /** Converts validator-ws persistence DTOs to the pure workflow snapshot. */
 public final class ValidationWorkflowMapper {
   public WorkflowState from(Validation validation) {
-    if (validation == null || validation.getMetrics() == null
+    if (validation == null
+        || validation.getMetrics() == null
         || validation.getMetrics().getStepTypes() == null) {
       throw new IllegalArgumentException("Validation has no persisted workflow");
     }
 
-    List<WorkflowState.Step> steps = validation.getMetrics().getStepTypes().stream()
-        .map(s -> new WorkflowState.Step(StepType.valueOf(s.getStepType()),
-            s.getExecutionOrder(), status(s.getStatus()))).toList();
+    List<WorkflowState.Step> steps =
+        validation.getMetrics().getStepTypes().stream()
+            .map(
+                s ->
+                    new WorkflowState.Step(
+                        StepType.valueOf(s.getStepType()),
+                        s.getExecutionOrder(),
+                        status(s.getStatus())))
+            .toList();
     return new WorkflowState(status(validation.getStatus()), steps);
   }
 

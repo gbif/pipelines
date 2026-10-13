@@ -18,18 +18,25 @@ public final class DwcdpCompletionInterpreter {
     JsonNode attempt = message.get("attempt");
     JsonNode valid = message.get("valid");
     JsonNode report = message.get("validationReport");
-    if (uuid == null || !uuid.isTextual() || attempt == null || !attempt.isIntegralNumber()
-        || attempt.intValue() != 1 || valid == null || !valid.isBoolean()
-        || report == null || report.isNull()) {
+    if (uuid == null
+        || !uuid.isTextual()
+        || attempt == null
+        || !attempt.isIntegralNumber()
+        || attempt.intValue() != 1
+        || valid == null
+        || !valid.isBoolean()
+        || report == null
+        || report.isNull()) {
       throw new IllegalArgumentException("Incomplete or unsupported DWc-DP completion payload");
     }
 
     UUID key = UUID.fromString(uuid.textValue());
 
     // Policy for first integration: invalid datapackage terminates the workflow.
-    WorkflowEvent event = valid.booleanValue()
-        ? WorkflowEvent.completed(StepType.VALIDATOR_VALIDATE_DWCDP)
-        : WorkflowEvent.failed(StepType.VALIDATOR_VALIDATE_DWCDP);
+    WorkflowEvent event =
+        valid.booleanValue()
+            ? WorkflowEvent.completed(StepType.VALIDATOR_VALIDATE_DWCDP)
+            : WorkflowEvent.failed(StepType.VALIDATOR_VALIDATE_DWCDP);
     return new Completion(key, event);
   }
 }

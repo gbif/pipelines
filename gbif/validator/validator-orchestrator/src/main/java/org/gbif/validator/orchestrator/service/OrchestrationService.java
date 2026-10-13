@@ -26,10 +26,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
- * Connects the pure engine to validator-ws and a message dispatcher.
- * Not a safe concurrent/atomic execution gate: validator-ws exposes full-object PUT,
- * not conditional status transitions, and RabbitMQ publishes are not in that transaction.
- * Callers must serialize events per validation and arrange recovery for publish failures.
+ * Connects the pure engine to validator-ws and a message dispatcher. Not a safe concurrent/atomic
+ * execution gate: validator-ws exposes full-object PUT, not conditional status transitions, and
+ * RabbitMQ publishes are not in that transaction. Callers must serialize events per validation and
+ * arrange recovery for publish failures.
  */
 @Service
 public class OrchestrationService {
@@ -42,8 +42,11 @@ public class OrchestrationService {
   private final SequentialWorkflowEngine sequentialEngine = new SequentialWorkflowEngine();
   private final DagProperties dagProperties;
 
-  public OrchestrationService(ValidationWsClient client, StepDispatcher dispatcher,
-      StepRegistry stepRegistry, DagProperties dagProperties) {
+  public OrchestrationService(
+      ValidationWsClient client,
+      StepDispatcher dispatcher,
+      StepRegistry stepRegistry,
+      DagProperties dagProperties) {
     this.client = Objects.requireNonNull(client);
     this.dispatcher = Objects.requireNonNull(dispatcher);
     this.stepRegistry = Objects.requireNonNull(stepRegistry);
@@ -56,38 +59,44 @@ public class OrchestrationService {
   }
 
   /**
-   * Applies a plan by saving status changes before dispatch. Not invoked by an MQ
-   * listener until conditional transitions and a recovery strategy are added.
+   * Applies a plan by saving status changes before dispatch. Not invoked by an MQ listener until
+   * conditional transitions and a recovery strategy are added.
    */
   public void handle(UUID validationKey, WorkflowEvent event) throws IOException {
     handle(validationKey, event, List.of());
   }
 
-  public void handle(
-      UUID validationKey, WorkflowEvent event, List<WorkflowChange> changes) throws IOException {
+  public void handle(UUID validationKey, WorkflowEvent event, List<WorkflowChange> changes)
+      throws IOException {
     Validation validation = client.get(validationKey);
     WorkflowDecision decision = evaluate(mapper.from(validation), event, changes);
 
     // Phase 1 owns only registered workers. Existing validation pipeline steps retain
     // their persisted state until the legacy pipeline handoff is implemented.
-    Set<StepType> unownedDispatches = decision.actions().stream()
-        .filter(action -> action.kind() == WorkflowDecision.Kind.DISPATCH)
-        .map(WorkflowDecision.Action::step)
-        .filter(step -> !stepRegistry.supports(step))
-        .collect(Collectors.toSet());
+    Set<StepType> unownedDispatches =
+        decision.actions().stream()
+            .filter(action -> action.kind() == WorkflowDecision.Kind.DISPATCH)
+            .map(WorkflowDecision.Action::step)
+            .filter(step -> !stepRegistry.supports(step))
+            .collect(Collectors.toSet());
 
     if (!unownedDispatches.isEmpty()) {
-      LOG.info("Leaving unowned validation steps for legacy pipeline handoff: {}",
-          unownedDispatches);
+      LOG.info(
+          "Leaving unowned validation steps for legacy pipeline handoff: {}", unownedDispatches);
     }
 
-    List<WorkflowDecision.Action> actions = decision.actions().stream()
-        .filter(action -> !(action.kind() == WorkflowDecision.Kind.DISPATCH
-            && unownedDispatches.contains(action.step())))
-        .filter(action -> !(action.kind() == WorkflowDecision.Kind.SET_STEP_STATUS
-            && unownedDispatches.contains(action.step())
-            && action.status() == WorkflowState.Status.QUEUED))
-        .toList();
+    List<WorkflowDecision.Action> actions =
+        decision.actions().stream()
+            .filter(
+                action ->
+                    !(action.kind() == WorkflowDecision.Kind.DISPATCH
+                        && unownedDispatches.contains(action.step())))
+            .filter(
+                action ->
+                    !(action.kind() == WorkflowDecision.Kind.SET_STEP_STATUS
+                        && unownedDispatches.contains(action.step())
+                        && action.status() == WorkflowState.Status.QUEUED))
+            .toList();
 
     // Resolve payloads up-front to avoid changing state for unsupported steps.
     Map<StepType, Object> requests = new EnumMap<>(StepType.class);
@@ -101,9 +110,11 @@ public class OrchestrationService {
     for (WorkflowDecision.Action action : actions) {
       switch (action.kind()) {
         case SET_STEP_STATUS -> {
-          ValidationStep step = validation.getMetrics().getStepTypes().stream()
-              .filter(s -> s.getStepType().equals(action.step().name())).findFirst()
-              .orElseThrow();
+          ValidationStep step =
+              validation.getMetrics().getStepTypes().stream()
+                  .filter(s -> s.getStepType().equals(action.step().name()))
+                  .findFirst()
+                  .orElseThrow();
           step.setStatus(toValidationStatus(action.status()));
           changed = true;
         }

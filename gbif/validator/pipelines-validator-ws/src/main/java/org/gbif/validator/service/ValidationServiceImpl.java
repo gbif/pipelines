@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,7 +30,6 @@ import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.utils.file.CompressionUtil.UnsupportedCompressionType;
 import org.gbif.validator.api.ClbDatasetImport;
-import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
@@ -390,5 +388,4 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     log.info("Send the MQ message to the validator queue for key - {}", key);
     messagePublisher.send(message);
   }
-
 }

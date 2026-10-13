@@ -16,64 +16,59 @@ class StepResolverServiceTest {
 
   @Test
   void shouldResolveDwcdpStepsInOrder() {
-    List<StepType> steps =
-      List.copyOf(stepResolverService.resolve(FileFormat.DWCDP));
+    List<StepType> steps = List.copyOf(stepResolverService.resolve(FileFormat.DWCDP));
 
     assertEquals(
-      List.of(
-        StepType.VALIDATOR_VALIDATE_DWCDP,
-        StepType.VALIDATOR_DWCDP_STAGE,
-        StepType.VALIDATOR_DWCDP_TO_VERBATIM,
-        StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
-        StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
-        StepType.VALIDATOR_COLLECT_METRICS),
-      steps);
+        List.of(
+            StepType.VALIDATOR_VALIDATE_DWCDP,
+            StepType.VALIDATOR_DWCDP_STAGE,
+            StepType.VALIDATOR_DWCDP_TO_VERBATIM,
+            StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
+            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
+            StepType.VALIDATOR_COLLECT_METRICS),
+        steps);
   }
 
   @ParameterizedTest
   @EnumSource(
-    value = FileFormat.class,
-    names = {"DWCA", "TABULAR", "SPREADSHEET"})
+      value = FileFormat.class,
+      names = {"DWCA", "TABULAR", "SPREADSHEET"})
   void shouldResolveStandardArchiveSteps(FileFormat fileFormat) {
-    List<StepType> steps =
-      List.copyOf(stepResolverService.resolve(fileFormat));
+    List<StepType> steps = List.copyOf(stepResolverService.resolve(fileFormat));
 
     assertEquals(
-      List.of(
-        StepType.VALIDATOR_VALIDATE_ARCHIVE,
-        StepType.VALIDATOR_DWCA_TO_VERBATIM,
-        StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
-        StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
-        StepType.VALIDATOR_COLLECT_METRICS),
-      steps);
+        List.of(
+            StepType.VALIDATOR_VALIDATE_ARCHIVE,
+            StepType.VALIDATOR_DWCA_TO_VERBATIM,
+            StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
+            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
+            StepType.VALIDATOR_COLLECT_METRICS),
+        steps);
   }
 
   @Test
   void shouldResolveXmlStepsInOrder() {
-    List<StepType> steps =
-      List.copyOf(stepResolverService.resolve(FileFormat.XML));
+    List<StepType> steps = List.copyOf(stepResolverService.resolve(FileFormat.XML));
 
     assertEquals(
-      List.of(
-        StepType.VALIDATOR_VALIDATE_ARCHIVE,
-        StepType.VALIDATOR_XML_TO_VERBATIM,
-        StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
-        StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
-        StepType.VALIDATOR_COLLECT_METRICS),
-      steps);
+        List.of(
+            StepType.VALIDATOR_VALIDATE_ARCHIVE,
+            StepType.VALIDATOR_XML_TO_VERBATIM,
+            StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
+            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
+            StepType.VALIDATOR_COLLECT_METRICS),
+        steps);
   }
 
   @Test
   void shouldResolveColdpToArchiveValidationOnly() {
     assertEquals(
-      List.of(StepType.VALIDATOR_VALIDATE_ARCHIVE),
-      List.copyOf(stepResolverService.resolve(FileFormat.COLDP)));
+        List.of(StepType.VALIDATOR_VALIDATE_ARCHIVE),
+        List.copyOf(stepResolverService.resolve(FileFormat.COLDP)));
   }
 
   @Test
   void shouldRejectNullFileFormat() {
-    assertThrows(
-      NullPointerException.class,
-      () -> stepResolverService.resolve(null));
+    assertThrows(NullPointerException.class, () -> stepResolverService.resolve(null));
   }
 }

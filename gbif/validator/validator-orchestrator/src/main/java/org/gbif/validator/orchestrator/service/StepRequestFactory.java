@@ -6,5 +6,6 @@ import org.gbif.validator.api.Validation;
 /** Converts an execution into the worker-specific request payload. */
 public interface StepRequestFactory {
   boolean supports(StepType step);
+
   Object create(StepType step, Validation validation);
 }
