@@ -12,6 +12,9 @@
 
   <artifactId>validator-orchestrator</artifactId>
 
+  <name>Pipelines :: GBIF :: Validator :: Validator Orchestrator</name>
+  <description>Orchestration Service to control workflow for data validation</description>
+
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
