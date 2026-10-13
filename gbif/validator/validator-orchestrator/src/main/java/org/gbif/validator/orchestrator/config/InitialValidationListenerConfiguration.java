@@ -12,9 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class InitialValidationListenerConfiguration {
 
   @Bean
-  @ConditionalOnProperty(
-      name = "orchestrator.unsafe-enable-start-consumer",
-      havingValue = "true")
+  @ConditionalOnProperty(name = "orchestrator.unsafe-enable-start-consumer", havingValue = "true")
   public ApplicationRunner initialValidationListener(
       MessageListener listener,
       StartMessagingProperties properties,

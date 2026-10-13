@@ -3,7 +3,6 @@ package org.gbif.validator.orchestrator.workflow;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,11 +60,10 @@ public final class DagWorkflowEngine implements WorkflowEngine {
         return new WorkflowDecision(List.of());
       }
 
-      Status outcome = event.kind() == WorkflowEvent.Kind.COMPLETED
-          ? Status.FINISHED : Status.FAILED;
+      Status outcome =
+          event.kind() == WorkflowEvent.Kind.COMPLETED ? Status.FINISHED : Status.FAILED;
       statuses.put(event.step(), outcome);
       actions.add(Action.stepStatus(event.step(), outcome));
-
     }
 
     // Step-specific decisions only affect steps that have not started.
@@ -89,11 +87,13 @@ public final class DagWorkflowEngine implements WorkflowEngine {
 
     // Evaluate deterministic order; avoid dispatching anything while a step remains active
     // when sequential mode is configured.
-    List<Step> ordered = state.steps().stream()
-        .sorted(Comparator.comparingInt(Step::order).thenComparing(s -> s.type().name()))
-        .toList();
-    boolean active = statuses.values().stream()
-        .anyMatch(status -> status == Status.QUEUED || status == Status.RUNNING);
+    List<Step> ordered =
+        state.steps().stream()
+            .sorted(Comparator.comparingInt(Step::order).thenComparing(s -> s.type().name()))
+            .toList();
+    boolean active =
+        statuses.values().stream()
+            .anyMatch(status -> status == Status.QUEUED || status == Status.RUNNING);
 
     // A join may become terminal and unblock another join, so repeat until stable.
     boolean changed;
@@ -105,8 +105,7 @@ public final class DagWorkflowEngine implements WorkflowEngine {
         }
 
         DagDefinition.Node node = definition.require(step.type());
-        List<Status> predecessors = node.dependencies().stream()
-            .map(statuses::get).toList();
+        List<Status> predecessors = node.dependencies().stream().map(statuses::get).toList();
         JoinEvaluator evaluator = evaluators.get(definition.policy(node));
         JoinDecision decision = evaluator.evaluate(node, predecessors);
 
@@ -126,8 +125,7 @@ public final class DagWorkflowEngine implements WorkflowEngine {
       }
 
       DagDefinition.Node node = definition.require(step.type());
-      List<Status> predecessors = node.dependencies().stream()
-          .map(statuses::get).toList();
+      List<Status> predecessors = node.dependencies().stream().map(statuses::get).toList();
       JoinDecision decision = evaluators.get(definition.policy(node)).evaluate(node, predecessors);
       if (decision == JoinDecision.EXECUTE && (definition.parallel() || !active)) {
         statuses.put(step.type(), Status.QUEUED);
@@ -139,11 +137,13 @@ public final class DagWorkflowEngine implements WorkflowEngine {
     }
 
     if (statuses.values().stream().allMatch(this::isTerminal)) {
-      boolean aborted = statuses.values().stream()
-          .anyMatch(status -> status == Status.FAILED || status == Status.ABORTED);
+      boolean aborted =
+          statuses.values().stream()
+              .anyMatch(status -> status == Status.FAILED || status == Status.ABORTED);
       boolean failed = statuses.values().stream().anyMatch(status -> status == Status.FAILED);
-      actions.add(Action.validationStatus(failed ? Status.FAILED
-          : aborted ? Status.ABORTED : Status.FINISHED));
+      actions.add(
+          Action.validationStatus(
+              failed ? Status.FAILED : aborted ? Status.ABORTED : Status.FINISHED));
     }
 
     return new WorkflowDecision(actions);
@@ -153,8 +153,8 @@ public final class DagWorkflowEngine implements WorkflowEngine {
     if (predecessors.stream().anyMatch(status -> !isTerminal(status))) {
       return JoinDecision.WAIT;
     }
-    if (predecessors.stream().anyMatch(
-        status -> status == Status.FAILED || status == Status.ABORTED)) {
+    if (predecessors.stream()
+        .anyMatch(status -> status == Status.FAILED || status == Status.ABORTED)) {
       return JoinDecision.ABORT;
     }
     return JoinDecision.EXECUTE;
@@ -162,11 +162,14 @@ public final class DagWorkflowEngine implements WorkflowEngine {
 
   private JoinDecision allTerminal(DagDefinition.Node node, List<Status> predecessors) {
     return predecessors.stream().allMatch(this::isTerminal)
-        ? JoinDecision.EXECUTE : JoinDecision.WAIT;
+        ? JoinDecision.EXECUTE
+        : JoinDecision.WAIT;
   }
 
   private boolean isTerminal(Status status) {
-    return status == Status.FINISHED || status == Status.SKIPPED
-        || status == Status.FAILED || status == Status.ABORTED;
+    return status == Status.FINISHED
+        || status == Status.SKIPPED
+        || status == Status.FAILED
+        || status == Status.ABORTED;
   }
 }

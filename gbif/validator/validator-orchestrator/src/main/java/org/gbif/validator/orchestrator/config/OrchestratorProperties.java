@@ -1,18 +1,17 @@
 package org.gbif.validator.orchestrator.config;
 
-import org.gbif.api.model.pipelines.StepType;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
+import org.gbif.api.model.pipelines.StepType;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Maps pipeline step types to RabbitMQ request and completion destinations.
  *
- * <p>The connection (including vhost) is configured separately through the
- * RabbitMQ connection properties. Exchange, routing keys and completion queues
- * can therefore be changed independently for each deployed orchestrator.
+ * <p>The connection (including vhost) is configured separately through the RabbitMQ connection
+ * properties. Exchange, routing keys and completion queues can therefore be changed independently
+ * for each deployed orchestrator.
  */
 @ConfigurationProperties(prefix = "orchestrator")
 public class OrchestratorProperties {

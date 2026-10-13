@@ -21,8 +21,7 @@ public class StepDispatcher {
   public void dispatch(StepType stepType, Object payload) throws IOException {
     Objects.requireNonNull(stepType, "stepType must not be null");
     Objects.requireNonNull(payload, "payload must not be null");
-    OrchestratorProperties.Destination destination =
-        properties.requireStep(stepType).getRequest();
+    OrchestratorProperties.Destination destination = properties.requireStep(stepType).getRequest();
     if (destination == null
         || isBlank(destination.getExchange())
         || isBlank(destination.getRoutingKey())) {
