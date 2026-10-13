@@ -21,6 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -51,7 +56,7 @@ import org.gbif.pipelines.spark.TableBuildPipeline;
  * </ul>
  */
 @Slf4j
-public class IdentifierMetricsReport {
+public class MetricsReport {
 
   static final String NOT_AVAILABLE = "NOT_AVAILABLE";
   static final String ES_COUNT_COLUMN = "EsOccurrenceIndexCount";
@@ -60,6 +65,10 @@ public class IdentifierMetricsReport {
       "/occurrence/search?limit=0&facet=datasetKey&facetLimit=120000";
   /** How often (in datasets) to log report-writing progress. */
   static final int PROGRESS_INTERVAL = 500;
+
+  /** The CSV row for one dataset, plus what was missing, so counts can be tallied in order. */
+  record DatasetRow(
+      String row, List<String> missingFiles, boolean esMissing, boolean icebergMissing) {}
 
   static final String ICEBERG_COUNT_SQL =
       "SELECT datasetKey, count(*) AS cnt FROM occurrence GROUP BY datasetKey";
@@ -114,6 +123,13 @@ public class IdentifierMetricsReport {
         description = "Add the per-dataset occurrence count from the occurrence table (Spark SQL)",
         arity = 1)
     private boolean icebergCounts = false;
+
+    @Parameter(
+        names = "--threads",
+        description =
+            "Number of threads reading the metrics files from HDFS (the work is I/O bound, so this"
+                + " can be well above the number of cores)")
+    private int threads = 20;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -167,7 +183,7 @@ public class IdentifierMetricsReport {
     Path reportPath = new Path(args.outputDir, filename);
 
     log.info("Step 3/3: scanning datasets and writing report to {}", reportPath);
-    int rows = writeReport(fileSystem, config, reportPath, esCounts, icebergCounts);
+    int rows = writeReport(fileSystem, config, reportPath, esCounts, icebergCounts, args.threads);
     log.info(
         "Finished: wrote metrics for {} datasets to {} in {} s",
         rows,
@@ -284,7 +300,7 @@ public class IdentifierMetricsReport {
             master,
             "Identifier metrics report - occurrence table counts",
             config,
-            IdentifierMetricsReport::configIcebergSparkSession);
+            MetricsReport::configIcebergSparkSession);
     try {
       log.info(
           "Spark session started in {} ms (defaultCatalog={}, spark_catalog={}), using database {}",
@@ -317,6 +333,7 @@ public class IdentifierMetricsReport {
    *
    * @param esCounts datasetKey to Elasticsearch count, or null to omit the column
    * @param icebergCounts datasetKey to occurrence table count, or null to omit the column
+   * @param threads number of threads reading the metrics files
    * @return the number of dataset rows written
    */
   public static int writeReport(
@@ -324,7 +341,8 @@ public class IdentifierMetricsReport {
       PipelinesConfig config,
       Path reportPath,
       Map<String, Long> esCounts,
-      Map<String, Long> icebergCounts)
+      Map<String, Long> icebergCounts,
+      int threads)
       throws IOException {
 
     FullBuildUtils.DirectoryScanResult scanResult =
@@ -366,46 +384,46 @@ public class IdentifierMetricsReport {
       writer.write(header.toString());
       writer.newLine();
 
-      for (Map.Entry<String, Integer> entry : datasetAttempts.entrySet()) {
-        String datasetId = entry.getKey();
-        int attempt = entry.getValue();
-        String attemptDir =
-            String.join("/", config.getOutputPath(), datasetId, String.valueOf(attempt));
-
-        StringBuilder row = new StringBuilder(datasetId).append(',').append(attempt);
-        for (MetricsFile metricsFile : METRICS_FILES) {
-          boolean found =
-              appendMetrics(
-                  fileSystem, attemptDir + "/" + metricsFile.filename(), metricsFile, row);
-          if (!found) {
-            missingCounts.merge(metricsFile.filename(), 1, Integer::sum);
-          }
+      // Build each dataset's row on a thread pool (the work is HDFS round trips), then write the
+      // rows in submission order so the report stays sorted by dataset UUID. Counters are
+      // tallied on this thread only, while writing.
+      int poolSize = Math.max(1, Math.min(threads, Math.max(1, total)));
+      log.info("Reading metrics for {} datasets using {} threads", total, poolSize);
+      ExecutorService executor = Executors.newFixedThreadPool(poolSize);
+      AtomicInteger completed = new AtomicInteger();
+      try {
+        List<Future<DatasetRow>> futures = new java.util.ArrayList<>(total);
+        for (Map.Entry<String, Integer> entry : datasetAttempts.entrySet()) {
+          String datasetId = entry.getKey();
+          int attempt = entry.getValue();
+          futures.add(
+              executor.submit(
+                  () -> {
+                    DatasetRow datasetRow =
+                        buildRow(fileSystem, config, datasetId, attempt, esCounts, icebergCounts);
+                    logProgress(completed.incrementAndGet(), total, start);
+                    return datasetRow;
+                  }));
         }
-        // a dataset absent from the facet / group-by has no records there
-        if (esCounts != null) {
-          if (!esCounts.containsKey(datasetId)) {
+
+        for (Future<DatasetRow> future : futures) {
+          DatasetRow datasetRow = getRow(future);
+          for (String file : datasetRow.missingFiles()) {
+            missingCounts.merge(file, 1, Integer::sum);
+          }
+          if (datasetRow.esMissing()) {
             esMissing++;
           }
-          row.append(',').append(esCounts.getOrDefault(datasetId, 0L));
-        }
-        if (icebergCounts != null) {
-          if (!icebergCounts.containsKey(datasetId)) {
+          if (datasetRow.icebergMissing()) {
             icebergMissing++;
           }
-          row.append(',').append(icebergCounts.getOrDefault(datasetId, 0L));
+          writer.write(datasetRow.row());
+          writer.newLine();
+          rows++;
+          log.debug("Row {}/{}: {}", rows, total, datasetRow.row());
         }
-        writer.write(row.toString());
-        writer.newLine();
-        rows++;
-        log.debug("Row {}/{}: {}", rows, total, row);
-
-        if (rows % PROGRESS_INTERVAL == 0) {
-          long elapsedMs = System.currentTimeMillis() - start;
-          long etaSec = rows == 0 ? 0 : (elapsedMs * (total - rows) / rows) / 1000;
-          log.info(
-              "Report progress: {}/{} datasets ({}%), elapsed {} s, ETA {} s",
-              rows, total, rows * 100 / total, elapsedMs / 1000, etaSec);
-        }
+      } finally {
+        executor.shutdownNow();
       }
     }
 
@@ -427,6 +445,69 @@ public class IdentifierMetricsReport {
           icebergMissing);
     }
     return rows;
+  }
+
+  /** Builds the CSV row for one dataset. Thread safe: only reads from HDFS and the count maps. */
+  private static DatasetRow buildRow(
+      FileSystem fileSystem,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      Map<String, Long> esCounts,
+      Map<String, Long> icebergCounts)
+      throws IOException {
+
+    String attemptDir =
+        String.join("/", config.getOutputPath(), datasetId, String.valueOf(attempt));
+
+    StringBuilder row = new StringBuilder(datasetId).append(',').append(attempt);
+    List<String> missingFiles = new java.util.ArrayList<>();
+    for (MetricsFile metricsFile : METRICS_FILES) {
+      boolean found =
+          appendMetrics(fileSystem, attemptDir + "/" + metricsFile.filename(), metricsFile, row);
+      if (!found) {
+        missingFiles.add(metricsFile.filename());
+      }
+    }
+
+    // a dataset absent from the facet / group-by has no records there
+    boolean esMissing = false;
+    if (esCounts != null) {
+      esMissing = !esCounts.containsKey(datasetId);
+      row.append(',').append(esCounts.getOrDefault(datasetId, 0L));
+    }
+    boolean icebergMissing = false;
+    if (icebergCounts != null) {
+      icebergMissing = !icebergCounts.containsKey(datasetId);
+      row.append(',').append(icebergCounts.getOrDefault(datasetId, 0L));
+    }
+    return new DatasetRow(row.toString(), missingFiles, esMissing, icebergMissing);
+  }
+
+  /** Logs progress every PROGRESS_INTERVAL completed datasets (called from worker threads). */
+  private static void logProgress(int done, int total, long start) {
+    if (done % PROGRESS_INTERVAL == 0 || done == total) {
+      long elapsedMs = System.currentTimeMillis() - start;
+      long etaSec = (elapsedMs * (total - done) / done) / 1000;
+      log.info(
+          "Report progress: {}/{} datasets ({}%), elapsed {} s, ETA {} s",
+          done, total, done * 100 / total, elapsedMs / 1000, etaSec);
+    }
+  }
+
+  /** Waits for a row, rethrowing a worker's failure as an IOException. */
+  private static DatasetRow getRow(Future<DatasetRow> future) throws IOException {
+    try {
+      return future.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException("Interrupted while building the report", e);
+    } catch (ExecutionException e) {
+      if (e.getCause() instanceof IOException ioe) {
+        throw ioe;
+      }
+      throw new IOException("Failed to build a report row", e.getCause());
+    }
   }
 
   /**
