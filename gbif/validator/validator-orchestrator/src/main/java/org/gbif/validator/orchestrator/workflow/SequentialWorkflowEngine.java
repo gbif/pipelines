@@ -14,16 +14,15 @@ public final class SequentialWorkflowEngine implements WorkflowEngine {
   public WorkflowDecision evaluate(WorkflowState state, WorkflowEvent event) {
     Objects.requireNonNull(state);
     Objects.requireNonNull(event);
-    if (state.status() == Status.ABORTED || state.status() == Status.FAILED
+    if (state.status() == Status.ABORTED
+        || state.status() == Status.FAILED
         || state.status() == Status.FINISHED) {
       return new WorkflowDecision(List.of());
     }
 
-
-    List<Step> steps = state.steps().stream()
-        .sorted(Comparator.comparingInt(Step::order)).toList();
-    Step firstIncomplete = steps.stream().filter(s -> s.status() != Status.FINISHED)
-        .findFirst().orElse(null);
+    List<Step> steps = state.steps().stream().sorted(Comparator.comparingInt(Step::order)).toList();
+    Step firstIncomplete =
+        steps.stream().filter(s -> s.status() != Status.FINISHED).findFirst().orElse(null);
     List<Action> actions = new ArrayList<>();
 
     if (event.kind() == WorkflowEvent.Kind.START) {
@@ -35,9 +34,9 @@ public final class SequentialWorkflowEngine implements WorkflowEngine {
       return new WorkflowDecision(actions);
     }
 
-
     // A completion must belong to the current active step; stale or unexpected events do nothing.
-    if (firstIncomplete == null || firstIncomplete.type() != event.step()
+    if (firstIncomplete == null
+        || firstIncomplete.type() != event.step()
         || (firstIncomplete.status() != Status.QUEUED
             && firstIncomplete.status() != Status.RUNNING)) {
       return new WorkflowDecision(List.of());

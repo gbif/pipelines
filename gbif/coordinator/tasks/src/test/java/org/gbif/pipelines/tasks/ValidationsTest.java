@@ -178,6 +178,15 @@ public class ValidationsTest {
     }
 
     @Override
+    public void createOrUpdateValidationReport(
+        UUID key, int attempt, String reportType, String report) {}
+
+    @Override
+    public String getValidationReport(UUID key, int attempt, String reportType) {
+      return "";
+    }
+
+    @Override
     public void validateChecklistResults(UUID validationKey, ClbDatasetImport clbDatasetImport) {}
   }
 }

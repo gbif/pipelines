@@ -21,10 +21,11 @@ public class StepSelector {
         || validation.getStatus() == Validation.Status.FINISHED) {
       return Optional.empty();
     }
-    Optional<ValidationStep> firstIncomplete = validation.getMetrics().getStepTypes().stream()
-        .sorted(Comparator.comparingInt(ValidationStep::getExecutionOrder))
-        .filter(step -> step.getStatus() != Validation.Status.FINISHED)
-        .findFirst();
+    Optional<ValidationStep> firstIncomplete =
+        validation.getMetrics().getStepTypes().stream()
+            .sorted(Comparator.comparingInt(ValidationStep::getExecutionOrder))
+            .filter(step -> step.getStatus() != Validation.Status.FINISHED)
+            .findFirst();
     if (firstIncomplete.isEmpty()) {
       return Optional.empty();
     }

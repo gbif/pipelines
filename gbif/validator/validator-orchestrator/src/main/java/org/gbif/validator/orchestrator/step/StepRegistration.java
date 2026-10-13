@@ -2,10 +2,10 @@ package org.gbif.validator.orchestrator.step;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.gbif.validator.orchestrator.workflow.WorkflowChange;
 import java.util.Objects;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.orchestrator.workflow.WorkflowChange;
 
 /** Keeps the completion payload type paired with its hooks. */
 public final class StepRegistration<C> {

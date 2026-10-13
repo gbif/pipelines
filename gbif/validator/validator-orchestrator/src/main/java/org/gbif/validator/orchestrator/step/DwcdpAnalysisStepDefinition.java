@@ -35,12 +35,18 @@ public final class DwcdpAnalysisStepDefinition implements StepDefinition<JsonNod
     JsonNode valid = message.path("valid");
     JsonNode report = message.path("validationReport");
 
-    if (!uuid.isTextual() || !attempt.isIntegralNumber() || !valid.isBoolean()
-        || report.isMissingNode() || report.isNull()) {
+    if (!uuid.isTextual()
+        || !attempt.isIntegralNumber()
+        || !valid.isBoolean()
+        || report.isMissingNode()
+        || report.isNull()) {
       throw new IllegalArgumentException("Incomplete DWc-DP completion payload");
     }
 
-    return new CompletionResult(UUID.fromString(uuid.textValue()), attempt.intValue(),
-        valid.booleanValue(), valid.booleanValue() ? null : "Invalid DWc-DP");
+    return new CompletionResult(
+        UUID.fromString(uuid.textValue()),
+        attempt.intValue(),
+        valid.booleanValue(),
+        valid.booleanValue() ? null : "Invalid DWc-DP");
   }
 }

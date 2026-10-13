@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.List;
 import java.util.UUID;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.orchestrator.support.RecordingValidationClient;
@@ -45,5 +44,4 @@ class DwcdpValidationReportHookTest {
 
     assertEquals(0, client.getReportWrites());
   }
-
 }

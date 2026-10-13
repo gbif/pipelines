@@ -12,8 +12,10 @@ import org.springframework.context.annotation.Configuration;
 public class CompletionProcessorConfiguration {
 
   @Bean
-  public CompletionProcessor completionProcessor(StepRegistry registry,
-      ValidationWsClient client, OrchestrationService coordinator,
+  public CompletionProcessor completionProcessor(
+      StepRegistry registry,
+      ValidationWsClient client,
+      OrchestrationService coordinator,
       HookFailureReporter reporter) {
     return new CompletionProcessor(registry, client, coordinator, reporter);
   }
