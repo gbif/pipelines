@@ -1,40 +1,42 @@
 package org.gbif.pipelines.spark;
 
 import static org.gbif.pipelines.spark.Directories.IDENTIFIERS;
+import static org.gbif.pipelines.spark.Directories.OCCURRENCE_JSON;
 import static org.gbif.pipelines.spark.IdentifiersPipeline.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.net.URL;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.OptionalInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.spark.util.SparkTestSession;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-public class CompareIdentifiersTest {
+class CompareIdentifiersTest {
 
   private static SparkSession spark;
   private static FileSystem fs;
 
-  @BeforeClass
-  public static void setUp() throws Exception {
+  @BeforeAll
+  static void setUp() throws Exception {
     spark = SparkTestSession.createBuilder().appName("test").getOrCreate();
     fs = FileSystem.getLocal(new Configuration());
   }
 
-  @AfterClass
-  public static void tearDown() {
+  @AfterAll
+  static void tearDown() {
     if (spark != null) {
       spark.close();
     }
@@ -53,19 +55,25 @@ public class CompareIdentifiersTest {
         Encoders.bean(IdentifierRecord.class));
   }
 
-  @Test
-  public void testNewAndRemoved() throws Exception {
+  /** Marks the interpretation of an attempt as completed. */
+  private static void markInterpreted(Path root, int attempt) throws IOException {
+    Path dir = root.resolve(attempt + "/" + OCCURRENCE_JSON);
+    Files.createDirectories(dir);
+    Files.createFile(dir.resolve("_SUCCESS"));
+  }
 
-    URL testRootUrl = getClass().getResource("/");
-    assert testRootUrl != null;
-    String testResourcesRoot = testRootUrl.getFile();
-    String root = testResourcesRoot + "/compare-identifiers";
+  @Test
+  void testNewAndRemoved(@TempDir Path dir) throws Exception {
+    String root = dir.toString();
 
     // attempt 1 & 2 completed, attempt 3 has no identifiers, attempt 5 is above the current
     identifiers("1").write().parquet(root + "/1/" + IDENTIFIERS);
+    markInterpreted(dir, 1);
     identifiers("1", "2", "3").write().parquet(root + "/2/" + IDENTIFIERS);
-    fs.mkdirs(new Path(root + "/3"));
+    markInterpreted(dir, 2);
+    Files.createDirectories(dir.resolve("3"));
     identifiers("9").write().parquet(root + "/5/" + IDENTIFIERS);
+    markInterpreted(dir, 5);
 
     assertEquals(OptionalInt.of(2), findPreviousAttempt(fs, root, 4));
 
@@ -74,30 +82,34 @@ public class CompareIdentifiersTest {
 
     Map<String, Long> metrics = compareWithPreviousAttempt(spark, fs, root, 4, current);
 
-    assertEquals(Long.valueOf(2), metrics.get(PREVIOUS_ATTEMPT));
-    assertEquals(Long.valueOf(3), metrics.get(PREVIOUS_IDENTIFIERS_COUNT));
-    assertEquals(Long.valueOf(4), metrics.get(CURRENT_IDENTIFIERS_COUNT));
-    assertEquals(Long.valueOf(2), metrics.get(NEW_IDENTIFIERS_COUNT));
-    assertEquals(Long.valueOf(1), metrics.get(REMOVED_IDENTIFIERS_COUNT));
-
-    FileUtil.fullyDelete(new java.io.File(root));
+    assertEquals(2L, metrics.get(PREVIOUS_ATTEMPT));
+    assertEquals(3L, metrics.get(PREVIOUS_IDENTIFIERS_COUNT));
+    assertEquals(4L, metrics.get(CURRENT_IDENTIFIERS_COUNT));
+    assertEquals(2L, metrics.get(NEW_IDENTIFIERS_COUNT));
+    assertEquals(1L, metrics.get(REMOVED_IDENTIFIERS_COUNT));
   }
 
   @Test
-  public void testNoPreviousAttempt() throws Exception {
+  void testSkipsAttemptWithoutInterpretation(@TempDir Path dir) throws Exception {
+    String root = dir.toString();
 
-    URL testRootUrl = getClass().getResource("/");
-    assert testRootUrl != null;
-    String testResourcesRoot = testRootUrl.getFile();
-    String root = testResourcesRoot + "/compare-identifiers";
+    identifiers("1").write().parquet(root + "/1/" + IDENTIFIERS);
+    markInterpreted(dir, 1);
+    // attempt 2 has identifiers but the interpretation never finished
+    identifiers("1", "2").write().parquet(root + "/2/" + IDENTIFIERS);
+
+    assertEquals(OptionalInt.of(1), findPreviousAttempt(fs, root, 3));
+  }
+
+  @Test
+  void testNoPreviousAttempt(@TempDir Path dir) throws Exception {
+    String root = dir.toString();
 
     Map<String, Long> metrics =
         compareWithPreviousAttempt(spark, fs, root, 1, identifiers("1", "2"));
 
-    assertEquals(Long.valueOf(2), metrics.get(CURRENT_IDENTIFIERS_COUNT));
+    assertEquals(2L, metrics.get(CURRENT_IDENTIFIERS_COUNT));
     assertFalse(metrics.containsKey(NEW_IDENTIFIERS_COUNT));
     assertFalse(metrics.containsKey(REMOVED_IDENTIFIERS_COUNT));
-
-    FileUtil.fullyDelete(new java.io.File(root));
   }
 }
