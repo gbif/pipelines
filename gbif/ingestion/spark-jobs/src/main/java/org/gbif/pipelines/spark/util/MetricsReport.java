@@ -59,8 +59,8 @@ import org.gbif.pipelines.spark.TableBuildPipeline;
 public class MetricsReport {
 
   static final String NOT_AVAILABLE = "NOT_AVAILABLE";
-  static final String ES_COUNT_COLUMN = "EsOccurrenceIndexCount";
-  static final String ICEBERG_COUNT_COLUMN = "IceberOccurrenceIndexCount";
+  static final String ES_COUNT_COLUMN = "ElasticOccurrenceCount";
+  static final String ICEBERG_COUNT_COLUMN = "IcebergOccurrenceCount";
   static final String ES_FACET_PATH =
       "/occurrence/search?limit=0&facet=datasetKey&facetLimit=120000";
   /** How often (in datasets) to log report-writing progress. */
