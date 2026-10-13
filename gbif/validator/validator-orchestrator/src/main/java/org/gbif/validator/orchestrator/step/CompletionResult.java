@@ -4,7 +4,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 /** Transport-neutral identification and processing result of a worker completion. */
-public record CompletionResult(UUID validationKey, int attempt, boolean successful, String details) {
+public record CompletionResult(
+    UUID validationKey, int attempt, boolean successful, String details) {
 
   public CompletionResult {
     Objects.requireNonNull(validationKey, "validationKey must not be null");

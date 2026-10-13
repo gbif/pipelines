@@ -79,7 +79,7 @@ public class MediaTypeAndFormatDetector {
         if (content.stream().anyMatch(c -> isNameColDPFile(c.getFileName().toString()))) {
           return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.COLDP));
         } else if (content.stream().anyMatch(MediaTypeAndFormatDetector::isDwCDatapackage)) {
-          return  Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCDP));
+          return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCDP));
         } else {
           return Optional.of(MediaTypeAndFormat.create(contentType, FileFormat.DWCA));
         }

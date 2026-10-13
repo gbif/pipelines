@@ -20,15 +20,15 @@ public class StepRegistrationConfiguration {
 
   @Bean
   public StepRegistry stepRegistry(ValidationWsClient client) {
-    return new StepRegistry(List.of(
-        new StepRegistration<>(
-            new DwcdpAnalysisStepDefinition(),
-            List.of(HookRegistration.required(new DwcdpValidationReportHook(client))))));
+    return new StepRegistry(
+        List.of(
+            new StepRegistration<>(
+                new DwcdpAnalysisStepDefinition(),
+                List.of(HookRegistration.required(new DwcdpValidationReportHook(client))))));
   }
 
   @Bean
   public HookFailureReporter hookFailureReporter() {
-    return (step, exception) ->
-        LOG.warn("Optional completion hook failed for {}", step, exception);
+    return (step, exception) -> LOG.warn("Optional completion hook failed for {}", step, exception);
   }
 }

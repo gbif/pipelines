@@ -59,8 +59,11 @@ class DwcdpExecutionFlowTest {
     fixture.coordinator.handle(fixture.key, WorkflowEvent.start());
     fixture.client.setRejectReport(true);
 
-    assertThrows(IllegalStateException.class, () -> fixture.processor.complete(
-        StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true)));
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            fixture.processor.complete(
+                StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true)));
 
     assertEquals(Validation.Status.FAILED, fixture.step().getStatus());
     assertEquals(Validation.Status.FAILED, fixture.client.getStoredValidation().getStatus());
@@ -89,8 +92,8 @@ class DwcdpExecutionFlowTest {
     fixture.processor.complete(StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true));
 
     assertEquals(Validation.Status.FINISHED, fixture.step().getStatus());
-    assertEquals(null, fixture.client.getStoredValidation().getMetrics().getStepTypes()
-        .get(1).getStatus());
+    assertEquals(
+        null, fixture.client.getStoredValidation().getMetrics().getStepTypes().get(1).getStatus());
     assertEquals(Validation.Status.RUNNING, fixture.client.getStoredValidation().getStatus());
     assertEquals(1, fixture.client.getReportWrites());
     assertEquals(1, fixture.messages.size());
@@ -109,25 +112,28 @@ class DwcdpExecutionFlowTest {
     }
 
     private Fixture(boolean includeLegacyStep) {
-      Metrics.ValidationStep first = Metrics.ValidationStep.builder()
-          .stepType(StepType.VALIDATOR_VALIDATE_DWCDP.name())
-          .executionOrder(1)
-          .build();
+      Metrics.ValidationStep first =
+          Metrics.ValidationStep.builder()
+              .stepType(StepType.VALIDATOR_VALIDATE_DWCDP.name())
+              .executionOrder(1)
+              .build();
       List<Metrics.ValidationStep> steps = new ArrayList<>();
       steps.add(first);
 
       if (includeLegacyStep) {
-        steps.add(Metrics.ValidationStep.builder()
-            .stepType(StepType.VALIDATOR_DWCDP_STAGE.name())
-            .executionOrder(2)
-            .build());
+        steps.add(
+            Metrics.ValidationStep.builder()
+                .stepType(StepType.VALIDATOR_DWCDP_STAGE.name())
+                .executionOrder(2)
+                .build());
       }
 
-      client.setValidation(Validation.builder()
-          .key(key)
-          .status(Validation.Status.QUEUED)
-          .metrics(Metrics.builder().stepTypes(steps).build())
-          .build());
+      client.setValidation(
+          Validation.builder()
+              .key(key)
+              .status(Validation.Status.QUEUED)
+              .metrics(Metrics.builder().stepTypes(steps).build())
+              .build());
 
       OrchestratorProperties properties = new OrchestratorProperties();
       OrchestratorProperties.StepMessaging messaging = new OrchestratorProperties.StepMessaging();
@@ -137,27 +143,38 @@ class DwcdpExecutionFlowTest {
       messaging.setRequest(destination);
       properties.setSteps(Map.of(StepType.VALIDATOR_VALIDATE_DWCDP, messaging));
 
-      MessagePublisher publisher = (MessagePublisher) Proxy.newProxyInstance(
-          MessagePublisher.class.getClassLoader(),
-          new Class<?>[] {MessagePublisher.class},
-          (proxy, method, args) -> {
-            if (method.getName().equals("send")) {
-              messages.add(args[0]);
-              return null;
-            }
+      MessagePublisher publisher =
+          (MessagePublisher)
+              Proxy.newProxyInstance(
+                  MessagePublisher.class.getClassLoader(),
+                  new Class<?>[] {MessagePublisher.class},
+                  (proxy, method, args) -> {
+                    if (method.getName().equals("send")) {
+                      messages.add(args[0]);
+                      return null;
+                    }
 
-            throw new UnsupportedOperationException(method.getName());
-          });
+                    throw new UnsupportedOperationException(method.getName());
+                  });
 
-      StepRegistry registry = new StepRegistry(List.of(new StepRegistration<>(
-          new DwcdpAnalysisStepDefinition(),
-          List.of(HookRegistration.required(new DwcdpValidationReportHook(client))))));
+      StepRegistry registry =
+          new StepRegistry(
+              List.of(
+                  new StepRegistration<>(
+                      new DwcdpAnalysisStepDefinition(),
+                      List.of(HookRegistration.required(new DwcdpValidationReportHook(client))))));
 
-      coordinator = new OrchestrationService(
-          client, new StepDispatcher(publisher, properties), registry, new DagProperties());
-      processor = new CompletionProcessor(registry, client, coordinator, (step, error) -> {
-        throw new AssertionError("Unexpected optional hook failure", error);
-      });
+      coordinator =
+          new OrchestrationService(
+              client, new StepDispatcher(publisher, properties), registry, new DagProperties());
+      processor =
+          new CompletionProcessor(
+              registry,
+              client,
+              coordinator,
+              (step, error) -> {
+                throw new AssertionError("Unexpected optional hook failure", error);
+              });
     }
 
     private Metrics.ValidationStep step() {
@@ -174,5 +191,4 @@ class DwcdpExecutionFlowTest {
       return node;
     }
   }
-
 }

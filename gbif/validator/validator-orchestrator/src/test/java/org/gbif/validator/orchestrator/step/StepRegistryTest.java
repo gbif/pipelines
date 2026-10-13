@@ -20,7 +20,8 @@ class StepRegistryTest {
   void rejectsDuplicateStepRegistrations() {
     StepRegistration<JsonNode> registration = new StepRegistration<>(definition, List.of());
 
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> new StepRegistry(List.of(registration, registration)));
   }
 
@@ -29,20 +30,25 @@ class StepRegistryTest {
     StepRegistration<JsonNode> registration = new StepRegistration<>(definition, List.of());
     StepRegistry registry = new StepRegistry(List.of(registration));
 
-    assertEquals(JsonNode.class,
-        registry.require(StepType.VALIDATOR_VALIDATE_DWCDP).completionType());
+    assertEquals(
+        JsonNode.class, registry.require(StepType.VALIDATOR_VALIDATE_DWCDP).completionType());
   }
 
   @Test
   void optionalHookFailureDoesNotBlockOtherHooks() throws Exception {
     List<String> called = new ArrayList<>();
-    StepRegistration<JsonNode> registration = new StepRegistration<>(definition, List.of(
-        HookRegistration.optional((validation, completion) -> {
-          throw new IllegalStateException("Optional failure");
-        }),
-        HookRegistration.required((validation, completion) -> {
-          called.add("required");
-        })));
+    StepRegistration<JsonNode> registration =
+        new StepRegistration<>(
+            definition,
+            List.of(
+                HookRegistration.optional(
+                    (validation, completion) -> {
+                      throw new IllegalStateException("Optional failure");
+                    }),
+                HookRegistration.required(
+                    (validation, completion) -> {
+                      called.add("required");
+                    })));
 
     List<Exception> errors = new ArrayList<>();
     registration.runHooks(null, sampleMessage(), (step, exception) -> errors.add(exception));
@@ -54,15 +60,21 @@ class StepRegistryTest {
   @Test
   void requiredHookFailureStopsProcessing() {
     List<String> called = new ArrayList<>();
-    StepRegistration<JsonNode> registration = new StepRegistration<>(definition, List.of(
-        HookRegistration.required((validation, completion) -> {
-          throw new IllegalStateException("Required failure");
-        }),
-        HookRegistration.optional((validation, completion) -> {
-          called.add("not reached");
-        })));
+    StepRegistration<JsonNode> registration =
+        new StepRegistration<>(
+            definition,
+            List.of(
+                HookRegistration.required(
+                    (validation, completion) -> {
+                      throw new IllegalStateException("Required failure");
+                    }),
+                HookRegistration.optional(
+                    (validation, completion) -> {
+                      called.add("not reached");
+                    })));
 
-    assertThrows(IllegalStateException.class,
+    assertThrows(
+        IllegalStateException.class,
         () -> registration.runHooks(null, sampleMessage(), (step, exception) -> {}));
     assertTrue(called.isEmpty());
   }
@@ -76,7 +88,8 @@ class StepRegistryTest {
   }
 
   private JsonNode sampleMessage() {
-    return new ObjectMapper().createObjectNode()
+    return new ObjectMapper()
+        .createObjectNode()
         .put("datasetUuid", UUID.randomUUID().toString())
         .put("attempt", 1)
         .put("valid", true)
