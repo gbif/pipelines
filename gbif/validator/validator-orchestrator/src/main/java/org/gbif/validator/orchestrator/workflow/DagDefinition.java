@@ -1,10 +1,7 @@
 package org.gbif.validator.orchestrator.workflow;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,7 +48,8 @@ public final class DagDefinition {
     for (Node node : nodes) {
       for (StepType predecessor : node.dependencies()) {
         if (!byType.containsKey(predecessor)) {
-          throw new IllegalArgumentException("Unknown dependency " + predecessor + " for " + node.type());
+          throw new IllegalArgumentException(
+              "Unknown dependency " + predecessor + " for " + node.type());
         }
       }
     }

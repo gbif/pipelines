@@ -19,13 +19,14 @@ class StepCompletionCallbackTest {
     List<Object> messages = new ArrayList<>();
     JsonNode message = new ObjectMapper().createObjectNode();
 
-    StepCompletionCallback<JsonNode> callback = new StepCompletionCallback<>(
-        StepType.VALIDATOR_VALIDATE_DWCDP,
-        JsonNode.class,
-        (step, payload) -> {
-          steps.add(step);
-          messages.add(payload);
-        });
+    StepCompletionCallback<JsonNode> callback =
+        new StepCompletionCallback<>(
+            StepType.VALIDATOR_VALIDATE_DWCDP,
+            JsonNode.class,
+            (step, payload) -> {
+              steps.add(step);
+              messages.add(payload);
+            });
 
     callback.handleMessage(message);
 
@@ -37,16 +38,18 @@ class StepCompletionCallbackTest {
   @Test
   void wrapsCheckedExceptionWithoutRetrying() {
     Exception failure = new Exception("Report upload failed");
-    StepCompletionCallback<JsonNode> callback = new StepCompletionCallback<>(
-        StepType.VALIDATOR_VALIDATE_DWCDP,
-        JsonNode.class,
-        (step, payload) -> {
-          throw failure;
-        });
+    StepCompletionCallback<JsonNode> callback =
+        new StepCompletionCallback<>(
+            StepType.VALIDATOR_VALIDATE_DWCDP,
+            JsonNode.class,
+            (step, payload) -> {
+              throw failure;
+            });
 
-    OrchestrationProcessingException exception = assertThrows(
-        OrchestrationProcessingException.class,
-        () -> callback.handleMessage(new ObjectMapper().createObjectNode()));
+    OrchestrationProcessingException exception =
+        assertThrows(
+            OrchestrationProcessingException.class,
+            () -> callback.handleMessage(new ObjectMapper().createObjectNode()));
 
     assertSame(failure, exception.getCause());
   }

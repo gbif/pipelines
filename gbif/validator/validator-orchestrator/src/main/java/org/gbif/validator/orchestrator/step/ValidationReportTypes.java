@@ -5,6 +5,5 @@ public final class ValidationReportTypes {
 
   public static final String DWCDP_ANALYSIS = "DWCDP_ANALYSIS";
 
-  private ValidationReportTypes() {
-  }
+  private ValidationReportTypes() {}
 }

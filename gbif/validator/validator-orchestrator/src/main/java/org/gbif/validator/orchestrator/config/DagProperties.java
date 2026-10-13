@@ -45,9 +45,9 @@ public class DagProperties {
 
     for (Map.Entry<StepType, NodeProperties> entry : nodes.entrySet()) {
       NodeProperties value = entry.getValue();
-      configuredNodes.add(new DagDefinition.Node(
-          entry.getKey(), Set.copyOf(value.getDependencies()),
-          value.getJoinPolicy()));
+      configuredNodes.add(
+          new DagDefinition.Node(
+              entry.getKey(), Set.copyOf(value.getDependencies()), value.getJoinPolicy()));
     }
 
     return new DagDefinition(configuredNodes, defaultJoinPolicy, parallel);

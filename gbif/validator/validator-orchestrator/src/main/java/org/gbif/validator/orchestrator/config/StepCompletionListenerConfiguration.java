@@ -57,11 +57,13 @@ public class StepCompletionListenerConfiguration {
       MessageListener listener,
       OrchestratorProperties properties,
       StepRegistration<T> registration,
-      CompletionProcessor processor) throws Exception {
+      CompletionProcessor processor)
+      throws Exception {
     OrchestratorProperties.Completion completion = requireCompletion(properties, registration);
 
-    StepCompletionCallback<T> callback = new StepCompletionCallback<>(
-        registration.stepType(), registration.completionType(), processor::complete);
+    StepCompletionCallback<T> callback =
+        new StepCompletionCallback<>(
+            registration.stepType(), registration.completionType(), processor::complete);
 
     listener.listen(
         completion.getQueue(),

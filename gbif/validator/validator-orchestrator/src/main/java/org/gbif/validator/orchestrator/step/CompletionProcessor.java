@@ -1,15 +1,15 @@
 package org.gbif.validator.orchestrator.step;
 
 import java.util.List;
-import org.gbif.validator.api.Metrics.ValidationStep;
-import org.gbif.validator.orchestrator.workflow.ValidationWorkflowMapper;
-import org.gbif.validator.orchestrator.workflow.WorkflowState;
-import org.gbif.validator.orchestrator.workflow.WorkflowChange;
 import java.util.Objects;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.orchestrator.service.OrchestrationService;
+import org.gbif.validator.orchestrator.workflow.ValidationWorkflowMapper;
+import org.gbif.validator.orchestrator.workflow.WorkflowChange;
 import org.gbif.validator.orchestrator.workflow.WorkflowEvent;
+import org.gbif.validator.orchestrator.workflow.WorkflowState;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Runs step-specific processing, then delegates all state transitions to the coordinator. */
@@ -20,8 +20,11 @@ public final class CompletionProcessor {
   private final OrchestrationService coordinator;
   private final HookFailureReporter reporter;
 
-  public CompletionProcessor(StepRegistry registry, ValidationWsClient client,
-      OrchestrationService coordinator, HookFailureReporter reporter) {
+  public CompletionProcessor(
+      StepRegistry registry,
+      ValidationWsClient client,
+      OrchestrationService coordinator,
+      HookFailureReporter reporter) {
     this.registry = Objects.requireNonNull(registry);
     this.client = Objects.requireNonNull(client);
     this.coordinator = Objects.requireNonNull(coordinator);
@@ -64,9 +67,8 @@ public final class CompletionProcessor {
       throw hookFailure;
     }
 
-    WorkflowEvent event = result.successful()
-        ? WorkflowEvent.completed(stepType)
-        : WorkflowEvent.failed(stepType);
+    WorkflowEvent event =
+        result.successful() ? WorkflowEvent.completed(stepType) : WorkflowEvent.failed(stepType);
 
     coordinator.handle(result.validationKey(), event, changes);
   }
@@ -80,10 +82,11 @@ public final class CompletionProcessor {
       return false;
     }
 
-    ValidationStep step = validation.getMetrics().getStepTypes().stream()
-        .filter(candidate -> candidate.getStepType().equals(stepType.name()))
-        .findFirst()
-        .orElseThrow(() -> new IllegalStateException("Unknown validation step: " + stepType));
+    ValidationStep step =
+        validation.getMetrics().getStepTypes().stream()
+            .filter(candidate -> candidate.getStepType().equals(stepType.name()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("Unknown validation step: " + stepType));
 
     return step.getStatus() == Validation.Status.QUEUED
         || step.getStatus() == Validation.Status.RUNNING;

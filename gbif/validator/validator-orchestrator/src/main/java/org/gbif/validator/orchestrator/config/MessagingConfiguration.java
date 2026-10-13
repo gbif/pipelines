@@ -25,14 +25,14 @@ public class MessagingConfiguration {
   }
 
   @Bean
-  public MessagePublisher messagePublisher(
-      ConnectionParameters connection, ObjectMapper mapper) throws IOException {
+  public MessagePublisher messagePublisher(ConnectionParameters connection, ObjectMapper mapper)
+      throws IOException {
     return new DefaultMessagePublisher(connection, new DefaultMessageRegistry(), mapper);
   }
 
   @Bean(destroyMethod = "close")
-  public MessageListener messageListener(
-      ConnectionParameters connection, ObjectMapper mapper) throws IOException {
+  public MessageListener messageListener(ConnectionParameters connection, ObjectMapper mapper)
+      throws IOException {
     return new MessageListener(connection, new DefaultMessageRegistry(), mapper);
   }
 }
