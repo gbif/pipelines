@@ -51,11 +51,11 @@ services:
       DWCDP_COMPLETION_QUEUE: validator_dwcdp_analysis_finished
     # Controlled local test only. Real deployments should NOT enable unsafe consumers.
 
-  # Opt in with: podman compose --profile analyser up -d
-  # Analyser image must be built separately. Provide a real datapackage volume.
+  # Real DWc-DP analyser, opt in with --profile analyser.
+  # The archive must be accessible at /data/datapackages/<validation UUID>.
   analyser:
     profiles: ["analyser"]
-    image: ${DWCDP_ANALYSER_IMAGE:-localhost/dwcdp-analyser:test}
+    image: ${DWCDP_ANALYSER_IMAGE:-docker.gbif.org/dwc-dp-analyser-service:0.0.7-SNAPSHOT}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -68,10 +68,13 @@ services:
       INPUT_QUEUE: validator_dwcdp_analysis
       OUTPUT_EXCHANGE: occurrence
       OUTPUT_ROUTING_KEY: validator.dwcdp.analysis.finished
-      REGISTRY_URL: http://mock-validator-ws:8080
-      REGISTRY_USER: localtest
-      REGISTRY_PASSWORD: localtest
+      # The analyser must not contact registry for validation-domain work.
+      REGISTRY_URL: ""
+      REGISTRY_USER: ""
+      REGISTRY_PASSWORD: ""
+      DUCKDB_MEMORY: ${DUCKDB_MEMORY:-2GiB}
       DUCKDB_TEMP_DIR: /data/workdir/.tmp
+      JVM_OPTIONS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=30.0 -Xms256m -Xmx1g"
     volumes:
       - ${DATAPACKAGES_DIR:-./datapackages}:/data/datapackages:ro
       - ${DWCDP_WORKDIR:-./workdir}:/data/workdir

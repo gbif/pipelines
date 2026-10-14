@@ -7,7 +7,7 @@ import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.DefaultMessageRegistry;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,13 +15,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MessagingConfiguration {
   @Bean
-  public ConnectionParameters connectionParameters(RabbitProperties rabbit) {
-    return new ConnectionParameters(
-        rabbit.getHost(),
-        rabbit.getPort(),
-        rabbit.getUsername(),
-        rabbit.getPassword(),
-        rabbit.getVirtualHost());
+  public ConnectionParameters connectionParameters(
+      @Value("${spring.rabbitmq.host:localhost}") String host,
+      @Value("${spring.rabbitmq.port:5672}") int port,
+      @Value("${spring.rabbitmq.username:guest}") String username,
+      @Value("${spring.rabbitmq.password:guest}") String password,
+      @Value("${spring.rabbitmq.virtual-host:/}") String virtualHost) {
+
+    return new ConnectionParameters(host, port, username, password, virtualHost);
   }
 
   @Bean
