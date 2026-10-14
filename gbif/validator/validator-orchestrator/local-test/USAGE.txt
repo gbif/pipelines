@@ -1,0 +1,64 @@
+# Local integration harness
+
+Start from `gbif/validator/validator-orchestrator` (or adjust paths accordingly).
+
+1. Build the executable image locally using the actual `target/*-shaded.jar` filename:
+
+   ```sh
+   podman build --build-arg BASE_REGISTRY=docker.gbif.org/third-party \
+     --build-arg JAR_FILE="target/$(basename "$(echo target/*-shaded.jar)")" \
+     -f docker/Dockerfile -t localhost/validator-orchestrator:test .
+   ```
+
+   Build the Maven shaded JAR first; verify exactly one exists. The JAR must contain a working `Main-Class`/Spring Boot launcher.
+
+2. Start dependencies and the orchestrator:
+
+   ```sh
+   podman compose -f local-test/compose.yaml up -d
+   podman compose -f local-test/compose.yaml logs -f orchestrator mock-validator-ws
+   ```
+
+3. From another terminal, seed a validation and submit a RabbitMQ request:
+
+   ```sh
+   python3 local-test/trigger.py
+   ```
+
+   The command prints the UUID. Without the real analyser, complete it manually:
+
+   ```sh
+   python3 local-test/trigger.py --complete UUID_FROM_ABOVE
+   curl http://127.0.0.1:18080/validation/UUID_FROM_ABOVE
+   ```
+
+RabbitMQ Management UI: http://127.0.0.1:15672 (localtest/localtest).
+The mock prints GET/PUT, status changes and validation report uploads. Its state is ephemeral.
+All published messages, queues and bindings use the `occurrence` topic exchange in vhost `/`.
+The trigger provisions the analyser input queue and binding. Orchestrator's own queues
+are created automatically when its listeners start.
+
+## Optional real analyser
+
+Build/tag your analyser image as `localhost/dwcdp-analyser:test` (or set
+`DWCDP_ANALYSER_IMAGE`), provide a real DWc-DP datapackage directory and a writable workdir:
+
+```sh
+DATAPACKAGES_DIR=/absolute/path/to/datapackages \
+DWCDP_WORKDIR=/absolute/path/to/workdir \
+podman compose -f local-test/compose.yaml --profile analyser up -d
+```
+
+The analyser's input queue is `validator_dwcdp_analysis`. The test harness's
+request is `{"datasetUuid":"...","attempt":1}`. The analyser must locate that
+UUID in its configured archive repository. The mock WS does **not** supply a real
+DWc-DP archive or registry endpoints: use an actual dataset in the volume and
+verify whether the analyser calls Registry independently before expecting a real job
+success. Do not use `--complete` simultaneously with the real analyser.
+
+This test deliberately enables the orchestrator's **unsafe** consumers; it is for
+single-instance development only. The WS updates and MQ publish are not atomic.
+The mock supports only `GET/PUT /validation/{uuid}` and report PUT, not the full API.
+Production handoff to the existing validation pipeline is still outside Phase 1.
+
+Stop: `podman compose -f local-test/compose.yaml down`.
