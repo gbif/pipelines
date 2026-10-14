@@ -68,6 +68,11 @@ public class OrchestrationService {
 
   public void handle(UUID validationKey, WorkflowEvent event, List<WorkflowChange> changes)
       throws IOException {
+    LOG.info(
+        "Processing workflow event validation={} event={} step={}",
+        validationKey,
+        event.kind(),
+        event.step());
     Validation validation = client.get(validationKey);
     WorkflowDecision decision = evaluate(mapper.from(validation), event, changes);
 
@@ -82,7 +87,9 @@ public class OrchestrationService {
 
     if (!unownedDispatches.isEmpty()) {
       LOG.info(
-          "Leaving unowned validation steps for legacy pipeline handoff: {}", unownedDispatches);
+          "Leaving unowned steps for legacy handoff validation={} steps={}",
+          validationKey,
+          unownedDispatches);
     }
 
     List<WorkflowDecision.Action> actions =
@@ -115,11 +122,24 @@ public class OrchestrationService {
                   .filter(s -> s.getStepType().equals(action.step().name()))
                   .findFirst()
                   .orElseThrow();
+          Validation.Status previousStatus = step.getStatus();
           step.setStatus(toValidationStatus(action.status()));
+          LOG.info(
+              "Step status validation={} step={} from={} to={}",
+              validationKey,
+              action.step(),
+              previousStatus,
+              step.getStatus());
           changed = true;
         }
         case SET_VALIDATION_STATUS -> {
+          Validation.Status previousStatus = validation.getStatus();
           validation.setStatus(toValidationStatus(action.status()));
+          LOG.info(
+              "Workflow status validation={} from={} to={}",
+              validationKey,
+              previousStatus,
+              validation.getStatus());
           changed = true;
         }
         case DISPATCH -> {
@@ -130,10 +150,18 @@ public class OrchestrationService {
 
     if (changed) {
       client.update(validation);
+      LOG.debug("Persisted workflow state validation={}", validationKey);
+    } else {
+      LOG.debug(
+          "No workflow state changes validation={} event={} step={}",
+          validationKey,
+          event.kind(),
+          event.step());
     }
 
     for (WorkflowDecision.Action action : actions) {
       if (action.kind() == WorkflowDecision.Kind.DISPATCH) {
+        LOG.info("Dispatching step validation={} step={}", validationKey, action.step());
         dispatcher.dispatch(action.step(), requests.get(action.step()));
       }
     }

@@ -5,11 +5,15 @@ import java.util.Objects;
 import java.util.UUID;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.validator.orchestrator.workflow.WorkflowEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /** Starts a validation using persisted workflow state, not steps embedded in the request. */
 @Component
 public class InitialValidationCallback implements MessageCallback<JsonNode> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(InitialValidationCallback.class);
 
   private final OrchestrationService coordinator;
 
@@ -42,8 +46,10 @@ public class InitialValidationCallback implements MessageCallback<JsonNode> {
         throw new IllegalArgumentException("validator-ws only supports attempt 1");
       }
 
+      LOG.info("Received validation start validation={} attempt={}", key, attempt);
       coordinator.handle(UUID.fromString(key), WorkflowEvent.start());
     } catch (Exception exception) {
+      LOG.error("Validation start processing failed", exception);
       throw new OrchestrationProcessingException("Failed to start validation", exception);
     }
   }

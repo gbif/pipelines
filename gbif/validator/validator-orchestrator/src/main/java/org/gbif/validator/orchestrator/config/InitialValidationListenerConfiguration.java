@@ -2,6 +2,8 @@ package org.gbif.validator.orchestrator.config;
 
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.validator.orchestrator.service.InitialValidationCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +13,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class InitialValidationListenerConfiguration {
 
+  private static final Logger LOG =
+      LoggerFactory.getLogger(InitialValidationListenerConfiguration.class);
+
   @Bean
   @ConditionalOnProperty(name = "orchestrator.unsafe-enable-start-consumer", havingValue = "true")
   public ApplicationRunner initialValidationListener(
@@ -19,6 +24,12 @@ public class InitialValidationListenerConfiguration {
       InitialValidationCallback callback) {
 
     return args -> {
+      LOG.info(
+          "Starting validation request consumer queue={} exchange={} routingKey={} threads={}",
+          properties.getQueue(),
+          properties.getExchange(),
+          properties.getRoutingKey(),
+          properties.getThreads());
       listener.listen(
           properties.getQueue(),
           properties.getRoutingKey(),
