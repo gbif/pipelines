@@ -5,6 +5,8 @@ import org.gbif.validator.orchestrator.service.StepCompletionCallback;
 import org.gbif.validator.orchestrator.step.CompletionProcessor;
 import org.gbif.validator.orchestrator.step.StepRegistration;
 import org.gbif.validator.orchestrator.step.StepRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +15,9 @@ import org.springframework.context.annotation.Configuration;
 /** Registers one typed completion consumer for every registered step. */
 @Configuration
 public class StepCompletionListenerConfiguration {
+
+  private static final Logger LOG =
+      LoggerFactory.getLogger(StepCompletionListenerConfiguration.class);
 
   @Bean
   @ConditionalOnProperty(
@@ -65,6 +70,13 @@ public class StepCompletionListenerConfiguration {
         new StepCompletionCallback<>(
             registration.stepType(), registration.completionType(), processor::complete);
 
+    LOG.info(
+        "Starting step completion consumer step={} queue={} exchange={} routingKey={} threads={}",
+        registration.stepType(),
+        completion.getQueue(),
+        completion.getExchange(),
+        completion.getRoutingKey(),
+        completion.getThreads());
     listener.listen(
         completion.getQueue(),
         completion.getRoutingKey(),
