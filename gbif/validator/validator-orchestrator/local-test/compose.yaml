@@ -1,0 +1,77 @@
+name: validator-orchestrator-local
+
+services:
+  rabbitmq:
+    image: docker.io/library/rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: localtest
+      RABBITMQ_DEFAULT_PASS: localtest
+    ports:
+      - "127.0.0.1:15672:15672"
+      - "127.0.0.1:5672:5672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mock-validator-ws:
+    image: docker.io/library/python:3.12-alpine
+    command: ["python", "-u", "/mock/server.py"]
+    volumes:
+      - ./mock-ws/server.py:/mock/server.py:ro
+    ports:
+      - "127.0.0.1:18080:8080"
+
+  orchestrator:
+    image: ${ORCHESTRATOR_IMAGE:-localhost/validator-orchestrator:test}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mock-validator-ws:
+        condition: service_started
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USERNAME: localtest
+      RABBITMQ_PASSWORD: localtest
+      RABBITMQ_VHOST: /
+      VALIDATOR_WS_URL: http://mock-validator-ws:8080
+      VALIDATOR_WS_USERNAME: localtest
+      VALIDATOR_WS_PASSWORD: localtest
+      ORCHESTRATOR_UNSAFE_ENABLE_START_CONSUMER: "true"
+      ORCHESTRATOR_UNSAFE_ENABLE_COMPLETION_CONSUMER: "true"
+      VALIDATION_START_EXCHANGE: occurrence
+      VALIDATION_START_ROUTING_KEY: validator.orchestrator.start
+      VALIDATION_START_QUEUE: validator_orchestrator_start
+      DWCDP_REQUEST_EXCHANGE: occurrence
+      DWCDP_REQUEST_ROUTING_KEY: validator.dwcdp.analysis
+      DWCDP_COMPLETION_EXCHANGE: occurrence
+      DWCDP_COMPLETION_ROUTING_KEY: validator.dwcdp.analysis.finished
+      DWCDP_COMPLETION_QUEUE: validator_dwcdp_analysis_finished
+    # Controlled local test only. Real deployments should NOT enable unsafe consumers.
+
+  # Opt in with: podman compose --profile analyser up -d
+  # Analyser image must be built separately. Provide a real datapackage volume.
+  analyser:
+    profiles: ["analyser"]
+    image: ${DWCDP_ANALYSER_IMAGE:-localhost/dwcdp-analyser:test}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBIT_HOST: rabbitmq
+      RABBIT_PORT: "5672"
+      RABBIT_USER: localtest
+      RABBIT_PASSWORD: localtest
+      RABBIT_VHOST: /
+      INPUT_QUEUE: validator_dwcdp_analysis
+      OUTPUT_EXCHANGE: occurrence
+      OUTPUT_ROUTING_KEY: validator.dwcdp.analysis.finished
+      REGISTRY_URL: http://mock-validator-ws:8080
+      REGISTRY_USER: localtest
+      REGISTRY_PASSWORD: localtest
+      DUCKDB_TEMP_DIR: /data/workdir/.tmp
+    volumes:
+      - ${DATAPACKAGES_DIR:-./datapackages}:/data/datapackages:ro
+      - ${DWCDP_WORKDIR:-./workdir}:/data/workdir
