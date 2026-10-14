@@ -55,6 +55,11 @@ imageCachePath:
 amplification:
   wsUrl: http://blast.gbif-dev.org
 fragmentsTable: dev_occurrence_fragment
+# records served by the API, see docs/hbase-records-tables.md
+recordsTableConfig:
+  occurrenceTable: dev_occurrence
+  eventTable: dev_event
+  manifestPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/records-manifests
 keygen:
   occurrenceTable: dev_occurrence
   counterTable: dev_occurrence_counter

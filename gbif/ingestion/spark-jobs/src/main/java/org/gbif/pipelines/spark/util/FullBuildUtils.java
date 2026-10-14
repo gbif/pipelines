@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -71,50 +72,35 @@ public class FullBuildUtils {
       if (fileStatus.isDirectory()) {
         String datasetId = fileStatus.getPath().getName();
 
-        // look for _SUCCESS files in the subdirectories of the dataset directory
-        FileStatus[] successFiles =
-            fileSystem.globStatus(
-                new Path(fileStatus.getPath() + "/*/" + sourceDirectory + "/_SUCCESS"));
+        FileStatus newestSuccessFile =
+            newestSuccessFile(fileSystem, fileStatus.getPath(), sourceDirectory);
 
-        if (successFiles != null && successFiles.length > 0) {
-          // find the newest _SUCCESS file
-          FileStatus newestSuccessFile = null;
-          for (FileStatus successFile : successFiles) {
-            if (newestSuccessFile == null
-                || successFile.getModificationTime() > newestSuccessFile.getModificationTime()) {
-              newestSuccessFile = successFile;
-            }
-          }
+        if (newestSuccessFile != null) {
 
-          if (newestSuccessFile != null) {
-
-            if (earliestAllowedSuccessFileDateEpochMillis != null
-                && newestSuccessFile.getModificationTime()
-                    < earliestAllowedSuccessFileDateEpochMillis) {
-              tooOldDatasets.add(datasetId);
-            } else {
-
-              Path successAttemptDir =
-                  newestSuccessFile
-                      .getPath()
-                      .getParent()
-                      .getParent(); // go up from hdfs/_SUCCESS to interpretation dir
-
-              String attempt = successAttemptDir.getName(); // this should be the attempt number
-
-              try {
-                // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read
-                // from
-                datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
-                hdfsPaths.add(successAttemptDir + "/" + sourceDirectory + "/");
-              } catch (NumberFormatException e) {
-                // ignore - this may happen if the directory structure is not as expected,
-                // in which case we just skip this dataset
-                unsuccessfulDatasets.add(datasetId);
-              }
-            }
+          if (earliestAllowedSuccessFileDateEpochMillis != null
+              && newestSuccessFile.getModificationTime()
+                  < earliestAllowedSuccessFileDateEpochMillis) {
+            tooOldDatasets.add(datasetId);
           } else {
-            unsuccessfulDatasets.add(datasetId);
+
+            Path successAttemptDir =
+                newestSuccessFile
+                    .getPath()
+                    .getParent()
+                    .getParent(); // go up from hdfs/_SUCCESS to interpretation dir
+
+            String attempt = successAttemptDir.getName(); // this should be the attempt number
+
+            try {
+              // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read
+              // from
+              datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
+              hdfsPaths.add(successAttemptDir + "/" + sourceDirectory + "/");
+            } catch (NumberFormatException e) {
+              // ignore - this may happen if the directory structure is not as expected,
+              // in which case we just skip this dataset
+              unsuccessfulDatasets.add(datasetId);
+            }
           }
         } else {
           unsuccessfulDatasets.add(datasetId);
@@ -135,6 +121,47 @@ public class FullBuildUtils {
     }
 
     return new DirectoryScanResult(hdfsPaths, datasetAttemptMap);
+  }
+
+  /**
+   * Attempt of the most recent successful interpretation of a dataset, the one with the newest
+   * _SUCCESS file in its source directory, as {@link #getSuccessfulParquetFilePaths} picks it
+   */
+  public static Optional<Integer> latestSuccessfulAttempt(
+      FileSystem fileSystem, PipelinesConfig config, String datasetId, String sourceDirectory)
+      throws IOException {
+    FileStatus newestSuccessFile =
+        newestSuccessFile(
+            fileSystem, new Path(config.getOutputPath() + "/" + datasetId), sourceDirectory);
+    if (newestSuccessFile == null) {
+      return Optional.empty();
+    }
+    // go up from <sourceDirectory>/_SUCCESS to the attempt directory
+    String attempt = newestSuccessFile.getPath().getParent().getParent().getName();
+    try {
+      return Optional.of(Integer.parseInt(attempt));
+    } catch (NumberFormatException e) {
+      return Optional.empty();
+    }
+  }
+
+  /** Newest _SUCCESS file in the source directory of the attempts of a dataset, or null */
+  private static FileStatus newestSuccessFile(
+      FileSystem fileSystem, Path datasetDirectory, String sourceDirectory) throws IOException {
+    // look for _SUCCESS files in the subdirectories of the dataset directory
+    FileStatus[] successFiles =
+        fileSystem.globStatus(new Path(datasetDirectory + "/*/" + sourceDirectory + "/_SUCCESS"));
+
+    FileStatus newestSuccessFile = null;
+    if (successFiles != null) {
+      for (FileStatus successFile : successFiles) {
+        if (newestSuccessFile == null
+            || successFile.getModificationTime() > newestSuccessFile.getModificationTime()) {
+          newestSuccessFile = successFile;
+        }
+      }
+    }
+    return newestSuccessFile;
   }
 
   public record DirectoryScanResult(

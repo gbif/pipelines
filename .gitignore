@@ -37,3 +37,7 @@ dependency-reduced-pom.xml
 /sdks/models/src/main/avro/occurrence-hdfs-record.avsc
 /sdks/models/src/main/avro/event-hdfs-record.avsc
 /sdks/models-pojo/src/main/avro/table/
+
+# records_test.py runs
+gbif/ingestion/spark-jobs/scripts/*.state
+gbif/ingestion/spark-jobs/scripts/records-test-archives/

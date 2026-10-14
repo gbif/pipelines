@@ -231,6 +231,7 @@
     <super-csv.version>2.4.0</super-csv.version>
     <lz4.version>1.3.0</lz4.version>
     <hdfs-tables.version>1.3.12</hdfs-tables.version>
+    <occurrence-es-mapping.version>1.2.12</occurrence-es-mapping.version>
   </properties>
 
   <build>
@@ -320,6 +321,21 @@
         <groupId>org.gbif.download</groupId>
         <artifactId>maven-extension-avsc-schema-generator</artifactId>
         <version>${hdfs-tables.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>occurrence-es-mapping</artifactId>
+        <version>${occurrence-es-mapping.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
