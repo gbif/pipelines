@@ -1,0 +1,33 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="3" author="nreibke" runInTransaction="false">
+    <sql>
+      CREATE TABLE validation_report
+      (
+        validation_key uuid NOT NULL,
+        attempt integer NOT NULL,
+        report_type varchar(255) NOT NULL,
+        report text NOT NULL,
+        created timestamp with time zone NOT NULL DEFAULT now(),
+        modified timestamp with time zone NOT NULL DEFAULT now(),
+
+        CONSTRAINT pk_validation_report
+          PRIMARY KEY (validation_key, attempt, report_type),
+
+        CONSTRAINT fk_validation_report_validation
+          FOREIGN KEY (validation_key)
+            REFERENCES validation (key)
+            ON DELETE CASCADE
+      );
+    </sql>
+
+    <rollback>
+      <sql>
+        DROP TABLE validation_report;
+      </sql>
+    </rollback>
+  </changeSet>
+</databaseChangeLog>

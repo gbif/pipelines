@@ -23,9 +23,11 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
+import org.gbif.validator.api.ValidationApi;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.service.ErrorMapper;
+import org.gbif.validator.service.ValidationReportService;
 import org.gbif.validator.service.ValidationService;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -52,9 +54,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-public class ValidationResource {
+public class ValidationResource implements ValidationApi {
 
   private final ValidationService<MultipartFile> validationService;
+  private final ValidationReportService validationReportService;
 
   private final ErrorMapper errorMapper;
 
@@ -234,5 +237,20 @@ public class ValidationResource {
         validationKey,
         clbDatasetImport);
     validationService.validateChecklistResults(validationKey, clbDatasetImport);
+  }
+
+  @Override
+  @Secured({APP_ROLE, ADMIN_ROLE})
+  public void createOrUpdateValidationReport(
+      UUID key, int attempt, String reportType, String report) {
+
+    validationReportService.createOrUpdate(key, attempt, reportType, report);
+  }
+
+  @Override
+  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
+  public String getValidationReport(UUID key, int attempt, String reportType) {
+
+    return validationReportService.get(key, attempt, reportType);
   }
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.gbif.validator.persistence.mapper.ValidationReportMapper">
+
+  <insert id="createOrUpdate">
+    INSERT INTO validation_report
+    (validation_key, attempt, report_type, report)
+    VALUES
+    (#{validationKey}, #{attempt}, #{reportType}, #{report})
+    ON CONFLICT (validation_key, attempt, report_type)
+    DO UPDATE SET
+    report = EXCLUDED.report,
+    modified = now()
+  </insert>
+
+  <select id="get" resultType="string">
+    SELECT report
+    FROM validation_report
+    WHERE validation_key = #{validationKey}
+    AND attempt = #{attempt}
+    AND report_type = #{reportType}
+  </select>
+
+</mapper>

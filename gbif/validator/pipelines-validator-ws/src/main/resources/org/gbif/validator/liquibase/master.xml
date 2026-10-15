@@ -6,4 +6,5 @@
 
   <include file="org/gbif/validator/liquibase/001-initial.xml"/>
   <include file="org/gbif/validator/liquibase/002-clb-validation.xml"/>
+  <include file="org/gbif/validator/liquibase/003-validation-report.xml"/>
 </databaseChangeLog>
