@@ -70,6 +70,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   private final int maxRunningValidationPerUser;
 
   private final ErrorMapper errorMapper;
+  private final ValidationMessageService validationMessageService;
 
   /** Asserts the user has not reached the maximum number of executing validations. */
   @Override
@@ -341,8 +342,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       }
 
       // Sent RabbitMQ message
-      notify(key, dataFile, pipelinesSteps);
+      validationMessageService.send(key, dataFile.getFileFormat(), pipelinesSteps);
     } catch (Exception ex) {
+      log.error("Failed to submit validation {}", key, ex);
       updateFailedValidation(key, ex.getMessage());
     }
   }

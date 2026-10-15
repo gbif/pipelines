@@ -34,10 +34,12 @@ import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
+import org.gbif.validator.api.ValidationApi;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.it.mocks.GatedFileStoreManager;
 import org.gbif.validator.ws.client.ValidationWsClient;
+import org.gbif.validator.ws.client.ValidationWsClientV2;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -84,6 +86,7 @@ public class ValidationResourceIT {
   private static ClientAndServer clientAndServer;
 
   private final ValidationWsClient validationWsClient;
+  private final ValidationApi validationApi;
 
   private final ValidationWsClient otherUserWsClient;
 
@@ -92,9 +95,13 @@ public class ValidationResourceIT {
   @Autowired
   public ValidationResourceIT(@LocalServerPort int port, GatedFileStoreManager fileStoreManager) {
     this.fileStoreManager = fileStoreManager;
+    String baseUrl = "http://localhost:" + port;
+
     validationWsClient =
-        ValidationWsClient.getInstance(
-            "http://localhost:" + port, TEST_USER.getUserName(), TEST_USER_PASSWORD);
+        ValidationWsClient.getInstance(baseUrl, TEST_USER.getUserName(), TEST_USER_PASSWORD);
+
+    validationApi =
+        ValidationWsClientV2.getInstance(baseUrl, TEST_USER.getUserName(), TEST_USER_PASSWORD);
     otherUserWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, OTHER_USER.getUserName(), TEST_USER_PASSWORD);
@@ -313,34 +320,22 @@ public class ValidationResourceIT {
   }
 
   @Test
-  public void cancelValidationIT() throws Exception {
+  public void cancelValidationIT() {
     File archive = readTestFileInputStream("/archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
+
     assertNotNull(validation);
 
-    // Can the new validation be retrieved?
-    Validation persistedValidation = validationWsClient.get(validation.getKey());
-    assertNotNull(persistedValidation);
+    UUID key = validation.getKey();
 
-    validationWsClient.cancel(persistedValidation.getKey());
+    Validation cancelledValidation = validationWsClient.cancel(key);
 
-    // Wait for the submit operation to complete
-    TimeUnit.SECONDS.sleep(2L);
+    assertNotNull(cancelledValidation);
+    assertEquals(Validation.Status.ABORTED, cancelledValidation.getStatus());
 
-    PagingResponse<Validation> validations =
-        validationWsClient.list(
-            ValidationSearchRequest.builder()
-                .offset(0L)
-                .limit(50)
-                .status(Validation.finishedStatuses())
-                .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
-                .build());
+    Validation persistedValidation = validationWsClient.get(key);
 
-    //    System.out.println("Finished validations: " + validations.getCount());
-    //    System.out.println("Looking for validation key: " + persistedValidation.getKey());
-    assertTrue(
-        validations.getResults().stream()
-            .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));
+    assertEquals(Validation.Status.ABORTED, persistedValidation.getStatus());
   }
 
   @Test
@@ -423,6 +418,39 @@ public class ValidationResourceIT {
             .noneMatch(v -> v.getKey().equals(persistedValidation.getKey())));
   }
 
+  @Test
+  void validationReportCreateAndUpdateIT() {
+    Validation validation = validationWsClient.submitFile(readTestFileInputStream("/archive.zip"));
+
+    UUID key = validation.getKey();
+    int attempt = 1;
+    String reportType = "DWCDP";
+
+    String initialReport =
+        """
+      {
+        "valid": true,
+        "issues": []
+      }
+      """;
+
+    String updatedReport =
+        """
+      {
+        "valid": false,
+        "issues": ["INVALID_DATAPACKAGE"]
+      }
+      """;
+
+    validationApi.createOrUpdateValidationReport(key, attempt, reportType, initialReport);
+
+    assertEquals(initialReport, validationApi.getValidationReport(key, attempt, reportType));
+
+    validationApi.createOrUpdateValidationReport(key, attempt, reportType, updatedReport);
+
+    assertEquals(updatedReport, validationApi.getValidationReport(key, attempt, reportType));
+  }
+
   @SneakyThrows
   protected static File readTestFileInputStream(String file) {
     return new File(ValidationResourceIT.class.getResource(file).getFile());
@@ -442,7 +470,10 @@ public class ValidationResourceIT {
         "upload.workingDirectory=" + workingDirectory.toString(),
         "upload.maxUploadSize=3145728",
         "storePath=" + storeDirectory.toString(),
-        "messaging.enabled=false"
+        "messaging.enabled=false",
+        "maxRunningValidationPerUser=1000",
+        "validator.dwcdp.exchange=validator_test",
+        "validator.dwcdp.routing-key=dwcdp_test"
       };
     }
   }
