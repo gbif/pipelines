@@ -27,6 +27,7 @@ import org.gbif.validator.persistence.mapper.DatasetJsonTypeHandler;
 import org.gbif.validator.persistence.mapper.MetricsJsonTypeHandler;
 import org.gbif.validator.persistence.mapper.StringArraySetTypeHandler;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
+import org.gbif.validator.persistence.mapper.ValidationReportMapper;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.boot.autoconfigure.SpringBootVFS;
 import org.mybatis.spring.mapper.MapperFactoryBean;
@@ -110,6 +111,16 @@ public class ValidatorDataSourceConfiguration {
       throws Exception {
     MapperFactoryBean<ValidationMapper> factoryBean =
         new MapperFactoryBean<>(ValidationMapper.class);
+    factoryBean.setSqlSessionFactory(sqlSessionFactoryBean.getObject());
+    return factoryBean;
+  }
+
+  @Bean
+  public MapperFactoryBean<ValidationReportMapper> validationReportMapper(
+      @Qualifier("validationSqlSessionFactory") SqlSessionFactoryBean sqlSessionFactoryBean)
+      throws Exception {
+    MapperFactoryBean<ValidationReportMapper> factoryBean =
+        new MapperFactoryBean<>(ValidationReportMapper.class);
     factoryBean.setSqlSessionFactory(sqlSessionFactoryBean.getObject());
     return factoryBean;
   }
