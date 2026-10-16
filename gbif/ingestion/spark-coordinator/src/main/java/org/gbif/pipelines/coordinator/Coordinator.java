@@ -202,8 +202,10 @@ public class Coordinator {
               new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
           case VALIDATOR_DWCDP_STAGE -> (messagePublisher ->
               new ValidatorDwcDpStageCallback(config, messagePublisher, master));
-          case VALIDATOR_DWCDP_TO_VERBATIM -> (messagePublisher ->
+          case VALIDATOR_DWCDP_TO_VERBATIM_STANDALONE -> (messagePublisher ->
               new ValidatorDwcDpToVerbatimCallback(config, messagePublisher, master));
+          case VALIDATOR_DWCDP_TO_VERBATIM_DISTRIBUTED -> (messagePublisher ->
+            new ValidatorDwcDpToVerbatimCallback(config, messagePublisher, master));
           case DWCDP_STAGE_STANDALONE -> (messagePublisher ->
               new DwcDpStageCallback(config, messagePublisher, master));
           case DWCDP_TO_VERBATIM_STANDALONE -> (messagePublisher ->
@@ -327,7 +329,8 @@ public class Coordinator {
     VALIDATOR_METRICS,
     VALIDATOR_METRICS_DISTRIBUTED,
     VALIDATOR_DWCDP_STAGE,
-    VALIDATOR_DWCDP_TO_VERBATIM,
+    VALIDATOR_DWCDP_TO_VERBATIM_STANDALONE,
+    VALIDATOR_DWCDP_TO_VERBATIM_DISTRIBUTED,
     DWCDP_STAGE_STANDALONE,
     DWCDP_STAGE_DISTRIBUTED,
     DWCDP_TO_VERBATIM_STANDALONE,
