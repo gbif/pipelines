@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpMetadataSyncFinishedMessage;
+import org.gbif.common.messaging.api.messages.DwcDpStageMessage;
 import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
@@ -84,6 +85,8 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         PipelinesEventsHdfsViewMessageHandler.handle(publisher, message);
       } else if (PipelinesEventsMessage.class.getSimpleName().equals(className)) {
         EventsMessageHandler.handle(config, publisher, message);
+      } else if (DwcDpStageMessage.class.getSimpleName().equals(className)) {
+        DwcDpStageMessageHandler.handleStage(publisher, message);
       } else if (DwcDpMetadataSyncFinishedMessage.class.getSimpleName().equals(className)) {
         DwcDpStageMessageHandler.handle(config, publisher, message);
       } else if (DwcDpToVerbatimMessage.class.getSimpleName().equals(className)) {
