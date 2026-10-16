@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.balancer.handler;
 
 import static org.gbif.api.model.pipelines.StepType.DWCDP_STAGE;
+import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -51,11 +52,34 @@ public class DwcDpStageMessageHandler {
             null,
             containsOccurrences,
             containsEvents);
-    publisher.send(out, ExchangeType.OCCURRENCE.getValue(), out.getRoutingKey() + STANDALONE);
+    publishStage(publisher, out);
     log.info(
         "Routing to STANDALONE, dataset {}, attempt: {}",
         m.getDatasetUuid().toString(),
         m.getAttempt());
+  }
+
+  /** Routes orchestrator-created stage messages without replacing their validator workflow steps. */
+  public static void handleStage(MessagePublisher publisher, PipelinesBalancerMessage message)
+      throws IOException {
+    DwcDpStageMessage stageMessage =
+        MAPPER.readValue(message.getPayload(), DwcDpStageMessage.class);
+
+    publishStage(publisher, stageMessage);
+  }
+
+  private static void publishStage(MessagePublisher publisher, DwcDpStageMessage message)
+      throws IOException {
+    boolean validator = isValidator(message.getPipelineSteps());
+    String routingKey =
+        (validator ? "validator." : "") + message.getRoutingKey() + STANDALONE;
+
+    publisher.send(message, ExchangeType.OCCURRENCE.getValue(), routingKey);
+    log.info(
+        "Routing DWCDP stage dataset {}, attempt {} to {}",
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        routingKey);
   }
 
   static long getFileSizeBytes(Path archivePath) throws IOException {
