@@ -66,7 +66,8 @@ public final class DwcdpStageHandoffAdapter
     }
 
     if (!occurrences && !events) {
-      throw new IllegalArgumentException("DWc-DP report contains no recognized Event or Occurrence resource");
+      throw new IllegalArgumentException(
+          "DWc-DP report contains no recognized Event or Occurrence resource");
     }
 
     DwcDpStageMessage stage =
