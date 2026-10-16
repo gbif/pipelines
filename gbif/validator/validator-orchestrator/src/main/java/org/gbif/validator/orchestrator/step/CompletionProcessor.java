@@ -1,6 +1,8 @@
 package org.gbif.validator.orchestrator.step;
 
+import java.util.Comparator;
 import java.util.List;
+import org.gbif.api.model.pipelines.StepType;
 import java.util.Objects;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics.ValidationStep;
@@ -63,33 +65,30 @@ public final class CompletionProcessor {
       return;
     }
 
-    // External completion artifacts must be persisted before advancing the workflow.
-    List<WorkflowChange> changes;
-
-    try {
-      registration.runHooks(validation, payload, reporter);
-      changes = registration.proposeChanges(validation, payload, reporter);
-    } catch (Exception hookFailure) {
-      LOG.error(
-          "Required completion processing failed validation={} step={}",
-          result.validationKey(),
-          stepType,
-          hookFailure);
-      // Required hooks are part of the execution. With no automatic retries,
-      // a failed required hook must not leave its step indefinitely queued.
-      try {
-        coordinator.handle(result.validationKey(), WorkflowEvent.failed(stepType));
-      } catch (Exception transitionFailure) {
-        hookFailure.addSuppressed(transitionFailure);
-      }
-
-      throw hookFailure;
-    }
-
+    // The coordinator owns persistence and workflow transitions. Job hooks and
+    // message adaptation are executed only after the result has been persisted.
     WorkflowEvent event =
         result.successful() ? WorkflowEvent.completed(stepType) : WorkflowEvent.failed(stepType);
+    coordinator.handle(result.validationKey(), event,
+        registration.proposeChanges(validation, payload, reporter));
 
-    coordinator.handle(result.validationKey(), event, changes);
+    JobContext context =
+        new JobContext(
+            result.validationKey(),
+            result.attempt(),
+            validation.getMetrics().getStepTypes().stream()
+                .sorted(Comparator.comparingInt(ValidationStep::getExecutionOrder))
+                .map(step -> StepType.valueOf(step.getStepType()))
+                .toList());
+
+    registration.runHooks(validation, payload, reporter);
+
+    // Only successful jobs hand off to external processing infrastructure.
+    if (result.successful() && coordinator.hasOutgoingDestination(stepType)) {
+      Object outgoing = registration.adaptOutgoing(payload, context);
+      coordinator.publishOutgoing(stepType, outgoing);
+    }
+
     LOG.info(
         "Step completion processed validation={} step={} result={}",
         result.validationKey(),

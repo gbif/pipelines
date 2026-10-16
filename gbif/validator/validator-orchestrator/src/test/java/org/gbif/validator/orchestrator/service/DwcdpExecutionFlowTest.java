@@ -54,7 +54,7 @@ class DwcdpExecutionFlowTest {
   }
 
   @Test
-  void failedReportUploadFailsExecutionWithoutDispatchingNextStep() throws Exception {
+  void failedReportUploadSurfacesFailureAfterPersistedCompletion() throws Exception {
     Fixture fixture = new Fixture();
     fixture.coordinator.handle(fixture.key, WorkflowEvent.start());
     fixture.client.setRejectReport(true);
@@ -65,8 +65,8 @@ class DwcdpExecutionFlowTest {
             fixture.processor.complete(
                 StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true)));
 
-    assertEquals(Validation.Status.FAILED, fixture.step().getStatus());
-    assertEquals(Validation.Status.FAILED, fixture.client.getStoredValidation().getStatus());
+    assertEquals(Validation.Status.FINISHED, fixture.step().getStatus());
+    assertEquals(Validation.Status.FINISHED, fixture.client.getStoredValidation().getStatus());
     assertEquals(0, fixture.client.getReportWrites());
     assertEquals(1, fixture.messages.size());
     assertEquals(2, fixture.client.getStatusWrites());

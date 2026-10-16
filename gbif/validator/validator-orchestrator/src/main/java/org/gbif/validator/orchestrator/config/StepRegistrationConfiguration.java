@@ -22,9 +22,9 @@ public class StepRegistrationConfiguration {
   public StepRegistry stepRegistry(ValidationWsClient client) {
     return new StepRegistry(
         List.of(
-            new StepRegistration<>(
-                new DwcdpAnalysisStepDefinition(),
-                List.of(HookRegistration.required(new DwcdpValidationReportHook(client))))));
+            StepRegistration.builder(new DwcdpAnalysisStepDefinition())
+                .onJobProcessed(HookRegistration.required(new DwcdpValidationReportHook(client)))
+                .build()));
   }
 
   @Bean

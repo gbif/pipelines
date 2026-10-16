@@ -37,6 +37,7 @@ public class OrchestratorProperties {
   public static class StepMessaging {
     private Destination request = new Destination();
     private Completion completion = new Completion();
+    private Destination outgoing = new Destination();
 
     public Destination getRequest() {
       return request;
@@ -44,6 +45,14 @@ public class OrchestratorProperties {
 
     public void setRequest(Destination request) {
       this.request = request;
+    }
+
+    public Destination getOutgoing() {
+      return outgoing;
+    }
+
+    public void setOutgoing(Destination outgoing) {
+      this.outgoing = outgoing;
     }
 
     public Completion getCompletion() {
