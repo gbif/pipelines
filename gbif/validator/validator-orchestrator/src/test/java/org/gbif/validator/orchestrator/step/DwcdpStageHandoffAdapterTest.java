@@ -69,17 +69,21 @@ class DwcdpStageHandoffAdapterTest {
     JobContext incomplete =
         new JobContext(validationKey, 1, List.of(StepType.VALIDATOR_VALIDATE_DWCDP));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> adapter.adapt(completion("occurrence"), incomplete));
+        IllegalArgumentException.class, () -> adapter.adapt(completion("occurrence"), incomplete));
   }
 
   @Test
   void rejectsFailedCompletionAndMismatchedIdentity() throws Exception {
-    JsonNode failed = mapper.readTree(completion("occurrence").toString().replace("\"valid\":true", "\"valid\":false"));
+    JsonNode failed =
+        mapper.readTree(
+            completion("occurrence").toString().replace("\"valid\":true", "\"valid\":false"));
     assertThrows(IllegalArgumentException.class, () -> adapter.adapt(failed, context));
     assertThrows(
         IllegalArgumentException.class,
-        () -> adapter.adapt(completion("occurrence"), new JobContext(UUID.randomUUID(), 1, context.pipelineSteps())));
+        () ->
+            adapter.adapt(
+                completion("occurrence"),
+                new JobContext(UUID.randomUUID(), 1, context.pipelineSteps())));
   }
 
   private DwcDpStageMessage stage(String... names) throws Exception {
