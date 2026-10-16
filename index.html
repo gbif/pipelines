@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GBIF Pipelines Metrics</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --surface: #ffffff; --text: #1d1d1b; --muted: #6b6b66;
+    --border: #e2e2dd; --accent: #2f5fd0; --bad-bg: #fde8e6; --bad-text: #a1281b;
+    --chip-on: #2f5fd0; --chip-on-text: #fff; --row-hover: #f1f3f9; --row-h: 28px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161615; --surface: #1f1f1d; --text: #ecece8; --muted: #9a9a93;
+      --border: #33332f; --accent: #7fa2ff; --bad-bg: #4a1f1a; --bad-text: #ffb4a8;
+      --chip-on: #7fa2ff; --chip-on-text: #111; --row-hover: #26282e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); display: flex; flex-direction: column;
+         font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 16px 20px 8px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center;
+              padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; margin-right: 4px; }
+  .chip { border: 1px solid var(--border); background: var(--surface); color: var(--text);
+          border-radius: 999px; padding: 5px 12px; cursor: pointer; font: inherit; }
+  .chip .n { color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .chip[aria-pressed="true"] { background: var(--chip-on); color: var(--chip-on-text); border-color: var(--chip-on); }
+  .chip[aria-pressed="true"] .n { color: inherit; opacity: .8; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; background: var(--surface); color: var(--text); padding: 5px 10px; cursor: pointer; font: inherit; }
+  .seg button[aria-pressed="true"] { background: var(--chip-on); color: var(--chip-on-text); }
+  .btn { border: 1px solid var(--accent); background: var(--surface); color: var(--accent); border-radius: 6px;
+         padding: 5px 12px; cursor: pointer; font: inherit; font-weight: 600; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  a.btn { display: inline-block; text-decoration: none; }
+  a.btn[aria-disabled="true"] { opacity: .45; cursor: default; pointer-events: none; }
+  details.cols { position: relative; }
+  details.cols summary { list-style: none; border: 1px solid var(--border); background: var(--surface); border-radius: 6px;
+                         padding: 5px 12px; cursor: pointer; user-select: none; }
+  details.cols summary::-webkit-details-marker { display: none; }
+  details.cols[open] summary { border-color: var(--accent); }
+  .colpanel { position: absolute; top: calc(100% + 4px); left: 0; z-index: 10; background: var(--surface);
+              border: 1px solid var(--border); border-radius: 8px; padding: 8px; min-width: 300px;
+              max-height: 60vh; overflow: auto; box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+  .colpanel .acts { display: flex; gap: 6px; padding: 2px 4px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .colpanel .acts button { border: 1px solid var(--border); background: var(--surface); color: var(--text);
+                           border-radius: 4px; padding: 2px 8px; cursor: pointer; font: inherit; font-size: 12px; }
+  .colpanel label { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+  .colpanel label:hover { background: var(--row-hover); }
+  .colpanel label .full { color: var(--muted); font-size: 11px; margin-left: auto; padding-left: 12px; }
+  input[type=search] { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+                       background: var(--surface); color: var(--text); font: inherit; min-width: 240px; }
+  .file { font-size: 13px; color: var(--muted); }
+  .status { padding: 8px 20px; color: var(--muted); font-size: 13px; display: flex; gap: 12px; align-items: center; }
+  .status.error { color: var(--bad-text); }
+  progress { width: 200px; display: none; }
+  .loading progress { display: inline-block; }
+  .wrap { flex: 1; min-height: 200px; overflow: auto; margin: 0 20px 20px;
+          border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; table-layout: fixed; font-variant-numeric: tabular-nums; }
+  th, td { padding: 0 10px; height: var(--row-h); border-bottom: 1px solid var(--border);
+           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+  th { position: sticky; top: 0; background: var(--surface); z-index: 1; font-weight: 600;
+       cursor: pointer; user-select: none; font-size: 12px; }
+  th.left, td.left { text-align: left; }
+  th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
+  th:first-child { z-index: 2; }
+  td:first-child { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+  tr.pad td { padding: 0; border: 0; height: auto; background: transparent; }
+  tr:hover td { background: var(--row-hover); }
+  tr.pad:hover td { background: transparent; }
+  td.bad { background: var(--bad-bg) !important; color: var(--bad-text); font-weight: 600; }
+  td.na { color: var(--muted); }
+  th.ext, td.ext { color: var(--muted); font-weight: 400; }
+  a.uuid { color: var(--accent); text-decoration: none; }
+  a.uuid:hover { text-decoration: underline; }
+  th .arrow { color: var(--accent); }
+  .tag { font-family: system-ui, sans-serif; font-size: 10px; padding: 1px 5px; border-radius: 4px; margin-left: 4px;
+         background: var(--bad-bg); color: var(--bad-text); }
+  .drop { margin: 20px; padding: 40px; border: 2px dashed var(--border); border-radius: 10px;
+          text-align: center; color: var(--muted); }
+  body.dragging .wrap { border-color: var(--accent); border-style: dashed; }
+  dialog#help { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text);
+                padding: 0; width: min(860px, calc(100vw - 32px)); max-height: calc(100vh - 64px);
+                box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+  dialog#help::backdrop { background: rgba(0,0,0,.35); }
+  .help-head { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+               padding: 14px 18px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); }
+  .help-head h2 { font-size: 16px; margin: 0; }
+  .help-close { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px;
+                padding: 3px 10px; cursor: pointer; font: inherit; }
+  .help-body { padding: 4px 18px 18px; }
+  .help-body p.note { color: var(--muted); font-size: 13px; margin: 10px 0; }
+  .help-body h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 18px 0 6px; }
+  .help-body h3 code { text-transform: none; letter-spacing: 0; }
+  .help-body dl { margin: 0; }
+  .help-body dt { font-weight: 600; margin-top: 10px; }
+  .help-body dt code { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .help-body dd { margin: 2px 0 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>GBIF Pipelines Metrics</h1>
+</header>
+
+<div class="controls">
+  <div class="group" id="filters">
+    <span class="label">Filters</span>
+    <button class="chip" data-f="0" aria-pressed="false">Elastic out of sync<span class="n"></span></button>
+    <button class="chip" data-f="1" aria-pressed="false">Iceberg out of sync<span class="n"></span></button>
+    <button class="chip" data-f="2" aria-pressed="false">Elastic Iceberg mismatch<span class="n"></span></button>
+  </div>
+  <div class="group">
+    <span class="label">Combine</span>
+    <div class="seg" id="mode">
+      <button data-m="and" aria-pressed="true">All (AND)</button>
+      <button data-m="or" aria-pressed="false">Any (OR)</button>
+    </div>
+  </div>
+  <div class="group">
+    <input type="search" id="q" placeholder="Search dataset UUID…">
+  </div>
+  <div class="group">
+    <button class="chip" id="extBtn" aria-pressed="false" disabled title="Show the per-extension record counts (extension_* columns) after the attempt column">Show extensions<span class="n"></span></button>
+  </div>
+  <div class="group">
+    <details class="cols" id="cols">
+      <summary>Columns <span id="colCount"></span> ▾</summary>
+      <div class="colpanel">
+        <div class="acts"><button data-a="all">Show all</button><button data-a="none">Hide all</button></div>
+        <div id="colList"></div>
+      </div>
+    </details>
+  </div>
+  <div class="group">
+    <button class="btn" id="export" disabled title="Download the datasetUUIDs of all rows currently shown">Export UUIDs</button>
+    <a class="btn" id="dlCsv" aria-disabled="true" title="Download the full CSV file this page was loaded from">Download CSV</a>
+  </div>
+  <div class="group">
+    <button class="btn" id="helpBtn" title="Describe each column">Help</button>
+  </div>
+  <div class="group file">
+    <input type="file" id="file" accept=".csv,.gz,.txt,text/csv,application/gzip">
+  </div>
+</div>
+
+<div class="status" id="status"><span id="msg">Loading…</span><progress id="prog" max="1" value="0"></progress></div>
+<div class="wrap" id="wrap"><div class="drop" id="drop">Drop a CSV file here, or use the file picker above.</div></div>
+
+<dialog id="help" aria-labelledby="helpTitle">
+  <div class="help-head"><h2 id="helpTitle">Column descriptions</h2><button class="help-close" id="helpClose" aria-label="Close">Close</button></div>
+  <div class="help-body" id="helpBody"></div>
+</dialog>
+
+<script>
+// ---------- configuration ----------
+const ARCHIVE = 'archiveToOccurrenceCount';
+const ES = 'ElasticOccurrenceCount';
+const ES_OLD = 'EsOccurrenceIndexCount';        // previous name, still accepted
+const ICE = 'IcebergOccurrenceCount';
+const ICE_OLD = 'IceberOccurrenceIndexCount';   // previous name, still accepted
+const FILTER_NAMES = ['ES out of sync', 'Iceberg out of sync', 'ES Iceberg mismatch'];
+const FILTER_TAGS  = ['ES', 'Iceberg', 'ES≠Ice'];
+let FILTER_COLS = [];            // column index pairs per filter, set after header parse
+const ROW_H = 28, OVERSCAN = 20;
+
+// ---------- data store (compact) ----------
+// rows: array of string arrays; flags: Uint8Array bitmask per row; view: Int32Array of visible row indices
+let headers = [], rows = [], flags = new Uint8Array(0), view = new Int32Array(0);
+let numCache = {};               // colIndex -> Float64Array (NaN for non-numeric)
+const HIDDEN_KEY = 'pipelinesMetrics.hiddenColumns';
+const REGISTRY_URL = uuid => `https://registry.gbif.org/dataset/${encodeURIComponent(uuid)}/ingestion-history`;
+let hidden = new Set();          // hidden column names
+try { hidden = new Set(JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]')); } catch (e) {}
+// Columns hidden until the viewer shows them. Applied once per column (tracked in DEFAULTS_KEY), so
+// it also reaches viewers with saved column choices and isn't re-applied after they show the column.
+const DEFAULT_HIDDEN = ['title'];
+const DEFAULTS_KEY = 'pipelinesMetrics.defaultHiddenApplied';
+try {
+  const applied = new Set(JSON.parse(localStorage.getItem(DEFAULTS_KEY) || '[]'));
+  const todo = DEFAULT_HIDDEN.filter(h => !applied.has(h));
+  if (todo.length) {
+    todo.forEach(h => { hidden.add(h); applied.add(h); });
+    localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hidden]));
+    localStorage.setItem(DEFAULTS_KEY, JSON.stringify([...applied]));
+  }
+} catch (e) { DEFAULT_HIDDEN.forEach(h => hidden.add(h)); } // no storage: hide every time
+const LEFT_COLS = new Set(['title']); // text columns, aligned left (numbers align right)
+const META_COLS = ['title', 'type', 'sub_type']; // dataset metadata from the registry export
+let visCols = [];                // indices of visible columns (datasetUUID always first)
+const EXT_PREFIX = 'extension_'; // per-extension record counts, toggled with "Show extensions"
+const isExt = h => h.startsWith(EXT_PREFIX);
+let colOrder = [];               // display order: datasetUUID, attempt, extension_* columns, the rest
+// Default CSV: the gzipped metrics report on HDFS, proxied by Apache (gunzipped in the browser)
+const DEFAULT_CSV = 'https://dev.gbif.org/pipelines-metrics-report.csv.gz';
+// File name of a CSV path or URL, e.g. "report.csv" for the WebHDFS URL above
+function baseName(src) { try { return decodeURIComponent(new URL(src, location.href).pathname.split('/').pop()) || src; } catch (e) { return src; } }
+let loadToken = 0, srcName = 'report.csv';
+let srcHref = '';                // where the loaded CSV can be downloaded from: its URL, or a blob: URL for a picked file
+
+const state = { active: 0, showExt: false, mode: 'and', q: '', sortCol: -1, sortDir: 1 };
+
+const $ = id => document.getElementById(id);
+const wrap = $('wrap');
+
+function setStatus(msg, err, loading) {
+  $('msg').textContent = msg;
+  $('status').className = 'status' + (err ? ' error' : '') + (loading ? ' loading' : '');
+}
+const yieldUI = () => new Promise(r => setTimeout(r, 0));
+
+function colIndex(...names) { for (const n of names) { const i = headers.indexOf(n); if (i >= 0) return i; } return -1; }
+
+function differs(a, b) {
+  if (a === b) return false;
+  a = a.trim(); b = b.trim();
+  if (a === b) return false;
+  if (a !== '' && b !== '') { const na = +a, nb = +b; if (na === na && nb === nb) return na !== nb; }
+  return true;
+}
+
+// ---------- parsing (chunked, keeps UI responsive) ----------
+function splitLine(line) {
+  if (line.indexOf('"') === -1) return line.split(',');
+  const out = []; let f = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (q) { if (c === '"') { if (line[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true; else if (c === ',') { out.push(f); f = ''; } else f += c;
+  }
+  out.push(f); return out;
+}
+
+async function load(text, name) {
+  const token = ++loadToken;
+  text = text.replace(/^﻿/, '');
+  setStatus(`Parsing ${baseName(name)} (${(text.length / 1048576).toFixed(1)} MB)…`, false, true);
+  await yieldUI();
+
+  // split into lines; join lines that sit inside an open quoted field (rare)
+  let lines = text.split(/\r?\n/);
+  text = null;
+  if (lines.length && lines[lines.length - 1] === '') lines.pop();
+  if (!lines.length) { setStatus('The CSV file is empty.', true); return; }
+
+  headers = splitLine(lines[0]).map(h => h.trim());
+  const ia = headers.indexOf(ARCHIVE), ie = colIndex(ES, ES_OLD), ii = colIndex(ICE, ICE_OLD);
+  FILTER_COLS = [[ia, ie], [ia, ii], [ie, ii]];
+  const missing = [[ARCHIVE, ia], [ES, ie], [ICE, ii]].filter(x => x[1] < 0).map(x => x[0]);
+
+  const total = lines.length - 1;
+  const newRows = new Array(total);
+  const newFlags = new Uint8Array(total);
+  const prog = $('prog');
+  let n = 0, pending = null;
+  const CHUNK = 20000;
+  for (let li = 1; li < lines.length; li++) {
+    let line = lines[li];
+    if (pending !== null) { line = pending + '\n' + line; pending = null; }
+    if ((line.split('"').length - 1) % 2 === 1) { pending = line; continue; } // unbalanced quote → multiline field
+    if (line === '') continue;
+    const cells = splitLine(line);
+    let fl = 0;
+    for (let f = 0; f < 3; f++) {
+      const [a, b] = FILTER_COLS[f];
+      if (a >= 0 && b >= 0 && differs(cells[a] ?? '', cells[b] ?? '')) fl |= 1 << f;
+    }
+    newRows[n] = cells; newFlags[n] = fl; n++;
+    if (li % CHUNK === 0) {
+      prog.value = li / lines.length;
+      setStatus(`Parsing… ${li.toLocaleString()} / ${total.toLocaleString()} rows`, false, true);
+      await yieldUI();
+      if (token !== loadToken) return; // superseded by a newer load
+    }
+  }
+  lines = null;
+  newRows.length = n;
+  rows = newRows; flags = newFlags.subarray(0, n); numCache = {};
+  state.sortCol = state.sortName ? headers.indexOf(state.sortName) : -1;
+
+  // counts on chips
+  const counts = [0, 0, 0];
+  for (let i = 0; i < n; i++) { const f = flags[i]; if (f & 1) counts[0]++; if (f & 2) counts[1]++; if (f & 4) counts[2]++; }
+  srcName = name;
+  $('export').disabled = false;
+  const dl = $('dlCsv');
+  dl.href = srcHref; dl.download = baseName(name); dl.removeAttribute('aria-disabled');
+  document.querySelectorAll('#filters .chip').forEach(b => b.querySelector('.n').textContent = counts[+b.dataset.f].toLocaleString());
+
+  const ia2 = headers.indexOf('attempt'), all = headers.map((_, c) => c);
+  const ext = all.filter(c => isExt(headers[c]));
+  const meta = META_COLS.map(h => headers.indexOf(h)).filter(c => c > 0);
+  colOrder = [0, ...(ia2 > 0 ? [ia2] : []), ...meta, ...ext,
+              ...all.filter(c => c > 0 && c !== ia2 && !meta.includes(c) && !isExt(headers[c]))];
+  $('extBtn').disabled = !ext.length;
+  $('extBtn').querySelector('.n').textContent = ext.length ? ext.length.toLocaleString() : '';
+
+  buildColumnList();
+  buildTable();
+  applyFilters();
+  if (missing.length) setStatus('Warning: missing column(s) ' + missing.join(', ') + ' — related filters disabled.', true);
+}
+
+// Text of a CSV blob, gunzipping it first if it is gzipped (detected by the 1f 8b magic bytes,
+// so a .gz the server already decoded via Content-Encoding is read as plain text)
+async function blobText(blob) {
+  const magic = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+  if (magic[0] !== 0x1f || magic[1] !== 0x8b) return blob.text();
+  return new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).text();
+}
+
+async function loadDefault() {
+  const name = new URLSearchParams(location.search).get('csv') || DEFAULT_CSV;
+  setStatus(`Loading ${baseName(name)}…`, false, true);
+  try {
+    const res = await fetch(name, { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+    srcHref = res.url || new URL(name, location.href).href;
+    await load(await blobText(await res.blob()), name);
+  } catch (e) {
+    setStatus(`Could not load "${name}" (${e.message}). The server may be unreachable from this network or may not allow cross-origin (CORS) requests, and browsers block local files on pages opened via file:// — choose / drop the CSV instead.`, true);
+  }
+}
+
+function loadFile(f) {
+  setStatus(`Reading ${f.name}…`, false, true);
+  if (srcHref.startsWith('blob:')) URL.revokeObjectURL(srcHref);
+  srcHref = URL.createObjectURL(f);
+  blobText(f).then(t => load(t, f.name), e => setStatus(`Could not read ${f.name} (${e.message}).`, true));
+}
+$('file').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadFile(f); });
+document.addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dragging'); });
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('dragging'); });
+document.addEventListener('drop', e => {
+  e.preventDefault(); document.body.classList.remove('dragging');
+  const f = e.dataTransfer.files[0]; if (f) loadFile(f);
+});
+
+// ---------- filtering & sorting ----------
+function applyFilters() {
+  const n = rows.length, act = state.active, and = state.mode === 'and', q = state.q;
+  const out = new Int32Array(n); let k = 0;
+  for (let i = 0; i < n; i++) {
+    const f = flags[i];
+    if (act && (and ? (f & act) !== act : (f & act) === 0)) continue;
+    if (q && rows[i][0].toLowerCase().indexOf(q) === -1) continue;
+    out[k++] = i;
+  }
+  view = out.slice(0, k);
+  if (state.sortCol >= 0) sortView();
+  wrap.scrollTop = 0;
+  renderRows(true);
+  applyStatusOnly();
+}
+
+function describeFilters() {
+  const act = state.active, parts = [];
+  if (act) parts.push(`matching ${state.mode === 'and' ? 'all of' : 'any of'}: ${FILTER_NAMES.filter((_, f) => act & (1 << f)).join(', ')}`);
+  if (state.q) parts.push(`UUID contains "${state.q}"`);
+  return parts.length ? ' ' + parts.join('; ') : '';
+}
+
+function numCol(c) {
+  if (numCache[c]) return numCache[c];
+  const n = rows.length, a = new Float64Array(n);
+  for (let i = 0; i < n; i++) { const v = rows[i][c]; a[i] = (v === undefined || v === '') ? NaN : +v; }
+  return numCache[c] = a;
+}
+function sortView() {
+  const c = state.sortCol, d = state.sortDir, nums = numCol(c);
+  const arr = Array.from(view);
+  arr.sort((x, y) => {
+    const a = nums[x], b = nums[y], an = a === a, bn = b === b;
+    if (an && bn) return (a - b) * d;
+    if (an !== bn) return an ? -1 : 1;          // numbers first, then text/blank
+    return (rows[x][c] || '').localeCompare(rows[y][c] || '') * d;
+  });
+  view = Int32Array.from(arr);
+}
+
+// ---------- virtualised table ----------
+let tbody, thead;
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+// Display name: drop "Count" and "Attempted"; full name stays in the hover tooltip
+// Explicit display labels for specific columns; others drop "Count"/"Attempted"
+const LABELS = { ElasticOccurrenceCount: 'Elastic', IcebergOccurrenceCount: 'Iceberg',
+                 EsOccurrenceIndexCount: 'Elastic', IceberOccurrenceIndexCount: 'Iceberg' };
+function shortName(h) { return LABELS[h] || (isExt(h) ? h.slice(EXT_PREFIX.length) : h.replace(/Count|Attempted/g, '')) || h; }
+function fmt(v) { return /^-?\d+$/.test(v) ? Number(v).toLocaleString() : v; }
+
+function buildTable() {
+  visCols = colOrder.filter(c => c === 0 || (isExt(headers[c]) ? state.showExt : !hidden.has(headers[c])));
+  // column widths from header + sample of data, so widths stay stable while scrolling
+  const sample = Math.min(rows.length, 5000);
+  const widths = headers.map((h, c) => {
+    let m = shortName(h).length * 0.85;
+    for (let i = 0; i < sample; i++) { const v = rows[i][c]; if (v && v.length * 1.3 > m) m = v.length * 1.3; }
+    return Math.ceil(Math.min(Math.max(m, 6), 40)) + 3;
+  });
+  widths[0] = 36 + 3 * 7; // UUID + room for tags
+  const cols = visCols.map(c => widths[c]).map(w => `<col style="width:${w}ch">`).join('');
+  wrap.innerHTML = `<table><colgroup>${cols}</colgroup><thead><tr></tr></thead><tbody></tbody></table>`;
+  thead = wrap.querySelector('thead tr'); tbody = wrap.querySelector('tbody');
+  renderHeader();
+  thead.addEventListener('click', e => {
+    const th = e.target.closest('th'); if (!th) return;
+    const c = +th.dataset.c;
+    if (state.sortCol === c) state.sortDir = -state.sortDir; else { state.sortCol = c; state.sortDir = 1; }
+    state.sortName = headers[c]; writeURL(true);
+    renderHeader();
+    setStatus('Sorting…', false, true);
+    setTimeout(() => { sortView(); wrap.scrollTop = 0; renderRows(true); applyStatusOnly(); }, 0);
+  });
+}
+function renderHeader() {
+  thead.innerHTML = visCols.map(c => { const h = headers[c];
+    const arrow = state.sortCol === c ? `<span class="arrow">${state.sortDir > 0 ? ' ▲' : ' ▼'}</span>` : '';
+    const d = colDoc(h), tip = d ? `${h}\n\n${d}` : h;
+    const cls = isExt(h) ? 'ext' : LEFT_COLS.has(h) ? 'left' : '';
+    return `<th data-c="${c}"${cls ? ` class="${cls}"` : ''} title="${esc(tip)}">${esc(shortName(h))}${arrow}</th>`;
+  }).join('');
+}
+function applyStatusOnly() {
+  setStatus(`Showing ${view.length.toLocaleString()} of ${rows.length.toLocaleString()} datasets${describeFilters()}.`);
+}
+
+let lastStart = -1, lastEnd = -1;
+function renderRows(force) {
+  if (!tbody) return;
+  const n = view.length;
+  const headH = thead.offsetHeight || ROW_H;
+  const top = Math.max(0, wrap.scrollTop - headH);
+  const start = Math.max(0, Math.floor(top / ROW_H) - OVERSCAN);
+  const end = Math.min(n, Math.ceil((top + wrap.clientHeight) / ROW_H) + OVERSCAN);
+  if (!force && start === lastStart && end === lastEnd) return;
+  lastStart = start; lastEnd = end;
+
+  const hlMask = state.active || 7;  // highlight cells for active filters (or all if none)
+  const ncol = visCols.length;
+  let html = `<tr class="pad"><td colspan="${ncol}" style="height:${start * ROW_H}px"></td></tr>`;
+  for (let k = start; k < end; k++) {
+    const i = view[k], r = rows[i], fl = flags[i];
+    const bad = new Set();
+    for (let f = 0; f < 3; f++) if (fl & hlMask & (1 << f)) { bad.add(FILTER_COLS[f][0]); bad.add(FILTER_COLS[f][1]); }
+    html += '<tr>';
+    for (let j = 0; j < ncol; j++) {
+      const c = visCols[j], v = r[c] ?? '';
+      const h = headers[c], left = LEFT_COLS.has(h);
+      const cls = bad.has(c) ? 'bad' : (v === '' || v === 'NOT_AVAILABLE' ? 'na' : '') + (isExt(h) ? ' ext' : '') + (left ? ' left' : '');
+      if (c === 0) {
+        let tags = '';
+        for (let f = 0; f < 3; f++) if (fl & (1 << f)) tags += `<span class="tag">${FILTER_TAGS[f]}</span>`;
+        html += `<td class="${cls}"><a class="uuid" href="${esc(REGISTRY_URL(v.trim()))}" target="_blank" rel="noopener" title="Open ingestion history in the GBIF registry">${esc(v)}</a>${tags}</td>`;
+      } else {
+        html += `<td class="${cls}"${left && v ? ` title="${esc(v)}"` : ''}>${v === '' ? '—' : esc(fmt(v))}</td>`;
+      }
+    }
+    html += '</tr>';
+  }
+  html += `<tr class="pad"><td colspan="${ncol}" style="height:${(n - end) * ROW_H}px"></td></tr>`;
+  tbody.innerHTML = html;
+}
+let raf = 0;
+wrap.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderRows(false); }); });
+window.addEventListener('resize', () => renderRows(true));
+
+// ---------- controls ----------
+document.querySelectorAll('#filters .chip').forEach(b => b.addEventListener('click', () => {
+  const bit = 1 << +b.dataset.f;
+  state.active ^= bit;
+  b.setAttribute('aria-pressed', !!(state.active & bit));
+  writeURL(true);
+  if (rows.length) applyFilters();
+}));
+document.querySelectorAll('#mode button').forEach(b => b.addEventListener('click', () => {
+  state.mode = b.dataset.m;
+  document.querySelectorAll('#mode button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  writeURL(true);
+  if (rows.length) applyFilters();
+}));
+
+$('extBtn').addEventListener('click', e => {
+  state.showExt = !state.showExt;
+  e.currentTarget.setAttribute('aria-pressed', state.showExt);
+  writeURL(true);
+  if (thead) refreshColumns();
+});
+
+// Export: one datasetUUID per line, in the current filter + sort order
+$('export').addEventListener('click', () => {
+  if (!view.length) { setStatus('Nothing to export — no datasets match the current filters.', true); return; }
+  const parts = new Array(view.length);
+  for (let k = 0; k < view.length; k++) parts[k] = rows[view[k]][0];
+  const blob = new Blob([parts.join('\n') + '\n'], { type: 'text/plain' });
+  const tags = ['es-out-of-sync', 'iceberg-out-of-sync', 'es-iceberg-mismatch'].filter((_, f) => state.active & (1 << f));
+  if (tags.length > 1) tags.unshift(state.mode);
+  const base = baseName(srcName).replace(/\.[^.]*$/, '');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${base}-uuids${tags.length ? '-' + tags.join('-') : ''}.txt`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  setStatus(`Exported ${view.length.toLocaleString()} datasetUUIDs to ${a.download}.`);
+});
+
+// ---------- column visibility ----------
+function saveHidden() { try { localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hidden])); } catch (e) {} }
+function buildColumnList() {
+  $('colList').innerHTML = headers.map((h, c) => c === 0 || isExt(h) ? '' :
+    `<label title="${esc(h)}"><input type="checkbox" data-c="${c}" ${hidden.has(h) ? '' : 'checked'}>${esc(shortName(h))}<span class="full">${esc(h)}</span></label>`
+  ).join('');
+  updateColCount();
+}
+function updateColCount() {
+  const cols = headers.filter((h, c) => c > 0 && !isExt(h));
+  const total = cols.length, shown = cols.filter(h => !hidden.has(h)).length;
+  $('colCount').textContent = shown === total ? '' : `(${shown}/${total})`;
+}
+function refreshColumns() {
+  const top = wrap.scrollTop, left = wrap.scrollLeft;
+  buildTable(); wrap.scrollTop = top; wrap.scrollLeft = left;
+  lastStart = -1; renderRows(true); updateColCount(); saveHidden();
+}
+$('colList').addEventListener('change', e => {
+  const cb = e.target; if (!cb.dataset.c) return;
+  const h = headers[+cb.dataset.c];
+  cb.checked ? hidden.delete(h) : hidden.add(h);
+  refreshColumns();
+});
+document.querySelector('#cols .acts').addEventListener('click', e => {
+  const a = e.target.dataset.a; if (!a) return;
+  headers.forEach((h, c) => { if (c > 0 && !isExt(h)) a === 'all' ? hidden.delete(h) : hidden.add(h); });
+  $('colList').querySelectorAll('input').forEach(cb => cb.checked = a === 'all');
+  refreshColumns();
+});
+document.addEventListener('click', e => { const d = $('cols'); if (d.open && !d.contains(e.target)) d.open = false; });
+
+// ---------- help ----------
+// Column descriptions, grouped by the metrics file / pipeline step that writes them
+// (see MetricsReport.METRICS_FILES in gbif/ingestion/spark-jobs).
+const HELP = [
+  { group: 'Dataset', cols: {
+    datasetUUID: 'GBIF registry key of the dataset. Click it to open the dataset\'s ingestion history in the registry.',
+    attempt: 'Crawl attempt the metrics were read from: the latest attempt directory that contains a verbatim-to-identifier.yml. All other metrics files are read from this same attempt.',
+    title: 'Dataset title, from the registry\'s dataset export (joined on dataset key). Blank if the dataset is missing from the export. Hidden by default: show it from the Columns menu.',
+    type: 'Dataset type from the registry\'s dataset export, e.g. OCCURRENCE, CHECKLIST, SAMPLING_EVENT or METADATA. Blank if the dataset is missing from the export.',
+    sub_type: 'Dataset subtype from the registry\'s dataset export. Blank if the dataset has none or is missing from the export.' } },
+  { group: 'Identifiers step', file: 'verbatim-to-identifier.yml', cols: {
+    gbifIdRecordsCountAttempted: 'Total number of verbatim records read by the identifiers step.',
+    uniqueIdsCountAttempted: 'Records whose record ID is not shared with any other record in the dataset (gbifIdRecords minus duplicatedIds).',
+    validAndPersistedGbifIdCountAttempted: 'Records matched to an existing GBIF ID, with neither the GBIF_ID_INVALID nor the GBIF_ID_ABSENT issue.',
+    absentGbifIdCountAttempted: 'Records with no GBIF ID yet, flagged GBIF_ID_ABSENT. No existing identifier was found, so a new GBIF ID will need to be created.',
+    invalidGbifIdCountAttempted: 'Records with no GBIF ID, flagged GBIF_ID_INVALID. An identifier could not be determined for them.',
+    filteredGbifIdsCountAttempted: 'Identifier records left after removing the absent ones (identifier records minus absentGbifId).',
+    duplicatedIdsCountAttempted: 'Records whose record ID appears more than once in the dataset. Every copy is counted, not just the extra ones.' } },
+  { group: 'Archive conversion', file: 'archive-to-verbatim.yml', cols: {
+    archiveToErCount: 'Core records converted from the source archive into verbatim extended records.',
+    archiveToOccurrenceCount: 'Occurrence records in the archive, either as core rows or as rows of an Occurrence extension.',
+    archiveToLargestFileCount: 'Row count of the largest file in the archive (core, occurrence or any extension).' } },
+  { group: 'Interpretation', file: 'verbatim-to-occurrence.yml', cols: {
+    basicRecordsCount: 'Records interpreted. Currently set to the number of identifier records after identifiers were processed, so newly created GBIF IDs are included.',
+    uniqueGbifIdsCount: 'Unique GBIF IDs among interpreted records. Currently set to the same value as basicRecordsCount.' } },
+  { group: 'Table build', file: 'occurrence-to-hdfs.yml', cols: {
+    avroToHdfsCountAttempted: 'Row count (SELECT COUNT(*)) of the dataset\'s temporary Iceberg table built from the interpreted output.' } },
+  { group: 'Indexing', file: 'occurrence-to-index.yml', cols: {
+    parquetToJsonCountAttempted: 'Records written to the Elasticsearch occurrence index by the indexing step.' } },
+  { group: 'Live counts (optional)', cols: {
+    ElasticOccurrenceCount: 'Live record count for the dataset from the occurrence search API (Elasticsearch datasetKey facet). Only present when the report is run with --esCounts=true.',
+    IcebergOccurrenceCount: 'Live record count for the dataset in the occurrence table (count(*) grouped by datasetKey). Only present when the report is run with --icebergCounts=true.' } },
+];
+const COL_DOCS = Object.assign({}, ...HELP.map(g => g.cols));
+COL_DOCS[ES_OLD] = COL_DOCS[ES]; COL_DOCS[ICE_OLD] = COL_DOCS[ICE];
+function colDoc(h) {
+  if (COL_DOCS[h]) return COL_DOCS[h];
+  if (isExt(h)) return `Rows in the archive's ${shortName(h)} extension file, from archive-to-verbatim.yml (${h}). 0 when the dataset has no such extension, NOT_AVAILABLE when the attempt has no archive-to-verbatim.yml. Shown with "Show extensions".`;
+  return '';
+}
+
+function buildHelp() {
+  const item = (h, d) => `<dt>${esc(shortName(h))}${shortName(h) === h ? '' : `<code>${esc(h)}</code>`}</dt><dd>${esc(d)}</dd>`;
+  let html = '<p class="note">Values are read from the per-step metrics files of each dataset\'s latest attempt. <b>NOT_AVAILABLE</b> means that step\'s metrics file is missing for that attempt. Highlighted cells are counts that disagree for an active filter.</p>';
+  for (const g of HELP) {
+    html += `<h3>${esc(g.group)}${g.file ? ` · <code>${esc(g.file)}</code>` : ''}</h3><dl>`;
+    for (const [h, d] of Object.entries(g.cols)) html += item(h, d);
+    html += '</dl>';
+  }
+  const exts = headers.filter(isExt);
+  if (exts.length) html += `<h3>Extensions · <code>archive-to-verbatim.yml</code></h3><p class="note">Record counts per Darwin Core Archive extension (<code>extension_*</code> columns, shown with “Show extensions”). The column name is the extension's namespace and term, e.g. <code>rs_Multimedia</code>. 0 means the dataset has no such extension; NOT_AVAILABLE means the attempt has no archive-to-verbatim.yml.</p><dl>${exts.map(h => `<dt>${esc(shortName(h))}<code>${esc(h)}</code></dt>`).join('')}</dl>`;
+  const extra = headers.filter(h => !COL_DOCS[h] && !isExt(h));
+  if (extra.length) html += `<h3>Other columns in this file</h3><dl>${extra.map(h => item(h, 'No description available.')).join('')}</dl>`;
+  $('helpBody').innerHTML = html;
+}
+$('helpBtn').addEventListener('click', () => { buildHelp(); $('help').showModal(); });
+$('helpClose').addEventListener('click', () => $('help').close());
+$('help').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); }); // click on backdrop
+
+let qTimer = 0;
+$('q').addEventListener('input', e => {
+  clearTimeout(qTimer);
+  qTimer = setTimeout(() => { state.q = e.target.value.trim().toLowerCase(); writeURL(false); if (rows.length) applyFilters(); }, 200);
+});
+
+// ---------- URL state ----------
+// ?csv=<file>&filter=es,iceberg,es-iceberg&mode=or&ext=1&q=<text>&sort=<column>&dir=desc
+const FILTER_KEYS = ['es', 'iceberg', 'es-iceberg'];
+function readURL() {
+  const u = new URLSearchParams(location.search);
+  state.active = 0;
+  (u.get('filter') || '').split(',').forEach(k => { const f = FILTER_KEYS.indexOf(k.trim()); if (f >= 0) state.active |= 1 << f; });
+  state.mode = u.get('mode') === 'or' ? 'or' : 'and';
+  state.showExt = u.get('ext') === '1';
+  state.q = (u.get('q') || '').trim().toLowerCase();
+  state.sortName = u.get('sort') || '';
+  state.sortDir = u.get('dir') === 'desc' ? -1 : 1;
+  state.sortCol = state.sortName && headers.length ? headers.indexOf(state.sortName) : -1;
+  // sync controls
+  document.querySelectorAll('#filters .chip').forEach(b => b.setAttribute('aria-pressed', !!(state.active & (1 << +b.dataset.f))));
+  document.querySelectorAll('#mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === state.mode));
+  $('extBtn').setAttribute('aria-pressed', state.showExt);
+  $('q').value = u.get('q') || '';
+}
+function writeURL(push) {
+  const u = new URLSearchParams(location.search);
+  const set = (k, v) => v ? u.set(k, v) : u.delete(k);
+  set('filter', FILTER_KEYS.filter((_, f) => state.active & (1 << f)).join(','));
+  set('mode', state.mode === 'or' ? 'or' : '');
+  set('ext', state.showExt ? '1' : '');
+  u.delete('exclude');                                  // removed option, drop from old links
+  set('q', $('q').value.trim());
+  set('sort', state.sortName || '');
+  set('dir', state.sortName && state.sortDir < 0 ? 'desc' : '');
+  const qs = u.toString().replace(/%2C/g, ',');
+  const url = location.pathname + (qs ? '?' + qs : '') + location.hash;
+  if (url === location.pathname + location.search + location.hash) return;
+  history[push ? 'pushState' : 'replaceState'](null, '', url);
+}
+// back / forward restores the previous query state
+window.addEventListener('popstate', () => {
+  readURL();
+  if (thead) buildTable();                     // rebuild: the extension columns may have been toggled
+  if (rows.length) applyFilters();
+});
+
+readURL();
+loadDefault();
+</script>
+</body>
+</html>
