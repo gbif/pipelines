@@ -12,7 +12,7 @@ import org.gbif.pipelines.spark.DataPackageConversionPipeline;
 
 @Slf4j
 public class ValidatorDwcDpStageCallback
-    extends PipelinesCallback<DwcDpStageMessage, PipelineBasedMessage>
+    extends ValidatorCallback<DwcDpStageMessage, PipelineBasedMessage>
     implements CloseableMessageCallback<DwcDpStageMessage> {
 
   public ValidatorDwcDpStageCallback(
