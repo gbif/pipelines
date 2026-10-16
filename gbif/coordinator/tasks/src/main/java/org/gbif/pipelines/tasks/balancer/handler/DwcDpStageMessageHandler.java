@@ -59,7 +59,9 @@ public class DwcDpStageMessageHandler {
         m.getAttempt());
   }
 
-  /** Routes orchestrator-created stage messages without replacing their validator workflow steps. */
+  /**
+   * Routes orchestrator-created stage messages without replacing their validator workflow steps.
+   */
   public static void handleStage(MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
     DwcDpStageMessage stageMessage =
@@ -71,8 +73,7 @@ public class DwcDpStageMessageHandler {
   private static void publishStage(MessagePublisher publisher, DwcDpStageMessage message)
       throws IOException {
     boolean validator = isValidator(message.getPipelineSteps());
-    String routingKey =
-        (validator ? "validator." : "") + message.getRoutingKey() + STANDALONE;
+    String routingKey = (validator ? "validator." : "") + message.getRoutingKey() + STANDALONE;
 
     publisher.send(message, ExchangeType.OCCURRENCE.getValue(), routingKey);
     log.info(

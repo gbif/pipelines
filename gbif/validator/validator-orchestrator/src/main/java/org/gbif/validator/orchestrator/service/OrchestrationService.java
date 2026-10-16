@@ -12,8 +12,8 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.orchestrator.config.DagProperties;
-import org.gbif.validator.orchestrator.step.StepRegistry;
 import org.gbif.validator.orchestrator.step.JobContext;
+import org.gbif.validator.orchestrator.step.StepRegistry;
 import org.gbif.validator.orchestrator.workflow.DagWorkflowEngine;
 import org.gbif.validator.orchestrator.workflow.SequentialWorkflowEngine;
 import org.gbif.validator.orchestrator.workflow.ValidationWorkflowMapper;
@@ -112,8 +112,8 @@ public class OrchestrationService {
       if (action.kind() == WorkflowDecision.Kind.DISPATCH) {
         Object request = stepRegistry.require(action.step()).createRequest(validation);
         try {
-          request = stepRegistry.require(action.step()).adaptRequest(
-              request, jobContext(validation, 1));
+          request =
+              stepRegistry.require(action.step()).adaptRequest(request, jobContext(validation, 1));
         } catch (Exception exception) {
           throw new IOException("Failed to adapt request for " + action.step(), exception);
         }

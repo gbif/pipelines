@@ -32,7 +32,8 @@ class StepMessageAdapterTest {
             .adaptOutgoing((completion, metadata) -> metadata.datasetUuid().toString())
             .build();
 
-    assertEquals(context.datasetUuid().toString(),
+    assertEquals(
+        context.datasetUuid().toString(),
         registration.adaptOutgoing(mapper.createObjectNode(), context));
   }
 
@@ -51,8 +52,10 @@ class StepMessageAdapterTest {
     List<String> executions = new java.util.ArrayList<>();
     StepRegistration<JsonNode> registration =
         StepRegistration.builder(new DwcdpAnalysisStepDefinition())
-            .onJobProcessed(HookRegistration.required((validation, result) -> executions.add("first")))
-            .onJobProcessed(HookRegistration.required((validation, result) -> executions.add("second")))
+            .onJobProcessed(
+                HookRegistration.required((validation, result) -> executions.add("first")))
+            .onJobProcessed(
+                HookRegistration.required((validation, result) -> executions.add("second")))
             .build();
 
     registration.runHooks(null, mapper.createObjectNode(), (step, error) -> {});

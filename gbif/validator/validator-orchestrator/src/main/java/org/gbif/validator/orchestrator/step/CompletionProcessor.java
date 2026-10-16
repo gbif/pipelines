@@ -1,15 +1,12 @@
 package org.gbif.validator.orchestrator.step;
 
 import java.util.Comparator;
-import java.util.List;
-import org.gbif.api.model.pipelines.StepType;
 import java.util.Objects;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.orchestrator.service.OrchestrationService;
 import org.gbif.validator.orchestrator.workflow.ValidationWorkflowMapper;
-import org.gbif.validator.orchestrator.workflow.WorkflowChange;
 import org.gbif.validator.orchestrator.workflow.WorkflowEvent;
 import org.gbif.validator.orchestrator.workflow.WorkflowState;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -69,8 +66,8 @@ public final class CompletionProcessor {
     // message adaptation are executed only after the result has been persisted.
     WorkflowEvent event =
         result.successful() ? WorkflowEvent.completed(stepType) : WorkflowEvent.failed(stepType);
-    coordinator.handle(result.validationKey(), event,
-        registration.proposeChanges(validation, payload, reporter));
+    coordinator.handle(
+        result.validationKey(), event, registration.proposeChanges(validation, payload, reporter));
 
     JobContext context =
         new JobContext(
