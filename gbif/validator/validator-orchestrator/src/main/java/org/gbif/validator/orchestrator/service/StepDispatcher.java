@@ -30,6 +30,27 @@ public class StepDispatcher {
     publisher.send(payload, destination.getExchange(), destination.getRoutingKey());
   }
 
+  public boolean hasOutgoingDestination(StepType stepType) {
+    OrchestratorProperties.Destination destination = properties.requireStep(stepType).getOutgoing();
+    return destination != null
+        && !isBlank(destination.getExchange())
+        && !isBlank(destination.getRoutingKey());
+  }
+
+  public void dispatchOutgoing(StepType completedStep, Object payload) throws IOException {
+    Objects.requireNonNull(payload, "payload must not be null");
+    OrchestratorProperties.Destination destination =
+        properties.requireStep(completedStep).getOutgoing();
+
+    if (destination == null
+        || isBlank(destination.getExchange())
+        || isBlank(destination.getRoutingKey())) {
+      throw new IllegalStateException("Missing outgoing destination for step " + completedStep);
+    }
+
+    publisher.send(payload, destination.getExchange(), destination.getRoutingKey());
+  }
+
   private static boolean isBlank(String value) {
     return value == null || value.isBlank();
   }
