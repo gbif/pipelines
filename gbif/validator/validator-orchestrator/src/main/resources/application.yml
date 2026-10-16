@@ -17,6 +17,9 @@ orchestrator:
       request:
         exchange: ${DWCDP_REQUEST_EXCHANGE:occurrence}
         routing-key: ${DWCDP_REQUEST_ROUTING_KEY:validator.dwcdp.analysis}
+      outgoing:
+        exchange: ${DWCDP_HANDOFF_EXCHANGE:occurrence}
+        routing-key: ${DWCDP_HANDOFF_ROUTING_KEY:occurrence.pipelines.balancer}
       completion:
         exchange: ${DWCDP_COMPLETION_EXCHANGE:occurrence}
         routing-key: ${DWCDP_COMPLETION_ROUTING_KEY:validator.dwcdp.analysis.finished}
