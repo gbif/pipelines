@@ -13,6 +13,7 @@ import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.orchestrator.config.DagProperties;
 import org.gbif.validator.orchestrator.step.StepRegistry;
+import org.gbif.validator.orchestrator.step.JobContext;
 import org.gbif.validator.orchestrator.workflow.DagWorkflowEngine;
 import org.gbif.validator.orchestrator.workflow.SequentialWorkflowEngine;
 import org.gbif.validator.orchestrator.workflow.ValidationWorkflowMapper;
@@ -109,7 +110,14 @@ public class OrchestrationService {
     Map<StepType, Object> requests = new EnumMap<>(StepType.class);
     for (WorkflowDecision.Action action : actions) {
       if (action.kind() == WorkflowDecision.Kind.DISPATCH) {
-        requests.put(action.step(), stepRegistry.require(action.step()).createRequest(validation));
+        Object request = stepRegistry.require(action.step()).createRequest(validation);
+        try {
+          request = stepRegistry.require(action.step()).adaptRequest(
+              request, jobContext(validation, 1));
+        } catch (Exception exception) {
+          throw new IOException("Failed to adapt request for " + action.step(), exception);
+        }
+        requests.put(action.step(), request);
       }
     }
 
@@ -165,6 +173,24 @@ public class OrchestrationService {
         dispatcher.dispatch(action.step(), requests.get(action.step()));
       }
     }
+  }
+
+  private JobContext jobContext(Validation validation, int attempt) {
+    return new JobContext(
+        validation.getKey(),
+        attempt,
+        validation.getMetrics().getStepTypes().stream()
+            .sorted(java.util.Comparator.comparingInt(ValidationStep::getExecutionOrder))
+            .map(step -> StepType.valueOf(step.getStepType()))
+            .toList());
+  }
+
+  public boolean hasOutgoingDestination(StepType completedStep) {
+    return dispatcher.hasOutgoingDestination(completedStep);
+  }
+
+  public void publishOutgoing(StepType completedStep, Object message) throws IOException {
+    dispatcher.dispatchOutgoing(completedStep, message);
   }
 
   private WorkflowDecision evaluate(
