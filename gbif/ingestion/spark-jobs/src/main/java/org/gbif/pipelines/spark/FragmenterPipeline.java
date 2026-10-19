@@ -190,9 +190,9 @@ public class FragmenterPipeline {
           };
 
       Dataset<org.apache.spark.sql.Row> rawRecords =
-              convertToRawRecords(verbatim, supplier, useTriplet, useOccurrenceId)
-                      .toDF()
-                      .persist(StorageLevel.MEMORY_AND_DISK());
+          convertToRawRecords(verbatim, supplier, useTriplet, useOccurrenceId)
+              .toDF()
+              .persist(StorageLevel.MEMORY_AND_DISK());
 
       long recordCount = rawRecords.count();
       log.debug("Count: {}", rawRecords.count());
