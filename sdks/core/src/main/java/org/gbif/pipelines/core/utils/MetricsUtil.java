@@ -10,6 +10,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.pipelines.common.PipelinesException;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -68,8 +69,7 @@ public class MetricsUtil {
       }
       return result;
     } catch (Exception e) {
-      log.error("Failed to read metrics yaml from {}", fileName, e);
-      return Map.of();
+      throw new PipelinesException("Failed to read metrics yaml from " + fileName, e);
     }
   }
 

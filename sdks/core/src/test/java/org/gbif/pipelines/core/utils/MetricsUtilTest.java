@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.pipelines.common.PipelinesException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -42,9 +44,8 @@ class MetricsUtilTest {
     FileSystem fs = FileSystem.getLocal(new Configuration());
     String fileName = tempDir.resolve("does-not-exist.yml").toString();
 
-    Map<String, Long> read = MetricsUtil.readMetricsYaml(fs, fileName);
-
-    assertEquals(Map.of(), read);
+    Assertions.assertThrowsExactly(
+        PipelinesException.class, () -> MetricsUtil.readMetricsYaml(fs, fileName));
   }
 
   @Test

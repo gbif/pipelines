@@ -13,6 +13,7 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -163,11 +164,12 @@ public class DwcDpToVerbatimCallback
             + "/"
             + Pipeline.ARCHIVE_TO_VERBATIM
             + ".yml";
-    Map<String, Long> metrics = MetricsUtil.readMetricsYaml(fileSystem, metricsPath);
-    if (!metrics.containsKey(key)) {
+    try {
+      Map<String, Long> metrics = MetricsUtil.readMetricsYaml(fileSystem, metricsPath);
+      return metrics.get(key);
+    } catch (PipelinesException e) {
       log.warn("Metric {} not found in {} — defaulting to 0", key, metricsPath);
       return 0L;
     }
-    return metrics.get(key);
   }
 }
