@@ -56,8 +56,8 @@ import org.gbif.pipelines.spark.TableBuildPipeline;
  * {@code /tmp}).
  *
  * <p>Each row also has the dataset's {@code title}, {@code type} and {@code sub_type} (after the
- * attempt column), joined on dataset key from the registry's dataset export TSV.
- * They are blank for a dataset missing from the export.
+ * attempt column), joined on dataset key from the registry's dataset export TSV. They are blank for
+ * a dataset missing from the export.
  *
  * <p>The {@code extension_*} counts in {@value #ARCHIVE_TO_VERBATIM_FILENAME} (records per DwC-A
  * extension, e.g. {@code extension_rs_Multimedia}) vary by dataset, so the report has one column
