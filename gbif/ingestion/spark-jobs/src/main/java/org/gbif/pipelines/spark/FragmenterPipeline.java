@@ -39,6 +39,7 @@ import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.storage.StorageLevel;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.dwc.terms.DwcTerm;
@@ -66,6 +67,8 @@ public class FragmenterPipeline {
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
   private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
   public static final String FRAGMENT_COLUMN_FAMILY = "fragment";
+  public static final String FRAGMENT_DATASET_KEY_COLUMN = "datasetKey";
+  public static final String FRAGMENT_ATTEMPT_COLUMN = "attempt";
 
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {
@@ -187,9 +190,9 @@ public class FragmenterPipeline {
           };
 
       Dataset<org.apache.spark.sql.Row> rawRecords =
-          convertToRawRecords(verbatim, supplier, useTriplet, useOccurrenceId)
-              .toDF()
-              .orderBy("key");
+              convertToRawRecords(verbatim, supplier, useTriplet, useOccurrenceId)
+                      .toDF()
+                      .persist(StorageLevel.MEMORY_AND_DISK());
 
       long recordCount = rawRecords.count();
       log.debug("Count: {}", rawRecords.count());
@@ -204,6 +207,11 @@ public class FragmenterPipeline {
                     cells.add(
                         new Tuple2<>(
                             new Tuple2<>(record.getAs("key"), "attempt"), String.valueOf(attempt)));
+                    // lets the fragment table be counted per dataset (the row key is salt:gbifId)
+                    cells.add(
+                        new Tuple2<>(
+                            new Tuple2<>(record.getAs("key"), FRAGMENT_DATASET_KEY_COLUMN),
+                            datasetId));
                     cells.add(
                         new Tuple2<>(
                             new Tuple2<>(record.getAs("key"), "dateCreated"),
