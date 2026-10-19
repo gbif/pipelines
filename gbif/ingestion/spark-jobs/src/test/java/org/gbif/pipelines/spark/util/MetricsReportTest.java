@@ -66,7 +66,7 @@ public class MetricsReportTest {
             DATASET_B,
                 new MetricsReport.DatasetMetadata("Plants, \"B\"", "SAMPLING_EVENT", "INVENTORY"));
 
-    int rows = MetricsReport.writeReport(fs, config, reportPath, metadata, null, null, 2);
+    int rows = MetricsReport.writeReport(fs, config, reportPath, metadata, null, null, 2, 60);
 
     assertEquals(3, rows);
     // the .csv extension is replaced and the report gzipped
@@ -121,7 +121,8 @@ public class MetricsReportTest {
     Files.write(report.toPath(), "old report".getBytes(StandardCharsets.UTF_8));
     long modified = report.lastModified();
 
-    MetricsReport.writeReport(fs, config, new Path(report.getAbsolutePath()), null, null, null, 1);
+    MetricsReport.writeReport(
+        fs, config, new Path(report.getAbsolutePath()), null, null, null, 1, 60);
 
     File backup =
         new File(
@@ -132,6 +133,129 @@ public class MetricsReportTest {
                 + ".csv.gz");
     assertEquals("old report", Files.readString(backup.toPath()));
     assertEquals(2, readGzipLines(report).size());
+  }
+
+  @Test
+  public void indexListsLatestAndPreviousRuns() throws Exception {
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    File reportDir = tmp.newFolder("reports");
+    Path report = file(reportDir, "report.csv.gz", 1_000_000L);
+    File index = new File(reportDir, MetricsReport.INDEX_FILENAME);
+
+    // first run: nothing to back up
+    MetricsReport.updateIndex(fs, report, null, 2);
+    assertIndex(index, "report.csv.gz", ts(1_000_000L), List.of());
+
+    // each later run puts the renamed report at the front, keeping at most 2
+    MetricsReport.updateIndex(fs, report, file(reportDir, "report-1.csv.gz", 1_000L), 2);
+    MetricsReport.updateIndex(fs, report, file(reportDir, "report-2.csv.gz", 2_000L), 2);
+    assertIndex(
+        index,
+        "report.csv.gz",
+        ts(1_000_000L),
+        List.of(
+            new MetricsReport.PreviousRun("report-2.csv.gz", ts(2_000L)),
+            new MetricsReport.PreviousRun("report-1.csv.gz", ts(1_000L))));
+    MetricsReport.updateIndex(fs, report, file(reportDir, "report-3.csv.gz", 3_000L), 2);
+    assertIndex(
+        index,
+        "report.csv.gz",
+        ts(1_000_000L),
+        List.of(
+            new MetricsReport.PreviousRun("report-3.csv.gz", ts(3_000L)),
+            new MetricsReport.PreviousRun("report-2.csv.gz", ts(2_000L))));
+
+    // a differently named report keeps the previous latest, with its timestamp
+    Path other = file(reportDir, "other.csv.gz", 2_000_000L);
+    MetricsReport.updateIndex(fs, other, null, 2);
+    assertIndex(
+        index,
+        "other.csv.gz",
+        ts(2_000_000L),
+        List.of(
+            new MetricsReport.PreviousRun("report.csv.gz", ts(1_000_000L)),
+            new MetricsReport.PreviousRun("report-3.csv.gz", ts(3_000L))));
+  }
+
+  @Test
+  public void indexWithPlainFilenamesIsUpgraded() throws Exception {
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    File reportDir = tmp.newFolder("reports");
+    Files.writeString(
+        new File(reportDir, MetricsReport.INDEX_FILENAME).toPath(),
+        "{\"latest\": \"report.csv.gz\", \"previousRuns\": [\"report-1.csv.gz\"]}");
+    Path report = file(reportDir, "report.csv.gz", 5_000L);
+
+    MetricsReport.updateIndex(fs, report, file(reportDir, "report-2.csv.gz", 2_000L), 60);
+
+    assertIndex(
+        new File(reportDir, MetricsReport.INDEX_FILENAME),
+        "report.csv.gz",
+        ts(5_000L),
+        List.of(
+            new MetricsReport.PreviousRun("report-2.csv.gz", ts(2_000L)),
+            new MetricsReport.PreviousRun("report-1.csv.gz", null)));
+  }
+
+  @Test
+  public void writeReportUpdatesIndex() throws Exception {
+    File output = tmp.newFolder("output");
+    writeMetrics(
+        output, DATASET_A, IdentifiersPipeline.METRICS_FILENAME, "uniqueIdsCountAttempted: 5\n");
+    PipelinesConfig config = new PipelinesConfig();
+    config.setOutputPath(output.getAbsolutePath());
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    File reportDir = tmp.newFolder("reports");
+    File report = new File(reportDir, "report.csv.gz");
+    Path reportPath = new Path(report.getAbsolutePath());
+
+    MetricsReport.writeReport(fs, config, reportPath, null, null, null, 1, 60);
+    long modified = report.lastModified();
+    MetricsReport.writeReport(fs, config, reportPath, null, null, null, 1, 60);
+
+    String backup =
+        "report-"
+            + MetricsReport.BACKUP_SUFFIX_FORMAT.format(java.time.Instant.ofEpochMilli(modified))
+            + ".csv.gz";
+    assertIndex(
+        new File(reportDir, MetricsReport.INDEX_FILENAME),
+        "report.csv.gz",
+        ts(report.lastModified()),
+        List.of(new MetricsReport.PreviousRun(backup, ts(modified))));
+    assertTrue(new File(reportDir, backup).exists());
+  }
+
+  /** Creates a file with the given modification time. */
+  private static Path file(File dir, String name, long modified) throws IOException {
+    File file = new File(dir, name);
+    Files.writeString(file.toPath(), name);
+    assertTrue(file.setLastModified(modified));
+    return new Path(file.getAbsolutePath());
+  }
+
+  private static String ts(long millis) {
+    return MetricsReport.INDEX_TIMESTAMP_FORMAT.format(java.time.Instant.ofEpochMilli(millis));
+  }
+
+  private static void assertIndex(
+      File index,
+      String latest,
+      String latestTimestamp,
+      List<MetricsReport.PreviousRun> previousRuns)
+      throws IOException {
+    com.fasterxml.jackson.databind.JsonNode json =
+        new com.fasterxml.jackson.databind.ObjectMapper().readTree(index);
+    assertEquals(latest, json.path("latest").asText());
+    assertEquals(latestTimestamp, json.path("latestTimestamp").asText());
+    List<MetricsReport.PreviousRun> runs = new java.util.ArrayList<>();
+    json.path("previousRuns")
+        .forEach(
+            run ->
+                runs.add(
+                    new MetricsReport.PreviousRun(
+                        run.path("file").asText(),
+                        run.path("timestamp").isNull() ? null : run.path("timestamp").asText())));
+    assertEquals(previousRuns, runs);
   }
 
   @Test

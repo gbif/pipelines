@@ -10,8 +10,12 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -53,7 +57,9 @@ import org.gbif.pipelines.spark.TableBuildPipeline;
  * verbatim-to-identifier.yml} is used. Its metrics, plus those of the other step metrics files in
  * {@link #METRICS_FILES} from the same attempt (or NOT_AVAILABLE where a file is missing), are
  * written as one row of a gzipped CSV ({@value #REPORT_EXTENSION}) to HDFS (default directory
- * {@code /tmp}).
+ * {@code /tmp}). An existing report is first renamed with a timestamp, and an {@value
+ * #INDEX_FILENAME} in the same directory records the latest report and the previous runs (newest
+ * first, up to {@code --maxPreviousRuns}).
  *
  * <p>Each row also has the dataset's {@code title}, {@code type} and {@code sub_type} (after the
  * attempt column), joined on dataset key from the registry's dataset export TSV. They are blank for
@@ -82,7 +88,7 @@ public class MetricsReport {
   static final String ICEBERG_COUNT_COLUMN = "IcebergOccurrenceCount";
   static final String ES_FACET_PATH =
       "/occurrence/search?limit=0&facet=datasetKey&facetLimit=120000";
-  static final String DATASET_EXPORT_URL = "/dataset/search/export";
+  static final String DATASET_EXPORT_URL = "dataset/search/export";
   /** The report columns taken from the dataset export, in order, and the export column names. */
   static final List<String> DATASET_METADATA_COLUMNS = List.of("title", "type", "sub_type");
 
@@ -114,6 +120,18 @@ public class MetricsReport {
    */
   static final DateTimeFormatter BACKUP_SUFFIX_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").withZone(ZoneId.systemDefault());
+
+  /** Lists the latest report and previous runs, in the report directory. */
+  static final String INDEX_FILENAME = "index.json";
+
+  static final int DEFAULT_MAX_PREVIOUS_RUNS = 60;
+
+  /** ISO-8601 to the second, with the UTC offset, for the times in index.json. */
+  static final DateTimeFormatter INDEX_TIMESTAMP_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX").withZone(ZoneId.systemDefault());
+
+  /** A previous run in index.json: the report file and when it was written (null if unknown). */
+  record PreviousRun(String file, String timestamp) {}
 
   /** How often (in datasets) to log report-writing progress. */
   static final int PROGRESS_INTERVAL = 500;
@@ -214,6 +232,11 @@ public class MetricsReport {
             "Number of threads reading the metrics files from HDFS (the work is I/O bound, so this"
                 + " can be well above the number of cores)")
     private int threads = 20;
+
+    @Parameter(
+        names = "--maxPreviousRuns",
+        description = "Maximum number of previous runs listed in index.json")
+    private int maxPreviousRuns = DEFAULT_MAX_PREVIOUS_RUNS;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -274,7 +297,14 @@ public class MetricsReport {
     log.info("Step 4/4: scanning datasets and writing report to {}", reportPath);
     int rows =
         writeReport(
-            fileSystem, config, reportPath, datasetMetadata, esCounts, icebergCounts, args.threads);
+            fileSystem,
+            config,
+            reportPath,
+            datasetMetadata,
+            esCounts,
+            icebergCounts,
+            args.threads,
+            args.maxPreviousRuns);
     log.info(
         "Finished: wrote metrics for {} datasets to {} in {} s",
         rows,
@@ -511,6 +541,7 @@ public class MetricsReport {
    * @param esCounts datasetKey to Elasticsearch count, or null to omit the column
    * @param icebergCounts datasetKey to occurrence table count, or null to omit the column
    * @param threads number of threads reading the metrics files
+   * @param maxPreviousRuns maximum number of previous runs listed in index.json
    * @return the number of dataset rows written
    */
   public static int writeReport(
@@ -520,7 +551,8 @@ public class MetricsReport {
       Map<String, DatasetMetadata> datasetMetadata,
       Map<String, Long> esCounts,
       Map<String, Long> icebergCounts,
-      int threads)
+      int threads,
+      int maxPreviousRuns)
       throws IOException {
 
     Map<String, DatasetMetadata> metadata = datasetMetadata != null ? datasetMetadata : Map.of();
@@ -603,7 +635,7 @@ public class MetricsReport {
     }
     log.info("Found {} extension columns: {}", extensionColumns.size(), extensionColumns);
 
-    backupExistingReport(fileSystem, reportPath);
+    Path backupPath = backupExistingReport(fileSystem, reportPath);
 
     int rows = 0;
     try (FSDataOutputStream out = fileSystem.create(reportPath, false);
@@ -657,7 +689,87 @@ public class MetricsReport {
           ICEBERG_COUNT_COLUMN,
           icebergMissing);
     }
+
+    updateIndex(fileSystem, reportPath, backupPath, maxPreviousRuns);
     return rows;
+  }
+
+  /**
+   * Writes {@value #INDEX_FILENAME} next to the report: {@code latest} is the new report and {@code
+   * latestTimestamp} when it was written. The run it replaces goes to the front of {@code
+   * previousRuns} (each a {@code file} and {@code timestamp}), which is capped at {@code
+   * maxPreviousRuns}. The replaced run is the renamed report, or the previous {@code latest} when
+   * that was a differently named report (so wasn't renamed). Timestamps are the files' modification
+   * times. An unreadable index is replaced; plain filenames from an older index are kept with a
+   * null timestamp.
+   *
+   * @param backupPath the renamed previous report, or null if there was none
+   */
+  static void updateIndex(
+      FileSystem fileSystem, Path reportPath, Path backupPath, int maxPreviousRuns)
+      throws IOException {
+
+    ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    Path indexPath = new Path(reportPath.getParent(), INDEX_FILENAME);
+    String latest = reportPath.getName();
+
+    PreviousRun previousLatest = null;
+    List<PreviousRun> previousRuns = new java.util.ArrayList<>();
+    if (fileSystem.exists(indexPath)) {
+      try (InputStream in = fileSystem.open(indexPath)) {
+        JsonNode index = mapper.readTree(in);
+        if (index.path("latest").isTextual()) {
+          previousLatest =
+              new PreviousRun(index.path("latest").asText(), textOrNull(index, "latestTimestamp"));
+        }
+        for (JsonNode run : index.path("previousRuns")) {
+          if (run.isTextual()) {
+            previousRuns.add(new PreviousRun(run.asText(), null));
+          } else if (run.path("file").isTextual()) {
+            previousRuns.add(
+                new PreviousRun(run.path("file").asText(), textOrNull(run, "timestamp")));
+          }
+        }
+      } catch (IOException e) {
+        log.warn("Ignoring unreadable {}, writing a new one", indexPath, e);
+      }
+    }
+
+    if (previousLatest != null && !previousLatest.file().equals(latest)) {
+      previousRuns.add(0, previousLatest);
+    }
+    if (backupPath != null) {
+      previousRuns.add(
+          0, new PreviousRun(backupPath.getName(), modifiedTime(fileSystem, backupPath)));
+    }
+    // keep the first (newest) entry per file
+    Map<String, PreviousRun> byFile = new java.util.LinkedHashMap<>();
+    previousRuns.forEach(run -> byFile.putIfAbsent(run.file(), run));
+    byFile.remove(latest);
+    previousRuns = byFile.values().stream().limit(Math.max(0, maxPreviousRuns)).toList();
+
+    ObjectNode index = mapper.createObjectNode();
+    index.put("latest", latest);
+    index.put("latestTimestamp", modifiedTime(fileSystem, reportPath));
+    ArrayNode runs = index.putArray("previousRuns");
+    for (PreviousRun run : previousRuns) {
+      runs.addObject().put("file", run.file()).put("timestamp", run.timestamp());
+    }
+
+    try (FSDataOutputStream out = fileSystem.create(indexPath, true)) {
+      out.write(mapper.writeValueAsBytes(index));
+    }
+    log.info("Updated {}: latest {}, {} previous runs", indexPath, latest, previousRuns.size());
+  }
+
+  private static String textOrNull(JsonNode node, String field) {
+    return node.path(field).isTextual() ? node.path(field).asText() : null;
+  }
+
+  /** A file's modification time, formatted for index.json. */
+  private static String modifiedTime(FileSystem fileSystem, Path path) throws IOException {
+    long modified = fileSystem.getFileStatus(path).getModificationTime();
+    return INDEX_TIMESTAMP_FORMAT.format(Instant.ofEpochMilli(modified));
   }
 
   /**
@@ -679,11 +791,12 @@ public class MetricsReport {
    * <name>-<yyyy-MM-dd_HH-mm-ss>.csv.gz}, using the time it was last modified, so a new report
    * doesn't overwrite it.
    *
+   * @return the renamed report, or null if there was no existing report
    * @throws IOException if the rename fails (e.g. the backup name is already taken)
    */
-  static void backupExistingReport(FileSystem fileSystem, Path reportPath) throws IOException {
+  static Path backupExistingReport(FileSystem fileSystem, Path reportPath) throws IOException {
     if (!fileSystem.exists(reportPath)) {
-      return;
+      return null;
     }
     long modified = fileSystem.getFileStatus(reportPath).getModificationTime();
     String name = reportFilename(reportPath.getName());
@@ -699,6 +812,7 @@ public class MetricsReport {
           "Failed to back up existing report " + reportPath + " to " + backupPath);
     }
     log.info("Existing report {} renamed to {}", reportPath, backupPath);
+    return backupPath;
   }
 
   /** Builds the CSV row for one dataset. Thread safe: only reads from HDFS and the count maps. */
