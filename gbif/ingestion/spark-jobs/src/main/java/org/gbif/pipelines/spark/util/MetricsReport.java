@@ -242,7 +242,8 @@ public class MetricsReport {
 
     log.info("Step 1/4: fetching dataset metadata");
     Map<String, DatasetMetadata> datasetMetadata =
-        fetchDatasetMetadata(config.getGbifApi().getWsUrl() + DATASET_EXPORT_URL, config.getGbifApi());
+        fetchDatasetMetadata(
+            config.getGbifApi().getWsUrl() + DATASET_EXPORT_URL, config.getGbifApi());
 
     Map<String, Long> esCounts = null;
     if (args.esCounts) {
