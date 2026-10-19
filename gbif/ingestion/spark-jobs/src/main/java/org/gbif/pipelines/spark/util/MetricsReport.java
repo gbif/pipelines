@@ -56,9 +56,8 @@ import org.gbif.pipelines.spark.TableBuildPipeline;
  * {@code /tmp}).
  *
  * <p>Each row also has the dataset's {@code title}, {@code type} and {@code sub_type} (after the
- * attempt column), joined on dataset key from the registry's dataset export TSV ({@code
- * --datasetExportUrl}, default {@value #DATASET_EXPORT_URL}). They are blank for a dataset missing
- * from the export.
+ * attempt column), joined on dataset key from the registry's dataset export TSV.
+ * They are blank for a dataset missing from the export.
  *
  * <p>The {@code extension_*} counts in {@value #ARCHIVE_TO_VERBATIM_FILENAME} (records per DwC-A
  * extension, e.g. {@code extension_rs_Multimedia}) vary by dataset, so the report has one column
@@ -461,28 +460,6 @@ public class MetricsReport {
    */
   static void configIcebergSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
     TableBuildPipeline.configSparkSession(sparkBuilder, config);
-    sparkBuilder
-        .config(
-            "spark.sql.extensions",
-            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-        .config("spark.sql.catalog.spark_catalog", "org.apache.iceberg.spark.SparkSessionCatalog")
-        .config("spark.sql.catalog.spark_catalog.type", "hive")
-        .config("spark.jars.packages", "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.6.0")
-        .config("spark.sql.catalog.local.commit.retry.num-retries", 10)
-        .config("spark.sql.catalog.local.commit.retry.min-wait-ms", 100)
-        .config("spark.sql.catalog.local.commit.retry.max-wait-ms", 1000)
-        .config("spark.sql.catalog.local.type", "hadoop")
-        .config("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog")
-        .config("spark.sql.catalog.spark_catalog", "org.apache.iceberg.spark.SparkSessionCatalog")
-        .config(
-            "spark.sql.extensions",
-            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-        // the default catalog must be defined, or Spark fails with CatalogNotFoundException
-        .config("spark.sql.catalog.iceberg", "org.apache.iceberg.spark.SparkCatalog")
-        .config("spark.sql.catalog.iceberg.type", "hive")
-        .config("spark.sql.defaultCatalog", "iceberg")
-        .config("spark.sql.sources.partitionOverwriteMode", "dynamic");
-
     if (config.getHiveMetastoreUris() != null) {
       sparkBuilder.config("spark.sql.catalog.spark_catalog.uri", config.getHiveMetastoreUris());
       sparkBuilder.config("spark.sql.catalog.iceberg.uri", config.getHiveMetastoreUris());
