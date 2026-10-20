@@ -373,7 +373,7 @@ public class OccurrenceInterpretationPipeline {
     // interpret DNA taxonomy
     Dataset<TaxonRecord> dnaTaxonRecords = spark.emptyDataset(Encoders.bean(TaxonRecord.class));
     if (config.getDnaConfig().isEnableDnaTaxonInterpretation()) {
-      dnaTaxonRecords = interpretDnaTaxonAndSave(spark, interpreted, config, DNA_TAXON);
+      dnaTaxonRecords = interpretDnaTaxonAndSave(spark, interpreted, config, outputPath);
     }
 
     // FIXME move to configuration
