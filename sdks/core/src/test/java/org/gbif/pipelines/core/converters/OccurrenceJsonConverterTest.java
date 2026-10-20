@@ -394,6 +394,17 @@ public class OccurrenceJsonConverterTest {
             .setDiagnostics(diagnostic)
             .build();
 
+    TaxonRecord dnaTaxonRecord =
+        TaxonRecord.newBuilder()
+            .setId("777")
+            .setDatasetKey("dna-dataset-key")
+            .setAcceptedUsage(au)
+            .setClassification(rankedNameList)
+            .setUsage(synonym)
+            .setSynonym(true)
+            .setDiagnostics(diagnostic)
+            .build();
+
     // grscicoll
     Match institutionMatch =
         Match.newBuilder()
@@ -485,7 +496,9 @@ public class OccurrenceJsonConverterTest {
             .verbatim(er)
             .temporal(tmr)
             .location(lr)
-            .multiTaxon(MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(tr)).build())
+            .multiTaxon(
+                MultiTaxonRecord.newBuilder().setTaxonRecords(new ArrayList<>(List.of(tr))).build())
+            .dnaTaxonRecord(dnaTaxonRecord)
             .grscicoll(gr)
             .multimedia(mmr)
             .dnaDerivedData(dnar)
@@ -699,6 +712,13 @@ public class OccurrenceJsonConverterTest {
     JsonNode dnaSequenceID = result.path("dnaSequenceID");
     assertEquals(2, dnaSequenceID.size());
     dnaSequenceID.forEach(n -> assertFalse(Strings.isNullOrEmpty(n.asText())));
+
+    assertTrue(result.path("classifications").has(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY));
+    assertTrue(result.path("classifications").has("dna-dataset-key"));
+    assertEquals(2, result.path("checklistKey").size());
+    assertEquals(
+        OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY, result.path("checklistKey").get(0).asText());
+    assertEquals("dna-dataset-key", result.path("checklistKey").get(1).asText());
   }
 
   @Test

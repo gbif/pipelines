@@ -16,6 +16,7 @@ package org.gbif.pipelines.spark;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.OccurrenceInterpretationPipeline.*;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
+import static org.gbif.pipelines.spark.util.SequenceClassifierUtils.loadDnaTaxonRecords;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 
@@ -108,14 +109,16 @@ public class TaxonomyRefreshPipeline {
     Dataset<Occurrence> interpreted =
         runTaxonomyTransform(spark, config, simpleRecords, outputPath);
 
+    Dataset<TaxonRecord> dnaTaxon = loadDnaTaxonRecords(spark, config, outputPath);
+
     // write parquet for elastic
-    toJson(interpreted, metadata, numOfShards)
+    toJson(interpreted, dnaTaxon, metadata, numOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_JSON);
 
     // write parquet for hdfs view
-    toHdfs(config, interpreted, metadata, numOfShards)
+    toHdfs(config, interpreted, dnaTaxon, metadata, numOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);

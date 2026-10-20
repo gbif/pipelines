@@ -48,6 +48,8 @@ public interface Directories {
   String SIMPLE_OCCURRENCE_REFRESH_TEMP = "simple_occurrence_refresh_temp";
   /** Directory for extended verbatim files after filtering out records with missing core ID */
   String VERBATIM_EXT_FILTERED = "verbatim_ext_filtered";
+  /** Directory for dna taxon records stored as parquet files */
+  String DNA_TAXON = "dna_taxon";
 
   /**
    * Directory for extended verbatim files for events after filtering out records in extensions that
