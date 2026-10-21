@@ -605,6 +605,7 @@ public class OccurrenceHdfsRecordConverterTest {
     taxonRecord.setClassification(classification);
     taxonRecord.setUsageParsedName(parsedName);
     taxonRecord.setNomenclature(Nomenclature.newBuilder().setSource("nothing").build());
+    taxonRecord.setEnvironments(List.of("MARINE", "BRACKISH"));
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
@@ -615,6 +616,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .convert();
 
     // Should
+    Assert.assertEquals(List.of("MARINE", "BRACKISH"), hdfsRecord.getEnvironments());
     Assert.assertEquals("Archaea", hdfsRecord.getKingdom());
     Assert.assertEquals(String.valueOf(2), hdfsRecord.getKingdomkey());
 

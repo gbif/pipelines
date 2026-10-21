@@ -398,6 +398,8 @@ public class JsonConverter {
                     taxon.getClassification(), org.gbif.pipelines.io.avro.RankedName::getKey))
             .setTaxonKeys(JsonConverter.convertTaxonKey(taxon))
             .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
+            .setEnvironments(
+                taxon.getEnvironments() != null ? taxon.getEnvironments() : Collections.emptyList())
             .setUsage(JsonConverter.buildUsage(taxon, false).orElse(null))
             .setStatus(taxon.getUsage() != null ? taxon.getUsage().getStatus() : null)
             .setAcceptedUsage(JsonConverter.buildUsage(taxon, true).orElse(null));
