@@ -101,7 +101,7 @@ public class TaxonomyDnaPipeline {
     long start = System.currentTimeMillis();
 
     ThreadContext.put("datasetKey", datasetId);
-    log.info("Starting taxonomy refresh");
+    log.info("Starting DNA taxonomy interpretation");
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
