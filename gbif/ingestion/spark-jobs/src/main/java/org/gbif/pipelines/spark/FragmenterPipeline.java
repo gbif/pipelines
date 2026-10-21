@@ -2,6 +2,8 @@ package org.gbif.pipelines.spark;
 
 import static org.gbif.pipelines.core.utils.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.spark.ArgsConstants.OCCURRENCE_ID_VALID_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.TRIPLET_VALID_ARG;
 import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
@@ -39,6 +41,7 @@ import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.storage.StorageLevel;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.dwc.terms.DwcTerm;
@@ -66,19 +69,24 @@ public class FragmenterPipeline {
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
   private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
   public static final String FRAGMENT_COLUMN_FAMILY = "fragment";
+  public static final String FRAGMENT_DATASET_KEY_COLUMN = "datasetKey";
+  public static final String FRAGMENT_ATTEMPT_COLUMN = "attempt";
+  private static final String FRAGMENT_DATE_CREATED_COLUMN = "dateCreated";
+  private static final String FRAGMENT_PROTOCOL_COLUMN = "protocol";
+  private static final String FRAGMENT_RECORD_COLUMN = "record";
 
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
-        names = "--tripletValid",
+        names = TRIPLET_VALID_ARG,
         description = "DWCA validation from crawler, all triplets are unique",
         required = false,
         arity = 1)
     private boolean tripletValid = false;
 
     @Parameter(
-        names = "--occurrenceIdValid",
+        names = OCCURRENCE_ID_VALID_ARG,
         description = "DWCA validation from crawler, all occurrenceIds are unique",
         required = false,
         arity = 1)
@@ -189,76 +197,85 @@ public class FragmenterPipeline {
       Dataset<org.apache.spark.sql.Row> rawRecords =
           convertToRawRecords(verbatim, supplier, useTriplet, useOccurrenceId)
               .toDF()
-              .orderBy("key");
+              .persist(StorageLevel.MEMORY_AND_DISK());
 
-      long recordCount = rawRecords.count();
-      log.debug("Count: {}", rawRecords.count());
+      try {
+        long recordCount = rawRecords.count();
+        log.debug("Count: {}", rawRecords.count());
 
-      // write hfiles
-      JavaPairRDD<Tuple2<String, String>, String> hbaseKvs =
-          rawRecords
-              .javaRDD()
-              .flatMapToPair(
-                  record -> {
-                    List<Tuple2<Tuple2<String, String>, String>> cells = new ArrayList<>();
-                    cells.add(
-                        new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), "attempt"), String.valueOf(attempt)));
-                    cells.add(
-                        new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), "dateCreated"),
-                            ((Long) record.getAs("createdDate")).toString()));
-                    cells.add(
-                        new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), "protocol"),
-                            EndpointType.DWC_ARCHIVE.name()));
-                    cells.add(
-                        new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), "record"),
-                            record.getAs("recordBody")));
-                    return cells.iterator();
-                  })
-              .repartitionAndSortWithinPartitions(
-                  new SaltPrefixPartitioner(2), // 0..99 salt prefix to align with HBase regions
-                  new Tuple2StringComparator());
+        // write hfiles
+        JavaPairRDD<Tuple2<String, String>, String> hbaseKvs =
+            rawRecords
+                .javaRDD()
+                .flatMapToPair(
+                    record -> {
+                      List<Tuple2<Tuple2<String, String>, String>> cells = new ArrayList<>();
+                      cells.add(
+                          new Tuple2<>(
+                              new Tuple2<>(record.getAs("key"), FRAGMENT_ATTEMPT_COLUMN),
+                              String.valueOf(attempt)));
+                      cells.add(
+                          new Tuple2<>(
+                              new Tuple2<>(record.getAs("key"), FRAGMENT_DATASET_KEY_COLUMN),
+                              datasetId));
+                      cells.add(
+                          new Tuple2<>(
+                              new Tuple2<>(record.getAs("key"), FRAGMENT_DATE_CREATED_COLUMN),
+                              ((Long) record.getAs("createdDate")).toString()));
+                      cells.add(
+                          new Tuple2<>(
+                              new Tuple2<>(record.getAs("key"), FRAGMENT_PROTOCOL_COLUMN),
+                              EndpointType.DWC_ARCHIVE.name()));
+                      cells.add(
+                          new Tuple2<>(
+                              new Tuple2<>(record.getAs("key"), FRAGMENT_RECORD_COLUMN),
+                              record.getAs("recordBody")));
+                      return cells.iterator();
+                    })
+                .repartitionAndSortWithinPartitions(
+                    new SaltPrefixPartitioner(2), // 0..99 salt prefix to align with HBase regions
+                    new Tuple2StringComparator());
 
-      cleanHdfsPath(fileSystem, config, outputPath);
-      String hfilePath = outputPath + "/" + config.getFragmentHfilePath();
+        cleanHdfsPath(fileSystem, config, outputPath);
+        String hfilePath = outputPath + "/" + config.getFragmentHfilePath();
 
-      Job job = Job.getInstance(hbaseConf);
-      job.setMapOutputKeyClass(ImmutableBytesWritable.class);
-      job.setMapOutputValueClass(org.apache.hadoop.hbase.KeyValue.class);
-      HFileOutputFormat2.configureIncrementalLoad(job, table, regionLocator);
+        Job job = Job.getInstance(hbaseConf);
+        job.setMapOutputKeyClass(ImmutableBytesWritable.class);
+        job.setMapOutputValueClass(org.apache.hadoop.hbase.KeyValue.class);
+        HFileOutputFormat2.configureIncrementalLoad(job, table, regionLocator);
 
-      hbaseKvs
-          .mapToPair(
-              cell -> {
-                ImmutableBytesWritable k = new ImmutableBytesWritable(Bytes.toBytes(cell._1._1));
-                Cell row =
-                    new KeyValue(
-                        Bytes.toBytes(cell._1._1), // key
-                        Bytes.toBytes(FRAGMENT_COLUMN_FAMILY), // column family
-                        Bytes.toBytes(cell._1._2), // cell
-                        Bytes.toBytes(cell._2) // cell value
-                        );
-                return new Tuple2<>(k, row);
-              })
-          .saveAsNewAPIHadoopFile(
-              hfilePath,
-              ImmutableBytesWritable.class,
-              KeyValue.class,
-              HFileOutputFormat2.class,
-              hbaseConf);
+        hbaseKvs
+            .mapToPair(
+                cell -> {
+                  ImmutableBytesWritable k = new ImmutableBytesWritable(Bytes.toBytes(cell._1._1));
+                  Cell row =
+                      new KeyValue(
+                          Bytes.toBytes(cell._1._1), // key
+                          Bytes.toBytes(FRAGMENT_COLUMN_FAMILY), // column family
+                          Bytes.toBytes(cell._1._2), // cell
+                          Bytes.toBytes(cell._2) // cell value
+                          );
+                  return new Tuple2<>(k, row);
+                })
+            .saveAsNewAPIHadoopFile(
+                hfilePath,
+                ImmutableBytesWritable.class,
+                KeyValue.class,
+                HFileOutputFormat2.class,
+                hbaseConf);
 
-      LoadIncrementalHFiles loader = new LoadIncrementalHFiles(hbaseConf);
-      loader.doBulkLoad(new Path(hfilePath), admin, table, regionLocator);
+        LoadIncrementalHFiles loader = new LoadIncrementalHFiles(hbaseConf);
+        loader.doBulkLoad(new Path(hfilePath), admin, table, regionLocator);
 
-      writeMetricsYaml(
-          fileSystem,
-          Map.of("fragmenterRecordsCountAttempted", recordCount),
-          outputPath + "/" + METRICS_FILENAME);
+        writeMetricsYaml(
+            fileSystem,
+            Map.of("fragmenterRecordsCountAttempted", recordCount),
+            outputPath + "/" + METRICS_FILENAME);
 
-      log.info(timeAndRecPerSecond("fragmenter", start, recordCount));
+        log.info(timeAndRecPerSecond("fragmenter", start, recordCount));
+      } finally {
+        rawRecords.unpersist();
+      }
     } catch (Exception e) {
       log.error("Error during fragmenter: {}", e.getMessage(), e);
       throw e;

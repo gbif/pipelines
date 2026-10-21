@@ -1,5 +1,7 @@
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.spark.ArgsConstants.*;
+
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
@@ -26,9 +28,10 @@ public class IdentifierDistributedCallback extends IdentifierCallback {
         pipelinesConfig.getAirflowConfig().identifierDag,
         StepType.VERBATIM_TO_IDENTIFIER,
         List.of(
-            "--tripletValid=" + message.getValidationResult().isTripletValid(),
-            "--occurrenceIdValid=" + message.getValidationResult().isOccurrenceIdValid(),
-            "--useExtendedRecordId="
+            TRIPLET_VALID_ARG + "=" + message.getValidationResult().isTripletValid(),
+            OCCURRENCE_ID_VALID_ARG + "=" + message.getValidationResult().isOccurrenceIdValid(),
+            USE_EXTENDED_RECORD_ID_ARG
+                + "="
                 + (message.getValidationResult().getUseExtendedRecordId() != null
                     ? message.getValidationResult().getUseExtendedRecordId()
                     : false)));
