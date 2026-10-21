@@ -72,21 +72,21 @@ public class IdentifiersPipeline {
   private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
-        names = "--tripletValid",
+        names = TRIPLET_VALID_ARG,
         description = "DWCA validation from crawler, all triplets are unique",
         required = false,
         arity = 1)
     private boolean tripletValid = false;
 
     @Parameter(
-        names = "--occurrenceIdValid",
+        names = OCCURRENCE_ID_VALID_ARG,
         description = "DWCA validation from crawler, all occurrenceIds are unique",
         required = false,
         arity = 1)
     private boolean occurrenceIdValid = true;
 
     @Parameter(
-        names = "--useExtendedRecordId",
+        names = USE_EXTENDED_RECORD_ID_ARG,
         description = "Skips gbif id generation and copies ids from ExtendedRecord ids",
         required = false,
         arity = 1)
