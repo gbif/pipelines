@@ -2,6 +2,8 @@ package org.gbif.pipelines.spark;
 
 import static org.gbif.pipelines.core.utils.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.spark.ArgsConstants.OCCURRENCE_ID_VALID_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.TRIPLET_VALID_ARG;
 import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
@@ -74,14 +76,14 @@ public class FragmenterPipeline {
   private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
-        names = "--tripletValid",
+        names = TRIPLET_VALID_ARG,
         description = "DWCA validation from crawler, all triplets are unique",
         required = false,
         arity = 1)
     private boolean tripletValid = false;
 
     @Parameter(
-        names = "--occurrenceIdValid",
+        names = OCCURRENCE_ID_VALID_ARG,
         description = "DWCA validation from crawler, all occurrenceIds are unique",
         required = false,
         arity = 1)
