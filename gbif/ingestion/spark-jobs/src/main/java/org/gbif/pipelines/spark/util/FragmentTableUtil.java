@@ -35,9 +35,9 @@ public final class FragmentTableUtil {
   }
 
   /**
-   * Configuration for a {@link TableInputFormat} scan of the fragment table reading only the
-   * datasetKey and attempt columns (never the large record column). Rows with neither column are
-   * not returned by such a scan.
+   * Configuration for a {@link TableInputFormat} scan of the fragment table reading datasetKey,
+   * attempt and protocol (never the large record column). Reading protocol also includes fragment
+   * rows where both datasetKey and attempt are missing.
    */
   public static Configuration scanConfiguration(PipelinesConfig config) {
     Configuration hbaseConf = hbaseConfiguration(config);
@@ -51,7 +51,10 @@ public final class FragmentTableUtil {
             + " "
             + family
             + ":"
-            + FragmenterPipeline.FRAGMENT_ATTEMPT_COLUMN);
+            + FragmenterPipeline.FRAGMENT_ATTEMPT_COLUMN
+            + " "
+            + family
+            + ":protocol");
     hbaseConf.set(TableInputFormat.SCAN_CACHEDROWS, "10000");
     hbaseConf.set(TableInputFormat.SCAN_CACHEBLOCKS, "false");
     return hbaseConf;
