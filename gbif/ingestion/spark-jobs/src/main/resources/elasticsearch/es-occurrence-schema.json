@@ -248,6 +248,14 @@
       }
     },
     {
+      "classifications_environments": {
+        "path_match": "classifications.*.environments",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
       "classifications_issues": {
         "path_match": "classifications.*.issues",
         "mapping": {
