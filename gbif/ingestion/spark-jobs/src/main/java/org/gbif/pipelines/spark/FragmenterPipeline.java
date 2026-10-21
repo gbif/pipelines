@@ -211,7 +211,8 @@ public class FragmenterPipeline {
                     List<Tuple2<Tuple2<String, String>, String>> cells = new ArrayList<>();
                     cells.add(
                         new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), FRAGMENT_ATTEMPT_COLUMN), String.valueOf(attempt)));
+                            new Tuple2<>(record.getAs("key"), FRAGMENT_ATTEMPT_COLUMN),
+                            String.valueOf(attempt)));
                     cells.add(
                         new Tuple2<>(
                             new Tuple2<>(record.getAs("key"), FRAGMENT_DATASET_KEY_COLUMN),
