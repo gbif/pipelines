@@ -263,8 +263,8 @@ public class FragmenterPipeline {
                 HFileOutputFormat2.class,
                 hbaseConf);
 
-      BulkLoadHFiles.create(hbaseConf)
-          .bulkLoad(TableName.valueOf(config.getFragmentsTable()), new Path(hfilePath));
+        BulkLoadHFiles.create(hbaseConf)
+            .bulkLoad(TableName.valueOf(config.getFragmentsTable()), new Path(hfilePath));
 
         writeMetricsYaml(
             fileSystem,
