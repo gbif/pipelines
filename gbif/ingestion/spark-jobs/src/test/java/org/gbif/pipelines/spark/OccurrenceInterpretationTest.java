@@ -38,7 +38,6 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.*;
@@ -120,25 +119,6 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     OccurrenceInterpretationPipeline.runInterpretation(
         spark, fileSystem, config, testUuid, attempt, 1, false, true, null);
 
-    assertParquetExists(basePath, testUuid, attempt, Directories.DNA_TAXON);
-    Dataset<TaxonRecord> dnaTaxon =
-        spark
-            .read()
-            .parquet(
-                java.nio.file.Path.of(basePath)
-                    .resolve(testUuid)
-                    .resolve(String.valueOf(attempt))
-                    .resolve(Directories.DNA_TAXON)
-                    .toString())
-            .as(Encoders.bean(TaxonRecord.class));
-
-    List<TaxonRecord> records = dnaTaxon.collectAsList();
-    assertEquals(1, records.size());
-    assertEquals("1", records.get(0).getId());
-    assertEquals("Panthera leo (Linnaeus, 1758)", records.get(0).getUsage().getName());
-    String dnaDatasetKey = records.get(0).getDatasetKey();
-    assertTrue(dnaDatasetKey.endsWith("_dna_assisted"));
-
     java.nio.file.Path jsonDir =
         java.nio.file.Path.of(basePath)
             .resolve(testUuid)
@@ -149,7 +129,13 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     List<String> jsonPayloads = jsonRecords.toJSON().collectAsList();
     assertEquals(1, jsonPayloads.size());
     String json = jsonPayloads.get(0);
-    assertTrue(JsonPath.<List<String>>read(json, "$.checklistKey").contains(dnaDatasetKey));
+
+    String dnaDatasetKey =
+        JsonPath.<List<String>>read(json, "$.checklistKey").stream()
+            .filter(key -> key.endsWith("_dna_assisted"))
+            .findFirst()
+            .orElse(null);
+    assertTrue(dnaDatasetKey != null);
     assertTrue(JsonPath.read(json, "$.classifications").toString().contains(dnaDatasetKey));
     assertEquals(
         "Panthera leo (Linnaeus, 1758)",
@@ -165,7 +151,10 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     List<OccurrenceHdfsRecord> hdfsOutput = hdfsRecords.collectAsList();
     assertEquals(1, hdfsOutput.size());
     OccurrenceHdfsRecord hdfsRecord = hdfsOutput.get(0);
-    assertTrue(hdfsRecord.getChecklistkey().contains(dnaDatasetKey));
+    assertTrue(
+        hdfsRecord.getChecklistkey().stream()
+            .map(Object::toString)
+            .anyMatch(dnaDatasetKey::equals));
     assertTrue(hdfsRecord.getClassifications().containsKey(dnaDatasetKey));
     assertFalse(hdfsRecord.getClassifications().get(dnaDatasetKey).isEmpty());
   }

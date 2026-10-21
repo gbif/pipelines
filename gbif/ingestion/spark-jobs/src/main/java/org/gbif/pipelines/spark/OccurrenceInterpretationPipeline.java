@@ -20,8 +20,6 @@ import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
-import static org.gbif.pipelines.spark.util.SequenceClassifierUtils.interpretDnaTaxonAndSave;
-import static org.gbif.pipelines.spark.util.SequenceClassifierUtils.loadDnaTaxonRecords;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 
@@ -192,8 +190,7 @@ public class OccurrenceInterpretationPipeline {
     final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
-    Dataset<TaxonRecord> dnaTaxon = loadDnaTaxonRecords(spark, config, outputPath);
-    generateOutputs(spark, config, numberOfShards, interpreted, dnaTaxon, metadata, outputPath);
+    generateOutputs(spark, config, numberOfShards, interpreted, metadata, outputPath);
   }
 
   public static void regenJsonOutput(
@@ -208,10 +205,8 @@ public class OccurrenceInterpretationPipeline {
 
     Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
 
-    Dataset<TaxonRecord> dnaTaxon = loadDnaTaxonRecords(spark, config, outputPath);
-
     sparkLog(spark, "toJson", "Writing JSON output");
-    toJson(interpreted, dnaTaxon, metadata, numberOfShards)
+    toJson(interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_JSON);
@@ -228,11 +223,10 @@ public class OccurrenceInterpretationPipeline {
     final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
-    Dataset<TaxonRecord> dnaTaxon = loadDnaTaxonRecords(spark, config, outputPath);
 
     // write parquet for hdfs view
     sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(config, interpreted, dnaTaxon, metadata, numberOfShards)
+    toHdfs(config, interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -241,18 +235,19 @@ public class OccurrenceInterpretationPipeline {
   public static void interpretDnaTaxonomyAndRegenOutput(
       SparkSession spark,
       PipelinesConfig config,
+      FileSystem fs,
       String datasetId,
       int attempt,
-      int numberOfShards) {
+      int numberOfShards)
+      throws Exception {
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
-    Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
-    Dataset<TaxonRecord> dnaTaxon =
-        interpretDnaTaxonAndSave(spark, interpreted, config, outputPath);
+    Dataset<Occurrence> interpreted =
+        TaxonomyDnaPipeline.runDnaTaxonomy(spark, fs, config, datasetId, attempt);
 
-    generateOutputs(spark, config, numberOfShards, interpreted, dnaTaxon, metadata, outputPath);
+    generateOutputs(spark, config, numberOfShards, interpreted, metadata, outputPath);
   }
 
   /** Helper to load the simple interpreted occurrences from disk. */
@@ -268,19 +263,18 @@ public class OccurrenceInterpretationPipeline {
       PipelinesConfig config,
       int numberOfShards,
       Dataset<Occurrence> interpreted,
-      Dataset<TaxonRecord> dnaTaxonRecords,
       MetadataRecord metadata,
       String outputPath) {
     // write parquet for elastic
     sparkLog(spark, "toJson", "Writing JSON output");
-    toJson(interpreted, dnaTaxonRecords, metadata, numberOfShards)
+    toJson(interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_JSON);
 
     // write parquet for hdfs view
     sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(config, interpreted, dnaTaxonRecords, metadata, numberOfShards)
+    toHdfs(config, interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -371,9 +365,8 @@ public class OccurrenceInterpretationPipeline {
         runTransforms(spark, config, simpleRecords, metadata, outputPath);
 
     // interpret DNA taxonomy
-    Dataset<TaxonRecord> dnaTaxonRecords = spark.emptyDataset(Encoders.bean(TaxonRecord.class));
     if (config.getDnaConfig().isEnableDnaTaxonInterpretation()) {
-      dnaTaxonRecords = interpretDnaTaxonAndSave(spark, interpreted, config, outputPath);
+      interpreted = TaxonomyDnaPipeline.runDnaTaxonomy(spark, fs, config, datasetId, attempt);
     }
 
     // FIXME move to configuration
@@ -385,8 +378,7 @@ public class OccurrenceInterpretationPipeline {
     }
 
     // write parquet for elastic
-    generateOutputs(
-        spark, config, numberOfOutputShards, interpreted, dnaTaxonRecords, metadata, outputPath);
+    generateOutputs(spark, config, numberOfOutputShards, interpreted, metadata, outputPath);
 
     // cleanup intermediate parquet outputs
     HdfsConfigs hdfsConfigs =
@@ -439,7 +431,7 @@ public class OccurrenceInterpretationPipeline {
         return true;
       case DNA_TAXONOMY:
         log.info("Running DNA taxonomy reinterpretation and output regeneration");
-        interpretDnaTaxonomyAndRegenOutput(spark, config, datasetId, attempt, numberOfShards);
+        interpretDnaTaxonomyAndRegenOutput(spark, config, fs, datasetId, attempt, numberOfShards);
         return true;
       default:
         return false;
@@ -802,54 +794,39 @@ public class OccurrenceInterpretationPipeline {
   }
 
   public static Dataset<Row> toJson(
-      Dataset<Occurrence> occurrences,
-      Dataset<TaxonRecord> dnaTaxonRecords,
-      MetadataRecord metadataRecord,
-      int numOfShards) {
+      Dataset<Occurrence> records, MetadataRecord metadataRecord, int numOfShards) {
 
     Dataset<OccurrenceJsonRecord> dataset =
-        occurrences
-            .joinWith(
-                dnaTaxonRecords, occurrences.col("id").equalTo(dnaTaxonRecords.col("id")), "left")
-            .map(
-                (MapFunction<Tuple2<Occurrence, TaxonRecord>, OccurrenceJsonRecord>)
-                    pair -> {
-                      Occurrence occurrence = pair._1();
-                      TaxonRecord dnaTaxonRecord = pair._2();
+        records.map(
+            (MapFunction<Occurrence, OccurrenceJsonRecord>)
+                record -> {
+                  OccurrenceJsonConverter c =
+                      OccurrenceJsonConverter.builder()
+                          .metadata(metadataRecord)
+                          .verbatim(MAPPER.readValue(record.getVerbatim(), ExtendedRecord.class))
+                          .basic(MAPPER.readValue(record.getBasic(), BasicRecord.class))
+                          .location(MAPPER.readValue(record.getLocation(), LocationRecord.class))
+                          .temporal(MAPPER.readValue(record.getTemporal(), TemporalRecord.class))
+                          .multiTaxon(MAPPER.readValue(record.getTaxon(), MultiTaxonRecord.class))
+                          .grscicoll(MAPPER.readValue(record.getGrscicoll(), GrscicollRecord.class))
+                          .identifier(
+                              MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
+                          .multimedia(
+                              MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
+                          .dnaDerivedData(
+                              MAPPER.readValue(
+                                  record.getDnaDerivedData(), DnaDerivedDataRecord.class))
+                          .clustering(
+                              MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
+                          .dnaTaxonRecord(
+                              record.getDnaTaxon() != null
+                                  ? MAPPER.readValue(record.getDnaTaxon(), TaxonRecord.class)
+                                  : null)
+                          .build();
 
-                      OccurrenceJsonConverter c =
-                          OccurrenceJsonConverter.builder()
-                              .metadata(metadataRecord)
-                              .verbatim(
-                                  MAPPER.readValue(occurrence.getVerbatim(), ExtendedRecord.class))
-                              .basic(MAPPER.readValue(occurrence.getBasic(), BasicRecord.class))
-                              .location(
-                                  MAPPER.readValue(occurrence.getLocation(), LocationRecord.class))
-                              .temporal(
-                                  MAPPER.readValue(occurrence.getTemporal(), TemporalRecord.class))
-                              .multiTaxon(
-                                  MAPPER.readValue(occurrence.getTaxon(), MultiTaxonRecord.class))
-                              .grscicoll(
-                                  MAPPER.readValue(
-                                      occurrence.getGrscicoll(), GrscicollRecord.class))
-                              .identifier(
-                                  MAPPER.readValue(
-                                      occurrence.getIdentifier(), IdentifierRecord.class))
-                              .multimedia(
-                                  MAPPER.readValue(
-                                      occurrence.getMultimedia(), MultimediaRecord.class))
-                              .dnaDerivedData(
-                                  MAPPER.readValue(
-                                      occurrence.getDnaDerivedData(), DnaDerivedDataRecord.class))
-                              .clustering(
-                                  MAPPER.readValue(
-                                      occurrence.getClustering(), ClusteringRecord.class))
-                              .dnaTaxonRecord(dnaTaxonRecord)
-                              .build();
-
-                      return c.convert();
-                    },
-                Encoders.bean(OccurrenceJsonRecord.class));
+                  return c.convert();
+                },
+            Encoders.bean(OccurrenceJsonRecord.class));
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
@@ -884,55 +861,46 @@ public class OccurrenceInterpretationPipeline {
 
   public static Dataset<Row> toHdfs(
       PipelinesConfig config,
-      Dataset<Occurrence> occurrences,
-      Dataset<TaxonRecord> dnaTaxonRecords,
+      Dataset<Occurrence> records,
       MetadataRecord metadataRecord,
       int numshards) {
 
     Dataset<OccurrenceHdfsRecord> dataset =
-        occurrences
-            .joinWith(
-                dnaTaxonRecords, occurrences.col("id").equalTo(dnaTaxonRecords.col("id")), "left")
-            .map(
-                (MapFunction<Tuple2<Occurrence, TaxonRecord>, OccurrenceHdfsRecord>)
-                    pair -> {
-                      Occurrence occurrence = pair._1();
-                      TaxonRecord dnaTaxonRecord = pair._2();
+        records.map(
+            (MapFunction<Occurrence, OccurrenceHdfsRecord>)
+                record -> {
+                  OccurrenceHdfsRecordConverter c =
+                      OccurrenceHdfsRecordConverter.builder()
+                          .metadataRecord(metadataRecord)
+                          .extendedRecord(
+                              MAPPER.readValue(record.getVerbatim(), ExtendedRecord.class))
+                          .basicRecord(MAPPER.readValue(record.getBasic(), BasicRecord.class))
+                          .locationRecord(
+                              MAPPER.readValue(record.getLocation(), LocationRecord.class))
+                          .temporalRecord(
+                              MAPPER.readValue(record.getTemporal(), TemporalRecord.class))
+                          .multiTaxonRecord(
+                              MAPPER.readValue(record.getTaxon(), MultiTaxonRecord.class))
+                          .grscicollRecord(
+                              MAPPER.readValue(record.getGrscicoll(), GrscicollRecord.class))
+                          .identifierRecord(
+                              MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
+                          .multimediaRecord(
+                              MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
+                          .dnaDerivedDataRecord(
+                              MAPPER.readValue(
+                                  record.getDnaDerivedData(), DnaDerivedDataRecord.class))
+                          .clusteringRecord(
+                              MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
+                          .dnaTaxonRecord(
+                              record.getDnaTaxon() != null
+                                  ? MAPPER.readValue(record.getDnaTaxon(), TaxonRecord.class)
+                                  : null)
+                          .build();
 
-                      OccurrenceHdfsRecordConverter c =
-                          OccurrenceHdfsRecordConverter.builder()
-                              .metadataRecord(metadataRecord)
-                              .extendedRecord(
-                                  MAPPER.readValue(occurrence.getVerbatim(), ExtendedRecord.class))
-                              .basicRecord(
-                                  MAPPER.readValue(occurrence.getBasic(), BasicRecord.class))
-                              .locationRecord(
-                                  MAPPER.readValue(occurrence.getLocation(), LocationRecord.class))
-                              .temporalRecord(
-                                  MAPPER.readValue(occurrence.getTemporal(), TemporalRecord.class))
-                              .multiTaxonRecord(
-                                  MAPPER.readValue(occurrence.getTaxon(), MultiTaxonRecord.class))
-                              .grscicollRecord(
-                                  MAPPER.readValue(
-                                      occurrence.getGrscicoll(), GrscicollRecord.class))
-                              .identifierRecord(
-                                  MAPPER.readValue(
-                                      occurrence.getIdentifier(), IdentifierRecord.class))
-                              .multimediaRecord(
-                                  MAPPER.readValue(
-                                      occurrence.getMultimedia(), MultimediaRecord.class))
-                              .dnaDerivedDataRecord(
-                                  MAPPER.readValue(
-                                      occurrence.getDnaDerivedData(), DnaDerivedDataRecord.class))
-                              .clusteringRecord(
-                                  MAPPER.readValue(
-                                      occurrence.getClustering(), ClusteringRecord.class))
-                              .dnaTaxonRecord(dnaTaxonRecord)
-                              .build();
-
-                      return c.convert();
-                    },
-                Encoders.bean(OccurrenceHdfsRecord.class));
+                  return c.convert();
+                },
+            Encoders.bean(OccurrenceHdfsRecord.class));
 
     if (config.getTableBuildConfig() == null
         || config.getTableBuildConfig().getClassifications() == null
