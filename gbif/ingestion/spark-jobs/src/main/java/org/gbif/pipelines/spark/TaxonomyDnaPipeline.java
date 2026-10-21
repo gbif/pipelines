@@ -162,8 +162,8 @@ public class TaxonomyDnaPipeline {
                   return Iterators.concat(
                       Iterators.transform(
                           Iterators.partition(occurrenceIterator, batchSize),
-                          group ->
-                              interpretOccurrenceDnaTaxon(group, client, taxonomyInterpreter)
+                          partition ->
+                              interpretOccurrenceDnaTaxon(partition, client, taxonomyInterpreter)
                                   .iterator()));
                 },
             Encoders.bean(Occurrence.class));
