@@ -585,6 +585,9 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
           0, JsonPath.<List<?>>read(json, "$.classifications['" + ck + "'].issues").size());
       assertEquals(
           "VU", JsonPath.read(json, "$.classifications['" + ck + "'].iucnRedListCategoryCode"));
+      assertEquals(
+          List.of("TERRESTRIAL", "FRESHWATER"),
+          JsonPath.<List<String>>read(json, "$.classifications['" + ck + "'].environments"));
       assertEquals("ACCEPTED", JsonPath.read(json, "$.classifications['" + ck + "'].status"));
       assertEquals(
           List.of("1", "44", "359", "732", "9703", "2435194", "5219404"),

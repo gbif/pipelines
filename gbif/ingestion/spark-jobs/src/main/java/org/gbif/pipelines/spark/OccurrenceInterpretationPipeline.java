@@ -967,6 +967,7 @@ public class OccurrenceInterpretationPipeline {
                   element_at(classification, lit("subgenus")).as("subgenus"),
                   element_at(classification, lit("species")).as("species"),
                   element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
+                  split(element_at(classification, lit("environments")), ",").as("environments"),
                   taxonKeys.as("taxonkeys"),
                   coalesce(taxonomicIssue, array().cast("array<string>")).as("taxonomicissue"),
                   taxonomicStatus.as("taxonomicstatus")));

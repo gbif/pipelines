@@ -12,4 +12,7 @@ public interface ArgsConstants {
   String NUMBER_OF_SHARDS_ARG = "--numberOfShards";
   String SWITCH_ON_SUCCESS = "--switchOnSuccess";
   String UNSUCCESSFUL_DUMP_FILENAME = "--unsuccessfulDumpFilename";
+  String TRIPLET_VALID_ARG = "--tripletValid";
+  String OCCURRENCE_ID_VALID_ARG = "--occurrenceIdValid";
+  String USE_EXTENDED_RECORD_ID_ARG = "--useExtendedRecordId";
 }

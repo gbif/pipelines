@@ -51,6 +51,8 @@ public class TaxonRecordConverter {
         .map(status -> status.getStatusCode())
         .ifPresent(taxonRecord::setIucnRedListCategoryCode);
 
+    taxonRecord.setEnvironments(Optional.ofNullable(source.getEnvironments()).orElseGet(List::of));
+
     return taxonRecord;
   }
 

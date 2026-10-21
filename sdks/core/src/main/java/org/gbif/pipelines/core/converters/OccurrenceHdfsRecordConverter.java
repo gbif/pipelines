@@ -83,6 +83,7 @@ public class OccurrenceHdfsRecordConverter {
           GbifTerm.species.simpleName().toLowerCase(),
           GbifTerm.speciesKey.simpleName().toLowerCase(),
           IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
+          GbifTerm.environments.simpleName().toLowerCase(),
           GbifTerm.verbatimScientificName.simpleName().toLowerCase());
 
   /**
@@ -458,6 +459,13 @@ public class OccurrenceHdfsRecordConverter {
             ? taxonRecord.getIucnRedListCategoryCode()
             : null);
 
+    // Environments: the map only holds strings, so join as csv and split back in Spark
+    map.put(
+        GbifTerm.environments.simpleName().toLowerCase(),
+        taxonRecord.getEnvironments() != null && !taxonRecord.getEnvironments().isEmpty()
+            ? String.join(",", taxonRecord.getEnvironments())
+            : null);
+
     for (String field : REQUIRED_TAXONOMIC_FIELDS) {
       map.putIfAbsent(field, null);
     }
@@ -577,6 +585,8 @@ public class OccurrenceHdfsRecordConverter {
     setCreatedIfGreater(occurrenceHdfsRecord, taxonRecord.getCreated());
 
     occurrenceHdfsRecord.setIucnredlistcategory(taxonRecord.getIucnRedListCategoryCode());
+    occurrenceHdfsRecord.setEnvironments(
+        taxonRecord.getEnvironments() != null ? taxonRecord.getEnvironments() : List.of());
 
     addTaxonIssues(taxonRecord.getIssues(), occurrenceHdfsRecord);
   }

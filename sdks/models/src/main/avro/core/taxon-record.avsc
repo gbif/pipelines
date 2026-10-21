@@ -152,7 +152,8 @@
       },
       {"name" : "usageParsedName", "type" : ["null", "ParsedName"], "default" : null},
       {"name" : "issues", "type": "IssueRecord", "default":{}},
-      {"name" : "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"}
+      {"name" : "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"},
+      {"name" : "environments", "type" : {"type" : "array", "items" : "string"}, "default" : [], "doc":"Environments of the accepted taxon as provided by the checklist, e.g. MARINE, BRACKISH, FRESHWATER, TERRESTRIAL"}
     ]
   },
   {
