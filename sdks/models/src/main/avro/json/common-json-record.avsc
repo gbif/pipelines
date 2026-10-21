@@ -220,6 +220,10 @@
         "default":[]
       },
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""},
+      {"name":"environments",
+        "type":{"type":"array","items":"string"},
+        "default":[]
+      },
       {"name":"issues",
         "type":{"type":"array","items":"string"},
         "default":[]

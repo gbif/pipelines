@@ -70,6 +70,7 @@
       "sourceId": "15951"
     }
   ],
+  "environments": ["TERRESTRIAL", "FRESHWATER"],
   "synonym": false,
   "left": 743377,
   "right": 743387
