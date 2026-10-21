@@ -71,6 +71,9 @@ public class FragmenterPipeline {
   public static final String FRAGMENT_COLUMN_FAMILY = "fragment";
   public static final String FRAGMENT_DATASET_KEY_COLUMN = "datasetKey";
   public static final String FRAGMENT_ATTEMPT_COLUMN = "attempt";
+  private static final String FRAGMENT_DATE_CREATED_COLUMN = "dateCreated";
+  private static final String FRAGMENT_PROTOCOL_COLUMN = "protocol";
+  private static final String FRAGMENT_RECORD_COLUMN = "record";
 
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {
@@ -208,23 +211,22 @@ public class FragmenterPipeline {
                     List<Tuple2<Tuple2<String, String>, String>> cells = new ArrayList<>();
                     cells.add(
                         new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), "attempt"), String.valueOf(attempt)));
-                    // lets the fragment table be counted per dataset (the row key is salt:gbifId)
+                            new Tuple2<>(record.getAs("key"), FRAGMENT_ATTEMPT_COLUMN), String.valueOf(attempt)));
                     cells.add(
                         new Tuple2<>(
                             new Tuple2<>(record.getAs("key"), FRAGMENT_DATASET_KEY_COLUMN),
                             datasetId));
                     cells.add(
                         new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), "dateCreated"),
+                            new Tuple2<>(record.getAs("key"), FRAGMENT_DATE_CREATED_COLUMN),
                             ((Long) record.getAs("createdDate")).toString()));
                     cells.add(
                         new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), "protocol"),
+                            new Tuple2<>(record.getAs("key"), FRAGMENT_PROTOCOL_COLUMN),
                             EndpointType.DWC_ARCHIVE.name()));
                     cells.add(
                         new Tuple2<>(
-                            new Tuple2<>(record.getAs("key"), "record"),
+                            new Tuple2<>(record.getAs("key"), FRAGMENT_RECORD_COLUMN),
                             record.getAs("recordBody")));
                     return cells.iterator();
                   })

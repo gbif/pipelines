@@ -1,4 +1,4 @@
-package org.gbif.pipelines.spark;
+package org.gbif.pipelines.spark.diag;
 
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.input_file_name;
@@ -34,6 +34,8 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.spark.Directories;
+import org.gbif.pipelines.spark.FragmenterPipeline;
 import org.gbif.pipelines.spark.util.FragmentTableUtil;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
 import org.gbif.pipelines.spark.util.PipelineArgs;
