@@ -208,10 +208,10 @@ public class DwcaArchiveValidatorTest {
   }
 
   private DwcaArchiveValidator newValidator(
-      UUID key, boolean failOnNoOccurrences, ValidationWsClient validationClient) {
+      UUID key, boolean validatorOnly, ValidationWsClient validationClient) {
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = this.getClass().getResource("/dataset/dwca").getPath();
-    config.failOnNoOccurrences = failOnNoOccurrences;
+    config.validatorOnly = validatorOnly;
 
     PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
     message.setAttempt(1);

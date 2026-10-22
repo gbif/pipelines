@@ -47,7 +47,10 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
   @Override
   protected Validation runValidations(Validation validation) {
     Validation result = validateDwcaArchive(validation);
-    if (config.failOnNoOccurrences) {
+    if (config.validatorOnly) {
+      // if the validator is running in validator-only mode,
+      // we need to check that the archive contains occurrence records
+      // otherwise, the archive is considered invalid
       validateOccurrencesPresent().ifPresent(fi -> Validations.mergeFileInfo(result, fi));
     }
     return result;
@@ -84,25 +87,29 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
           : Optional.empty();
     }
 
-    ArchiveFile occurrenceExt = archive.getExtension(DwcTerm.Occurrence);
-    if (occurrenceExt == null) {
-      return Optional.of(
-          fatal(
-              DwcFileType.CORE,
-              coreFileName,
-              EvaluationType.OCCURRENCE_EXTENSION_MISSING,
-              "Archive with a "
-                  + core.getRowType().simpleName()
-                  + " core has no Occurrence extension"));
-    }
+    // if we have an Event core, we need to check that the Occurrence extension is present
+    // and not empty, otherwise the archive is not supported for validation
+    if (core.getRowType() == DwcTerm.Event) {
+      ArchiveFile occurrenceExt = archive.getExtension(DwcTerm.Occurrence);
+      if (occurrenceExt == null) {
+        return Optional.of(
+            fatal(
+                DwcFileType.CORE,
+                coreFileName,
+                EvaluationType.OCCURRENCE_EXTENSION_MISSING,
+                "Archive with a "
+                    + core.getRowType().simpleName()
+                    + " core has no Occurrence extension"));
+      }
 
-    if (isEmpty(occurrenceExt)) {
-      return Optional.of(
-          fatal(
-              DwcFileType.EXTENSION,
-              occurrenceExt.getFirstLocationFile().getName(),
-              EvaluationType.OCCURRENCE_EXTENSION_EMPTY,
-              "Occurrence extension file contains no records"));
+      if (isEmpty(occurrenceExt)) {
+        return Optional.of(
+            fatal(
+                DwcFileType.EXTENSION,
+                occurrenceExt.getFirstLocationFile().getName(),
+                EvaluationType.OCCURRENCE_EXTENSION_EMPTY,
+                "Occurrence extension file contains no records"));
+      }
     }
 
     return Optional.empty();
