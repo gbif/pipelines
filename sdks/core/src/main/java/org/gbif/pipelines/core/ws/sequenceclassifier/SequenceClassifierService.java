@@ -11,7 +11,7 @@ import retrofit2.http.POST;
 public interface SequenceClassifierService {
 
   /** Classifies a batch of occurrences. */
-  @POST("occurrence/classify/batch")
+  @POST("/occurrence/classify/batch")
   Call<List<ClassifyOccurrenceResponse>> classifyBatch(
       @Body List<ClassifyOccurrenceRequest> occurrences);
 }
