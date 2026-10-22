@@ -18,10 +18,13 @@ import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.iceberg.DistributionMode;
+import org.apache.iceberg.spark.SparkWriteOptions;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.storage.StorageLevel;
 import org.gbif.api.util.TermNormalizationUtils;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Extension;
@@ -167,16 +170,30 @@ public class VerbatimExtensionsInterpretationPipeline {
     // Normalize the directory name
     Dataset<Row> normalizedKeys = readExtendedRecords(spark, datasetType, inputPath, datasetId);
 
-    // Dynamically create flattened columns
-    Dataset<Row> flattened = selectColumnsForExtension(spark, normalizedKeys);
+    // Dynamically create flattened columns. Cached because each extension directory is written
+    // in a separate job; without this, the read, join and explode are recomputed per directory.
+    Dataset<Row> flattened =
+        selectColumnsForExtension(spark, normalizedKeys).persist(StorageLevel.MEMORY_AND_DISK());
 
-    // Repartition for performance
-    spark.sparkContext().setJobGroup("repartitioning", "Repartitioning by extension", true);
-    Dataset<Row> optimized = flattened.repartition(col("directory"));
+    try {
+      writeExtensions(spark, config, datasetId, icebergCatalog, datasetType, flattened);
+    } finally {
+      flattened.unpersist();
+    }
+  }
+
+  @SneakyThrows
+  private static void writeExtensions(
+      SparkSession spark,
+      PipelinesConfig config,
+      String datasetId,
+      String icebergCatalog,
+      DatasetType datasetType,
+      Dataset<Row> flattened) {
 
     // collect distinct directories
     List<String> directories =
-        optimized.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
+        flattened.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
 
     log.debug(
         "Found {} distinct extension directories: {}",
@@ -230,7 +247,7 @@ public class VerbatimExtensionsInterpretationPipeline {
       StructType tblSchema = spark.read().format("iceberg").load(table).schema();
 
       // ensure unique column names (keep first occurrence) to avoid ambiguous references
-      var sourceDF = optimized.filter(col("directory").equalTo(dir));
+      var sourceDF = flattened.filter(col("directory").equalTo(dir));
       String[] columnList = sourceDF.columns();
       Map<String, Integer> seen = new HashMap<>();
       String[] renamed = new String[columnList.length];
@@ -264,8 +281,12 @@ public class VerbatimExtensionsInterpretationPipeline {
         toWrite = toWrite.withColumn("datasetKey", lit(datasetId));
       }
 
-      // write to existing Iceberg table (append; use overwritePartitions() if needed)
-      toWrite.writeTo(table).overwritePartitions();
+      // write to existing Iceberg table. Distribution mode is disabled because only a single
+      // datasetKey partition is written; hash distribution would shuffle all rows to one task.
+      toWrite
+          .writeTo(table)
+          .option(SparkWriteOptions.DISTRIBUTION_MODE, DistributionMode.NONE.modeName())
+          .overwritePartitions();
     }
   }
 
