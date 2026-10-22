@@ -30,7 +30,7 @@ pipeline {
         allOf {
           expression { params.RELEASE }
           not {
-             branch 'master'
+             branch 'ebird'
           }
         }
       }
@@ -45,7 +45,7 @@ pipeline {
       steps {
         script {
           // NEW: branch-qualified version, workspace only, never committed
-          if (env.BRANCH_NAME != 'dev' && env.BRANCH_NAME != 'master' && !params.RELEASE) {
+          if (env.BRANCH_NAME != 'dev' && env.BRANCH_NAME != 'ebird' && !params.RELEASE) {
             def suffix = env.BRANCH_NAME.replaceAll('[^a-zA-Z0-9.-]', '-').toUpperCase()
             sh """
               BASE_VERSION=\$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
@@ -104,12 +104,12 @@ pipeline {
       when {
         allOf {
           expression { params.RELEASE }
-          branch 'master'
+          branch 'ebird'
         }
       }
       steps {
         configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
-          git 'https://github.com/gbif/pipelines.git'
+          git branch: 'ebird', url: 'https://github.com/gbif/pipelines.git'
           sh 'mvn -s $MAVEN_SETTINGS -B release:prepare release:perform -Denforcer.skip=true -Dmaven.test.skip=true -P ${PROFILES}'
         }
       }
