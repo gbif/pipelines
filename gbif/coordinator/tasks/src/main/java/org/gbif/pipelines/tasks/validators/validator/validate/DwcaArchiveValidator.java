@@ -92,6 +92,8 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
     if (core.getRowType() == DwcTerm.Event) {
       ArchiveFile occurrenceExt = archive.getExtension(DwcTerm.Occurrence);
       if (occurrenceExt == null) {
+        log.warn(
+            "Archive with a {} core has no Occurrence extension", core.getRowType().simpleName());
         return Optional.of(
             fatal(
                 DwcFileType.CORE,
@@ -103,6 +105,9 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
       }
 
       if (isEmpty(occurrenceExt)) {
+        log.warn(
+            "Archive with a {} core has an empty Occurrence extension",
+            core.getRowType().simpleName());
         return Optional.of(
             fatal(
                 DwcFileType.EXTENSION,
