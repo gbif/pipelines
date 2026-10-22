@@ -23,6 +23,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.IdentifiersPipeline;
 import org.gbif.pipelines.util.SparkConfUtil;
@@ -77,7 +78,18 @@ public class ValidatorIdentifierCallback
             .validate();
 
     if (validationResult.isResultValid()) {
+      if (validationResult.duplicateIdentifiers() > 0) {
+        log.warn(validationResult.validationMessage());
+        throw new PipelinesException(
+            String.format(
+                "Duplicate %d identifiers found. Check field mapping.",
+                validationResult.duplicateIdentifiers()));
+      } else {
       log.info(validationResult.validationMessage());
+    }
+    } else {
+      log.error(validationResult.validationMessage());
+      throw new PipelinesException(validationResult.validationMessage());
     }
   }
 

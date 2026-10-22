@@ -32,6 +32,13 @@ public class ArchiveValidatorConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
+  /**
+   * Fail DwC-A validation when the archive contains no occurrence records: an Occurrence core with
+   * no records, or a non-Occurrence core without an Occurrence extension or with an empty one.
+   */
+  @Parameter(names = "--fail-on-no-occurrences")
+  public boolean failOnNoOccurrences = false;
+
   @ParametersDelegate @Valid @NotNull
   public ChecklistBankConfiguration clbConfig = new ChecklistBankConfiguration();
 

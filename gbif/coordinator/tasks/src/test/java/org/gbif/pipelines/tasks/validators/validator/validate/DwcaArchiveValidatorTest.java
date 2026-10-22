@@ -1,6 +1,8 @@
 package org.gbif.pipelines.tasks.validators.validator.validate;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
@@ -13,6 +15,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.validator.api.DwcFileType;
+import org.gbif.validator.api.EvaluationType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Validation.Status;
@@ -134,5 +137,91 @@ public class DwcaArchiveValidatorTest {
     assertEquals(message.getExecutionId(), result.getExecutionId());
     assertEquals(DatasetType.OCCURRENCE, result.getDatasetType());
     assertEquals(EndpointType.DWC_ARCHIVE, result.getEndpointType());
+  }
+
+  @Test
+  public void emptyOccurrenceCoreFailsTest() {
+    assertFailsWith(
+        "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0001",
+        "occurrence.txt",
+        EvaluationType.OCCURRENCE_CORE_EMPTY);
+  }
+
+  @Test
+  public void missingOccurrenceExtensionFailsTest() {
+    assertFailsWith(
+        "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0002",
+        "event.txt",
+        EvaluationType.OCCURRENCE_EXTENSION_MISSING);
+  }
+
+  @Test
+  public void emptyOccurrenceExtensionFailsTest() {
+    assertFailsWith(
+        "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0003",
+        "occurrence.txt",
+        EvaluationType.OCCURRENCE_EXTENSION_EMPTY);
+  }
+
+  @Test
+  public void noOccurrencesPassesWhenCheckDisabledTest() {
+    for (String k :
+        new String[] {
+          "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0001",
+          "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0002",
+          "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0003"
+        }) {
+      newValidator(UUID.fromString(k), false).validate();
+    }
+  }
+
+  @Test
+  public void archivesWithOccurrencesPassWhenCheckEnabledTest() {
+    newValidator(UUID.fromString("9bed66b3-4caa-42bb-9c93-71d7ba109dad"), true).validate();
+    newValidator(UUID.fromString("a731e3b9-1ff9-4b22-a7e8-7d40aced5bc7"), true).validate();
+  }
+
+  private void assertFailsWith(String datasetKey, String fileName, EvaluationType expected) {
+    // State
+    UUID key = UUID.fromString(datasetKey);
+    ValidationWsClient validationClient =
+        ValidationWsClientStub.builder().key(key).status(Status.RUNNING).build();
+
+    // When
+    DwcaArchiveValidator validator = newValidator(key, true, validationClient);
+
+    // Should
+    assertThrows(IllegalArgumentException.class, validator::validate);
+    FileInfo fileInfo =
+        validationClient.get(key).getMetrics().getFileInfos().stream()
+            .filter(fi -> fileName.equals(fi.getFileName()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(fileInfo.getIssues().stream().anyMatch(i -> expected.name().equals(i.getIssue())));
+  }
+
+  private DwcaArchiveValidator newValidator(UUID key, boolean failOnNoOccurrences) {
+    return newValidator(
+        key,
+        failOnNoOccurrences,
+        ValidationWsClientStub.builder().key(key).status(Status.RUNNING).build());
+  }
+
+  private DwcaArchiveValidator newValidator(
+      UUID key, boolean failOnNoOccurrences, ValidationWsClient validationClient) {
+    ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
+    config.archiveRepository = this.getClass().getResource("/dataset/dwca").getPath();
+    config.failOnNoOccurrences = failOnNoOccurrences;
+
+    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
+    message.setAttempt(1);
+    message.setDatasetUuid(key);
+
+    return DwcaArchiveValidator.builder()
+        .message(message)
+        .config(config)
+        .validationClient(validationClient)
+        .schemaValidatorFactory(new SchemaValidatorFactory())
+        .build();
   }
 }
