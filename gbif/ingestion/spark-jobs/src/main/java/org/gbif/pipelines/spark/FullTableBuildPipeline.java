@@ -22,9 +22,6 @@ import org.apache.spark.sql.types.*;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
-import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
-import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
-import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
 import org.gbif.pipelines.spark.util.PipelineArgs;
 
@@ -142,15 +139,6 @@ public class FullTableBuildPipeline {
     FileSystem fileSystem = getFileSystem(spark, config);
 
     /* ############ standard init block - end ########## */
-
-    spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
-    spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
-    spark
-        .udf()
-        .register(
-            "cleanDelimitersArray",
-            new CleanDelimiterArraysUdf(),
-            DataTypes.createArrayType(DataTypes.StringType));
 
     log.info("Starting table build");
 
@@ -337,17 +325,12 @@ public class FullTableBuildPipeline {
 
     log.debug("Created Iceberg table: {}", tempLoadingTable);
 
-    // Display table schema and initial record count
-    Dataset<Row> result = spark.sql("SELECT COUNT(*) FROM " + tempLoadingTable);
-    long avroToHdfsCountAttempted = result.collectAsList().get(0).getLong(0);
-
     if (log.isDebugEnabled()) {
       spark.sql("DESCRIBE TABLE " + tempLoadingTable).show(false);
-      spark.sql("SELECT COUNT(*) FROM " + tempLoadingTable).show(false);
     }
 
-    checkForOrphanedRecord(spark, tempLoadingTable);
-    return avroToHdfsCountAttempted;
+    // count records and check for records without gbifId or datasetKey in a single scan
+    return checkForOrphanedRecord(spark, tempLoadingTable);
   }
 
   /**

@@ -11,16 +11,11 @@ import static org.gbif.pipelines.spark.util.TableUtil.*;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
@@ -28,9 +23,6 @@ import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
-import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
-import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
-import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.spark.util.TableUtil;
 import org.jetbrains.annotations.NotNull;
@@ -134,15 +126,6 @@ public class TableBuildPipeline {
 
     String coreDwcTerm = datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
 
-    spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
-    spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
-    spark
-        .udf()
-        .register(
-            "cleanDelimitersArray",
-            new CleanDelimiterArraysUdf(),
-            DataTypes.createArrayType(DataTypes.StringType));
-
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);
     ThreadContext.put("attempt", String.valueOf(attempt));
@@ -159,33 +142,21 @@ public class TableBuildPipeline {
     // load hdfs view
     Dataset<Row> hdfs = spark.read().parquet(outputPath + "/" + sourceDirectory);
 
-    // Generate a unique temporary table name
-    String tempCoreTable =
+    // Generate a unique temporary view name. The parquet is read directly through a session
+    // temp view rather than being copied into an intermediate Iceberg table first.
+    String tempCoreView =
         String.format("%s_%s_%d", coreDwcTerm, datasetId.replace("-", "_"), attempt);
+    hdfs.createOrReplaceTempView(tempCoreView);
 
     // Switch to the configured Hive database
     spark.sql("USE " + config.getHiveDB());
 
-    // Drop the table if it already exists
-    spark.sql("DROP TABLE IF EXISTS " + tempCoreTable);
-
-    // Check HDFS for remnant DB files from failed attempts
-    cleanHdfsPath(fileSystem, config, tempCoreTable);
-    hdfs.writeTo(tempCoreTable).create();
-
-    log.debug("Created Iceberg table: {}", tempCoreTable);
-
-    // Display table schema and initial record count
-    Dataset<Row> result = spark.sql("SELECT COUNT(*) FROM " + tempCoreTable);
-    long avroToHdfsCountAttempted = result.collectAsList().get(0).getLong(0);
-
     if (log.isDebugEnabled()) {
-      spark.sql("DESCRIBE TABLE " + tempCoreTable).show(false);
-      spark.sql("SELECT COUNT(*) FROM " + tempCoreTable).show(false);
+      spark.sql("DESCRIBE TABLE " + tempCoreView).show(false);
     }
 
-    // check for records without gbifId or datasetKey
-    checkForOrphanedRecord(spark, tempCoreTable);
+    // count records and check for records without gbifId or datasetKey in a single scan
+    long avroToHdfsCountAttempted = checkForOrphanedRecord(spark, tempCoreView);
 
     if (spark.catalog().tableExists(coreDwcTerm)) {
       log.debug("Table {} exists", coreDwcTerm);
@@ -218,24 +189,21 @@ public class TableBuildPipeline {
       // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
       StructType tblSchema = spark.read().format("iceberg").load(coreDwcTerm).schema();
 
-      // Build the insert query
-      String insertQuery =
+      // Build the select query, columns are in the target table order and aliased to its names
+      String selectQuery =
           String.format(
-              "INSERT OVERWRITE TABLE %s.%s (%s) SELECT %s FROM %s.%s",
-              config.getHiveDB(),
-              coreDwcTerm,
-              Arrays.stream(tblSchema.fields())
-                  .map(StructField::name)
-                  .collect(Collectors.joining(", ")),
-              generateSelectColumns(tblSchema, hdfsColumnList),
-              config.getHiveDB(),
-              tempCoreTable);
+              "SELECT %s FROM %s", generateSelectColumns(tblSchema, hdfsColumnList), tempCoreView);
 
-      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
-      TableUtil.runSQLWithRetries(
+      String targetTable = config.getHiveDB() + "." + coreDwcTerm;
+      log.debug("Inserting data into {} table: {}", coreDwcTerm, selectQuery);
+      TableUtil.runWithRetries(
           spark,
-          insertQuery,
-          config.getHiveDB() + "." + coreDwcTerm,
+          () ->
+              overwritePartitions(
+                  spark.sql(selectQuery),
+                  targetTable,
+                  config.getTableBuildConfig().getWriteDistributionMode()),
+          targetTable,
           config.getTableBuildConfig().getMaxRetriesWithRefresh(),
           config.getTableBuildConfig().getBaseSleepMs());
     }
@@ -251,7 +219,7 @@ public class TableBuildPipeline {
     }
 
     // write to the multimedia table
-    insertOverwriteMultimediaTableFromTemp(spark, tempCoreTable, coreDwcTerm + "_multimedia");
+    insertOverwriteMultimediaTableFromTemp(spark, tempCoreView, coreDwcTerm + "_multimedia");
 
     if (datasetType == DatasetType.OCCURRENCE) {
       // Create dna table if it does not exist
@@ -262,7 +230,7 @@ public class TableBuildPipeline {
       }
 
       // write to the dna table
-      insertOverwriteDnaDerivedDataTable(spark, tempCoreTable, dnaTableName, true);
+      insertOverwriteDnaDerivedDataTable(spark, tempCoreView, dnaTableName, true);
     }
 
     // if a sampling event dataset, create the humboldt_event table if it does not exist and
@@ -273,14 +241,12 @@ public class TableBuildPipeline {
         // populate the event table
         spark.sql(getCreateIfNotExistsHumboldt(config.getTableBuildConfig(), humboldtTableName));
       }
-      insertOverwriteHumboldtTableFromTemp(spark, tempCoreTable, humboldtTableName);
+      insertOverwriteHumboldtTableFromTemp(spark, tempCoreView, humboldtTableName);
     }
 
-    // Drop the temporary table
-    spark.sql("DROP TABLE " + tempCoreTable);
-
-    log.debug("Dropped Iceberg table: {}", tempCoreTable);
-    cleanHdfsPath(fileSystem, config, tempCoreTable);
+    // Drop the temporary view
+    spark.catalog().dropTempView(tempCoreView);
+    log.debug("Dropped temporary view: {}", tempCoreView);
 
     // Write metrics to yaml
     writeMetricsYaml(
@@ -309,16 +275,5 @@ public class TableBuildPipeline {
   @NotNull
   public static String getMetricsFileName(String tableName) {
     return tableName + "-to-hdfs.yml";
-  }
-
-  private static void cleanHdfsPath(FileSystem fileSystem, PipelinesConfig config, String table)
-      throws IOException {
-    Path warehousePath = new Path(config.getHdfsWarehousePath() + "/" + table);
-    log.debug("Checking warehouse path: {}", warehousePath);
-    if (fileSystem.exists(warehousePath)) {
-      log.debug("Deleting warehouse path: {}", warehousePath);
-      fileSystem.delete(warehousePath, true);
-      log.debug("Deleted warehouse path: {}", warehousePath);
-    }
   }
 }

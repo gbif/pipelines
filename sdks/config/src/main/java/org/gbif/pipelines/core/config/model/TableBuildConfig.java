@@ -28,4 +28,8 @@ public class TableBuildConfig implements Serializable {
 
   int maxRetriesWithRefresh = 5;
   int baseSleepMs = 10000;
+
+  // Iceberg write distribution mode (none, hash, range) for single dataset core table writes.
+  // When null the table default is used.
+  String writeDistributionMode = null;
 }
