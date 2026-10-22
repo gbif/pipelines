@@ -463,6 +463,8 @@ public class JsonConverter {
     }
 
     derivedTaxon.setIucnRedListCategoryCode(tr.getIucnRedListCategoryCode());
+    derivedTaxon.setEnvironments(
+        tr.getEnvironments() != null ? tr.getEnvironments() : List.of());
 
     if (tr.getClassification() != null) {
       List<String> taxonKeys = new ArrayList<>();

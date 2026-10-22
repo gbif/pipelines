@@ -482,6 +482,10 @@ public class EventHdfsRecordConverter {
                           values
                               .computeIfAbsent("iucnRedListCategoryCode", k -> new ArrayList<>())
                               .add(t.getIucnRedListCategoryCode());
+                          values
+                              .computeIfAbsent("environments", k -> new ArrayList<>())
+                              .addAll(
+                                  t.getEnvironments() != null ? t.getEnvironments() : List.of());
 
                           values
                               .computeIfAbsent("taxonkeys", k -> new ArrayList<>())

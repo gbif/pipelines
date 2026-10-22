@@ -103,6 +103,14 @@
       }
     },
     {
+      "humboldt__environments": {
+        "path_match": "event.humboldt.*.*.environments",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
       "derived_taxon_usage_key": {
         "path_match": "derivedMetadata.taxonomicCoverage.classifications.*.*.key",
         "mapping": {
@@ -146,6 +154,14 @@
     {
       "derived_taxon_iucnRedListCategoryCode": {
         "path_match": "derivedMetadata.taxonomicCoverage.classifications.*.iucnRedListCategoryCode",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "derived_taxon_environments": {
+        "path_match": "derivedMetadata.taxonomicCoverage.classifications.*.environments",
         "mapping": {
           "type": "keyword"
         }

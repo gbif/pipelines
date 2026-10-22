@@ -96,6 +96,16 @@ public class HumboldtInterpreterTest {
     assertEquals(1, humboldt.getExcludedDegreeOfEstablishmentScope().size());
     assertEquals(4, humboldt.getTargetTaxonomicScope().size());
     assertEquals(
+        List.of("MARINE", "BRACKISH"),
+        humboldt.getTargetTaxonomicScope().stream()
+            .filter(
+                ts ->
+                    DEFAULT_CHECKLIST_KEY.equals(ts.getChecklistKey())
+                        && ts.getUsage().getName().equalsIgnoreCase("Aves"))
+            .findFirst()
+            .orElseThrow()
+            .getEnvironments());
+    assertEquals(
         2,
         humboldt.getTargetTaxonomicScope().stream()
             .filter(ts -> ts.getChecklistKey().equals(DEFAULT_CHECKLIST_KEY))
