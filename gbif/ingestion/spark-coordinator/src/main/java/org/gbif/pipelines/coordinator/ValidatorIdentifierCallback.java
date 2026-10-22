@@ -85,8 +85,8 @@ public class ValidatorIdentifierCallback
                 "Duplicate %d identifiers found. Check field mapping.",
                 validationResult.duplicateIdentifiers()));
       } else {
-      log.info(validationResult.validationMessage());
-    }
+        log.info(validationResult.validationMessage());
+      }
     } else {
       log.error(validationResult.validationMessage());
       throw new PipelinesException(validationResult.validationMessage());
