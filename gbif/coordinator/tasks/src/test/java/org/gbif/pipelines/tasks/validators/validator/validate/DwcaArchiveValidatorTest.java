@@ -200,10 +200,10 @@ public class DwcaArchiveValidatorTest {
     assertTrue(fileInfo.getIssues().stream().anyMatch(i -> expected.name().equals(i.getIssue())));
   }
 
-  private DwcaArchiveValidator newValidator(UUID key, boolean failOnNoOccurrences) {
+  private DwcaArchiveValidator newValidator(UUID key, boolean validatorOnly) {
     return newValidator(
         key,
-        failOnNoOccurrences,
+        validatorOnly,
         ValidationWsClientStub.builder().key(key).status(Status.RUNNING).build());
   }
 
