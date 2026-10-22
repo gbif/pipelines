@@ -38,6 +38,7 @@ public class IndexableRules {
               OCCURRENCE_CORE_EMPTY,
               OCCURRENCE_EXTENSION_MISSING,
               OCCURRENCE_EXTENSION_EMPTY,
+              OCCURRENCE_NOT_CONNECTED_TO_CORE,
               DUPLICATED_TERM,
               LICENSE_MISSING_OR_UNKNOWN));
 

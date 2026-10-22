@@ -19,6 +19,7 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.record.Record;
+import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
@@ -102,6 +103,8 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
                 "Archive with a "
                     + core.getRowType().simpleName()
                     + " core has no Occurrence extension"));
+      } else {
+        log.info("Archive has a core has an Occurrence extension");
       }
 
       if (isEmpty(occurrenceExt)) {
@@ -114,10 +117,36 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
                 occurrenceExt.getFirstLocationFile().getName(),
                 EvaluationType.OCCURRENCE_EXTENSION_EMPTY,
                 "Occurrence extension file contains no records"));
+      } else {
+        log.info(
+            "Archive with a {} core has a non-empty Occurrence extension",
+            core.getRowType().simpleName());
+      }
+
+      if (!hasEventWithOccurrence(archive)) {
+        log.warn("No Event core record is connected to an Occurrence extension record");
+        return Optional.of(
+            fatal(
+                DwcFileType.EXTENSION,
+                occurrenceExt.getFirstLocationFile().getName(),
+                EvaluationType.OCCURRENCE_NOT_CONNECTED_TO_CORE,
+                "No Occurrence extension record is linked to an Event core record"));
       }
     }
 
     return Optional.empty();
+  }
+
+  /** Reads star records until an Event core record with at least one Occurrence is found. */
+  private static boolean hasEventWithOccurrence(Archive archive) throws Exception {
+    try (ClosableIterator<StarRecord> it = archive.iterator()) {
+      while (it.hasNext()) {
+        if (!it.next().extension(DwcTerm.Occurrence).isEmpty()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private static boolean isEmpty(ArchiveFile archiveFile) throws Exception {

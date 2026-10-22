@@ -164,12 +164,21 @@ public class DwcaArchiveValidatorTest {
   }
 
   @Test
+  public void occurrenceNotConnectedToEventCoreFailsTest() {
+    assertFailsWith(
+        "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0004",
+        "occurrence.txt",
+        EvaluationType.OCCURRENCE_NOT_CONNECTED_TO_CORE);
+  }
+
+  @Test
   public void noOccurrencesPassesWhenCheckDisabledTest() {
     for (String k :
         new String[] {
           "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0001",
           "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0002",
-          "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0003"
+          "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0003",
+          "1c1b4c6e-0b7a-4a4e-9a3e-2f6b1d1e0004"
         }) {
       newValidator(UUID.fromString(k), false).validate();
     }
