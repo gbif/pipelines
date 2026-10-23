@@ -139,6 +139,7 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
 
   /** Reads star records until an Event core record with at least one Occurrence is found. */
   private static boolean hasEventWithOccurrence(Archive archive) throws Exception {
+    archive.initialize();
     try (ClosableIterator<StarRecord> it = archive.iterator()) {
       while (it.hasNext()) {
         if (!it.next().extension(DwcTerm.Occurrence).isEmpty()) {
