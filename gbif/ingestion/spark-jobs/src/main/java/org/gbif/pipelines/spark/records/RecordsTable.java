@@ -250,7 +250,9 @@ class RecordsTable {
                   return result.iterator();
                 })
             .repartitionAndSortWithinPartitions(
-                new RegionPartitioner(regionLocator.getStartKeys()), new CellComparator());
+                new RegionPartitioner(
+                    regionLocator.getStartKeys(), prepared.rdd().getNumPartitions()),
+                new CellComparator());
 
     // carries the table settings (compression, bloom filter, block size) to the HFiles
     Job job = Job.getInstance(hbaseConf);
@@ -280,21 +282,31 @@ class RecordsTable {
             jobConf);
   }
 
-  /** Sends each row to the partition of the HBase region holding it, so HFiles align to regions */
+  /**
+   * Sends each row to a partition of the HBase region holding it, so HFiles align to regions. A
+   * region is spread over several partitions, by row key hash, so a large load isn't shuffled into
+   * one partition per region: a full build would push a hundredth of all the records through each
+   * one. Bulk loading accepts several HFiles per region, as long as each one is sorted and within
+   * the region.
+   */
   static class RegionPartitioner extends Partitioner {
 
     @Serial private static final long serialVersionUID = 1L;
 
     private final String[] startKeys;
+    private final int partitionsPerRegion;
 
-    RegionPartitioner(byte[][] regionStartKeys) {
+    /** @param targetPartitions approximate number of partitions, at least one per region */
+    RegionPartitioner(byte[][] regionStartKeys, int targetPartitions) {
       startKeys = Arrays.stream(regionStartKeys).map(Bytes::toString).toArray(String[]::new);
       Arrays.sort(startKeys);
+      partitionsPerRegion =
+          Math.max(1, (targetPartitions + startKeys.length - 1) / startKeys.length);
     }
 
     @Override
     public int numPartitions() {
-      return startKeys.length;
+      return startKeys.length * partitionsPerRegion;
     }
 
     @Override
@@ -303,7 +315,9 @@ class RecordsTable {
       String rowKey = ((Tuple2<String, String>) key)._1;
       int index = Arrays.binarySearch(startKeys, rowKey);
       // not a start key: the region is the one before the insertion point
-      return index >= 0 ? index : Math.max(0, -index - 2);
+      int region = index >= 0 ? index : Math.max(0, -index - 2);
+      // all the cells of a row go to the same partition
+      return region * partitionsPerRegion + Math.floorMod(rowKey.hashCode(), partitionsPerRegion);
     }
   }
 
