@@ -3,10 +3,14 @@ package org.gbif.pipelines.backbone.impact;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.spark.sql.Row;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
@@ -19,6 +23,9 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 @Getter
 @Setter
 @EqualsAndHashCode
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Classification {
 
   private String kingdom;
@@ -257,6 +264,17 @@ public class Classification {
                   acceptedTaxonKey));
     }
     return values.collect(Collectors.toList());
+  }
+
+  /**
+   * @return a copy of this classification with the authorship removed from the scientific names,
+   *     for use in comparisons
+   */
+  public Classification withoutAuthorship(UnaryOperator<String> stripAuthorship) {
+    return toBuilder()
+        .scientificName(stripAuthorship.apply(scientificName))
+        .acceptedScientificName(stripAuthorship.apply(acceptedScientificName))
+        .build();
   }
 
   /**

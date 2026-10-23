@@ -1,8 +1,15 @@
 package org.gbif.pipelines.backbone.impact;
 
 import com.beust.jcommander.JCommander;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -32,6 +39,7 @@ public class GbifImpactPipeline {
   static final String SOURCE_VIEW = "gbif_impact_source";
   static final String IMPACT_DIR = "impact";
   private static final String REPORT_TMP_DIR = "_report_tmp";
+  static final String IGNORE_NAMES_RESOURCE = "/ignore-names.txt";
 
   /** Verbatim columns, as named in the source table (see project readme). */
   private static final String[] VERBATIM_COLUMNS = {
@@ -162,7 +170,9 @@ public class GbifImpactPipeline {
     source.createOrReplaceTempView(SOURCE_VIEW);
 
     // only check records within scope (e.g. limit to Lepidoptera) and above the limit
-    Dataset<Row> candidates = spark.sql(sourceQuery(args.minimumOccurrenceCount, args.scope));
+    // and skip verbatim names that cannot be meaningfully matched
+    Dataset<Row> candidates =
+        spark.sql(sourceQuery(args.minimumOccurrenceCount, args.scope, loadIgnoreNames()));
     if (args.numPartitions > 0) {
       candidates = candidates.repartition(args.numPartitions);
     }
@@ -180,15 +190,27 @@ public class GbifImpactPipeline {
 
   /**
    * Selects the columns used for the lookup with lower case names and string values (keys may be
-   * stored as integers), filtering by the occurrence count and the optional scope.
+   * stored as integers), filtering by the occurrence count, the optional scope and removing rows
+   * with a null, empty or ignored verbatim scientific name (compared trimmed and case
+   * insensitively).
    */
-  static String sourceQuery(int minimumOccurrenceCount, Integer scope) {
+  static String sourceQuery(int minimumOccurrenceCount, Integer scope, Set<String> ignoreNames) {
     String columns =
         Arrays.stream(concat(VERBATIM_COLUMNS, CURRENT_COLUMNS))
             .map(c -> String.format("CAST(`%s` AS STRING) AS `%s`", c, c.toLowerCase()))
             .collect(Collectors.joining(",\n  "));
 
-    String where = "occurrenceCount > " + minimumOccurrenceCount;
+    String where =
+        "occurrenceCount > "
+            + minimumOccurrenceCount
+            + " AND `v_scientificName` IS NOT NULL AND TRIM(`v_scientificName`) <> ''";
+    if (!ignoreNames.isEmpty()) {
+      where +=
+          ignoreNames.stream()
+              .map(n -> "'" + n.replace("\\", "\\\\").replace("'", "\\'") + "'")
+              .collect(
+                  Collectors.joining(", ", " AND LOWER(TRIM(`v_scientificName`)) NOT IN (", ")"));
+    }
     if (scope != null) {
       where +=
           Arrays.stream(SCOPE_KEY_COLUMNS)
@@ -200,6 +222,27 @@ public class GbifImpactPipeline {
     return String.format(
         "SELECT\n  %s,\n  CAST(occurrenceCount AS BIGINT) AS occurrencecount\nFROM %s\nWHERE %s",
         columns, SOURCE_VIEW, where);
+  }
+
+  /**
+   * @return the lower case, trimmed names from the {@value #IGNORE_NAMES_RESOURCE} resource,
+   *     skipping blank lines and # comments
+   */
+  static Set<String> loadIgnoreNames() throws IOException {
+    try (InputStream in = GbifImpactPipeline.class.getResourceAsStream(IGNORE_NAMES_RESOURCE)) {
+      if (in == null) {
+        throw new IOException("Missing resource " + IGNORE_NAMES_RESOURCE);
+      }
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+        return reader
+            .lines()
+            .map(String::trim)
+            .filter(l -> !l.isEmpty() && !l.startsWith("#"))
+            .map(l -> l.toLowerCase(Locale.ROOT))
+            .collect(Collectors.toCollection(TreeSet::new));
+      }
+    }
   }
 
   /** Writes the Parquet output as a single tab delimited file with a header. */

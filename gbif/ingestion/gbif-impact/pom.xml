@@ -18,6 +18,7 @@
   <properties>
     <scala.binary.version>2.12</scala.binary.version>
     <sonar.skip>true</sonar.skip>
+    <name-parser.version>3.8.5</name-parser.version>
   </properties>
 
   <dependencies>
@@ -68,7 +69,28 @@
           <groupId>org.apache.avro</groupId>
           <artifactId>avro</artifactId>
         </exclusion>
+        <!-- declared below, used directly by AuthorshipStripper -->
+        <exclusion>
+          <groupId>org.gbif</groupId>
+          <artifactId>name-parser</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif</groupId>
+          <artifactId>name-parser-api</artifactId>
+        </exclusion>
       </exclusions>
+    </dependency>
+
+    <!-- Name parser used to remove authorships when comparing names -->
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>name-parser</artifactId>
+      <version>${name-parser.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>name-parser-api</artifactId>
+      <version>${name-parser.version}</version>
     </dependency>
 
     <!-- Spark (provided by the cluster) -->

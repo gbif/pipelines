@@ -1,0 +1,196 @@
+# Verbatim scientific names (case insensitive, trimmed) that are skipped by the impact assessment.
+# Rows with a null or empty verbatim scientific name are always skipped.
+# Only names carrying no usable taxon belong here: "Syrphidae indet." or "Navicula sp." still
+# match to a family / genus and must not be listed.
+
+# Placeholders for unidentified material
+Unidentified
+unidentifiable
+Unspecified
+Undetermined
+Undetermined sp.
+Unident sp
+taxon undetermined
+unknown unknown Unknown Unknown
+0-Unknown
+indet
+indet.
+Indet. sp.
+sp.
+spec.
+Egg indet
+
+# Placeholder genus and species
+Gen. indet.
+Gen. indet. sp.
+Gen. indet. sp. indet.
+Gen.indet. SP.INDET.
+Gen. sp.
+Gen sp
+Genus sp.
+Genus sp
+Genus indet. sp. indet.
+Genus ? spec. ? ,
+Genre indet.
+Genre sp.
+
+# Placeholder classifications
+Incertae sedis
+Biota incertae sedis
+Eukaryota incertae sedis
+Eukaryota kgd Incertae sedis
+
+# Missing or broken values
+null
+NA
+ND
+_ _
+dropped
+[bad data, blank import]
+Number not used sp.
+
+# Samples, substrates and other non-taxa
+environmental samples
+Environmental Recording
+metagenome
+marine metagenome
+biofilm metagenome
+human gut metagenome
+goat gut metagenome
+uncultured organism
+mixed taxa, stratigraphic collection
+Mixed earth indet.
+Mixed solution indet.
+Group slide sp.
+Other Substrate
+Other Algae/Plants
+Other Green Algae
+Other Red Algae
+No fish
+Nodule StÃ©rile ?
+Stellate body (Land plant hair)
+CLASSIFICATION LIST
+DEAD NUMBER
+Plastic Total (trial)
+Rock
+Rock specimen
+Sand
+Sand gravel
+Plastic
+Plastic strand black
+Plastic strand blue
+Plastic strand red
+Pollen
+Fish eggs with oil globules
+Fish eggs without oil globules
+
+# Common names for broad groups
+Plant
+Algae
+Ciliates
+Flagellates
+flagellates - phytoplankton
+picophytoplankton
+Moss sp.
+Lichen (unidentified)
+
+# Unnamed environmental sequences, with no taxon in the name
+bacterium
+unidentified marine_bacterioplankton
+eukaryotic picoplankton_environmental_sample
+marine bacterium_SCRIPPS_423
+agricultural soil_bacterium_SC-I-11
+agricultural soil_bacterium_SC-I-81
+metal-contaminated soil_clone_K20-27
+saltmarsh clone_LCP-26
+saltmarsh clone_LCP-67
+saltmarsh clone_LCP-89
+uncultured archaeon
+uncultured bacterium
+uncultured eukaryote
+uncultured eukaryotic phytoplankton
+uncultured marine bacterium
+uncultured marine eukaryote
+uncultured marine_bacterium
+uncultured marine_eukaryote
+uncultured phototrophic_eukaryote
+uncultured prokaryote
+bacterium AMSU
+bacterium Ellin5220
+bacterium Ellin5290
+bacterium Ellin6502
+bacterium Ellin6505
+bacterium Ellin6510
+bacterium Ellin6526
+bacterium Ellin6529
+bacterium Ellin6537
+bacterium Ellin7504
+bacterium Ellin7505
+bacterium LWH54
+bacterium SCGC_AG-212-C10
+bacterium SH1-10
+bacterium SH1-3
+bacterium SH4-10
+bacterium UW_659-2-F09
+bacterium WH5-6
+bacterium WH6-5
+bacterium WH8-1
+bacterium WHC7-12
+bacterium WX65
+bacterium YC-LK-LKJ22
+bacterium YC-LK-LKJ25
+bacterium YC-LK-LKJ31
+bacterium YC-LK-LKJ38
+bacterium YC-ZSS-LKJ159
+bacterium YC-ZSS-LKJ66
+bacterium YC-ZSS-LKJ94
+eukaryote clone_OLI11001
+eukaryote clone_OLI11005
+eukaryote clone_OLI11009
+eukaryote clone_OLI11011
+eukaryote clone_OLI11013
+eukaryote clone_OLI11027
+eukaryote clone_OLI11029
+eukaryote clone_OLI11038
+eukaryote clone_OLI11150
+eukaryote clone_OLI11261
+eukaryote marine_clone_ANT37-16
+eukaryote marine_clone_ME1-17
+eukaryote marine_clone_ME1-18
+eukaryote marine_clone_ME1-20
+eukaryote marine_clone_ME1-21
+eukaryote marine_clone_ME1-22
+eukaryote marine_clone_ME1-24
+
+# Epithets without a genus
+albicans
+amurensis
+asiatica
+chinensis
+clavatus
+gebleri
+incisa
+japonica
+japonicum
+japonicus
+koreana
+kozhantschikovi
+kua
+longipennis
+maximowiczii
+mellifera
+minutissimus
+nigrifrons
+obsoletus/scoticus
+obsoletus s.st
+orientalis
+pellucidus
+pictipennis
+pilicornis
+punctatissima
+schinifolium
+schmidti
+sieboldii
+subsessilis
+succinctus
+thunbergii

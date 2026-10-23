@@ -75,6 +75,13 @@ public class GbifImpactArgs implements Serializable {
   public boolean ignoreAuthorshipFormatting = true;
 
   @Parameter(
+      names = "--ignoreAuthorship",
+      description =
+          "Controls if authorship should be ignored entirely when comparing scientific names",
+      arity = 1)
+  public boolean ignoreAuthorship = true;
+
+  @Parameter(
       names = "--numPartitions",
       description =
           "Repartition the source into this many partitions before the lookups to control "

@@ -246,6 +246,14 @@ Instead of a Hive table, the source can be read directly from Parquet files with
 `--sourcePath=hdfs:///path/to/alltaxa` (`--database`, `--table` and `--metastoreUris` are then not needed).
 `--numPartitions` controls the parallelism of the lookups against the API.
 
+Authorship is ignored when comparing the current and proposed scientific names (the names are reduced
+to their canonical form with the GBIF name parser). Use `--ignoreAuthorship=false` to report
+authorship-only changes.
+
+Rows whose verbatim scientific name is null, empty, or one of the names listed in
+[`src/main/resources/ignore-names.txt`](src/main/resources/ignore-names.txt) (compared trimmed and
+case insensitively) are skipped.
+
 The job writes:
 
 * `<targetDir>/impact/` – the changed classifications as Parquet

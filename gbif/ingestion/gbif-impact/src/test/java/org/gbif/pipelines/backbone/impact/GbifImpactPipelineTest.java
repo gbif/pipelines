@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -163,6 +164,49 @@ class GbifImpactPipelineTest {
     assertEquals(List.of("Felis catus"), names);
   }
 
+  @Test
+  void authorshipIsComparedWhenNotIgnored() throws Exception {
+    String sourcePath = tmp.resolve("source").toString();
+    writeSource(sourcePath);
+
+    GbifImpactArgs args = new GbifImpactArgs();
+    args.sourcePath = sourcePath;
+    args.targetDir = tmp.resolve("out").toString();
+    args.apiBaseUri = "http://api.example.org/v1";
+    args.minimumOccurrenceCount = 10;
+    args.skipKeys = true;
+    args.ignoreAuthorship = false;
+
+    GbifImpactPipeline.run(spark, args, StubService::new);
+
+    List<String> names =
+        spark.read().parquet(args.targetDir + "/impact").collectAsList().stream()
+            .map(r -> r.<String>getAs("verbatim_scientificName"))
+            .sorted()
+            .collect(Collectors.toList());
+    assertEquals(List.of("Felis catus", "Puma concolor"), names);
+  }
+
+  @Test
+  void ignoreNamesAreLoaded() throws Exception {
+    Set<String> names = GbifImpactPipeline.loadIgnoreNames();
+    assertTrue(
+        names.containsAll(
+            Set.of("unidentified", "incertae sedis", "taxon undetermined", "gen. indet.")));
+    // lower cased, comments and blank lines skipped
+    assertTrue(names.contains("[bad data, blank import]"));
+    assertTrue(names.stream().noneMatch(n -> n.isEmpty() || n.startsWith("#")));
+    assertTrue(names.stream().allMatch(n -> n.equals(n.toLowerCase())));
+  }
+
+  @Test
+  void stripsAuthorship() {
+    assertEquals("Puma concolor", AuthorshipStripper.strip("Puma concolor (Linnaeus, 1771)"));
+    assertEquals("Abies alba", AuthorshipStripper.strip("Abies alba Mill."));
+    assertEquals("Puma concolor", AuthorshipStripper.strip("Puma concolor"));
+    assertEquals(null, AuthorshipStripper.strip(null));
+  }
+
   /** Writes a source table in the shape described in the project readme. */
   private static void writeSource(String path) {
     String[] stringCols = {
@@ -229,9 +273,28 @@ class GbifImpactPipelineTest {
 
     List<Row> rows =
         List.of(
-            row(schema, "Puma concolor", "Puma", "Puma concolor", 2435098, 2435099, 1000L),
+            // current name has authorship, the proposed one does not
+            row(
+                schema,
+                "Puma concolor",
+                "Puma",
+                "Puma concolor",
+                "Puma concolor (Linnaeus, 1771)",
+                2435098,
+                2435099,
+                1000L),
             row(schema, "Felis catus", "Felis", "Felis catus", 2435022, 2435035, 500L),
-            row(schema, "Rare taxon", "Rare", "Rare taxon", 5, 6, 3L));
+            row(schema, "Rare taxon", "Rare", "Rare taxon", 5, 6, 3L),
+            // ignored verbatim names, the stub would propose incertae sedis for all of these
+            row(schema, null, null, null, 7, 8, 1000L),
+            row(schema, "", null, null, 7, 8, 1000L),
+            row(schema, "  ", null, null, 7, 8, 1000L),
+            row(schema, "Unidentified", null, null, 7, 8, 1000L),
+            row(schema, " incertae SEDIS", null, null, 7, 8, 1000L),
+            row(schema, "Taxon undetermined", null, null, 7, 8, 1000L),
+            row(schema, "Gen. indet. ", null, null, 7, 8, 1000L),
+            row(schema, "[bad data, blank import]", null, null, 7, 8, 1000L),
+            row(schema, "Genus ? spec. ? ,", null, null, 7, 8, 1000L));
 
     spark.createDataFrame(rows, schema).write().mode("overwrite").parquet(path);
   }
@@ -244,14 +307,26 @@ class GbifImpactPipelineTest {
       int genusKey,
       int speciesKey,
       long count) {
+    return row(schema, name, genus, species, species, genusKey, speciesKey, count);
+  }
+
+  private static Row row(
+      StructType schema,
+      String name,
+      String genus,
+      String species,
+      String scientificName,
+      int genusKey,
+      int speciesKey,
+      long count) {
     Object[] values = new Object[schema.fields().length];
     values[schema.fieldIndex("v_kingdom")] = "Animalia";
     values[schema.fieldIndex("v_scientificName")] = name;
     values[schema.fieldIndex("kingdom")] = "Animalia";
     values[schema.fieldIndex("genus")] = genus;
     values[schema.fieldIndex("species")] = species;
-    values[schema.fieldIndex("scientificName")] = species;
-    values[schema.fieldIndex("acceptedScientificName")] = species;
+    values[schema.fieldIndex("scientificName")] = scientificName;
+    values[schema.fieldIndex("acceptedScientificName")] = scientificName;
     values[schema.fieldIndex("kingdomKey")] = 1;
     values[schema.fieldIndex("genusKey")] = genusKey;
     values[schema.fieldIndex("speciesKey")] = speciesKey;

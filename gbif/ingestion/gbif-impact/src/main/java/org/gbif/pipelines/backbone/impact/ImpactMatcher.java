@@ -57,6 +57,7 @@ public class ImpactMatcher implements MapPartitionsFunction<Row, Row> {
   private final boolean skipKeys;
   private final boolean ignoreWhitespace;
   private final boolean ignoreAuthorshipFormatting;
+  private final boolean ignoreAuthorship;
   private final MatchServiceFactory serviceFactory;
 
   public ImpactMatcher(GbifImpactArgs args, MatchServiceFactory serviceFactory) {
@@ -65,6 +66,7 @@ public class ImpactMatcher implements MapPartitionsFunction<Row, Row> {
     this.skipKeys = args.skipKeys;
     this.ignoreWhitespace = args.ignoreWhitespace;
     this.ignoreAuthorshipFormatting = args.ignoreAuthorshipFormatting;
+    this.ignoreAuthorship = args.ignoreAuthorship;
     this.serviceFactory = serviceFactory;
   }
 
@@ -156,12 +158,18 @@ public class ImpactMatcher implements MapPartitionsFunction<Row, Row> {
         proposed.setKingdomKey("0");
       }
 
-      // emit classifications that differ, optionally considering the keys
+      // emit classifications that differ, optionally considering the keys and authorship
+      Classification existingCmp = existing;
+      Classification proposedCmp = proposed;
+      if (ignoreAuthorship) {
+        existingCmp = existing.withoutAuthorship(AuthorshipStripper::strip);
+        proposedCmp = proposed.withoutAuthorship(AuthorshipStripper::strip);
+      }
       boolean changed =
           skipKeys
-              ? !existing.classificationEquals(
-                  proposed, ignoreWhitespace, ignoreAuthorshipFormatting)
-              : !existing.equals(proposed);
+              ? !existingCmp.classificationEquals(
+                  proposedCmp, ignoreWhitespace, ignoreAuthorshipFormatting)
+              : !existingCmp.equals(proposedCmp);
 
       return changed
           ? toRow(source.getAs("occurrencecount"), matchRequest, existing, proposed)
