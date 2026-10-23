@@ -142,7 +142,7 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
     archive.initialize();
     try (ClosableIterator<StarRecord> it = archive.iterator()) {
       while (it.hasNext()) {
-List<Record> occurrences = it.next().extension(DwcTerm.Occurrence);
+        List<Record> occurrences = it.next().extension(DwcTerm.Occurrence);
         if (occurrences != null && !occurrences.isEmpty()) {
           return true;
         }

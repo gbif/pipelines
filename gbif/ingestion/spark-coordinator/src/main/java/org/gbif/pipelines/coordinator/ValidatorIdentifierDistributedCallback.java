@@ -47,6 +47,19 @@ public class ValidatorIdentifierDistributedCallback extends ValidatorIdentifierC
                 + "="
                 + (message.getValidationResult().getUseExtendedRecordId() != null
                     && message.getValidationResult().getUseExtendedRecordId())));
+
+    IdentifierValidationResult validationResult =
+        PostprocessValidation.builder()
+            .httpClient(this.httpClient)
+            .message(message)
+            .fileSystem(this.fileSystem)
+            .config(pipelinesConfig.getStandalone())
+            .outputPath(pipelinesConfig.getOutputPath())
+            .bypassRegistry(true)
+            .build()
+            .validate();
+
+    checkValidity(validationResult);
   }
 
   @Override

@@ -35,6 +35,9 @@ public class IdentifierDistributedCallback extends IdentifierCallback {
                 + (message.getValidationResult().getUseExtendedRecordId() != null
                     ? message.getValidationResult().getUseExtendedRecordId()
                     : false)));
+
+    // check if the validation result is valid, if not throw an exception
+    checkValidity(message);
   }
 
   @Override

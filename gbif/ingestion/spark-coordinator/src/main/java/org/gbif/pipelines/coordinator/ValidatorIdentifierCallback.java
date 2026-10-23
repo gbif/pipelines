@@ -77,6 +77,17 @@ public class ValidatorIdentifierCallback
             .build()
             .validate();
 
+    checkValidity(validationResult);
+  }
+
+  /**
+   * Checks the validity of the identifier validation result. If the result is valid but contains
+   * duplicate identifiers, a warning is logged and a PipelinesException is thrown. If the result is
+   * invalid, an error is logged and a PipelinesException is thrown.
+   *
+   * @param validationResult
+   */
+  protected void checkValidity(IdentifierValidationResult validationResult) {
     if (validationResult.isResultValid()) {
       if (validationResult.duplicateIdentifiers() > 0) {
         log.warn(validationResult.validationMessage());
