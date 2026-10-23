@@ -113,7 +113,7 @@ public class PostprocessValidation {
     // absentIdCount is the number of records in this new attempt that do not yet have
     // an assigned numeric ID from HBase
     long absentIdCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.ABSENT_GBIF_ID_COUNT);
-    long existingCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT);
+    long existingCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.UNIQUE_IDS_COUNT);
     long duplicateCount = getMetricFn.applyAsLong(PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT);
     return new ValidationMetrics(
         threshold, totalCount, absentIdCount, existingCount, duplicateCount);
