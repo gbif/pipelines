@@ -2,6 +2,7 @@ package org.gbif.pipelines.coordinator;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
@@ -16,6 +17,8 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.spark.Directories;
+import org.gbif.pipelines.spark.records.RecordsTableWriter;
+import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordType;
 import org.gbif.pipelines.spark.util.TableUtil;
 
 @Slf4j
@@ -94,12 +97,30 @@ public class DatasetDeleteCallback extends AbstractMessageCallback<DeleteDataset
           60,
           5);
 
+      // remove the records served by the API, once the index no longer returns their keys
+      deleteRecords(message);
+
       // remove files to avoid inclusion in index  & table rebuilds
       deleteFileSystemOutputs(message);
 
       log.info("Deleted dataset {}", message.getDatasetUuid());
     } finally {
       runningCounter.decrementAndGet();
+    }
+  }
+
+  private void deleteRecords(DeleteDatasetOccurrencesMessage message) {
+    log.info("Deleting dataset {} from HBase records", message.getDatasetUuid());
+    try {
+      RecordsTableWriter.deleteDataset(
+          sparkSession,
+          fileSystem,
+          pipelinesConfig,
+          RecordsTableWriter.hbaseConfiguration(pipelinesConfig),
+          datasetType == DatasetType.OCCURRENCE ? RecordType.OCCURRENCE : RecordType.EVENT,
+          message.getDatasetUuid().toString());
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
   }
 
