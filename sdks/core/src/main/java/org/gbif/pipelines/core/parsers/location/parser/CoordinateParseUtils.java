@@ -229,7 +229,8 @@ public class CoordinateParseUtils {
         return ParsedField.success(GeocodeRequest.create(lon, lat), issues);
       } else {
         issues.add(SUSPECTED_SWAPPED_COORDINATE.name());
-        return ParsedField.success(GeocodeRequest.create(lat, lon), issues);
+        // Keep the issue but fail parsing so out-of-range coordinates are not persisted.
+        return ParsedField.fail(issues);
       }
     }
 
