@@ -161,36 +161,3 @@ eukaryote marine_clone_ME1-20
 eukaryote marine_clone_ME1-21
 eukaryote marine_clone_ME1-22
 eukaryote marine_clone_ME1-24
-
-# Epithets without a genus
-albicans
-amurensis
-asiatica
-chinensis
-clavatus
-gebleri
-incisa
-japonica
-japonicum
-japonicus
-koreana
-kozhantschikovi
-kua
-longipennis
-maximowiczii
-mellifera
-minutissimus
-nigrifrons
-obsoletus/scoticus
-obsoletus s.st
-orientalis
-pellucidus
-pictipennis
-pilicornis
-punctatissima
-schinifolium
-schmidti
-sieboldii
-subsessilis
-succinctus
-thunbergii
