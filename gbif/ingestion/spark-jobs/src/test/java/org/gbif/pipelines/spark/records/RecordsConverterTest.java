@@ -12,11 +12,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 import org.gbif.api.model.event.Event;
 import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
+import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.pipelines.spark.records.RecordsConverter.ApiRecord;
 import org.gbif.search.es.event.EventEsField;
 import org.gbif.search.es.event.SearchHitEventConverter;
@@ -138,6 +144,54 @@ public class RecordsConverterTest {
   @Test(expected = IllegalArgumentException.class)
   public void eventWithoutKeyIsRejected() {
     RecordsConverter.forEvents().convert("{\"type\":\"event\"}");
+  }
+
+  @Test
+  public void dateIdentifiedSameFormatAsApi() throws Exception {
+    Occurrence occurrence = new Occurrence();
+    occurrence.setDateIdentified(new Date(1_700_000_123_456L));
+
+    ObjectMapper wsMapper = new ObjectMapper();
+    Mixins.getPredefinedMixins().forEach(wsMapper::addMixIn);
+
+    assertEquals(
+        wsMapper.readTree(wsMapper.writeValueAsString(occurrence)).get("dateIdentified"),
+        MAPPER.readTree(API_MAPPER.writeValueAsString(occurrence)).get("dateIdentified"));
+    assertEquals(
+        "\"2023-11-14T22:15:23\"",
+        MAPPER
+            .readTree(API_MAPPER.writeValueAsString(occurrence))
+            .get("dateIdentified")
+            .toString());
+  }
+
+  /** DateSerde.NoTimezoneDateJsonSerializer shares a SimpleDateFormat across threads */
+  @Test
+  public void dateIdentifiedThreadSafe() throws Exception {
+    ExecutorService executor = Executors.newFixedThreadPool(16);
+    try {
+      List<Future<Boolean>> results =
+          IntStream.range(0, 20_000)
+              .mapToObj(
+                  i ->
+                      executor.submit(
+                          () -> {
+                            Occurrence occurrence = new Occurrence();
+                            long time = 1_000_000_000_000L + i * 86_400_000L;
+                            occurrence.setDateIdentified(new Date(time));
+                            String expected =
+                                java.time.Instant.ofEpochMilli(time).toString().substring(0, 19);
+                            return API_MAPPER
+                                .writeValueAsString(occurrence)
+                                .contains("\"dateIdentified\":\"" + expected + "\"");
+                          }))
+              .toList();
+      for (Future<Boolean> result : results) {
+        assertTrue(result.get());
+      }
+    } finally {
+      executor.shutdownNow();
+    }
   }
 
   @Test

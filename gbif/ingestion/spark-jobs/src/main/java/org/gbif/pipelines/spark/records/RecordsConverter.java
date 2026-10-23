@@ -2,18 +2,27 @@ package org.gbif.pipelines.spark.records;
 
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.io.Serial;
 import java.io.Serializable;
 import java.io.UncheckedIOException;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.ws.mixin.Mixins;
+import org.gbif.api.ws.mixin.OccurrenceMixin;
 
 /**
  * Converts the JSON documents produced for Elasticsearch into the JSON returned by the API for a
@@ -110,7 +119,36 @@ public abstract class RecordsConverter implements Serializable {
     mapper.disable(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES);
     mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     Mixins.getPredefinedMixins().forEach(mapper::addMixIn);
+    mapper.addMixIn(Occurrence.class, ThreadSafeOccurrenceMixin.class);
     mapper.registerModule(new JavaTimeModule());
     return mapper;
+  }
+
+  /**
+   * {@link OccurrenceMixin} serializes dateIdentified with a static SimpleDateFormat
+   * (DateSerde.NoTimezoneDateJsonSerializer), which isn't thread-safe and fails when several Spark
+   * tasks share an executor. This keeps the same mixin and output, using a thread-safe formatter.
+   */
+  interface ThreadSafeOccurrenceMixin extends OccurrenceMixin {
+
+    @Override
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonSerialize(using = NoTimezoneDateSerializer.class)
+    Date getDateIdentified();
+  }
+
+  /** Same format as DateSerde.NoTimezoneDateJsonSerializer */
+  static class NoTimezoneDateSerializer extends JsonSerializer<Date> {
+
+    private static final DateTimeFormatter NO_TIMEZONE_FORMAT =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(ZoneOffset.UTC);
+
+    @Override
+    public void serialize(Date value, JsonGenerator gen, SerializerProvider provider)
+        throws IOException {
+      if (value != null) {
+        gen.writeString(NO_TIMEZONE_FORMAT.format(value.toInstant()));
+      }
+    }
   }
 }
