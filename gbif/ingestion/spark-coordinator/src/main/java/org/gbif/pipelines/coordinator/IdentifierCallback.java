@@ -2,6 +2,7 @@ package org.gbif.pipelines.coordinator;
 
 import static org.gbif.pipelines.util.DistributedUtil.getRecordsNumber;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +66,11 @@ public class IdentifierCallback
             ? message.getValidationResult().getUseExtendedRecordId()
             : false);
 
+    // check if the validation result is valid, if not throw an exception
+    checkValidity(message);
+  }
+
+  protected void checkValidity(PipelinesVerbatimMessage message) throws IOException {
     IdentifierValidationResult validationResult =
         PostprocessValidation.builder()
             .httpClient(this.httpClient)

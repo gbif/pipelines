@@ -60,6 +60,7 @@ public abstract class BaseDwcaArchiveValidator implements ArchiveValidator {
             .flatMap(x -> x.getRelatedData().keySet().stream())
             .anyMatch(x -> x.equals(Level.FATAL.name()));
     if (hasFatalIssues) {
+      log.error("Discovered fatal issues in validation for dataset {}", message.getDatasetUuid());
       throw new IllegalArgumentException("Discovered fatal issue");
     }
   }
