@@ -181,6 +181,7 @@ public class TaxonomyRefreshPipeline {
                       .dnaDerivedData(simpleRecord.getDnaDerivedData())
                       .multimedia(simpleRecord.getMultimedia())
                       .clustering(simpleRecord.getClustering())
+                      .dnaTaxon(simpleRecord.getDnaTaxon())
                       .build();
                 },
             Encoders.bean(Occurrence.class));

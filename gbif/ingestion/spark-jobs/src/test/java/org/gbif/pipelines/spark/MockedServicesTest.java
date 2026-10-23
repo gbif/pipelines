@@ -3,6 +3,8 @@ package org.gbif.pipelines.spark;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
@@ -20,12 +22,14 @@ public abstract class MockedServicesTest {
   private static WireMockServer nameMatchingServer;
   private static WireMockServer grsciCollServer;
   private static WireMockServer geocodeServer;
+  private static WireMockServer sequenceClassifierServer;
 
   // downstream-visible ports
   protected static int registryPort;
   protected static int nameMatchingPort;
   protected static int grsciCollPort;
   protected static int geocodePort;
+  protected static int sequenceClassifierPort;
 
   @ClassRule
   public static ExternalResource wireMockResource =
@@ -38,17 +42,21 @@ public abstract class MockedServicesTest {
               new WireMockServer(wireMockConfig().dynamicPort().dynamicHttpsPort());
           grsciCollServer = new WireMockServer(wireMockConfig().dynamicPort().dynamicHttpsPort());
           geocodeServer = new WireMockServer(wireMockConfig().dynamicPort().dynamicHttpsPort());
+          sequenceClassifierServer =
+              new WireMockServer(wireMockConfig().dynamicPort().dynamicHttpsPort());
 
           registryServer.start();
           nameMatchingServer.start();
           grsciCollServer.start();
           geocodeServer.start();
+          sequenceClassifierServer.start();
 
           // capture ports AFTER start()
           registryPort = registryServer.port();
           nameMatchingPort = nameMatchingServer.port();
           grsciCollPort = grsciCollServer.port();
           geocodePort = geocodeServer.port();
+          sequenceClassifierPort = sequenceClassifierServer.port();
 
           URL testRootUrl = EventInterpretationTest.class.getResource("/");
           assert testRootUrl != null;
@@ -131,6 +139,19 @@ public abstract class MockedServicesTest {
                                   java.nio.file.Path.of(
                                       testResourcesRoot + "ws/installation-response.json")))));
 
+          sequenceClassifierServer.stubFor(
+              post(urlPathMatching("/occurrence/classify/batch"))
+                  .withRequestBody(matchingJsonPath("$"))
+                  .willReturn(
+                      aResponse()
+                          .withStatus(200)
+                          .withHeader("Content-Type", "application/json")
+                          .withBody(
+                              Files.readString(
+                                  java.nio.file.Path.of(
+                                      testResourcesRoot
+                                          + "ws/sequenceclassifier-response.json")))));
+
           TestConfigUtil.createConfigYaml(
               testResourcesRoot,
               testResourcesRoot,
@@ -139,6 +160,7 @@ public abstract class MockedServicesTest {
               nameMatchingPort,
               geocodePort,
               grsciCollPort,
+              sequenceClassifierPort,
               "pipelines.yaml");
         }
 

@@ -6,6 +6,7 @@ import java.util.Optional;
 /** Enumeration of special interpretation runs that can be requested via the CLI/args. */
 public enum OccurrenceInterpretType {
   MULTI_TAXONOMY,
+  DNA_TAXONOMY,
   CLUSTERING,
   REGEN_OUTPUTS,
   REGEN_JSON_OUTPUTS,

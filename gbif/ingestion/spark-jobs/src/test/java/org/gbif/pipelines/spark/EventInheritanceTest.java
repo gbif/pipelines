@@ -151,6 +151,7 @@ public class EventInheritanceTest {
         9999, // not used for test
         9999, // not used for test
         9999, // not used for test
+        9999, // not used for test
         "pipelines.yaml");
 
     // create a dataframe with the list of objects

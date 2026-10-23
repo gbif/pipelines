@@ -8,8 +8,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import org.gbif.pipelines.core.config.model.DnaConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.VocabularyConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 
 public class TestConfigUtil {
 
@@ -21,6 +23,7 @@ public class TestConfigUtil {
       int namematchingPort,
       int geocodePort,
       int grscicollPort,
+      int sequenceClassifierPort,
       String outConfigFilePath)
       throws IOException {
 
@@ -48,6 +51,12 @@ public class TestConfigUtil {
       config.getGeocode().getApi().setWsUrl("http://localhost:" + geocodePort + "/v1/");
       config.getGbifApi().setWsUrl("http://localhost:" + registryPort + "/v1/");
       config.getKeygen().setZkConnectionString(zkConnectionString);
+
+      DnaConfig dnaConfig = new DnaConfig();
+      WsConfig dnaWsConfig = new WsConfig();
+      dnaWsConfig.setWsUrl("http://localhost:" + sequenceClassifierPort);
+      dnaConfig.setSequenceClassifierWsConfig(dnaWsConfig);
+      config.setDnaConfig(dnaConfig);
 
       VocabularyConfig vocabularyConfig = new VocabularyConfig();
       vocabularyConfig.setVocabulariesPath(testResourcePath + "vocab");

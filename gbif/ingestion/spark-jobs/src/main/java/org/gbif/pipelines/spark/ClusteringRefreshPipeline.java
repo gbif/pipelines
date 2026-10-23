@@ -189,6 +189,7 @@ public class ClusteringRefreshPipeline {
                       .dnaDerivedData(simpleRecord.getDnaDerivedData())
                       .multimedia(simpleRecord.getMultimedia())
                       .clustering(MAPPER.writeValueAsString(cr))
+                      .dnaTaxon(simpleRecord.getDnaTaxon())
                       .build();
                 },
             Encoders.bean(Occurrence.class));

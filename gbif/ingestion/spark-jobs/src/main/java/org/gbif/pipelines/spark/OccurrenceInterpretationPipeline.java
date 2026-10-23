@@ -29,6 +29,7 @@ import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -142,31 +143,11 @@ public class OccurrenceInterpretationPipeline {
 
       if (interpretTypeOpt.isPresent() && interpretTypeOpt.get() != OccurrenceInterpretType.ALL) {
         OccurrenceInterpretType it = interpretTypeOpt.get();
-        switch (it) {
-          case MULTI_TAXONOMY:
-            log.info("Running only taxonomy interpretation");
-            TaxonomyRefreshPipeline.runTaxonomy(
-                spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-            break;
-          case CLUSTERING:
-            log.info("Running only clustering interpretation");
-            ClusteringRefreshPipeline.runClustering(
-                spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-            break;
-          case REGEN_OUTPUTS:
-            log.info("Running output regeneration");
-            regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
-            break;
-          case REGEN_JSON_OUTPUTS:
-            log.info("Running JSON output regeneration");
-            regenJsonOutput(spark, config, datasetId, attempt, args.numberOfShards);
-            break;
-          case REGEN_HDFS_OUTPUTS:
-            log.info("Running HDFS output regeneration");
-            regenHdfsOutput(spark, config, datasetId, attempt, args.numberOfShards);
-            break;
-          default:
-            throw new IllegalArgumentException("Unsupported interpretation type: " + it);
+        boolean handled =
+            handleInterpretTypes(
+                it, spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+        if (!handled) {
+          throw new IllegalArgumentException("Unsupported interpretation type: " + it);
         }
       } else {
         runInterpretation(
@@ -251,6 +232,24 @@ public class OccurrenceInterpretationPipeline {
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
   }
 
+  public static void interpretDnaTaxonomyAndRegenOutput(
+      SparkSession spark,
+      PipelinesConfig config,
+      FileSystem fs,
+      String datasetId,
+      int attempt,
+      int numberOfShards)
+      throws Exception {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
+
+    Dataset<Occurrence> interpreted =
+        TaxonomyDnaPipeline.runDnaTaxonomy(spark, fs, config, datasetId, attempt);
+
+    generateOutputs(spark, config, numberOfShards, interpreted, metadata, outputPath);
+  }
+
   /** Helper to load the simple interpreted occurrences from disk. */
   private static Dataset<Occurrence> loadSimpleInterpreted(SparkSession spark, String outputPath) {
     return spark
@@ -312,31 +311,11 @@ public class OccurrenceInterpretationPipeline {
             : Optional.empty();
 
     if (interpretTypeOpt.isPresent()) {
-      switch (interpretTypeOpt.get()) {
-        case MULTI_TAXONOMY:
-          log.info("Running only taxonomy interpretation");
-          TaxonomyRefreshPipeline.runTaxonomy(
-              spark, fs, config, datasetId, attempt, numberOfShards);
-          return;
-        case CLUSTERING:
-          log.info("Running only clustering interpretation");
-          ClusteringRefreshPipeline.runClustering(
-              spark, fs, config, datasetId, attempt, numberOfShards);
-          return;
-        case REGEN_OUTPUTS:
-          log.info("Running only output regeneration");
-          regenOutput(spark, config, datasetId, attempt, numberOfShards);
-          return;
-        case REGEN_HDFS_OUTPUTS:
-          log.info("Running only hdfs output regeneration");
-          regenHdfsOutput(spark, config, datasetId, attempt, numberOfShards);
-          return;
-        case REGEN_JSON_OUTPUTS:
-          log.info("Running only json output regeneration");
-          regenJsonOutput(spark, config, datasetId, attempt, numberOfShards);
-          return;
-        default:
-          // no-op
+      boolean handled =
+          handleInterpretTypes(
+              interpretTypeOpt.get(), spark, fs, config, datasetId, attempt, numberOfShards);
+      if (handled) {
+        return;
       }
     }
 
@@ -385,6 +364,11 @@ public class OccurrenceInterpretationPipeline {
     Dataset<Occurrence> interpreted =
         runTransforms(spark, config, simpleRecords, metadata, outputPath);
 
+    // interpret DNA taxonomy
+    if (config.getDnaConfig().isEnableDnaTaxonInterpretation()) {
+      interpreted = TaxonomyDnaPipeline.runDnaTaxonomy(spark, fs, config, datasetId, attempt);
+    }
+
     // FIXME move to configuration
     Integer numberOfOutputShards = numberOfShards;
     if (identifiersCount > 50_000 && identifiersCount <= 100_000) {
@@ -411,6 +395,47 @@ public class OccurrenceInterpretationPipeline {
 
     ThreadContext.put("datasetKey", datasetId);
     log.info(timeAndRecPerSecond("interpretation", start, identifiersCount));
+  }
+
+  @SneakyThrows
+  private static boolean handleInterpretTypes(
+      OccurrenceInterpretType interpretType,
+      SparkSession spark,
+      FileSystem fs,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      int numberOfShards) {
+
+    switch (interpretType) {
+      case MULTI_TAXONOMY:
+        log.info("Running only taxonomy interpretation");
+        TaxonomyRefreshPipeline.runTaxonomy(spark, fs, config, datasetId, attempt, numberOfShards);
+        return true;
+      case CLUSTERING:
+        log.info("Running only clustering interpretation");
+        ClusteringRefreshPipeline.runClustering(
+            spark, fs, config, datasetId, attempt, numberOfShards);
+        return true;
+      case REGEN_OUTPUTS:
+        log.info("Running only output regeneration");
+        regenOutput(spark, config, datasetId, attempt, numberOfShards);
+        return true;
+      case REGEN_HDFS_OUTPUTS:
+        log.info("Running only hdfs output regeneration");
+        regenHdfsOutput(spark, config, datasetId, attempt, numberOfShards);
+        return true;
+      case REGEN_JSON_OUTPUTS:
+        log.info("Running only json output regeneration");
+        regenJsonOutput(spark, config, datasetId, attempt, numberOfShards);
+        return true;
+      case DNA_TAXONOMY:
+        log.info("Running DNA taxonomy reinterpretation and output regeneration");
+        interpretDnaTaxonomyAndRegenOutput(spark, config, fs, datasetId, attempt, numberOfShards);
+        return true;
+      default:
+        return false;
+    }
   }
 
   private static void checkIdentifiers(Dataset<IdentifierRecord> identifiers) {
@@ -793,6 +818,10 @@ public class OccurrenceInterpretationPipeline {
                                   record.getDnaDerivedData(), DnaDerivedDataRecord.class))
                           .clustering(
                               MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
+                          .dnaTaxonRecord(
+                              record.getDnaTaxon() != null
+                                  ? MAPPER.readValue(record.getDnaTaxon(), TaxonRecord.class)
+                                  : null)
                           .build();
 
                   return c.convert();
@@ -863,6 +892,10 @@ public class OccurrenceInterpretationPipeline {
                                   record.getDnaDerivedData(), DnaDerivedDataRecord.class))
                           .clusteringRecord(
                               MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
+                          .dnaTaxonRecord(
+                              record.getDnaTaxon() != null
+                                  ? MAPPER.readValue(record.getDnaTaxon(), TaxonRecord.class)
+                                  : null)
                           .build();
 
                   return c.convert();

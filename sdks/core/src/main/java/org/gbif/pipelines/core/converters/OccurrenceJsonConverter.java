@@ -60,6 +60,7 @@ public class OccurrenceJsonConverter {
   private final MultimediaRecord multimedia;
   private final DnaDerivedDataRecord dnaDerivedData;
   private final ExtendedRecord verbatim;
+  private final TaxonRecord dnaTaxonRecord;
 
   private final boolean indexLegacyTaxonomy;
   private final boolean indexMultiTaxonomy;
@@ -314,6 +315,11 @@ public class OccurrenceJsonConverter {
     if (multiTaxon != null
         && multiTaxon.getTaxonRecords() != null
         && !multiTaxon.getTaxonRecords().isEmpty()) {
+
+      if (dnaTaxonRecord != null) {
+        multiTaxon.getTaxonRecords().add(dnaTaxonRecord);
+      }
+
       Map<String, Classification> classifications =
           JsonConverter.convertToClassifications(multiTaxon);
       builder.setClassifications(classifications);

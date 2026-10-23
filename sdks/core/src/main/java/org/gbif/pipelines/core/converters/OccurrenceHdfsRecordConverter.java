@@ -44,6 +44,7 @@ public class OccurrenceHdfsRecordConverter {
   private final MetadataRecord metadataRecord;
   private final MultimediaRecord multimediaRecord;
   private final DnaDerivedDataRecord dnaDerivedDataRecord;
+  private final TaxonRecord dnaTaxonRecord;
 
   // required taxonomic terms
   static final Set<String> REQUIRED_TAXONOMIC_FIELDS =
@@ -326,6 +327,11 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setClassifications(new LinkedHashMap<>());
       return;
     }
+
+    if (dnaTaxonRecord != null) {
+      multiTaxonRecord.getTaxonRecords().add(dnaTaxonRecord);
+    }
+
     occurrenceHdfsRecord.setChecklistkey(
         multiTaxonRecord.getTaxonRecords().stream()
             .map(TaxonRecord::getDatasetKey)
