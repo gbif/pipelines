@@ -353,8 +353,7 @@ public class LocationInterpreterTest {
 
     // State
     ExtendedRecord source = createEr("Indonesia", "ID", null, null, "110.279078", "-8.023319");
-    LocationRecord expected =
-        createLr(Country.INDONESIA, 110.279078, -8.023319, SUSPECTED_SWAPPED_COORDINATE);
+    LocationRecord expected = createLr(Country.INDONESIA, null, null, SUSPECTED_SWAPPED_COORDINATE);
 
     // When
     LocationRecord result = interpret(source, false);

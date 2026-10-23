@@ -472,6 +472,11 @@ public class HumboldtInterpreter {
                             .findFirst()
                             .map(NameUsageMatchResponse.Status::getStatusCode)
                             .ifPresent(thr::setIucnRedListCategoryCode);
+
+                        if (response.getEnvironments() != null
+                            && !response.getEnvironments().isEmpty()) {
+                          thr.setEnvironments(response.getEnvironments());
+                        }
                       });
                 }
               });

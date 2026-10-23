@@ -1,0 +1,11 @@
+<archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">
+  <core encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1"
+      rowType="http://rs.tdwg.org/dwc/terms/Event">
+    <files>
+      <location>event.txt</location>
+    </files>
+    <id index="0"/>
+    <field index="1" term="http://rs.tdwg.org/dwc/terms/eventDate"/>
+    <field index="2" term="http://rs.tdwg.org/dwc/terms/samplingProtocol"/>
+  </core>
+</archive>

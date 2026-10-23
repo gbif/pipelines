@@ -449,6 +449,10 @@ public class ParentJsonConverter {
 
                                   taxonBuilder.setIucnRedListCategoryCode(
                                       t.getIucnRedListCategoryCode());
+                                  taxonBuilder.setEnvironments(
+                                      t.getEnvironments() != null
+                                          ? t.getEnvironments()
+                                          : List.of());
 
                                   Map<String, String> classification = new LinkedHashMap<>();
                                   Map<String, String> classificationKeys = new LinkedHashMap<>();
