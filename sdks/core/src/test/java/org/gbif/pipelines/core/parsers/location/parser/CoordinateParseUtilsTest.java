@@ -62,14 +62,14 @@ public class CoordinateParseUtilsTest {
         CoordinateParseUtils.parseLatLng("-100", "90"),
         GeocodeRequest.create(90d, -100d),
         PRESUMED_SWAPPED_COORDINATE);
-    assertExpected(
-        CoordinateParseUtils.parseLatLng("100", "40", false),
-        GeocodeRequest.create(100d, 40d),
-        SUSPECTED_SWAPPED_COORDINATE);
-    assertExpected(
-        CoordinateParseUtils.parseLatLng("-100", "90", false),
-        GeocodeRequest.create(-100d, 90d),
-        SUSPECTED_SWAPPED_COORDINATE);
+
+    ParsedField<GeocodeRequest> result = CoordinateParseUtils.parseLatLng("100", "40", false);
+    assertFalse(result.isSuccessful());
+    assertTrue(result.getIssues().contains(SUSPECTED_SWAPPED_COORDINATE.name()));
+
+    result = CoordinateParseUtils.parseLatLng("-100", "90", false);
+    assertFalse(result.isSuccessful());
+    assertTrue(result.getIssues().contains(SUSPECTED_SWAPPED_COORDINATE.name()));
 
     // check errors
     assertFailed(CoordinateParseUtils.parseLatLng("", "30"));
@@ -201,10 +201,11 @@ public class CoordinateParseUtilsTest {
         CoordinateParseUtils.parseVerbatimCoordinates("100º23'05\"N 20º35'25\"W"),
         GeocodeRequest.create(-20.590278, 100.384722),
         PRESUMED_SWAPPED_COORDINATE);
-    assertExpected(
-        CoordinateParseUtils.parseVerbatimCoordinates("100º23'05\"N 20º35'25\"W", false),
-        GeocodeRequest.create(100.384722, -20.590278),
-        SUSPECTED_SWAPPED_COORDINATE);
+
+    ParsedField<GeocodeRequest> result =
+        CoordinateParseUtils.parseVerbatimCoordinates("100º23'05\"N 20º35'25\"W", false);
+    assertFalse(result.isSuccessful());
+    assertTrue(result.getIssues().contains(SUSPECTED_SWAPPED_COORDINATE.name()));
 
     // failed
     assertFailed(CoordinateParseUtils.parseVerbatimCoordinates(""));
