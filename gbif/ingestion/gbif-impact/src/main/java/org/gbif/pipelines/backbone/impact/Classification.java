@@ -1,15 +1,14 @@
 package org.gbif.pipelines.backbone.impact;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.hive.hcatalog.common.HCatException;
-import org.apache.hive.hcatalog.data.HCatRecord;
-import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.spark.sql.Row;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
@@ -20,7 +19,7 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 @Getter
 @Setter
 @EqualsAndHashCode
-public class GBIFClassification {
+public class Classification {
 
   private String kingdom;
   private String phylum;
@@ -50,8 +49,8 @@ public class GBIFClassification {
   /**
    * @return A new classification representing unknown.
    */
-  static GBIFClassification error() {
-    GBIFClassification c = new GBIFClassification();
+  static Classification error() {
+    Classification c = new Classification();
     c.scientificName = "ERROR";
     c.kingdom = "ERROR";
     c.setKingdomKey("-1");
@@ -62,52 +61,51 @@ public class GBIFClassification {
   /**
    * @return A new classification representing unknown.
    */
-  static GBIFClassification newIncertaeSedis() {
-    GBIFClassification c = new GBIFClassification();
+  static Classification newIncertaeSedis() {
+    Classification c = new Classification();
     c.scientificName = "incertae sedis";
     c.taxonKey = "0";
     return c;
   }
 
   /**
-   * Builder for content represented in Hive sourced data using GBIF occurrence_hdfs naming
-   * convention.
+   * Builder for content represented in the source table using GBIF occurrence_hdfs naming
+   * convention. All columns are expected as strings.
    */
-  static GBIFClassification buildFromHiveSource(HCatRecord source, HCatSchema schema)
-      throws HCatException {
+  static Classification buildFromRow(Row source) {
 
-    GBIFClassification c = new GBIFClassification();
+    Classification c = new Classification();
 
-    c.kingdom = source.getString("kingdom", schema);
-    c.phylum = source.getString("phylum", schema);
-    c.klass = source.getString("class", schema);
-    c.order = source.getString("order", schema);
-    c.superFamily = source.getString("superfamily", schema);
-    c.family = source.getString("family", schema);
-    c.subFamily = source.getString("subfamily", schema);
-    c.tribe = source.getString("tribe", schema);
-    c.subTribe = source.getString("subtribe", schema);
-    c.genus = source.getString("genus", schema);
-    c.subGenus = source.getString("subGenus", schema);
-    c.species = source.getString("species", schema);
-    c.scientificName = source.getString("scientificname", schema);
-    c.acceptedScientificName = source.getString("acceptedscientificname", schema);
-    c.kingdomKey = source.getString("kingdomkey", schema) + "";
-    c.phylumKey = source.getString("phylumkey", schema) + "";
-    c.classKey = source.getString("classkey", schema) + "";
-    c.orderKey = source.getString("orderkey", schema) + "";
-    c.familyKey = source.getString("familykey", schema) + "";
-    c.genusKey = source.getString("genuskey", schema) + "";
-    c.subGenusKey = source.getString("subgenuskey", schema) + "";
-    c.speciesKey = source.getString("specieskey", schema) + "";
-    c.taxonKey = source.getString("taxonkey", schema) + "";
-    c.acceptedTaxonKey = source.getString("acceptedtaxonkey", schema) + "";
+    c.kingdom = source.getAs("kingdom");
+    c.phylum = source.getAs("phylum");
+    c.klass = source.getAs("class");
+    c.order = source.getAs("order");
+    c.superFamily = source.getAs("superfamily");
+    c.family = source.getAs("family");
+    c.subFamily = source.getAs("subfamily");
+    c.tribe = source.getAs("tribe");
+    c.subTribe = source.getAs("subtribe");
+    c.genus = source.getAs("genus");
+    c.subGenus = source.getAs("subgenus");
+    c.species = source.getAs("species");
+    c.scientificName = source.getAs("scientificname");
+    c.acceptedScientificName = source.getAs("acceptedscientificname");
+    c.kingdomKey = source.getAs("kingdomkey");
+    c.phylumKey = source.getAs("phylumkey");
+    c.classKey = source.getAs("classkey");
+    c.orderKey = source.getAs("orderkey");
+    c.familyKey = source.getAs("familykey");
+    c.genusKey = source.getAs("genuskey");
+    c.subGenusKey = source.getAs("subgenuskey");
+    c.speciesKey = source.getAs("specieskey");
+    c.taxonKey = source.getAs("taxonkey");
+    c.acceptedTaxonKey = source.getAs("acceptedtaxonkey");
     return c;
   }
 
   /** Builder from a lookup web service response. */
-  public static GBIFClassification buildFromNameUsageMatch(NameUsageMatchResponse usageMatch) {
-    GBIFClassification c = new GBIFClassification();
+  public static Classification buildFromNameUsageMatch(NameUsageMatchResponse usageMatch) {
+    Classification c = new Classification();
     if (Objects.nonNull(usageMatch.getClassification())) {
       usageMatch
           .getClassification()
@@ -184,100 +182,81 @@ public class GBIFClassification {
     return c;
   }
 
-  /**
-   * @return classification in tab delimited format
-   */
-  @Override
-  public String toString() {
-    return toString(false);
-  }
+  private static final String[] FIELDS = {
+    "kingdom",
+    "phylum",
+    "klass",
+    "order",
+    "superFamily",
+    "family",
+    "subFamily",
+    "tribe",
+    "subTribe",
+    "genus",
+    "subGenus",
+    "species",
+    "scientificName",
+    "acceptedScientificName"
+  };
+
+  private static final String[] KEYS = {
+    "kingdomKey", "phylumKey", "classKey", "orderKey", "familyKey",
+    "genusKey", "subGenusKey", "speciesKey", "taxonKey", "acceptedTaxonKey"
+  };
 
   /**
-   * Generates a tab-delimited list of classification headers.
+   * Generates the classification column names.
    *
-   * @param prefix Prefix to apply to each header field.
-   * @param skipKeys If true, key-based headers are skipped.
-   * @return Tab-delimited string of classification headers.
+   * @param prefix Prefix to apply to each column name.
+   * @param skipKeys If true, key-based columns are skipped.
+   * @return Column names, in the same order as {@link #values(boolean)}.
    */
-  public static String toHeader(String prefix, boolean skipKeys) {
-    String[] fields = {
-      "kingdom",
-      "phylum",
-      "klass",
-      "order",
-      "superFamily",
-      "family",
-      "subFamily",
-      "tribe",
-      "subTribe",
-      "genus",
-      "subGenus",
-      "species",
-      "scientificName",
-      "acceptedScientificName"
-    };
-
-    String[] keys = {
-      "kingdomKey", "phylumKey", "classKey", "orderKey", "familyKey",
-      "genusKey", "subGenusKey", "speciesKey", "taxonKey", "acceptedTaxonKey"
-    };
-
-    Stream<String> headerStream = Arrays.stream(fields).map(f -> prefix + f);
-
+  public static String[] headers(String prefix, boolean skipKeys) {
+    Stream<String> names = Arrays.stream(FIELDS);
     if (!skipKeys) {
-      headerStream = Stream.concat(headerStream, Arrays.stream(keys).map(k -> prefix + k));
+      names = Stream.concat(names, Arrays.stream(KEYS));
     }
-
-    return headerStream.collect(Collectors.joining("\t"));
+    return names.map(n -> prefix + n).toArray(String[]::new);
   }
 
   /**
-   * @return classification in tab delimited format optionally skipping keys
+   * @return classification values optionally skipping keys, in the order of {@link #headers(String,
+   *     boolean)}
    */
-  public String toString(boolean skipKeys) {
-    CharSequence[] defaultValues = {
-      kingdom,
-      phylum,
-      klass,
-      order,
-      superFamily,
-      family,
-      subFamily,
-      tribe,
-      subTribe,
-      genus,
-      subGenus,
-      species,
-      scientificName,
-      acceptedScientificName
-    };
-
-    if (skipKeys) return String.join("\t", defaultValues);
-    else {
-      CharSequence[] keyVals = {
-        safe(kingdomKey),
-        safe(phylumKey),
-        safe(classKey),
-        safe(orderKey),
-        safe(familyKey),
-        safe(genusKey),
-        safe(subGenusKey),
-        safe(speciesKey),
-        safe(taxonKey),
-        safe(acceptedTaxonKey)
-      };
-      CharSequence[] allVals =
-          Stream.concat(Arrays.stream(defaultValues), Arrays.stream(keyVals))
-              .toArray(CharSequence[]::new);
-
-      return String.join("\t", allVals);
+  public List<String> values(boolean skipKeys) {
+    Stream<String> values =
+        Stream.of(
+            kingdom,
+            phylum,
+            klass,
+            order,
+            superFamily,
+            family,
+            subFamily,
+            tribe,
+            subTribe,
+            genus,
+            subGenus,
+            species,
+            scientificName,
+            acceptedScientificName);
+    if (!skipKeys) {
+      values =
+          Stream.concat(
+              values,
+              Stream.of(
+                  kingdomKey,
+                  phylumKey,
+                  classKey,
+                  orderKey,
+                  familyKey,
+                  genusKey,
+                  subGenusKey,
+                  speciesKey,
+                  taxonKey,
+                  acceptedTaxonKey));
     }
-  }
-
-  /** Returns the string or an empty string if null. */
-  private static String safe(String value) {
-    //    return value != null && !value.equalsIgnoreCase("null") ? value : "";
-    return value;
+    return values.collect(Collectors.toList());
   }
 
   /**
@@ -287,7 +266,7 @@ public class GBIFClassification {
       Object o, boolean ignoreWhitespace, boolean ignoreAuthorshipFormatting) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    GBIFClassification that = (GBIFClassification) o;
+    Classification that = (Classification) o;
 
     if (!ignoreWhitespace) {
       return Objects.equals(kingdom, that.kingdom)

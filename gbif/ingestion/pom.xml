@@ -19,7 +19,7 @@
     <module>healthcheck</module>
     <module>spark-jobs</module>
     <module>spark-coordinator</module>
-      <!--    <module>pre-backbone-release</module>-->
+    <module>gbif-impact</module>
   </modules>
 
 </project>

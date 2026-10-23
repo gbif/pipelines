@@ -3,7 +3,7 @@
 IS_M2RELEASEBUILD=$1
 POM_VERSION=$2
 
-MODULE="pre-backbone-release"
+MODULE="gbif-impact"
 
 IMAGE=docker.gbif.org/${MODULE}:${POM_VERSION}
 IMAGE_LATEST=docker.gbif.org/${MODULE}:latest

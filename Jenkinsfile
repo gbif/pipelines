@@ -130,6 +130,11 @@ pipeline {
         sh 'build/healthcheck-docker-build.sh false ${VERSION}'
       }
     }
+    stage('Build GBIF Impact Docker image') {
+      steps {
+        sh 'build/gbif-impact-docker-build.sh false ${VERSION}'
+      }
+    }
   }
 
   post {

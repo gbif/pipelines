@@ -1,6 +1,6 @@
-# Pre-backbone Release
+# GBIF Impact
 
-This diagnostic pipeline is used by data managers to assess the impact
+This diagnostic Spark job is used by data managers to assess the impact
 of a proposed taxonomy release. The verbatim occurrence
 classifications are looked up against the proposed new
 backbone. All records that change from their current organisation
@@ -224,28 +224,37 @@ CREATE TABLE gbif_impact.fossils STORED AS PARQUET
 ```
 
 
-Execute the pipeline using e.g. (not --skipKeys=false can be added to omit taxa keys in the result):
+Execute the job with `spark-submit` (`--skipKeys=true` can be added to omit taxa keys in the result):
 ```
-spark2-submit \
-  --class org.gbif.pipelines.backbone.impact.BackbonePreRelease \
+spark-submit \
+  --class org.gbif.pipelines.backbone.impact.GbifImpactPipeline \
   --master yarn --executor-memory 4G --executor-cores 2 --num-executors 100 \
-  pre-backbone-release-2.14.0-SNAPSHOT-shaded.jar \
-  --datebase=tim \
-  --table=classifications \
-  --targetDir=hdfs:///tmp/backbone-pre-release-impact/report \
-  --metastoreUris=thrift://c4hivemetastore.gbif-uat.org:9083
-  --APIBaseURI=http://api.gbif-uat.org/v1/
-  --scope=1
-  --minimumOccurrenceCount=1000
+  gbif-impact-<version>-shaded.jar \
+  --database=gbif_impact \
+  --table=alltaxa \
+  --metastoreUris=thrift://c4hivemetastore.gbif-uat.org:9083 \
+  --targetDir=hdfs:///tmp/gbif-impact/report \
+  --APIBaseURI=http://api.gbif-uat.org/v1/ \
+  --checklistKey=<checklist key> \
+  --scope=1 \
+  --minimumOccurrenceCount=1000 \
+  --numPartitions=200 \
   --skipKeys=false
 ```
 
-Get the result:
+Instead of a Hive table, the source can be read directly from Parquet files with
+`--sourcePath=hdfs:///path/to/alltaxa` (`--database`, `--table` and `--metastoreUris` are then not needed).
+`--numPartitions` controls the parallelism of the lookups against the API.
+
+The job writes:
+
+* `<targetDir>/impact/` – the changed classifications as Parquet
+* `<targetDir>/report.csv` – the same content as a single tab delimited file with a header
+  (the file name can be changed with `--reportFileName`)
+
+Get the report:
 ```
-hdfs dfs -getmerge /tmp/backbone-pre-release-impact /tmp/report-1000.txt
+hdfs dfs -get /tmp/gbif-impact/report/report.csv ./report-1000.tsv
 ```
 
-Prepend a header (optionally use the header-no-keys.tsv)
-```
-cat header.tsv /tmp/report-1000.txt > ./report-1000.tsv
-```
+The Docker image `docker.gbif.org/gbif-impact` contains the shaded jar at `/jobs/gbif-impact.jar`.
