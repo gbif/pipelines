@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -70,6 +71,14 @@ class RecordsTable {
   private static final String LOAD_ATTEMPT = "__attempt";
   private static final String LOAD_JSON = "__json";
 
+  /** Columns of a row in the order HFiles require: by family, then column */
+  static final List<String> HFILE_COLUMNS =
+      Stream.of(ATTEMPT_COLUMN, DATASET_KEY_COLUMN, INTERPRETED_COLUMN, VERBATIM_COLUMN)
+          .sorted(
+              Comparator.comparing(RecordsTableKey::family)
+                  .thenComparing(Comparator.naturalOrder()))
+          .toList();
+
   private final Configuration hbaseConf;
   private final RecordsTableConfig config;
   private final RecordType type;
@@ -105,7 +114,7 @@ class RecordsTable {
     if (count <= config.getBulkLoadIfRecordsMoreThan()) {
       writePuts(prepared);
     } else {
-      bulkLoad(prepared, fileSystem, workingDirectory);
+      bulkLoad(prepared, fileSystem, workingDirectory, count);
     }
   }
 
@@ -200,7 +209,8 @@ class RecordsTable {
     put.addColumn(Bytes.toBytes(family(column)), Bytes.toBytes(column), Bytes.toBytes(value));
   }
 
-  private void bulkLoad(Dataset<Row> prepared, FileSystem fileSystem, String workingDirectory)
+  private void bulkLoad(
+      Dataset<Row> prepared, FileSystem fileSystem, String workingDirectory, long count)
       throws IOException {
     Path hfilePath = new Path(workingDirectory + "/" + config.getHfilePath());
     Path stagingPath = new Path(workingDirectory + "/" + config.getHfilePath() + STAGING);
@@ -215,44 +225,59 @@ class RecordsTable {
       loadConf.set(BulkLoadHFiles.CREATE_TABLE_CONF_KEY, "no");
 
       fileSystem.delete(hfilePath, true);
-      writeHFiles(prepared, type.converter(), loadConf, table, regionLocator, hfilePath);
+      int partitions =
+          hfilePartitions(
+              prepared.rdd().getNumPartitions(), count, config.getBulkLoadRecordsPerPartition());
+      writeHFiles(
+          prepared, type.converter(), loadConf, table, regionLocator, hfilePath, partitions);
       BulkLoadHFiles.create(loadConf).bulkLoad(tableName, hfilePath);
       fileSystem.delete(hfilePath, true);
       fileSystem.delete(stagingPath, true);
     }
   }
 
+  /**
+   * Partitions to write the HFiles with: enough to keep each one under {@code recordsPerPartition}
+   * records, and no fewer than the input has
+   */
+  static int hfilePartitions(int inputPartitions, long count, long recordsPerPartition) {
+    long needed = (count + recordsPerPartition - 1) / recordsPerPartition;
+    return (int) Math.min(Integer.MAX_VALUE, Math.max(inputPartitions, needed));
+  }
+
+  /**
+   * Writes the records as HFiles of at most {@code partitions} partitions. A record is shuffled and
+   * sorted as one entry, its row key and the values in {@link #HFILE_COLUMNS} order, and expanded
+   * into cells after the sort: the cells of a row are then already in the order HFiles need.
+   */
   private static void writeHFiles(
       Dataset<Row> prepared,
       RecordsConverter converter,
       Configuration hbaseConf,
       Table table,
       RegionLocator regionLocator,
-      Path hfilePath)
+      Path hfilePath,
+      int partitions)
       throws IOException {
 
-    JavaPairRDD<Tuple2<String, String>, String> cells =
+    JavaPairRDD<String, String[]> records =
         prepared
             .javaRDD()
-            .flatMapToPair(
+            .mapToPair(
                 row -> {
-                  String datasetKey = row.getAs(LOAD_DATASET_KEY);
-                  String attempt = String.valueOf((Integer) row.getAs(LOAD_ATTEMPT));
                   RecordsConverter.ApiRecord record = converter.convert(row.getAs(LOAD_JSON));
-                  String rowKey = record.rowKey();
-                  List<Tuple2<Tuple2<String, String>, String>> result = new ArrayList<>(4);
-                  result.add(new Tuple2<>(new Tuple2<>(rowKey, ATTEMPT_COLUMN), attempt));
-                  result.add(new Tuple2<>(new Tuple2<>(rowKey, DATASET_KEY_COLUMN), datasetKey));
-                  result.add(
-                      new Tuple2<>(new Tuple2<>(rowKey, INTERPRETED_COLUMN), record.interpreted()));
-                  result.add(
-                      new Tuple2<>(new Tuple2<>(rowKey, VERBATIM_COLUMN), record.verbatim()));
-                  return result.iterator();
+                  Map<String, String> values =
+                      Map.of(
+                          ATTEMPT_COLUMN, String.valueOf((Integer) row.getAs(LOAD_ATTEMPT)),
+                          DATASET_KEY_COLUMN, row.getAs(LOAD_DATASET_KEY),
+                          INTERPRETED_COLUMN, record.interpreted(),
+                          VERBATIM_COLUMN, record.verbatim());
+                  return new Tuple2<>(
+                      record.rowKey(),
+                      HFILE_COLUMNS.stream().map(values::get).toArray(String[]::new));
                 })
             .repartitionAndSortWithinPartitions(
-                new RegionPartitioner(
-                    regionLocator.getStartKeys(), prepared.rdd().getNumPartitions()),
-                new CellComparator());
+                new RegionPartitioner(regionLocator.getStartKeys(), partitions));
 
     // carries the table settings (compression, bloom filter, block size) to the HFiles
     Job job = Job.getInstance(hbaseConf);
@@ -261,18 +286,24 @@ class RecordsTable {
     HFileOutputFormat2.configureIncrementalLoad(job, table, regionLocator);
     Configuration jobConf = job.getConfiguration();
 
-    cells
-        .mapToPair(
-            cell -> {
-              byte[] row = Bytes.toBytes(cell._1._1);
-              String column = cell._1._2;
-              KeyValue kv =
-                  new KeyValue(
-                      row,
-                      Bytes.toBytes(family(column)),
-                      Bytes.toBytes(column),
-                      Bytes.toBytes(cell._2));
-              return new Tuple2<>(new ImmutableBytesWritable(row), kv);
+    records
+        .flatMapToPair(
+            record -> {
+              byte[] row = Bytes.toBytes(record._1);
+              ImmutableBytesWritable key = new ImmutableBytesWritable(row);
+              List<Tuple2<ImmutableBytesWritable, KeyValue>> cells =
+                  new ArrayList<>(HFILE_COLUMNS.size());
+              for (int i = 0; i < HFILE_COLUMNS.size(); i++) {
+                String column = HFILE_COLUMNS.get(i);
+                KeyValue kv =
+                    new KeyValue(
+                        row,
+                        Bytes.toBytes(family(column)),
+                        Bytes.toBytes(column),
+                        Bytes.toBytes(record._2[i]));
+                cells.add(new Tuple2<>(key, kv));
+              }
+              return cells.iterator();
             })
         .saveAsNewAPIHadoopFile(
             hfilePath.toString(),
@@ -310,30 +341,13 @@ class RecordsTable {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public int getPartition(Object key) {
-      String rowKey = ((Tuple2<String, String>) key)._1;
+      String rowKey = (String) key;
       int index = Arrays.binarySearch(startKeys, rowKey);
       // not a start key: the region is the one before the insertion point
       int region = index >= 0 ? index : Math.max(0, -index - 2);
       // all the cells of a row go to the same partition
       return region * partitionsPerRegion + Math.floorMod(rowKey.hashCode(), partitionsPerRegion);
-    }
-  }
-
-  /** Orders cells by row key, family and column, as HFiles require */
-  static class CellComparator implements Comparator<Tuple2<String, String>>, Serializable {
-
-    @Serial private static final long serialVersionUID = 1L;
-
-    @Override
-    public int compare(Tuple2<String, String> o1, Tuple2<String, String> o2) {
-      int byRow = o1._1.compareTo(o2._1);
-      if (byRow != 0) {
-        return byRow;
-      }
-      int byFamily = family(o1._2).compareTo(family(o2._2));
-      return byFamily != 0 ? byFamily : o1._2.compareTo(o2._2);
     }
   }
 

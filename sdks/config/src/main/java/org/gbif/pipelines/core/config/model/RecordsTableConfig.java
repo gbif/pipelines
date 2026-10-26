@@ -37,6 +37,12 @@ public class RecordsTableConfig implements Serializable {
    */
   private long bulkLoadIfRecordsMoreThan = 50_000;
 
+  /**
+   * Records per partition when writing HFiles. Each partition is sorted by an executor, spilling to
+   * its local disk, so this bounds the disk a task needs whatever the size of the load
+   */
+  private long bulkLoadRecordsPerPartition = 500_000;
+
   /** Number of Delete mutations sent per batch when removing records */
   private int deleteBatchSize = 1_000;
 }

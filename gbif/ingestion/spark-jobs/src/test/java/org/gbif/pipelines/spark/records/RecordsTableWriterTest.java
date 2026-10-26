@@ -48,7 +48,6 @@ import org.gbif.pipelines.core.config.model.KeygenConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.RecordsTableConfig;
 import org.gbif.pipelines.spark.HbaseServer;
-import org.gbif.pipelines.spark.records.RecordsTable.CellComparator;
 import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordType;
 import org.gbif.pipelines.spark.records.RecordsTableWriter.RecordsLoad;
 import org.gbif.pipelines.spark.util.SparkTestSession;
@@ -56,7 +55,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import scala.Tuple2;
 
 public class RecordsTableWriterTest {
 
@@ -381,24 +379,10 @@ public class RecordsTableWriterTest {
 
   /** HFiles need the cells of a row sorted by family, then column */
   @Test
-  public void cellsAreSortedByRowFamilyAndColumn() {
-    List<Tuple2<String, String>> cells =
-        new ArrayList<>(
-            List.of(
-                new Tuple2<>("02:2", INTERPRETED_COLUMN),
-                new Tuple2<>("01:1", DATASET_KEY_COLUMN),
-                new Tuple2<>("01:1", VERBATIM_COLUMN),
-                new Tuple2<>("01:1", ATTEMPT_COLUMN),
-                new Tuple2<>("01:1", INTERPRETED_COLUMN)));
-    cells.sort(new CellComparator());
+  public void hfileColumnsAreSortedByFamilyAndColumn() {
     assertEquals(
-        List.of(
-            new Tuple2<>("01:1", INTERPRETED_COLUMN),
-            new Tuple2<>("01:1", VERBATIM_COLUMN),
-            new Tuple2<>("01:1", ATTEMPT_COLUMN),
-            new Tuple2<>("01:1", DATASET_KEY_COLUMN),
-            new Tuple2<>("02:2", INTERPRETED_COLUMN)),
-        cells);
+        List.of(INTERPRETED_COLUMN, VERBATIM_COLUMN, ATTEMPT_COLUMN, DATASET_KEY_COLUMN),
+        RecordsTable.HFILE_COLUMNS);
   }
 
   @Test
