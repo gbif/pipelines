@@ -11,9 +11,17 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -29,8 +37,11 @@ import org.gbif.pipelines.spark.util.PipelineArgs;
 /**
  * Rebuilds the HBase records table of occurrences or events (see docs/hbase-records-tables.md) from
  * the last successful interpretation of every dataset, without touching Elasticsearch. It reads the
- * same parquet as {@link FullIndexBuildPipeline} and loads all the datasets in one bulk load,
- * writing a new manifest for each.
+ * same parquet as {@link FullIndexBuildPipeline} and loads the datasets in batches of about {@code
+ * --batchRecords} records, writing a new manifest for each. Each batch is written, bulk loaded and
+ * committed before the next one starts, which bounds the shuffle, the spills and the HFiles staged
+ * at once. After a failure, {@code --startBatch} resumes from the batch that failed: the batches
+ * are the same as long as the source parquet is.
  *
  * <p>With {@code --truncate=true} the table is emptied, keeping its regions, and its manifests
  * removed before the load. Without it, the records are replaced and the records no longer in the
@@ -75,6 +86,17 @@ public class FullRecordsTableBuildPipeline {
                 + "The API serves no records from the table until the load completes.",
         arity = 1)
     private boolean truncate = false;
+
+    @Parameter(
+        names = "--batchRecords",
+        description =
+            "Approximate number of records per batch, a dataset with more records is a batch of its own")
+    private long batchRecords = 100_000_000L;
+
+    @Parameter(
+        names = "--startBatch",
+        description = "First batch to load, starting from 0, to resume a build that failed")
+    private int startBatch = 0;
 
     @Parameter(
         names = "--table",
@@ -152,30 +174,109 @@ public class FullRecordsTableBuildPipeline {
         type.table(config.getRecordsTableConfig()),
         scanResult.datasetAttemptMap().size());
 
+    if (args.truncate && args.startBatch > 0) {
+      throw new IllegalArgumentException(
+          "--truncate would remove the batches before --startBatch, resume without it");
+    }
     if (args.truncate) {
       RecordsTableWriter.truncate(fileSystem, config, hbaseConf, type);
     }
 
-    Dataset<Row> documents =
+    // only the dataset key column is read to count, a cheap pass over the parquet
+    Map<String, Long> recordCounts =
         spark
             .read()
             .parquet(scanResult.successfulPaths().toArray(new String[0]))
-            .coalesce(args.numberOfShards);
+            .groupBy(RecordsTableWriter.DOCUMENT_DATASET_KEY)
+            .count()
+            .collectAsList()
+            .stream()
+            .collect(Collectors.toMap(r -> r.getString(0), r -> r.getLong(1)));
 
-    RecordsLoad load =
-        RecordsTableWriter.load(
-            spark,
-            fileSystem,
-            config,
-            hbaseConf,
-            type,
-            scanResult.datasetAttemptMap(),
-            documents,
-            config.getRebuildPath() + "/records-" + type.name().toLowerCase());
+    List<Map<String, Integer>> batches =
+        batches(scanResult.datasetAttemptMap(), recordCounts, args.batchRecords);
+    log.info(
+        "Loading {} records of {} datasets in {} batches, starting from batch {}",
+        recordCounts.values().stream().mapToLong(Long::longValue).sum(),
+        scanResult.datasetAttemptMap().size(),
+        batches.size(),
+        args.startBatch);
 
-    // nothing is indexed here, the records removed can be deleted straight away
-    load.commit();
-    log.info(timeAndRecPerSecond("full-records-table-build", start, load.getLoaded()));
+    Map<String, String> datasetPaths = datasetPaths(scanResult.successfulPaths());
+    long loaded = 0;
+    long removed = 0;
+    for (int i = args.startBatch; i < batches.size(); i++) {
+      Map<String, Integer> batch = batches.get(i);
+      long batchStart = System.currentTimeMillis();
+      log.info("Loading batch {} of {}, {} datasets", i, batches.size(), batch.size());
+
+      String[] paths =
+          batch.keySet().stream()
+              .map(datasetPaths::get)
+              .filter(Objects::nonNull)
+              .toArray(String[]::new);
+      Dataset<Row> documents = spark.read().parquet(paths).coalesce(args.numberOfShards);
+
+      RecordsLoad load =
+          RecordsTableWriter.load(
+              spark,
+              fileSystem,
+              config,
+              hbaseConf,
+              type,
+              batch,
+              documents,
+              config.getRebuildPath() + "/records-" + type.name().toLowerCase());
+
+      // nothing is indexed here, the records removed can be deleted straight away
+      removed += load.commit();
+      loaded += load.getLoaded();
+      log.info(
+          "Batch {} of {}: {}",
+          i,
+          batches.size(),
+          timeAndRecPerSecond("full-records-table-build", batchStart, load.getLoaded()));
+    }
+
+    log.info("Loaded {} records and removed {}", loaded, removed);
+    log.info(timeAndRecPerSecond("full-records-table-build", start, loaded));
+  }
+
+  /**
+   * Groups the datasets, in key order, into batches of up to {@code batchRecords} records. A
+   * dataset with more records is a batch of its own. The datasets without records join the batch
+   * being built, so their records are removed as part of it.
+   *
+   * @return the attempt of each dataset of each batch
+   */
+  static List<Map<String, Integer>> batches(
+      Map<String, Integer> datasetAttempts, Map<String, Long> recordCounts, long batchRecords) {
+    List<Map<String, Integer>> batches = new ArrayList<>();
+    Map<String, Integer> batch = new TreeMap<>();
+    long batchCount = 0;
+    for (String datasetKey : new TreeSet<>(datasetAttempts.keySet())) {
+      long count = recordCounts.getOrDefault(datasetKey, 0L);
+      if (count > 0 && batchCount > 0 && batchCount + count > batchRecords) {
+        batches.add(batch);
+        batch = new TreeMap<>();
+        batchCount = 0;
+      }
+      batch.put(datasetKey, datasetAttempts.get(datasetKey));
+      batchCount += count;
+    }
+    if (!batch.isEmpty()) {
+      batches.add(batch);
+    }
+    return batches;
+  }
+
+  /**
+   * Source path of each dataset, the paths are {@code
+   * <outputPath>/<datasetKey>/<attempt>/<source>/}
+   */
+  static Map<String, String> datasetPaths(List<String> paths) {
+    return paths.stream()
+        .collect(Collectors.toMap(p -> new Path(p).getParent().getParent().getName(), p -> p));
   }
 
   /** Points the record type at another table and its own manifests */
