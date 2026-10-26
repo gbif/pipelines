@@ -12,6 +12,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
@@ -383,6 +384,24 @@ public class RecordsTableWriterTest {
     assertEquals(
         List.of(INTERPRETED_COLUMN, VERBATIM_COLUMN, ATTEMPT_COLUMN, DATASET_KEY_COLUMN),
         RecordsTable.HFILE_COLUMNS);
+  }
+
+  /** The excluded fields are dropped before the documents are written as JSON */
+  @Test
+  public void excludedFieldsAreNotWrittenAsJson() throws Exception {
+    Dataset<Row> documents = occurrences(7L);
+    assertTrue(List.of(documents.columns()).contains("all"));
+
+    Row prepared =
+        RecordsTable.prepare(
+                spark,
+                documents,
+                Map.of(OCCURRENCE_DATASET, 1),
+                RecordType.OCCURRENCE.converter().excludedFields())
+            .first();
+    JsonNode json = MAPPER.readTree(prepared.<String>getAs(RecordsTable.LOAD_JSON));
+    assertFalse(json.has("all"));
+    assertEquals(7L, json.get("gbifId").asLong());
   }
 
   @Test

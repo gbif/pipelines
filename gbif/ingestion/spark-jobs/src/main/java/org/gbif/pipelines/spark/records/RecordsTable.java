@@ -69,7 +69,7 @@ class RecordsTable {
 
   private static final String LOAD_DATASET_KEY = "__datasetKey";
   private static final String LOAD_ATTEMPT = "__attempt";
-  private static final String LOAD_JSON = "__json";
+  static final String LOAD_JSON = "__json";
 
   /** Columns of a row in the order HFiles require: by family, then column */
   static final List<String> HFILE_COLUMNS =
@@ -110,7 +110,8 @@ class RecordsTable {
       long count,
       String workingDirectory)
       throws IOException {
-    Dataset<Row> prepared = prepare(spark, documents, datasetAttempts);
+    Dataset<Row> prepared =
+        prepare(spark, documents, datasetAttempts, type.converter().excludedFields());
     if (count <= config.getBulkLoadIfRecordsMoreThan()) {
       writePuts(prepared);
     } else {
@@ -157,9 +158,16 @@ class RecordsTable {
     }
   }
 
-  /** Documents as JSON, with the dataset and attempt they belong to */
-  private static Dataset<Row> prepare(
-      SparkSession spark, Dataset<Row> documents, Map<String, Integer> datasetAttempts) {
+  /**
+   * Documents as JSON, with the dataset and attempt they belong to. The excluded top-level fields
+   * are dropped before the JSON is written, as the converter would parse and drop them: "all"
+   * repeats every value of an occurrence.
+   */
+  static Dataset<Row> prepare(
+      SparkSession spark,
+      Dataset<Row> documents,
+      Map<String, Integer> datasetAttempts,
+      List<String> excludedFields) {
     List<Row> attempts =
         datasetAttempts.entrySet().stream()
             .map(e -> RowFactory.create(e.getKey(), e.getValue()))
@@ -172,7 +180,10 @@ class RecordsTable {
                 .add(LOAD_ATTEMPT, DataTypes.IntegerType));
 
     Column[] columns =
-        Arrays.stream(documents.columns()).map(c -> col("`" + c + "`")).toArray(Column[]::new);
+        Arrays.stream(documents.columns())
+            .filter(c -> !excludedFields.contains(c))
+            .map(c -> col("`" + c + "`"))
+            .toArray(Column[]::new);
     return documents
         .select(
             col(DOCUMENT_DATASET_KEY).as(LOAD_DATASET_KEY), to_json(struct(columns)).as(LOAD_JSON))
