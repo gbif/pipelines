@@ -69,7 +69,8 @@ class RecordsTable {
 
   private static final String LOAD_DATASET_KEY = "__datasetKey";
   private static final String LOAD_ATTEMPT = "__attempt";
-  static final String LOAD_JSON = "__json";
+  /** The document, as a struct or, when {@link RowSource} can't convert its schema, as JSON */
+  static final String LOAD_SOURCE = "__source";
 
   /** Columns of a row in the order HFiles require: by family, then column */
   static final List<String> HFILE_COLUMNS =
@@ -159,9 +160,10 @@ class RecordsTable {
   }
 
   /**
-   * Documents as JSON, with the dataset and attempt they belong to. The excluded top-level fields
-   * are dropped before the JSON is written, as the converter would parse and drop them: "all"
-   * repeats every value of an occurrence.
+   * Documents with the dataset and attempt they belong to. The excluded top-level fields are
+   * dropped here, as the converter would drop them: "all" repeats every value of an occurrence. The
+   * documents are kept as a struct, read by {@link #convert(RecordsConverter, Row)}, and only
+   * written as JSON when their schema has types {@link RowSource} doesn't convert.
    */
   static Dataset<Row> prepare(
       SparkSession spark,
@@ -184,10 +186,24 @@ class RecordsTable {
             .filter(c -> !excludedFields.contains(c))
             .map(c -> col("`" + c + "`"))
             .toArray(Column[]::new);
+    Column source;
+    if (RowSource.supports(documents.select(columns).schema())) {
+      source = struct(columns);
+    } else {
+      log.warn("Documents with types not converted from rows, writing them as JSON");
+      source = to_json(struct(columns));
+    }
     return documents
-        .select(
-            col(DOCUMENT_DATASET_KEY).as(LOAD_DATASET_KEY), to_json(struct(columns)).as(LOAD_JSON))
+        .select(col(DOCUMENT_DATASET_KEY).as(LOAD_DATASET_KEY), source.as(LOAD_SOURCE))
         .join(broadcast(attemptsDf), LOAD_DATASET_KEY);
+  }
+
+  /** Converts a prepared document, from its struct or its JSON */
+  static RecordsConverter.ApiRecord convert(RecordsConverter converter, Row prepared) {
+    Object source = prepared.getAs(LOAD_SOURCE);
+    return source instanceof Row row
+        ? converter.convert(RowSource.toSource(row))
+        : converter.convert((String) source);
   }
 
   private void writePuts(Dataset<Row> prepared) {
@@ -203,7 +219,7 @@ class RecordsTable {
                       connection.getBufferedMutator(TableName.valueOf(table))) {
                 while (rows.hasNext()) {
                   Row row = rows.next();
-                  RecordsConverter.ApiRecord record = converter.convert(row.getAs(LOAD_JSON));
+                  RecordsConverter.ApiRecord record = convert(converter, row);
                   // both families in the same Put, the row is written atomically
                   Put put = new Put(Bytes.toBytes(record.rowKey()));
                   addColumn(put, ATTEMPT_COLUMN, String.valueOf((Integer) row.getAs(LOAD_ATTEMPT)));
@@ -258,8 +274,9 @@ class RecordsTable {
 
   /**
    * Writes the records as HFiles of at most {@code partitions} partitions. A record is shuffled and
-   * sorted as one entry, its row key and the values in {@link #HFILE_COLUMNS} order, and expanded
-   * into cells after the sort: the cells of a row are then already in the order HFiles need.
+   * sorted as one entry, its row key and the UTF-8 values in {@link #HFILE_COLUMNS} order, and
+   * expanded into cells after the sort: the cells of a row are then already in the order HFiles
+   * need.
    */
   private static void writeHFiles(
       Dataset<Row> prepared,
@@ -271,21 +288,24 @@ class RecordsTable {
       int partitions)
       throws IOException {
 
-    JavaPairRDD<String, String[]> records =
+    JavaPairRDD<String, byte[][]> records =
         prepared
             .javaRDD()
             .mapToPair(
                 row -> {
-                  RecordsConverter.ApiRecord record = converter.convert(row.getAs(LOAD_JSON));
+                  RecordsConverter.ApiRecord record = convert(converter, row);
                   Map<String, String> values =
                       Map.of(
                           ATTEMPT_COLUMN, String.valueOf((Integer) row.getAs(LOAD_ATTEMPT)),
                           DATASET_KEY_COLUMN, row.getAs(LOAD_DATASET_KEY),
                           INTERPRETED_COLUMN, record.interpreted(),
                           VERBATIM_COLUMN, record.verbatim());
+                  // encoded once here, the shuffle and the KeyValues carry the bytes
                   return new Tuple2<>(
                       record.rowKey(),
-                      HFILE_COLUMNS.stream().map(values::get).toArray(String[]::new));
+                      HFILE_COLUMNS.stream()
+                          .map(c -> Bytes.toBytes(values.get(c)))
+                          .toArray(byte[][]::new));
                 })
             .repartitionAndSortWithinPartitions(
                 new RegionPartitioner(regionLocator.getStartKeys(), partitions));
@@ -308,10 +328,7 @@ class RecordsTable {
                 String column = HFILE_COLUMNS.get(i);
                 KeyValue kv =
                     new KeyValue(
-                        row,
-                        Bytes.toBytes(family(column)),
-                        Bytes.toBytes(column),
-                        Bytes.toBytes(record._2[i]));
+                        row, Bytes.toBytes(family(column)), Bytes.toBytes(column), record._2[i]);
                 cells.add(new Tuple2<>(key, kv));
               }
               return cells.iterator();

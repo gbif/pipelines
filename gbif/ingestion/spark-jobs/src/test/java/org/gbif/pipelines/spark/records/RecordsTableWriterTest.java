@@ -12,7 +12,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
@@ -386,9 +386,9 @@ public class RecordsTableWriterTest {
         RecordsTable.HFILE_COLUMNS);
   }
 
-  /** The excluded fields are dropped before the documents are written as JSON */
+  /** The excluded fields are dropped before the documents are converted */
   @Test
-  public void excludedFieldsAreNotWrittenAsJson() throws Exception {
+  public void excludedFieldsAreDropped() throws Exception {
     Dataset<Row> documents = occurrences(7L);
     assertTrue(List.of(documents.columns()).contains("all"));
 
@@ -399,9 +399,31 @@ public class RecordsTableWriterTest {
                 Map.of(OCCURRENCE_DATASET, 1),
                 RecordType.OCCURRENCE.converter().excludedFields())
             .first();
-    JsonNode json = MAPPER.readTree(prepared.<String>getAs(RecordsTable.LOAD_JSON));
-    assertFalse(json.has("all"));
-    assertEquals(7L, json.get("gbifId").asLong());
+    Map<String, Object> source = RowSource.toSource(prepared.getAs(RecordsTable.LOAD_SOURCE));
+    assertFalse(source.containsKey("all"));
+    assertEquals(7, source.get("gbifId"));
+  }
+
+  /** The documents converted from rows give the same records as from their JSON */
+  @Test
+  public void rowsConvertAsTheirJson() throws Exception {
+    assertRowsConvertAsJson(occurrences(7L, 3_000_000_000L), RecordType.OCCURRENCE);
+    assertRowsConvertAsJson(
+        documents(List.of(readResource("/records/event-es-source.json"))), RecordType.EVENT);
+  }
+
+  private static void assertRowsConvertAsJson(Dataset<Row> documents, RecordType type)
+      throws Exception {
+    assertTrue(RowSource.supports(documents.schema()));
+    List<String> json = documents.toJSON().collectAsList();
+    List<Row> rows = documents.collectAsList();
+    for (int i = 0; i < rows.size(); i++) {
+      Map<String, Object> fromJson = MAPPER.readValue(json.get(i), new TypeReference<>() {});
+      assertEquals(fromJson, RowSource.toSource(rows.get(i)));
+      assertEquals(
+          type.converter().convert(json.get(i)),
+          type.converter().convert(RowSource.toSource(rows.get(i))));
+    }
   }
 
   @Test

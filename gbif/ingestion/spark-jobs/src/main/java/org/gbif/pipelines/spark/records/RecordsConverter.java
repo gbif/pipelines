@@ -61,7 +61,18 @@ public abstract class RecordsConverter implements Serializable {
   /** @param esSourceJson document as indexed in Elasticsearch */
   public ApiRecord convert(String esSourceJson) {
     try {
-      Map<String, Object> source = SOURCE_MAPPER.readValue(esSourceJson, MAP_TYPE);
+      return convert(SOURCE_MAPPER.readValue(esSourceJson, MAP_TYPE));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  /**
+   * @param source document as indexed in Elasticsearch, as Jackson reads it into a map. It is
+   *     modified, the excluded fields are removed from it.
+   */
+  public ApiRecord convert(Map<String, Object> source) {
+    try {
       excludedFields().forEach(path -> removePath(source, path));
 
       String rowKey = rowKey(source);
