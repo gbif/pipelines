@@ -32,16 +32,23 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.BufferedMutator;
 import org.apache.hadoop.hbase.client.BufferedMutatorParams;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptor;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.io.compress.Compression;
+import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
+import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.tool.BulkLoadHFiles;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.hadoop.hbase.util.RegionSplitter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -142,6 +149,79 @@ class RecordsTable {
               return List.of(count).iterator();
             })
         .fold(0L, Long::sum);
+  }
+
+  /**
+   * Creates the table, empty and pre-split, with its compactions disabled until {@link
+   * #compactions(boolean)} enables them, so the HFiles of a build aren't compacted while it loads
+   * more.
+   *
+   * @param regions regions to split the table into
+   */
+  void create(int regions) throws IOException {
+    try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
+        Admin admin = connection.getAdmin()) {
+      if (admin.tableExists(tableName)) {
+        throw new IOException("Records table " + tableName + " already exists");
+      }
+      TableDescriptor descriptor =
+          TableDescriptorBuilder.newBuilder(tableName)
+              // reads are random Gets, smaller blocks than the 64KB default
+              .setColumnFamily(
+                  familyDescriptor(RecordsTableKey.DATA_FAMILY).setBlocksize(32 * 1024).build())
+              .setColumnFamily(familyDescriptor(RecordsTableKey.METADATA_FAMILY).build())
+              .setCompactionEnabled(false)
+              .build();
+      admin.createTable(descriptor, splits(type, regions));
+      log.info("Created {} with {} regions", tableName, regions);
+    }
+  }
+
+  private static ColumnFamilyDescriptorBuilder familyDescriptor(String name) {
+    return ColumnFamilyDescriptorBuilder.newBuilder(Bytes.toBytes(name))
+        .setMaxVersions(1)
+        .setCompressionType(Compression.Algorithm.SNAPPY)
+        .setDataBlockEncoding(DataBlockEncoding.FAST_DIFF)
+        .setBloomFilterType(BloomType.ROW);
+  }
+
+  /**
+   * Split points of a new table. Occurrence keys start with a two digit salt, the regions take an
+   * even share of the 100 salts: "01", "02", ... "99" for 100 regions. Event keys are SHA-1 hex
+   * strings, split evenly.
+   */
+  static byte[][] splits(RecordType type, int regions) {
+    if (type == RecordType.EVENT) {
+      return new RegionSplitter.HexStringSplit().split(regions);
+    }
+    if (regions < 1 || regions > 100) {
+      throw new IllegalArgumentException("Occurrence tables have 1 to 100 regions, one per salt");
+    }
+    byte[][] splits = new byte[regions - 1][];
+    for (int i = 1; i < regions; i++) {
+      splits[i - 1] = Bytes.toBytes(String.format("%02d", i * 100 / regions));
+    }
+    return splits;
+  }
+
+  /** Enables or disables the compactions of the table */
+  void compactions(boolean enabled) throws IOException {
+    try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
+        Admin admin = connection.getAdmin()) {
+      TableDescriptor descriptor = admin.getDescriptor(tableName);
+      if (descriptor.isCompactionEnabled() != enabled) {
+        admin.modifyTable(
+            TableDescriptorBuilder.newBuilder(descriptor).setCompactionEnabled(enabled).build());
+      }
+    }
+  }
+
+  /** Requests a major compaction of the table, it runs in the background */
+  void majorCompact() throws IOException {
+    try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
+        Admin admin = connection.getAdmin()) {
+      admin.majorCompact(tableName);
+    }
   }
 
   /** Empties the table, keeping its regions and settings */

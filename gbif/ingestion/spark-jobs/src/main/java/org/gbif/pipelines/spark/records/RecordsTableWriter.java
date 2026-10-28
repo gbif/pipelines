@@ -231,6 +231,51 @@ public final class RecordsTableWriter {
     log.info("Truncated {} and removed its {} manifests", table, type);
   }
 
+  /**
+   * Creates the table of a record type, empty, pre-split and with its compactions disabled, and
+   * removes its manifests, which described another table. Fails if the table exists.
+   */
+  public static void createTable(
+      FileSystem fileSystem,
+      PipelinesConfig config,
+      Configuration hbaseConf,
+      RecordType type,
+      int regions)
+      throws IOException {
+
+    RecordsTableConfig tableConfig = config.getRecordsTableConfig();
+    String table = type.table(tableConfig);
+    if (sharedTables(config).contains(table)) {
+      throw new IllegalArgumentException(
+          "Records table " + table + " is also the keygen or fragments table, not creating it");
+    }
+
+    new RecordsTable(hbaseConf, tableConfig, type).create(regions);
+    RecordsManifests.deleteAll(fileSystem, tableConfig, type);
+    log.info("Created {} and removed its {} manifests", table, type);
+  }
+
+  /**
+   * Enables or disables the compactions of the table of a record type. A build disables them while
+   * it loads, so each load's HFiles aren't rewritten while the next one is written.
+   */
+  public static void compactions(
+      PipelinesConfig config, Configuration hbaseConf, RecordType type, boolean enabled)
+      throws IOException {
+    new RecordsTable(hbaseConf, config.getRecordsTableConfig(), type).compactions(enabled);
+    log.info(
+        "Compactions of {} {}",
+        type.table(config.getRecordsTableConfig()),
+        enabled ? "enabled" : "disabled");
+  }
+
+  /** Requests a major compaction of the table of a record type, it runs in the background */
+  public static void majorCompact(PipelinesConfig config, Configuration hbaseConf, RecordType type)
+      throws IOException {
+    new RecordsTable(hbaseConf, config.getRecordsTableConfig(), type).majorCompact();
+    log.info("Requested a major compaction of {}", type.table(config.getRecordsTableConfig()));
+  }
+
   /** Tables of other components, never to be used as records tables */
   private static List<String> sharedTables(PipelinesConfig config) {
     List<String> tables = new ArrayList<>();

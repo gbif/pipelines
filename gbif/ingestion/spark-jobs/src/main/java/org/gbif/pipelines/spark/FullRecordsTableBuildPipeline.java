@@ -47,6 +47,15 @@ import org.gbif.pipelines.spark.util.PipelineArgs;
  * removed before the load. Without it, the records are replaced and the records no longer in the
  * datasets loaded are deleted, as an incremental load does.
  *
+ * <p>With {@code --createTable=true} the table is created, pre-split into {@code --regions}
+ * regions, and its manifests removed, the job then is the only one using it. The table must not
+ * exist.
+ *
+ * <p>The compactions of the table are disabled while the batches load, so each batch's HFiles
+ * aren't rewritten while the next one is written. Once the last batch is loaded they are enabled
+ * and a major compaction requested. A failed build leaves them disabled until a resumed one
+ * completes.
+ *
  * <p>{@code --table} and {@code --manifestPath} build a new, pre-split table next to the live one,
  * to point the configuration at once built.
  */
@@ -97,6 +106,19 @@ public class FullRecordsTableBuildPipeline {
         names = "--startBatch",
         description = "First batch to load, starting from 0, to resume a build that failed")
     private int startBatch = 0;
+
+    @Parameter(
+        names = "--createTable",
+        description =
+            "Create the table, pre-split and empty, and remove its manifests. The table must not exist.",
+        arity = 1)
+    private boolean createTable = false;
+
+    @Parameter(
+        names = "--regions",
+        description =
+            "Regions of the created table, 100 for occurrences (one per salt, at most 100) and 16 for events by default")
+    private Integer regions = null;
 
     @Parameter(
         names = "--table",
@@ -174,13 +196,21 @@ public class FullRecordsTableBuildPipeline {
         type.table(config.getRecordsTableConfig()),
         scanResult.datasetAttemptMap().size());
 
-    if (args.truncate && args.startBatch > 0) {
+    if ((args.truncate || args.createTable) && args.startBatch > 0) {
       throw new IllegalArgumentException(
-          "--truncate would remove the batches before --startBatch, resume without it");
+          "--truncate and --createTable would remove the batches before --startBatch, resume without them");
     }
-    if (args.truncate) {
+    if (args.truncate && args.createTable) {
+      throw new IllegalArgumentException(
+          "--createTable creates an empty table, don't --truncate it");
+    }
+    if (args.createTable) {
+      int regions = args.regions != null ? args.regions : type == RecordType.OCCURRENCE ? 100 : 16;
+      RecordsTableWriter.createTable(fileSystem, config, hbaseConf, type, regions);
+    } else if (args.truncate) {
       RecordsTableWriter.truncate(fileSystem, config, hbaseConf, type);
     }
+    RecordsTableWriter.compactions(config, hbaseConf, type, false);
 
     // only the dataset key column is read to count, a cheap pass over the parquet
     Map<String, Long> recordCounts =
@@ -239,6 +269,8 @@ public class FullRecordsTableBuildPipeline {
     }
 
     log.info("Loaded {} records and removed {}", loaded, removed);
+    RecordsTableWriter.compactions(config, hbaseConf, type, true);
+    RecordsTableWriter.majorCompact(config, hbaseConf, type);
     log.info(timeAndRecPerSecond("full-records-table-build", start, loaded));
   }
 

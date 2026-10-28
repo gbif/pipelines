@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +35,17 @@ import org.apache.hadoop.fs.FilterFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
+import org.apache.hadoop.hbase.io.compress.Compression;
+import org.apache.hadoop.hbase.io.encoding.DataBlockEncoding;
+import org.apache.hadoop.hbase.regionserver.BloomType;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -424,6 +430,91 @@ public class RecordsTableWriterTest {
           type.converter().convert(json.get(i)),
           type.converter().convert(RowSource.toSource(rows.get(i))));
     }
+  }
+
+  /** A created table is pre-split, set up as documented and loaded with compactions disabled */
+  @Test
+  public void createdTablesAreLoaded() throws Exception {
+    String table = "test_records_created";
+    PipelinesConfig created = copyConfig(table);
+
+    RecordsTableWriter.createTable(fileSystem, created, hbaseConf, RecordType.OCCURRENCE, 4);
+
+    TableName name = TableName.valueOf(table);
+    try (Admin admin = HBASE_SERVER.getConnection().getAdmin();
+        RegionLocator locator = HBASE_SERVER.getConnection().getRegionLocator(name)) {
+      assertEquals(
+          List.of("", "25", "50", "75"),
+          Arrays.stream(locator.getStartKeys()).map(Bytes::toString).toList());
+      TableDescriptor descriptor = admin.getDescriptor(name);
+      assertFalse(descriptor.isCompactionEnabled());
+      for (String family : List.of(DATA_FAMILY, METADATA_FAMILY)) {
+        ColumnFamilyDescriptor cf = descriptor.getColumnFamily(Bytes.toBytes(family));
+        assertEquals(1, cf.getMaxVersions());
+        assertEquals(Compression.Algorithm.SNAPPY, cf.getCompressionType());
+        assertEquals(DataBlockEncoding.FAST_DIFF, cf.getDataBlockEncoding());
+        assertEquals(BloomType.ROW, cf.getBloomFilterType());
+      }
+      assertEquals(
+          32 * 1024, descriptor.getColumnFamily(Bytes.toBytes(DATA_FAMILY)).getBlocksize());
+    }
+
+    // the HFiles are written with the table settings and bulk loaded
+    RecordsLoad load =
+        RecordsTableWriter.load(
+            spark,
+            fileSystem,
+            created,
+            hbaseConf,
+            RecordType.OCCURRENCE,
+            OCCURRENCE_DATASET,
+            1,
+            occurrences(1L, 30L, 80L));
+    assertEquals(3, load.getLoaded());
+    load.commit();
+    for (long key : new long[] {1L, 30L, 80L}) {
+      assertFamilies(get(table, RecordsTableKey.occurrenceRowKey(key)));
+    }
+
+    RecordsTableWriter.compactions(created, hbaseConf, RecordType.OCCURRENCE, true);
+    try (Admin admin = HBASE_SERVER.getConnection().getAdmin()) {
+      assertTrue(admin.getDescriptor(name).isCompactionEnabled());
+    }
+
+    // an existing table isn't created again
+    assertThrows(
+        IOException.class,
+        () ->
+            RecordsTableWriter.createTable(
+                fileSystem, created, hbaseConf, RecordType.OCCURRENCE, 4));
+
+    // the manifests at the manifest path described another table, they are removed
+    Path manifest =
+        RecordsManifests.path(
+            created.getRecordsTableConfig(), RecordType.OCCURRENCE, OCCURRENCE_DATASET);
+    assertTrue(fileSystem.exists(manifest));
+    created.getRecordsTableConfig().setOccurrenceTable(table + "_2");
+    RecordsTableWriter.createTable(fileSystem, created, hbaseConf, RecordType.OCCURRENCE, 4);
+    assertFalse(fileSystem.exists(manifest));
+  }
+
+  @Test
+  public void splits() {
+    byte[][] occurrences = RecordsTable.splits(RecordType.OCCURRENCE, 100);
+    assertEquals(99, occurrences.length);
+    assertEquals("01", Bytes.toString(occurrences[0]));
+    assertEquals("99", Bytes.toString(occurrences[98]));
+
+    assertEquals(
+        List.of("25", "50", "75"),
+        Arrays.stream(RecordsTable.splits(RecordType.OCCURRENCE, 4)).map(Bytes::toString).toList());
+    assertThrows(
+        IllegalArgumentException.class, () -> RecordsTable.splits(RecordType.OCCURRENCE, 101));
+
+    byte[][] events = RecordsTable.splits(RecordType.EVENT, 16);
+    assertEquals(15, events.length);
+    assertEquals("10000000", Bytes.toString(events[0]));
+    assertEquals("f0000000", Bytes.toString(events[14]));
   }
 
   @Test
