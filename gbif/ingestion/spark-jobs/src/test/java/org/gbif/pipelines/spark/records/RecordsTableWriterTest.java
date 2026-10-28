@@ -637,10 +637,10 @@ public class RecordsTableWriterTest {
   }
 
   @Test
-  public void truncateRefusesTheKeygenTable() throws Exception {
-    PipelinesConfig keygenConfig = copyConfig(HbaseServer.CFG.getOccurrenceTable());
+  public void truncateRefusesTheKeygenLookupTable() throws Exception {
+    PipelinesConfig keygenConfig = copyConfig(HbaseServer.CFG.getLookupTable());
     KeygenConfig keygen = new KeygenConfig();
-    keygen.setOccurrenceTable(HbaseServer.CFG.getOccurrenceTable());
+    keygen.setLookupTable(HbaseServer.CFG.getLookupTable());
     keygenConfig.setKeygen(keygen);
 
     assertThrows(
@@ -649,7 +649,7 @@ public class RecordsTableWriterTest {
             RecordsTableWriter.truncate(
                 fileSystem, keygenConfig, hbaseConf, RecordType.OCCURRENCE));
     try (Admin admin = HBASE_SERVER.getConnection().getAdmin()) {
-      assertTrue(admin.isTableEnabled(TableName.valueOf(HbaseServer.CFG.getOccurrenceTable())));
+      assertTrue(admin.isTableEnabled(TableName.valueOf(HbaseServer.CFG.getLookupTable())));
     }
   }
 
