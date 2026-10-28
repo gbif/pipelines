@@ -281,7 +281,6 @@ public final class RecordsTableWriter {
     List<String> tables = new ArrayList<>();
     tables.add(config.getFragmentsTable());
     if (config.getKeygen() != null) {
-      tables.add(config.getKeygen().getOccurrenceTable());
       tables.add(config.getKeygen().getLookupTable());
       tables.add(config.getKeygen().getCounterTable());
     }
