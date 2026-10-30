@@ -164,19 +164,17 @@ public class VerbatimExtensionsInterpretationPipeline {
 
     registerUdfs(spark);
 
-    // Normalize the directory name
+    // Normalize the directory name. Do not repartition by a column such as directory, datasetKey or
+    // gbifid: they have few distinct values per dataset and would send whole extensions to a single
+    // task.
     Dataset<Row> normalizedKeys = readExtendedRecords(spark, datasetType, inputPath, datasetId);
 
     // Dynamically create flattened columns
     Dataset<Row> flattened = selectColumnsForExtension(spark, normalizedKeys);
 
-    // Repartition for performance
-    spark.sparkContext().setJobGroup("repartitioning", "Repartitioning by extension", true);
-    Dataset<Row> optimized = flattened.repartition(col("directory"));
-
     // collect distinct directories
     List<String> directories =
-        optimized.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
+        normalizedKeys.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
 
     log.debug(
         "Found {} distinct extension directories: {}",
@@ -190,7 +188,7 @@ public class VerbatimExtensionsInterpretationPipeline {
 
     log.debug("Available extension tables: {}", String.join(", ", extensionTableMap.keySet()));
 
-    // Write partitioned Parquet output (flat schema)
+    // Write each extension to its Iceberg table (flat schema)
     for (String dir : directories) {
 
       String normalisedDir = dir.toLowerCase().replaceAll("_", "");
@@ -230,7 +228,7 @@ public class VerbatimExtensionsInterpretationPipeline {
       StructType tblSchema = spark.read().format("iceberg").load(table).schema();
 
       // ensure unique column names (keep first occurrence) to avoid ambiguous references
-      var sourceDF = optimized.filter(col("directory").equalTo(dir));
+      var sourceDF = flattened.filter(col("directory").equalTo(dir));
       String[] columnList = sourceDF.columns();
       Map<String, Integer> seen = new HashMap<>();
       String[] renamed = new String[columnList.length];
