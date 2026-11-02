@@ -63,7 +63,7 @@ spring:
 
   # Initial request from validator-ws; enable only in single-instance development.
   unsafe-enable-start-consumer: ${ORCHESTRATOR_UNSAFE_ENABLE_START_CONSUMER:false}
-  start:
+  listen:
     exchange: ${VALIDATION_START_EXCHANGE:occurrence}
     routing-key: ${VALIDATION_START_ROUTING_KEY:validator.orchestrator.start}
     queue: ${VALIDATION_START_QUEUE:validator_orchestrator_start}

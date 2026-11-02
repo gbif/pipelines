@@ -1,0 +1,113 @@
+version: '3'
+
+dotenv:
+  - .env
+
+vars:
+  COMPOSE: podman compose -f compose.yaml
+
+tasks:
+  default:
+    desc: List local integration tasks
+    cmds:
+      - task --list
+
+  build:
+    desc: Build the orchestrator image from the existing shaded JAR
+    dir: ..
+    cmds:
+      - |
+        set -eu
+        set -- target/*-shaded.jar
+        if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+          echo 'Expected exactly one target/*-shaded.jar; build the Maven module first.' >&2
+          exit 1
+        fi
+        podman build \
+          --build-arg BASE_REGISTRY=docker.gbif.org/third-party \
+          --build-arg "JAR_FILE=$1" \
+          -f docker/Dockerfile \
+          -t localhost/validator-orchestrator:test .
+
+  up:
+    desc: Start RabbitMQ, mock validator-ws and orchestrator
+    cmds:
+      - '{{.COMPOSE}} up -d'
+
+  up:analyser:
+    desc: Start the full stack including the real analyser
+    cmds:
+      - |
+        set -eu
+        : "${DATAPACKAGES_DIR:?Set DATAPACKAGES_DIR in .env}"
+        : "${DWCDP_WORKDIR:?Set DWCDP_WORKDIR in .env}"
+        case "$DATAPACKAGES_DIR" in /*) ;; *) echo 'DATAPACKAGES_DIR must be absolute' >&2; exit 1 ;; esac
+        case "$DWCDP_WORKDIR" in /*) ;; *) echo 'DWCDP_WORKDIR must be absolute' >&2; exit 1 ;; esac
+        if [ ! -d "$DATAPACKAGES_DIR" ]; then
+          echo "Datapackage directory not found: $DATAPACKAGES_DIR" >&2
+          exit 1
+        fi
+        mkdir -p "$DWCDP_WORKDIR"
+        {{.COMPOSE}} --profile analyser up -d
+
+  logs:
+    desc: Follow application logs without RabbitMQ noise
+    cmds:
+      - '{{.COMPOSE}} --profile analyser logs -f --tail=100 analyser orchestrator mock-validator-ws'
+
+  logs:orchestrator:
+    desc: Follow only the orchestrator logs
+    cmds:
+      - '{{.COMPOSE}} logs -f --tail=100 orchestrator'
+
+  logs:analyser:
+    desc: Follow only the analyser logs
+    cmds:
+      - '{{.COMPOSE}} --profile analyser logs -f --tail=100 analyser'
+
+  status:
+    desc: List local-test containers (including stopped containers)
+    cmds:
+      - podman ps -a --filter name=validator-orchestrator-local
+
+  trigger:
+    desc: Submit a validation using an existing datapackage UUID
+    requires:
+      vars: [UUID]
+    cmds:
+      - python3 trigger.py --uuid '{{.UUID}}'
+
+  complete:
+    desc: Send synthetic completion (without the real analyser processing the same UUID)
+    requires:
+      vars: [UUID]
+    cmds:
+      - python3 trigger.py --complete '{{.UUID}}'
+
+  pull:analyser:
+    desc: Pull the configured analyser image (does not recreate the container)
+    cmds:
+      - |
+        podman pull "${DWCDP_ANALYSER_IMAGE:-docker.gbif.org/dwc-dp-analyser-service:0.0.7-SNAPSHOT}"
+
+  restart:analyser:
+    desc: Restart only the existing analyser container (preserves image and mounts)
+    cmds:
+      - |
+        set -eu
+        ids="$(podman ps -aq --filter name=validator-orchestrator-local_analyser)"
+        if [ -z "$ids" ]; then
+          echo 'No analyser container found; use task up:analyser.' >&2
+          exit 1
+        fi
+        set -- $ids
+        if [ "$#" -ne 1 ]; then
+          echo "Expected one analyser container; found $#" >&2
+          exit 1
+        fi
+        podman restart "$1"
+
+  down:
+    desc: Stop and remove the local Compose environment
+    cmds:
+      - '{{.COMPOSE}} --profile analyser down'

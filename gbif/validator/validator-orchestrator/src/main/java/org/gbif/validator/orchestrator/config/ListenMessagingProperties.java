@@ -2,8 +2,8 @@ package org.gbif.validator.orchestrator.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "orchestrator.start")
-public class StartMessagingProperties {
+@ConfigurationProperties(prefix = "orchestrator.listen")
+public class ListenMessagingProperties {
 
   private String exchange;
   private String routingKey;

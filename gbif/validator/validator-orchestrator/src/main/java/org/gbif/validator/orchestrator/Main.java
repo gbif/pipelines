@@ -1,8 +1,8 @@
 package org.gbif.validator.orchestrator;
 
 import org.gbif.validator.orchestrator.config.DagProperties;
+import org.gbif.validator.orchestrator.config.ListenMessagingProperties;
 import org.gbif.validator.orchestrator.config.OrchestratorProperties;
-import org.gbif.validator.orchestrator.config.StartMessagingProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties({
   OrchestratorProperties.class,
   DagProperties.class,
-  StartMessagingProperties.class
+  ListenMessagingProperties.class
 })
 public class Main {
   public static void main(String[] args) {
