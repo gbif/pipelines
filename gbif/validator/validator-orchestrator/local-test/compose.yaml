@@ -1,3 +1,4 @@
+
 name: validator-orchestrator-local
 
 services:
@@ -30,29 +31,25 @@ services:
         condition: service_healthy
       mock-validator-ws:
         condition: service_started
+    volumes:
+      - ./application-local.yml:/etc/validator-orchestrator/application-local.yml:ro
     environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: "file:/etc/validator-orchestrator/"
+      SPRING_PROFILES_ACTIVE: local
+
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: "5672"
       RABBITMQ_USERNAME: localtest
       RABBITMQ_PASSWORD: localtest
       RABBITMQ_VHOST: /
+
       VALIDATOR_WS_URL: http://mock-validator-ws:8080
       VALIDATOR_WS_USERNAME: localtest
       VALIDATOR_WS_PASSWORD: localtest
-      ORCHESTRATOR_UNSAFE_ENABLE_START_CONSUMER: "true"
-      ORCHESTRATOR_UNSAFE_ENABLE_COMPLETION_CONSUMER: "true"
-      VALIDATION_START_EXCHANGE: occurrence
-      VALIDATION_START_ROUTING_KEY: validator.orchestrator.start
-      VALIDATION_START_QUEUE: validator_orchestrator_start
-      DWCDP_REQUEST_EXCHANGE: occurrence
-      DWCDP_REQUEST_ROUTING_KEY: validator.dwcdp.analysis
-      DWCDP_COMPLETION_EXCHANGE: occurrence
-      DWCDP_COMPLETION_ROUTING_KEY: validator.dwcdp.analysis.finished
-      DWCDP_COMPLETION_QUEUE: validator_dwcdp_analysis_finished
-    # Controlled local test only. Real deployments should NOT enable unsafe consumers.
 
-  # Real DWc-DP analyser, opt in with --profile analyser.
-  # The archive must be accessible at /data/datapackages/<validation UUID>.
+    # Controlled local integration test only.
+
+  # Real DwC-DP analyser, opt in with --profile analyser.
   analyser:
     profiles: ["analyser"]
     image: ${DWCDP_ANALYSER_IMAGE:-docker.gbif.org/dwc-dp-analyser-service:0.0.7-SNAPSHOT}
@@ -68,7 +65,6 @@ services:
       INPUT_QUEUE: validator_dwcdp_analysis
       OUTPUT_EXCHANGE: occurrence
       OUTPUT_ROUTING_KEY: validator.dwcdp.analysis.finished
-      # The analyser must not contact registry for validation-domain work.
       REGISTRY_URL: ""
       REGISTRY_USER: ""
       REGISTRY_PASSWORD: ""
