@@ -1,0 +1,31 @@
+
+orchestrator:
+  steps:
+    VALIDATOR_VALIDATE_DWCDP:
+      request:
+        exchange: occurrence
+        routing-key: validator.dwcdp.analysis
+      outgoing:
+        exchange: occurrence
+        routing-key: occurrence.pipelines.balancer
+      completion:
+        exchange: occurrence
+        routing-key: validator.dwcdp.analysis.finished
+        queue: validator_dwcdp_analysis_finished
+        threads: 1
+
+  # Enabled only for the controlled local integration test.
+  # Workflow state updates and RabbitMQ dispatch are not atomic.
+  unsafe-enable-start-consumer: true
+  unsafe-enable-completion-consumer: true
+
+  start:
+    exchange: occurrence
+    routing-key: validator.orchestrator.start
+    queue: validator_orchestrator_start
+    threads: 1
+
+  validator-ws:
+    url: ${VALIDATOR_WS_URL:http://localhost:8080}
+    username: ${VALIDATOR_WS_USERNAME:}
+    password: ${VALIDATOR_WS_PASSWORD:}
