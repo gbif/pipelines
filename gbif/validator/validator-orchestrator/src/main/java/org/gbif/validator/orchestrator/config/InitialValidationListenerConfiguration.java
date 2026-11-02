@@ -20,7 +20,7 @@ public class InitialValidationListenerConfiguration {
   @ConditionalOnProperty(name = "orchestrator.unsafe-enable-start-consumer", havingValue = "true")
   public ApplicationRunner initialValidationListener(
       MessageListener listener,
-      StartMessagingProperties properties,
+      ListenMessagingProperties properties,
       InitialValidationCallback callback) {
 
     return args -> {
