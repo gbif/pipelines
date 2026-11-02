@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.iceberg.DistributionMode;
+import org.apache.iceberg.spark.SparkWriteOptions;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
@@ -230,7 +232,7 @@ public class VerbatimExtensionsInterpretationPipeline {
       StructType tblSchema = spark.read().format("iceberg").load(table).schema();
 
       // ensure unique column names (keep first occurrence) to avoid ambiguous references
-      var sourceDF = optimized.filter(col("directory").equalTo(dir));
+      var sourceDF = flattened.filter(col("directory").equalTo(dir));
       String[] columnList = sourceDF.columns();
       Map<String, Integer> seen = new HashMap<>();
       String[] renamed = new String[columnList.length];
@@ -264,8 +266,12 @@ public class VerbatimExtensionsInterpretationPipeline {
         toWrite = toWrite.withColumn("datasetKey", lit(datasetId));
       }
 
-      // write to existing Iceberg table (append; use overwritePartitions() if needed)
-      toWrite.writeTo(table).overwritePartitions();
+      // write to existing Iceberg table. Distribution mode is disabled because only a single
+      // datasetKey partition is written; hash distribution would shuffle all rows to one task.
+      toWrite
+          .writeTo(table)
+          .option(SparkWriteOptions.DISTRIBUTION_MODE, DistributionMode.NONE.modeName())
+          .overwritePartitions();
     }
   }
 
