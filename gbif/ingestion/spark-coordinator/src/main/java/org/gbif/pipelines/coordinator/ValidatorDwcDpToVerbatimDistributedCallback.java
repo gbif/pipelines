@@ -1,14 +1,12 @@
 package org.gbif.pipelines.coordinator;
 
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.util.DistributedUtil;
-
-import java.util.List;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Distributed callback for the DWCDP_TO_VERBATIM step. Triggers an Airflow DAG via {@link
