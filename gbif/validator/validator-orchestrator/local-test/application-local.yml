@@ -1,5 +1,13 @@
 
 orchestrator:
+  # Receives requests to evaluate an existing validation workflow.
+  # The workflow may already have completed one or more steps.
+  listen:
+    exchange: occurrence
+    routing-key: validator.orchestrator.start
+    queue: validator_orchestrator_start
+    threads: 1
+
   steps:
     VALIDATOR_VALIDATE_DWCDP:
       request:
@@ -18,12 +26,6 @@ orchestrator:
   # Workflow state updates and RabbitMQ dispatch are not atomic.
   unsafe-enable-start-consumer: true
   unsafe-enable-completion-consumer: true
-
-  start:
-    exchange: occurrence
-    routing-key: validator.orchestrator.start
-    queue: validator_orchestrator_start
-    threads: 1
 
   validator-ws:
     url: ${VALIDATOR_WS_URL:http://localhost:8080}
