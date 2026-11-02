@@ -205,7 +205,7 @@ public class Coordinator {
           case VALIDATOR_DWCDP_TO_VERBATIM_STANDALONE -> (messagePublisher ->
               new ValidatorDwcDpToVerbatimCallback(config, messagePublisher, master));
           case VALIDATOR_DWCDP_TO_VERBATIM_DISTRIBUTED -> (messagePublisher ->
-            new ValidatorDwcDpToVerbatimCallback(config, messagePublisher, master));
+              new ValidatorDwcDpToVerbatimDistributedCallback(config, messagePublisher, master));
           case DWCDP_STAGE_STANDALONE -> (messagePublisher ->
               new DwcDpStageCallback(config, messagePublisher, master));
           case DWCDP_TO_VERBATIM_STANDALONE -> (messagePublisher ->
