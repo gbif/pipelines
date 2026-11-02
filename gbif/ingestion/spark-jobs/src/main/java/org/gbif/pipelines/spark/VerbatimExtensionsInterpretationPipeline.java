@@ -24,7 +24,6 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-import org.apache.spark.storage.StorageLevel;
 import org.gbif.api.util.TermNormalizationUtils;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Extension;
@@ -170,30 +169,16 @@ public class VerbatimExtensionsInterpretationPipeline {
     // Normalize the directory name
     Dataset<Row> normalizedKeys = readExtendedRecords(spark, datasetType, inputPath, datasetId);
 
-    // Dynamically create flattened columns. Cached because each extension directory is written
-    // in a separate job; without this, the read, join and explode are recomputed per directory.
-    Dataset<Row> flattened =
-        selectColumnsForExtension(spark, normalizedKeys).persist(StorageLevel.MEMORY_AND_DISK());
+    // Dynamically create flattened columns
+    Dataset<Row> flattened = selectColumnsForExtension(spark, normalizedKeys);
 
-    try {
-      writeExtensions(spark, config, datasetId, icebergCatalog, datasetType, flattened);
-    } finally {
-      flattened.unpersist();
-    }
-  }
-
-  @SneakyThrows
-  private static void writeExtensions(
-      SparkSession spark,
-      PipelinesConfig config,
-      String datasetId,
-      String icebergCatalog,
-      DatasetType datasetType,
-      Dataset<Row> flattened) {
+    // Repartition for performance
+    spark.sparkContext().setJobGroup("repartitioning", "Repartitioning by extension", true);
+    Dataset<Row> optimized = flattened.repartition(col("directory"));
 
     // collect distinct directories
     List<String> directories =
-        flattened.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
+        optimized.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
 
     log.debug(
         "Found {} distinct extension directories: {}",

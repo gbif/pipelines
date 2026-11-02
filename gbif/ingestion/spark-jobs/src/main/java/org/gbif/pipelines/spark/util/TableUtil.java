@@ -23,7 +23,6 @@ import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
-import org.gbif.pipelines.spark.udf.CleanDelimiters;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
@@ -199,7 +198,7 @@ public class TableUtil {
   }
 
   /**
-   * Count the records and check for records without a datasetKey or gbifId, in a single scan.
+   * Check for records without a datasetKey or gbifId.
    *
    * @param spark
    * @param tempLoadingTable
@@ -348,23 +347,21 @@ public class TableUtil {
 
       hdfsColumn.setIcebergCol(parquetColumn);
       hdfsColumn.setSelect(
-          base64DecodeSql("`" + parquetColumn + "`") + " AS `" + normalisedName + "`");
+          String.format("base64_decode(%s) AS `%s`", parquetColumn, normalisedName));
 
     } else if (normalisedName.equalsIgnoreCase("class_")) {
 
       hdfsColumn.setIcebergCol("class");
-      hdfsColumn.setSelect(cleanDelimitersSql("`" + parquetColumn + "`") + " AS class");
+      hdfsColumn.setSelect("cleanDelimiters(`" + parquetColumn + "`) AS class");
 
     } else {
 
       hdfsColumn.setIcebergCol(normalisedName);
       if (dataType instanceof StringType) {
-        hdfsColumn.setSelect(
-            cleanDelimitersSql("`" + parquetColumn + "`") + " AS " + normalisedName);
+        hdfsColumn.setSelect("cleanDelimiters(`" + parquetColumn + "`) AS " + normalisedName);
       } else if (dataType instanceof ArrayType
           && ((ArrayType) dataType).elementType() instanceof StringType) {
-        hdfsColumn.setSelect(
-            cleanDelimitersArraySql("`" + parquetColumn + "`") + " AS " + normalisedName);
+        hdfsColumn.setSelect("cleanDelimitersArray(`" + parquetColumn + "`) AS " + normalisedName);
       } else {
         hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
       }
@@ -437,20 +434,20 @@ public class TableUtil {
         .select(col("gbifid"), explode(col("mm_record")).alias("mm_record"), col("datasetkey"))
         .select(
             col("gbifid"),
-            expr(cleanDelimitersSql("mm_record.type")).alias("type"),
-            expr(cleanDelimitersSql("mm_record.format")).alias("format"),
-            expr(cleanDelimitersSql("mm_record.identifier")).alias("identifier"),
-            expr(cleanDelimitersSql("mm_record.references")).alias("references"),
-            expr(cleanDelimitersSql("mm_record.title")).alias("title"),
-            expr(cleanDelimitersSql("mm_record.description")).alias("description"),
-            expr(cleanDelimitersSql("mm_record.source")).alias("source"),
-            expr(cleanDelimitersSql("mm_record.audience")).alias("audience"),
+            callUDF("cleanDelimiters", col("mm_record.type")).alias("type"),
+            callUDF("cleanDelimiters", col("mm_record.format")).alias("format"),
+            callUDF("cleanDelimiters", col("mm_record.identifier")).alias("identifier"),
+            callUDF("cleanDelimiters", col("mm_record.references")).alias("references"),
+            callUDF("cleanDelimiters", col("mm_record.title")).alias("title"),
+            callUDF("cleanDelimiters", col("mm_record.description")).alias("description"),
+            callUDF("cleanDelimiters", col("mm_record.source")).alias("source"),
+            callUDF("cleanDelimiters", col("mm_record.audience")).alias("audience"),
             col("mm_record.created").alias("created"),
-            expr(cleanDelimitersSql("mm_record.creator")).alias("creator"),
-            expr(cleanDelimitersSql("mm_record.contributor")).alias("contributor"),
-            expr(cleanDelimitersSql("mm_record.publisher")).alias("publisher"),
-            expr(cleanDelimitersSql("mm_record.license")).alias("license"),
-            expr(cleanDelimitersSql("mm_record.rightsHolder")).alias("rightsholder"),
+            callUDF("cleanDelimiters", col("mm_record.creator")).alias("creator"),
+            callUDF("cleanDelimiters", col("mm_record.contributor")).alias("contributor"),
+            callUDF("cleanDelimiters", col("mm_record.publisher")).alias("publisher"),
+            callUDF("cleanDelimiters", col("mm_record.license")).alias("license"),
+            callUDF("cleanDelimiters", col("mm_record.rightsHolder")).alias("rightsholder"),
             col("datasetkey"))
         .createOrReplaceTempView("mm_records");
     spark.sql(
@@ -518,7 +515,7 @@ public class TableUtil {
             col("gbifid"),
             from_json(
                     encodedExtData
-                        ? expr(base64DecodeSql("ext_dna_derived_data"))
+                        ? expr("cast(base64_decode(ext_dna_derived_data) as string)")
                         : col("ext_dna_derived_data"),
                     new ArrayType(
                         new StructType()
@@ -591,7 +588,7 @@ public class TableUtil {
         .select(
             col("gbifid"),
             from_json(
-                    expr(base64DecodeSql("ext_humboldt")),
+                    expr("cast(base64_decode(ext_humboldt) as string)"),
                     new ArrayType(
                         createHumboldtStructTypeFromJson(INTERPRETED_HUMBOLDT_TERMS), true))
                 .alias("h_record"),
@@ -620,7 +617,7 @@ public class TableUtil {
         .select(
             col("gbifid"),
             from_json(
-                    expr(base64DecodeSql("ext_multimedia")),
+                    expr("cast(base64_decode(ext_multimedia) as string)"),
                     new ArrayType(
                         new StructType()
                             .add("type", "string", false)
@@ -643,20 +640,20 @@ public class TableUtil {
         .select(col("gbifid"), explode(col("mm_record")).alias("mm_record"), col("datasetkey"))
         .select(
             col("gbifid"),
-            expr(cleanDelimitersSql("mm_record.type")).alias("type"),
-            expr(cleanDelimitersSql("mm_record.format")).alias("format"),
-            expr(cleanDelimitersSql("mm_record.identifier")).alias("identifier"),
-            expr(cleanDelimitersSql("mm_record.references")).alias("references"),
-            expr(cleanDelimitersSql("mm_record.title")).alias("title"),
-            expr(cleanDelimitersSql("mm_record.description")).alias("description"),
-            expr(cleanDelimitersSql("mm_record.source")).alias("source"),
-            expr(cleanDelimitersSql("mm_record.audience")).alias("audience"),
+            callUDF("cleanDelimiters", col("mm_record.type")).alias("type"),
+            callUDF("cleanDelimiters", col("mm_record.format")).alias("format"),
+            callUDF("cleanDelimiters", col("mm_record.identifier")).alias("identifier"),
+            callUDF("cleanDelimiters", col("mm_record.references")).alias("references"),
+            callUDF("cleanDelimiters", col("mm_record.title")).alias("title"),
+            callUDF("cleanDelimiters", col("mm_record.description")).alias("description"),
+            callUDF("cleanDelimiters", col("mm_record.source")).alias("source"),
+            callUDF("cleanDelimiters", col("mm_record.audience")).alias("audience"),
             col("mm_record.created").alias("created"),
-            expr(cleanDelimitersSql("mm_record.creator")).alias("creator"),
-            expr(cleanDelimitersSql("mm_record.contributor")).alias("contributor"),
-            expr(cleanDelimitersSql("mm_record.publisher")).alias("publisher"),
-            expr(cleanDelimitersSql("mm_record.license")).alias("license"),
-            expr(cleanDelimitersSql("mm_record.rightsHolder")).alias("rightsholder"),
+            callUDF("cleanDelimiters", col("mm_record.creator")).alias("creator"),
+            callUDF("cleanDelimiters", col("mm_record.contributor")).alias("contributor"),
+            callUDF("cleanDelimiters", col("mm_record.publisher")).alias("publisher"),
+            callUDF("cleanDelimiters", col("mm_record.license")).alias("license"),
+            callUDF("cleanDelimiters", col("mm_record.rightsHolder")).alias("rightsholder"),
             col("datasetkey"))
         .createOrReplaceTempView("mm_records");
     spark.sql(
@@ -848,47 +845,5 @@ public class TableUtil {
     return String.format(
         "%s_ext_%s_%s",
         coreDwcTerm, extensionTable.getLeafNamespace(), extensionTable.getHiveTableName());
-  }
-
-  /** Characters trimmed from both ends by {@link String#trim()}. */
-  private static final String JAVA_TRIM_PATTERN = "^[\\x00-\\x20]+|[\\x00-\\x20]+$";
-
-  /**
-   * SQL expression equivalent to {@link CleanDelimiters}: delimiter characters are replaced with a
-   * space and the result is trimmed. Uses built-in functions so Spark can apply code generation.
-   *
-   * @param column SQL column reference
-   */
-  public static String cleanDelimitersSql(String column) {
-    return String.format(
-        "regexp_replace(regexp_replace(%s, '%s', ' '), '%s', '')",
-        column, sqlEscape(CleanDelimiters.DELIMITERS_MATCH), sqlEscape(JAVA_TRIM_PATTERN));
-  }
-
-  /**
-   * SQL expression equivalent to {@link org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf}:
-   * cleans each element, drops null or empty elements and returns an empty array for null input.
-   *
-   * @param column SQL column reference
-   */
-  public static String cleanDelimitersArraySql(String column) {
-    return String.format(
-        "coalesce(filter(transform(%s, x -> %s), x -> x IS NOT NULL AND x <> ''),"
-            + " cast(array() AS array<string>))",
-        column, cleanDelimitersSql("x"));
-  }
-
-  /**
-   * SQL expression equivalent to {@link org.gbif.pipelines.spark.udf.Base64DecodeUDF}: decodes a
-   * base64 string to a UTF-8 string, returning null for invalid input.
-   *
-   * @param column SQL column reference
-   */
-  public static String base64DecodeSql(String column) {
-    return String.format("cast(try_to_binary(%s, 'base64') AS string)", column);
-  }
-
-  private static String sqlEscape(String value) {
-    return value.replace("\\", "\\\\").replace("'", "\\'");
   }
 }
