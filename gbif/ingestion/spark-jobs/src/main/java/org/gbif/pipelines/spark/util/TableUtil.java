@@ -7,9 +7,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.iceberg.exceptions.CommitFailedException;
+import org.apache.spark.sql.DataFrameWriterV2;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.catalyst.analysis.NoSuchTableException;
 import org.apache.spark.sql.types.*;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.dwc.terms.Term;
@@ -38,6 +40,18 @@ public class TableUtil {
    */
   public static void runSQLWithRetries(
       SparkSession spark, String sql, String targetTable, int maxRetries, int baseSleepMs) {
+    runWithRetries(spark, () -> spark.sql(sql), targetTable, maxRetries, baseSleepMs);
+  }
+
+  /**
+   * Run a write action with retries and table refresh if we have failures.
+   *
+   * @param spark
+   * @param action the write to run
+   * @param targetTable
+   */
+  public static void runWithRetries(
+      SparkSession spark, Runnable action, String targetTable, int maxRetries, int baseSleepMs) {
 
     if (maxRetries <= 0) {
       throw new IllegalArgumentException("maxRetries must be greater than 0");
@@ -53,7 +67,7 @@ public class TableUtil {
     boolean success = false;
     for (int attemptNum = 1; attemptNum <= maxRetries && !success; attemptNum++) {
       try {
-        spark.sql(sql);
+        action.run();
         success = true;
       } catch (CommitFailedException cfe) {
         log.warn(
@@ -78,6 +92,27 @@ public class TableUtil {
           throw new RuntimeException("Interrupted while waiting to retry insert", ie);
         }
       }
+    }
+  }
+
+  /**
+   * Dynamically overwrite the partitions of the target table present in the supplied records.
+   *
+   * @param records records to write
+   * @param targetTable fully qualified target table
+   * @param distributionMode optional Iceberg write distribution mode (none, hash, range), the table
+   *     default is used when null
+   */
+  public static void overwritePartitions(
+      Dataset<Row> records, String targetTable, String distributionMode) {
+    DataFrameWriterV2<Row> writer = records.writeTo(targetTable);
+    if (distributionMode != null && !distributionMode.isEmpty()) {
+      writer.option("distribution-mode", distributionMode);
+    }
+    try {
+      writer.overwritePartitions();
+    } catch (NoSuchTableException e) {
+      throw new IllegalStateException("Table " + targetTable + " does not exist", e);
     }
   }
 
@@ -167,21 +202,23 @@ public class TableUtil {
    *
    * @param spark
    * @param tempLoadingTable
+   * @return the number of records in the table
    */
-  public static void checkForOrphanedRecord(SparkSession spark, String tempLoadingTable) {
+  public static long checkForOrphanedRecord(SparkSession spark, String tempLoadingTable) {
     Dataset<Row> df =
         spark.sql(
             String.format(
                 """
-                    SELECT COUNT(*) AS cnt
+                    SELECT COUNT(*) AS total,
+                           COUNT_IF(datasetKey IS NULL
+                             OR datasetKey = ''
+                             OR gbifId IS NULL
+                             OR gbifId = '') AS orphaned
                     FROM %s
-                    WHERE datasetKey IS NULL
-                      OR datasetKey = ''
-                      OR gbifId IS NULL
-                      OR gbifId = ''
                 """,
                 tempLoadingTable));
-    long count = df.collectAsList().get(0).getLong(0);
+    Row row = df.collectAsList().get(0);
+    long count = row.getLong(1);
     if (count > 0) {
       log.warn(
           "There are {} records with NULL or empty datasetKey or gbifId in the temporary table {}",
@@ -189,6 +226,7 @@ public class TableUtil {
           tempLoadingTable);
       throw new IllegalStateException("There are " + count + " records with NULL datasetKey");
     }
+    return row.getLong(0);
   }
 
   public static String getCreateTableSQL(
