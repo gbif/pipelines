@@ -23,7 +23,7 @@ public final class DwcdpValidationReportHook implements CompletionHook<JsonNode>
     JsonNode report = completion.path("validationReport");
 
     if (report.isMissingNode() || report.isNull()) {
-      throw new IllegalArgumentException("DWc-DP completion has no validationReport");
+      throw new IllegalArgumentException("DwC-DP completion has no validationReport");
     }
 
     client.createOrUpdateValidationReport(

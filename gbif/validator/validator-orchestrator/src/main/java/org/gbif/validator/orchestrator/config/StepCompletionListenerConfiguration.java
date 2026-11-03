@@ -8,7 +8,6 @@ import org.gbif.validator.orchestrator.step.StepRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,9 +19,6 @@ public class StepCompletionListenerConfiguration {
       LoggerFactory.getLogger(StepCompletionListenerConfiguration.class);
 
   @Bean
-  @ConditionalOnProperty(
-      name = "orchestrator.unsafe-enable-completion-consumer",
-      havingValue = "true")
   public ApplicationRunner stepCompletionConsumers(
       MessageListener listener,
       OrchestratorProperties properties,
@@ -35,9 +31,17 @@ public class StepCompletionListenerConfiguration {
         requireCompletion(properties, registration);
       }
 
+      int registered = 0;
       for (StepRegistration<?> registration : registry.registrations()) {
         register(listener, properties, registration, processor);
+        registered++;
       }
+
+      if (registered == 0) {
+        throw new IllegalStateException("No step completion consumers registered");
+      }
+
+      LOG.info("Registered {} step completion consumers", registered);
     };
   }
 
@@ -70,19 +74,19 @@ public class StepCompletionListenerConfiguration {
         new StepCompletionCallback<>(
             registration.stepType(), registration.completionType(), processor::complete);
 
-    LOG.info(
-        "Starting step completion consumer step={} queue={} exchange={} routingKey={} threads={}",
-        registration.stepType(),
-        completion.getQueue(),
-        completion.getExchange(),
-        completion.getRoutingKey(),
-        completion.getThreads());
     listener.listen(
         completion.getQueue(),
         completion.getRoutingKey(),
         completion.getExchange(),
         completion.getThreads(),
         callback);
+    LOG.info(
+        "Listening for step completion step={} queue={} exchange={} routingKey={} threads={}",
+        registration.stepType(),
+        completion.getQueue(),
+        completion.getExchange(),
+        completion.getRoutingKey(),
+        completion.getThreads());
   }
 
   private static boolean isBlank(String value) {

@@ -27,7 +27,7 @@ public final class DwcdpCompletionInterpreter {
         || !valid.isBoolean()
         || report == null
         || report.isNull()) {
-      throw new IllegalArgumentException("Incomplete or unsupported DWc-DP completion payload");
+      throw new IllegalArgumentException("Incomplete or unsupported DwC-DP completion payload");
     }
 
     UUID key = UUID.fromString(uuid.textValue());
