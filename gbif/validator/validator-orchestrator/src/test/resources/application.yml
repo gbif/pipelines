@@ -1,13 +1,15 @@
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-
   endpoint:
     health:
       probes:
         enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 # Transport connection is independent of per-step routing.
 # Override these per deployment, including the virtual host when domains split.
