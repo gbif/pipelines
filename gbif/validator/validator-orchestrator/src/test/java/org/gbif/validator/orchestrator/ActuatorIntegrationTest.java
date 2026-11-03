@@ -36,8 +36,6 @@ import org.springframework.context.annotation.Import;
     classes = Main.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
-      "orchestrator.unsafe-enable-start-consumer=false",
-      "orchestrator.unsafe-enable-completion-consumer=false",
       "orchestrator.validator-ws.url=http://127.0.0.1:1",
       "orchestrator.validator-ws.username=test",
       "orchestrator.validator-ws.password=test",
@@ -102,7 +100,7 @@ class ActuatorIntegrationTest {
   @TestConfiguration(proxyBeanMethods = false)
   static class OfflineInfrastructure {
 
-    /** Remove definitions before singleton creation; @Primary alone would still connect. */
+    /** Remove external beans and consumer runners before singleton creation. */
     @Bean
     static BeanDefinitionRegistryPostProcessor suppressExternalInfrastructure() {
       return new BeanDefinitionRegistryPostProcessor() {
@@ -110,7 +108,13 @@ class ActuatorIntegrationTest {
         public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
             throws BeansException {
           for (String beanName :
-              new String[] {"messagePublisher", "messageListener", "validationWsClient"}) {
+              new String[] {
+                "messagePublisher",
+                "messageListener",
+                "validationWsClient",
+                "initialValidationListener",
+                "stepCompletionConsumers"
+              }) {
             if (!registry.containsBeanDefinition(beanName)) {
               throw new IllegalStateException("Expected production bean: " + beanName);
             }

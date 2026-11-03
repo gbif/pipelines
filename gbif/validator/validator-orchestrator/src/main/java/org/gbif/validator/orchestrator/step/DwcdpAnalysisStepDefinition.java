@@ -27,7 +27,7 @@ public final class DwcdpAnalysisStepDefinition implements StepDefinition<JsonNod
   @Override
   public CompletionResult interpret(JsonNode message) {
     if (message == null || !message.isObject()) {
-      throw new IllegalArgumentException("Expected a DWc-DP completion object");
+      throw new IllegalArgumentException("Expected a DwC-DP completion object");
     }
 
     JsonNode uuid = message.path("datasetUuid");
@@ -40,13 +40,13 @@ public final class DwcdpAnalysisStepDefinition implements StepDefinition<JsonNod
         || !valid.isBoolean()
         || report.isMissingNode()
         || report.isNull()) {
-      throw new IllegalArgumentException("Incomplete DWc-DP completion payload");
+      throw new IllegalArgumentException("Incomplete DwC-DP completion payload");
     }
 
     return new CompletionResult(
         UUID.fromString(uuid.textValue()),
         attempt.intValue(),
         valid.booleanValue(),
-        valid.booleanValue() ? null : "Invalid DWc-DP");
+        valid.booleanValue() ? null : "Invalid DwC-DP");
   }
 }

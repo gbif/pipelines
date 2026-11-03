@@ -1,4 +1,3 @@
-
 orchestrator:
   # Receives requests to evaluate an existing validation workflow.
   # The workflow may already have completed one or more steps.
@@ -21,11 +20,6 @@ orchestrator:
         routing-key: validator.dwcdp.analysis.finished
         queue: validator_dwcdp_analysis_finished
         threads: 1
-
-  # Enabled only for the controlled local integration test.
-  # Workflow state updates and RabbitMQ dispatch are not atomic.
-  unsafe-enable-start-consumer: true
-  unsafe-enable-completion-consumer: true
 
   validator-ws:
     url: ${VALIDATOR_WS_URL:http://localhost:8080}

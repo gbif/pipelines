@@ -1,16 +1,3 @@
-management:
-  endpoint:
-    health:
-      probes:
-        enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus,metrics
-  metrics:
-    tags:
-      application: ${spring.application.name}
-
 # Transport connection is independent of per-step routing.
 # Override these per deployment, including the virtual host when domains split.
 spring:
@@ -30,9 +17,6 @@ orchestrator:
     routing-key: test.orchestrator.request
     queue: test_orchestrator_request
     threads: 1
-
-  unsafe-enable-start-consumer: false
-  unsafe-enable-completion-consumer: false
 
   steps:
     VALIDATOR_VALIDATE_DWCDP:

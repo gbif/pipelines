@@ -23,12 +23,12 @@ public final class DwcdpStageHandoffAdapter
   public PipelinesBalancerMessage adapt(JsonNode completion, JobContext context)
       throws JsonProcessingException {
     if (completion == null || !completion.path("valid").asBoolean(false)) {
-      throw new IllegalArgumentException("Cannot hand off unsuccessful DWc-DP analysis");
+      throw new IllegalArgumentException("Cannot hand off unsuccessful DwC-DP analysis");
     }
 
     if (!context.datasetUuid().toString().equals(completion.path("datasetUuid").asText())
         || context.attempt() != completion.path("attempt").asInt(-1)) {
-      throw new IllegalArgumentException("DWc-DP completion does not match workflow context");
+      throw new IllegalArgumentException("DwC-DP completion does not match workflow context");
     }
 
     Set<String> steps = new LinkedHashSet<>();
@@ -41,12 +41,12 @@ public final class DwcdpStageHandoffAdapter
 
     if (!steps.contains(StepType.VALIDATOR_DWCDP_STAGE.name())
         || !steps.contains(StepType.VALIDATOR_DWCDP_TO_VERBATIM.name())) {
-      throw new IllegalArgumentException("DWc-DP validation workflow has no staging chain");
+      throw new IllegalArgumentException("DwC-DP validation workflow has no staging chain");
     }
 
     JsonNode resources = completion.path("validationReport").path("resourceAnalysisResults");
     if (!resources.isArray() || resources.isEmpty()) {
-      throw new IllegalArgumentException("DWc-DP report has no resource analysis information");
+      throw new IllegalArgumentException("DwC-DP report has no resource analysis information");
     }
 
     boolean occurrences = false;
@@ -54,7 +54,7 @@ public final class DwcdpStageHandoffAdapter
     for (JsonNode resource : resources) {
       JsonNode nameNode = resource.path("name");
       if (!nameNode.isTextual() || nameNode.asText().isBlank()) {
-        throw new IllegalArgumentException("DWc-DP report contains an unnamed resource");
+        throw new IllegalArgumentException("DwC-DP report contains an unnamed resource");
       }
 
       String name = nameNode.asText().trim();
@@ -67,7 +67,7 @@ public final class DwcdpStageHandoffAdapter
 
     if (!occurrences && !events) {
       throw new IllegalArgumentException(
-          "DWc-DP report contains no recognized Event or Occurrence resource");
+          "DwC-DP report contains no recognized Event or Occurrence resource");
     }
 
     DwcDpStageMessage stage =
