@@ -165,6 +165,8 @@ For mock-only completion testing:
 
 ```sh
 task up
+sleep 15
+task up
 task trigger UUID=<uuid>
 task complete UUID=<uuid>
 ```
