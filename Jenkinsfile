@@ -89,7 +89,7 @@ pipeline {
       }
       when {
         expression {
-          env.BUILD_TYPE == 'FULL' && env.DRY_RUN == 'false'
+          env.BUILD_TYPE == 'FULL' && env.DRY_RUN == 'false' && !params.RELEASE
         }
       }
       steps {
