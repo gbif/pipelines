@@ -1,13 +1,15 @@
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-
   endpoint:
     health:
       probes:
         enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 # Transport connection is independent of per-step routing.
 # Override these per deployment, including the virtual host when domains split.
@@ -44,25 +46,6 @@ spring:
     username: ${VALIDATOR_WS_USERNAME:}
     password: ${VALIDATOR_WS_PASSWORD:}
 
-  # Unsafe integration switch for development only. Default OFF because validator-ws
-  # PUT + RabbitMQ publication cannot atomically claim and dispatch a next step.
-  unsafe-enable-completion-consumer: ${ORCHESTRATOR_UNSAFE_ENABLE_COMPLETION_CONSUMER:false}
-
-  # Optional DAG activation; without nodes the coordinator uses the sequential engine.
-  # Dependency lists and per-node policies are separate from messaging routes.
-  # workflow:
-  #   parallel: false
-  #   default-join-policy: NON_ERROR
-  #   nodes:
-  #     VALIDATOR_VALIDATE_DWCDP:
-  #       dependencies: []
-  #     VALIDATOR_DWCDP_STAGE:
-  #       dependencies: [VALIDATOR_VALIDATE_DWCDP]
-  #     VALIDATOR_DWCDP_TO_VERBATIM:
-  #       dependencies: [VALIDATOR_DWCDP_STAGE]
-
-  # Initial request from validator-ws; enable only in single-instance development.
-  unsafe-enable-start-consumer: ${ORCHESTRATOR_UNSAFE_ENABLE_START_CONSUMER:false}
   listen:
     exchange: ${VALIDATION_START_EXCHANGE:occurrence}
     routing-key: ${VALIDATION_START_ROUTING_KEY:validator.orchestrator.start}

@@ -12,6 +12,9 @@ COPY --chown=stackable ${JAR_FILE} /app/service.jar
 COPY --chown=stackable docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Expose Actuators
+EXPOSE 8080
+
 ENV RABBITMQ_HOST=localhost \
     RABBITMQ_PORT=5672 \
     RABBITMQ_USERNAME=guest \

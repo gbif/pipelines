@@ -151,6 +151,15 @@
         <version>${gbif-metadata-profile-eml.version}</version>
       </dependency>
 
+      <!-- Align the Prometheus Java client libraries before Spring Boot dependency management. -->
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>prometheus-metrics-bom</artifactId>
+        <version>1.4.3</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- Spring dependencies -->
       <dependency>
         <groupId>org.springframework.boot</groupId>
