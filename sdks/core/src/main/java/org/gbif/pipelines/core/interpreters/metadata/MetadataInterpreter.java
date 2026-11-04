@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.interpreters.metadata;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.common.parsers.LicenseParser;
@@ -52,10 +54,8 @@ public class MetadataInterpreter {
     mdr.setInstallationKey(dataset.getInstallationKey());
     mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 
-    List<Endpoint> endpoints = prioritySortEndpoints(dataset.getEndpoints());
-    if (!endpoints.isEmpty()) {
-      mdr.setProtocol(endpoints.get(0).getType().name());
-    }
+    crawledEndpoint(prioritySortEndpoints(dataset.getEndpoints()))
+        .ifPresent(endpoint -> mdr.setProtocol(endpoint.getType().name()));
 
     List<Network> networkList = client.getNetworkFromDataset(datasetId);
     if (networkList != null && !networkList.isEmpty()) {
@@ -111,13 +111,32 @@ public class MetadataInterpreter {
     return License.UNSPECIFIED == license ? null : license;
   }
 
-  // Copied from CrawlerCoordinatorServiceImpl
+  /** Crawlable endpoints, best first. Same order as {@code CrawlerCoordinatorServiceImpl}. */
   public static List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
-    // Filter out all Endpoints that we can't crawl
     return endpoints.stream()
         .filter(endpoint -> EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType()))
-        .sorted(new EndpointPriorityComparator())
+        .sorted(Collections.reverseOrder(new EndpointPriorityComparator()))
         .collect(Collectors.toList());
+  }
+
+  /**
+   * Endpoint the crawler would use. EML outranks DwC-DP and COLDP but has no records, so a data
+   * package is crawled instead and EML stays metadata-only.
+   */
+  private static Optional<Endpoint> crawledEndpoint(List<Endpoint> bestFirst) {
+    if (bestFirst.isEmpty()) {
+      return Optional.empty();
+    }
+    Endpoint best = bestFirst.get(0);
+    if (best.getType() == EndpointType.EML) {
+      for (Endpoint candidate : bestFirst) {
+        EndpointType type = candidate.getType();
+        if (type == EndpointType.DWC_DP || type == EndpointType.COLDP) {
+          return Optional.of(candidate);
+        }
+      }
+    }
+    return Optional.of(best);
   }
 
   /** Gets the latest crawl attempt time, if exists. */

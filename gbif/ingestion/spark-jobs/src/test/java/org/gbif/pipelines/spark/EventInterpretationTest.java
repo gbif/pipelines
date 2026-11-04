@@ -371,7 +371,7 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertEquals(
             "17a83780-3060-4851-9d6f-029d5fcb81c9",
             JsonPath.read(json, "$.metadata.installationKey"));
-        assertEquals("EML", JsonPath.read(json, "$.metadata.protocol"));
+        assertEquals("DWC_ARCHIVE", JsonPath.read(json, "$.metadata.protocol"));
         assertEquals(
             "Bulgarian Society for the Protection of Birds",
             JsonPath.read(json, "$.metadata.publisherTitle"));

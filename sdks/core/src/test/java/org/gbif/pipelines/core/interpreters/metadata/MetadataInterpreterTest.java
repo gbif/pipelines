@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.interpreters.metadata;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -23,6 +24,16 @@ public class MetadataInterpreterTest {
   private static final String DATASET_ID = "7683cc47-cb13-4bad-9614-387c66aa8df0";
   private static final String INSTALLATION_KEY = "17a83780-3060-4851-9d6f-029d5fcb81c9";
   private static final String ORG_KEY = "d1fec91e-5b53-4cff-9b31-10fed530a3c3";
+
+  @Test
+  public void protocolIsTheEndpointTheCrawlerUses() {
+    assertEquals("DWC_ARCHIVE", protocol(EndpointType.EML, EndpointType.DWC_ARCHIVE));
+    assertEquals("DWC_DP", protocol(EndpointType.EML, EndpointType.DWC_DP));
+    assertEquals("COLDP", protocol(EndpointType.COLDP, EndpointType.EML));
+    assertEquals("EML", protocol(EndpointType.EML));
+    assertEquals(
+        "CAMTRAP_DP", protocol(EndpointType.CAMTRAP_DP, EndpointType.EML, EndpointType.DWC_DP));
+  }
 
   @Test
   public void copiesDatasetCategoryFromRegistry() {
@@ -49,7 +60,29 @@ public class MetadataInterpreterTest {
     assertTrue(result.getDatasetCategory().isEmpty());
   }
 
+  private static String protocol(EndpointType... types) {
+    List<Endpoint> endpoints = new ArrayList<>();
+    for (EndpointType type : types) {
+      Endpoint endpoint = new Endpoint();
+      endpoint.setType(type);
+      endpoints.add(endpoint);
+    }
+    return MetadataInterpreter.interpret(
+            stubClient(null, Collections.emptyList(), endpoints),
+            DATASET_ID,
+            1,
+            MetadataRecord.newBuilder().setId("1").build())
+        .getProtocol();
+  }
+
   private static MetadataServiceClient stubClient(Set<String> categories, List<Network> networks) {
+    Endpoint endpoint = new Endpoint();
+    endpoint.setType(EndpointType.DWC_ARCHIVE);
+    return stubClient(categories, networks, List.of(endpoint));
+  }
+
+  private static MetadataServiceClient stubClient(
+      Set<String> categories, List<Network> networks, List<Endpoint> endpoints) {
     return new MetadataServiceClient() {
       @Override
       public Dataset getDataset(String datasetId) {
@@ -61,9 +94,7 @@ public class MetadataInterpreterTest {
         if (categories != null) {
           dataset.setCategory(categories);
         }
-        Endpoint endpoint = new Endpoint();
-        endpoint.setType(EndpointType.DWC_ARCHIVE);
-        dataset.setEndpoints(List.of(endpoint));
+        dataset.setEndpoints(endpoints);
         return dataset;
       }
 

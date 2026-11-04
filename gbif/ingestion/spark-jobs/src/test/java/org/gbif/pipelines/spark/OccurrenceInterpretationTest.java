@@ -270,7 +270,7 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
       assertEquals(0, JsonPath.<List<?>>read(json, "$.preparations").size());
       assertEquals(List.of("nlbif2022.015"), JsonPath.<List<String>>read(json, "$.projectId"));
       assertEquals("nlbif2022.015", JsonPath.read(json, "$.projectIdJoined"));
-      assertEquals("EML", JsonPath.read(json, "$.protocol"));
+      assertEquals("DWC_ARCHIVE", JsonPath.read(json, "$.protocol"));
       assertEquals("EUROPE", JsonPath.read(json, "$.publishedByGbifRegion"));
       assertEquals(
           "Bulgarian Society for the Protection of Birds", JsonPath.read(json, "$.publisherTitle"));
