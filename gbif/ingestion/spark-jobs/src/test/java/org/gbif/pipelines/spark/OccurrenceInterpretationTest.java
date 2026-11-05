@@ -4,6 +4,7 @@ import static org.apache.parquet.hadoop.ParquetFileWriter.Mode.OVERWRITE;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,9 +33,11 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.Constants;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.*;
@@ -95,6 +98,65 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     // check hdfs outputs in detail
     checkHdfsTableOutputs(basePath, testUuid, attempt);
     checkJsonOutputs(basePath, testUuid, attempt);
+  }
+
+  @Test
+  public void testDnaTaxonInterpretationEnabled() throws Exception {
+    String testUuid = "ab1f2f60-690a-40cf-9d82-75ec7db7e97f";
+    int attempt = 1;
+    String basePath = getClass().getResource("/").getFile();
+
+    generateIdentifierParquet(basePath, testUuid, attempt);
+    generateMinimalDnaVerbatimParquet(basePath, testUuid, attempt);
+
+    URL testRootUrl = getClass().getResource("/");
+    assert testRootUrl != null;
+    String testResourcesRoot = testRootUrl.getFile();
+    PipelinesConfig config = loadConfig(testResourcesRoot + "/pipelines.yaml");
+    config.getDnaConfig().setEnableDnaTaxonInterpretation(true);
+
+    FileSystem fileSystem = getFileSystem(spark, config);
+    OccurrenceInterpretationPipeline.runInterpretation(
+        spark, fileSystem, config, testUuid, attempt, 1, false, true, null);
+
+    java.nio.file.Path jsonDir =
+        java.nio.file.Path.of(basePath)
+            .resolve(testUuid)
+            .resolve(String.valueOf(attempt))
+            .resolve(Directories.OCCURRENCE_JSON);
+    Dataset<OccurrenceJsonRecord> jsonRecords =
+        spark.read().parquet(jsonDir.toString()).as(Encoders.bean(OccurrenceJsonRecord.class));
+    List<String> jsonPayloads = jsonRecords.toJSON().collectAsList();
+    assertEquals(1, jsonPayloads.size());
+    String json = jsonPayloads.get(0);
+
+    String dnaDatasetKey =
+        JsonPath.<List<String>>read(json, "$.checklistKey").stream()
+            .filter(key -> key.endsWith("_dna_assisted"))
+            .findFirst()
+            .orElse(null);
+    assertTrue(dnaDatasetKey != null);
+    assertTrue(JsonPath.read(json, "$.classifications").toString().contains(dnaDatasetKey));
+    assertEquals(
+        "Panthera leo (Linnaeus, 1758)",
+        JsonPath.read(json, "$.classifications['" + dnaDatasetKey + "'].usage.name"));
+
+    java.nio.file.Path hdfsDir =
+        java.nio.file.Path.of(basePath)
+            .resolve(testUuid)
+            .resolve(String.valueOf(attempt))
+            .resolve(Directories.OCCURRENCE_HDFS);
+    Dataset<OccurrenceHdfsRecord> hdfsRecords =
+        spark.read().parquet(hdfsDir.toString()).as(Encoders.bean(OccurrenceHdfsRecord.class));
+    List<OccurrenceHdfsRecord> hdfsOutput = hdfsRecords.collectAsList();
+    assertEquals(1, hdfsOutput.size());
+    OccurrenceHdfsRecord hdfsRecord = hdfsOutput.get(0);
+    assertTrue(
+        hdfsRecord.getChecklistkey().stream()
+            .map(Object::toString)
+            .anyMatch(dnaDatasetKey::equals));
+    assertTrue(hdfsRecord.getClassifications().containsKey(dnaDatasetKey));
+    assertFalse(hdfsRecord.getClassifications().get(dnaDatasetKey).isEmpty());
   }
 
   private void checkJsonOutputs(String outputFile, String testUuid, int attempt) throws Exception {
@@ -730,6 +792,43 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
 
     try (ParquetWriter<ExtendedRecord> writer =
         AvroParquetWriter.<ExtendedRecord>builder(path)
+            .withSchema(schema)
+            .withDataModel(ReflectData.get())
+            .withCompressionCodec(CompressionCodecName.SNAPPY)
+            .withConf(new org.apache.hadoop.conf.Configuration())
+            .withWriteMode(OVERWRITE)
+            .build()) {
+      writer.write(er);
+    }
+  }
+
+  private void generateMinimalDnaVerbatimParquet(String basePath, String uuid, int attempt)
+      throws IOException {
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").build();
+    er.setCoreRowType(DwcTerm.Occurrence.qualifiedName());
+    Map<String, String> coreTerms = new HashMap<>();
+    coreTerms.put(DwcTerm.occurrenceID.qualifiedName(), "occ-1");
+    coreTerms.put(DwcTerm.scientificName.qualifiedName(), "Panthera leo");
+    coreTerms.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
+    coreTerms.put(DwcTerm.phylum.qualifiedName(), "Chordata");
+    coreTerms.put(DwcTerm.class_.qualifiedName(), "Mammalia");
+    coreTerms.put(DwcTerm.order.qualifiedName(), "Carnivora");
+    coreTerms.put(DwcTerm.family.qualifiedName(), "Felidae");
+    coreTerms.put(DwcTerm.genus.qualifiedName(), "Panthera");
+    coreTerms.put(DwcTerm.specificEpithet.qualifiedName(), "leo");
+    coreTerms.put(DwcTerm.taxonRank.qualifiedName(), "species");
+    er.setCoreTerms(coreTerms);
+
+    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
+    Map<String, String> dnaTerms = new HashMap<>();
+    dnaTerms.put(GbifDnaTerm.dna_sequence.qualifiedName(), "ACGTACGTACGTACGTACGT");
+    extensions.put("http://rs.gbif.org/terms/1.0/DNADerivedData", List.of(dnaTerms));
+    er.setExtensions(extensions);
+
+    Schema schema = ReflectData.AllowNull.get().getSchema(ExtendedRecord.class);
+    String outputPath = basePath + "/" + uuid + "/" + attempt + "/verbatim/verbatim.parquet";
+    try (ParquetWriter<ExtendedRecord> writer =
+        AvroParquetWriter.<ExtendedRecord>builder(new Path(outputPath))
             .withSchema(schema)
             .withDataModel(ReflectData.get())
             .withCompressionCodec(CompressionCodecName.SNAPPY)
