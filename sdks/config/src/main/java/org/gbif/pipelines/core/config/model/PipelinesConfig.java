@@ -110,6 +110,8 @@ public class PipelinesConfig implements Serializable {
 
   private String fragmentHfileStagingPath = "hfile-staging";
 
+  private RecordsTableConfig recordsTableConfig = new RecordsTableConfig();
+
   private StandaloneConfig standalone = new StandaloneConfig();
 
   /**
