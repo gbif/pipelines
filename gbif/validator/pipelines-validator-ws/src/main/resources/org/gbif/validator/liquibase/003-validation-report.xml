@@ -22,6 +22,7 @@
             REFERENCES validation (key)
             ON DELETE CASCADE
       );
+      ALTER TABLE validation_report OWNER TO validator;
     </sql>
 
     <rollback>
