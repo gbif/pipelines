@@ -1,6 +1,7 @@
 package org.gbif.validator.orchestrator.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,12 +14,14 @@ import java.util.Map;
 import java.util.UUID;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.orchestrator.config.DagProperties;
 import org.gbif.validator.orchestrator.config.OrchestratorProperties;
 import org.gbif.validator.orchestrator.step.CompletionProcessor;
 import org.gbif.validator.orchestrator.step.DwcdpAnalysisStepDefinition;
+import org.gbif.validator.orchestrator.step.DwcdpStageHandoffAdapter;
 import org.gbif.validator.orchestrator.step.DwcdpValidationReportHook;
 import org.gbif.validator.orchestrator.step.HookRegistration;
 import org.gbif.validator.orchestrator.step.StepRegistration;
@@ -99,6 +102,23 @@ class DwcdpExecutionFlowTest {
     assertEquals(1, fixture.messages.size());
   }
 
+  @Test
+  void successfulCompletionPublishesLegacyHandoffOnce() throws Exception {
+    Fixture fixture = new Fixture(true, true);
+
+    fixture.coordinator.handle(fixture.key, WorkflowEvent.start());
+    fixture.processor.complete(StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true));
+
+    assertEquals(2, fixture.messages.size());
+    assertInstanceOf(PipelinesBalancerMessage.class, fixture.messages.get(1));
+    assertEquals(Validation.Status.FINISHED, fixture.step().getStatus());
+    assertEquals(
+        null, fixture.client.getStoredValidation().getMetrics().getStepTypes().get(1).getStatus());
+
+    fixture.processor.complete(StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true));
+    assertEquals(2, fixture.messages.size());
+  }
+
   private static final class Fixture {
 
     private final UUID key = UUID.randomUUID();
@@ -112,6 +132,10 @@ class DwcdpExecutionFlowTest {
     }
 
     private Fixture(boolean includeLegacyStep) {
+      this(includeLegacyStep, false);
+    }
+
+    private Fixture(boolean includeLegacyStep, boolean withHandoff) {
       Metrics.ValidationStep first =
           Metrics.ValidationStep.builder()
               .stepType(StepType.VALIDATOR_VALIDATE_DWCDP.name())
@@ -126,6 +150,13 @@ class DwcdpExecutionFlowTest {
                 .stepType(StepType.VALIDATOR_DWCDP_STAGE.name())
                 .executionOrder(2)
                 .build());
+        if (withHandoff) {
+          steps.add(
+              Metrics.ValidationStep.builder()
+                  .stepType(StepType.VALIDATOR_DWCDP_TO_VERBATIM.name())
+                  .executionOrder(3)
+                  .build());
+        }
       }
 
       client.setValidation(
@@ -141,6 +172,12 @@ class DwcdpExecutionFlowTest {
       destination.setExchange("validation.jobs");
       destination.setRoutingKey("dwcdp.request");
       messaging.setRequest(destination);
+      if (withHandoff) {
+        OrchestratorProperties.Destination outgoing = new OrchestratorProperties.Destination();
+        outgoing.setExchange("occurrence");
+        outgoing.setRoutingKey("occurrence.pipelines.balancer");
+        messaging.setOutgoing(outgoing);
+      }
       properties.setSteps(Map.of(StepType.VALIDATOR_VALIDATE_DWCDP, messaging));
 
       MessagePublisher publisher =
@@ -160,9 +197,16 @@ class DwcdpExecutionFlowTest {
       StepRegistry registry =
           new StepRegistry(
               List.of(
-                  new StepRegistration<>(
-                      new DwcdpAnalysisStepDefinition(),
-                      List.of(HookRegistration.required(new DwcdpValidationReportHook(client))))));
+                  withHandoff
+                      ? StepRegistration.builder(new DwcdpAnalysisStepDefinition())
+                          .onJobProcessed(
+                              HookRegistration.required(new DwcdpValidationReportHook(client)))
+                          .adaptOutgoing(new DwcdpStageHandoffAdapter(new ObjectMapper()))
+                          .build()
+                      : new StepRegistration<>(
+                          new DwcdpAnalysisStepDefinition(),
+                          List.of(
+                              HookRegistration.required(new DwcdpValidationReportHook(client))))));
 
       coordinator =
           new OrchestrationService(
@@ -187,7 +231,9 @@ class DwcdpExecutionFlowTest {
       node.put("datasetUuid", key.toString());
       node.put("attempt", 1);
       node.put("valid", valid);
-      node.set("validationReport", mapper.createObjectNode().put("records", 3));
+      ObjectNode report = mapper.createObjectNode().put("records", 3);
+      report.putArray("resourceAnalysisResults").addObject().put("name", "occurrence");
+      node.set("validationReport", report);
       return node;
     }
   }

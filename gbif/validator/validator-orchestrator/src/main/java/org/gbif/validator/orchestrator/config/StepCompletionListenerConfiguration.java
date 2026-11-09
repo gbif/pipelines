@@ -28,7 +28,7 @@ public class StepCompletionListenerConfiguration {
     return args -> {
       // Check all destinations before creating any consumers.
       for (StepRegistration<?> registration : registry.registrations()) {
-        requireCompletion(properties, registration);
+        validateRegistration(properties, registration);
       }
 
       int registered = 0;
@@ -43,6 +43,47 @@ public class StepCompletionListenerConfiguration {
 
       LOG.info("Registered {} step completion consumers", registered);
     };
+  }
+
+  static void validateRegistration(
+      OrchestratorProperties properties, StepRegistration<?> registration) {
+    OrchestratorProperties.StepMessaging messaging =
+        properties.requireStep(registration.stepType());
+    requireDestination(messaging.getRequest(), "request", registration);
+    requireCompletion(properties, registration);
+
+    OrchestratorProperties.Destination outgoing = messaging.getOutgoing();
+    if (registration.hasOutgoingAdapter()) {
+      requireDestination(outgoing, "outgoing", registration);
+    } else if (outgoing != null
+        && (!isBlank(outgoing.getExchange()) || !isBlank(outgoing.getRoutingKey()))) {
+      throw new IllegalStateException(
+          "Outgoing destination without adapter for " + registration.stepType());
+    }
+
+    LOG.info(
+        "Configured step={} ownership=orchestrator request={}/{} completion={}/{} queue={} threads={} outgoing={}/{}",
+        registration.stepType(),
+        messaging.getRequest().getExchange(),
+        messaging.getRequest().getRoutingKey(),
+        messaging.getCompletion().getExchange(),
+        messaging.getCompletion().getRoutingKey(),
+        messaging.getCompletion().getQueue(),
+        messaging.getCompletion().getThreads(),
+        outgoing == null ? null : outgoing.getExchange(),
+        outgoing == null ? null : outgoing.getRoutingKey());
+  }
+
+  private static void requireDestination(
+      OrchestratorProperties.Destination destination,
+      String purpose,
+      StepRegistration<?> registration) {
+    if (destination == null
+        || isBlank(destination.getExchange())
+        || isBlank(destination.getRoutingKey())) {
+      throw new IllegalStateException(
+          "Invalid " + purpose + " destination for " + registration.stepType());
+    }
   }
 
   private static OrchestratorProperties.Completion requireCompletion(
