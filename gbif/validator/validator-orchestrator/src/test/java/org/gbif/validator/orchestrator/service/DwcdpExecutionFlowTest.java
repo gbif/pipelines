@@ -111,12 +111,38 @@ class DwcdpExecutionFlowTest {
 
     assertEquals(2, fixture.messages.size());
     assertInstanceOf(PipelinesBalancerMessage.class, fixture.messages.get(1));
+    assertEquals(Validation.Status.QUEUED, fixture.statusAtHandoffPublish);
     assertEquals(Validation.Status.FINISHED, fixture.step().getStatus());
     assertEquals(
-        null, fixture.client.getStoredValidation().getMetrics().getStepTypes().get(1).getStatus());
+        Validation.Status.QUEUED,
+        fixture.client.getStoredValidation().getMetrics().getStepTypes().get(1).getStatus());
 
     fixture.processor.complete(StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true));
     assertEquals(2, fixture.messages.size());
+  }
+
+  @Test
+  void handoffPublishFailureMarksLegacyStepAndValidationFailed() throws Exception {
+    Fixture fixture = new Fixture(true, true);
+
+    fixture.coordinator.handle(fixture.key, WorkflowEvent.start());
+    fixture.failOutgoingPublish = true;
+
+    assertThrows(
+        java.io.IOException.class,
+        () ->
+            fixture.processor.complete(
+                StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true)));
+
+    assertEquals(Validation.Status.FINISHED, fixture.step().getStatus());
+    assertEquals(
+        Validation.Status.FAILED,
+        fixture.client.getStoredValidation().getMetrics().getStepTypes().get(1).getStatus());
+    assertEquals(Validation.Status.FAILED, fixture.client.getStoredValidation().getStatus());
+    assertEquals(1, fixture.messages.size());
+
+    fixture.processor.complete(StepType.VALIDATOR_VALIDATE_DWCDP, fixture.completion(true));
+    assertEquals(1, fixture.messages.size());
   }
 
   private static final class Fixture {
@@ -124,6 +150,8 @@ class DwcdpExecutionFlowTest {
     private final UUID key = UUID.randomUUID();
     private final RecordingValidationClient client = new RecordingValidationClient();
     private final List<Object> messages = new ArrayList<>();
+    private boolean failOutgoingPublish;
+    private Validation.Status statusAtHandoffPublish;
     private final OrchestrationService coordinator;
     private final CompletionProcessor processor;
 
@@ -187,6 +215,18 @@ class DwcdpExecutionFlowTest {
                   new Class<?>[] {MessagePublisher.class},
                   (proxy, method, args) -> {
                     if (method.getName().equals("send")) {
+                      if (args[0] instanceof PipelinesBalancerMessage) {
+                        statusAtHandoffPublish =
+                            client
+                                .getStoredValidation()
+                                .getMetrics()
+                                .getStepTypes()
+                                .get(1)
+                                .getStatus();
+                      }
+                      if (failOutgoingPublish && args[0] instanceof PipelinesBalancerMessage) {
+                        throw new java.io.IOException("Simulated handoff publish failure");
+                      }
                       messages.add(args[0]);
                       return null;
                     }
