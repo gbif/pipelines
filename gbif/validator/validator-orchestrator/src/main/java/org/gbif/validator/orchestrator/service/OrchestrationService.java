@@ -189,8 +189,71 @@ public class OrchestrationService {
     return dispatcher.hasOutgoingDestination(completedStep);
   }
 
-  public void publishOutgoing(StepType completedStep, Object message) throws IOException {
-    dispatcher.dispatchOutgoing(completedStep, message);
+  /**
+   * Claims the next legacy step before sending the handoff. The legacy worker remains responsible
+   * for RUNNING and completion, but the producer of the handoff owns the QUEUED transition. This
+   * operation is intentionally not atomic across validator-ws and RabbitMQ.
+   */
+  public void handoffAfterCompletion(UUID validationKey, StepType completedStep, Object message)
+      throws IOException {
+    Validation validation = client.get(validationKey);
+    List<ValidationStep> steps =
+        validation.getMetrics().getStepTypes().stream()
+            .sorted(java.util.Comparator.comparingInt(ValidationStep::getExecutionOrder))
+            .toList();
+
+    int completedIndex = -1;
+    for (int i = 0; i < steps.size(); i++) {
+      if (steps.get(i).getStepType().equals(completedStep.name())) {
+        completedIndex = i;
+        break;
+      }
+    }
+
+    if (completedIndex < 0 || completedIndex + 1 >= steps.size()) {
+      throw new IllegalStateException("No following step for handoff from " + completedStep);
+    }
+
+    ValidationStep completed = steps.get(completedIndex);
+    ValidationStep next = steps.get(completedIndex + 1);
+    StepType nextType = StepType.valueOf(next.getStepType());
+
+    if (completed.getStatus() != Validation.Status.FINISHED) {
+      throw new IllegalStateException("Handoff source is not finished: " + completedStep);
+    }
+    if (stepRegistry.supports(nextType)) {
+      throw new IllegalStateException("Outgoing legacy handoff targets an owned step: " + nextType);
+    }
+    if (next.getStatus() != null) {
+      LOG.info(
+          "Skipping already claimed legacy handoff validation={} step={} status={}",
+          validationKey,
+          nextType,
+          next.getStatus());
+      return;
+    }
+
+    next.setStatus(Validation.Status.QUEUED);
+    client.update(validation);
+    LOG.info("Queued legacy handoff validation={} step={}", validationKey, nextType);
+
+    try {
+      dispatcher.dispatchOutgoing(completedStep, message);
+    } catch (IOException | RuntimeException exception) {
+      // Accepted one-shot policy: dispatch failure fails the queued step and this validation.
+      // A broker acknowledgement ambiguity can still mean the worker received the message.
+      Validation latest = client.get(validationKey);
+      ValidationStep failedStep =
+          latest.getMetrics().getStepTypes().stream()
+              .filter(step -> step.getStepType().equals(nextType.name()))
+              .findFirst()
+              .orElseThrow();
+      failedStep.setStatus(Validation.Status.FAILED);
+      latest.setStatus(Validation.Status.FAILED);
+      client.update(latest);
+      LOG.error("Legacy handoff failed validation={} step={}", validationKey, nextType, exception);
+      throw exception;
+    }
   }
 
   private WorkflowDecision evaluate(

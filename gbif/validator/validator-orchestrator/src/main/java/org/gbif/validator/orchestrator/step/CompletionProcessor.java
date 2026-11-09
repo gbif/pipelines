@@ -88,7 +88,7 @@ public final class CompletionProcessor {
       }
 
       Object outgoing = registration.adaptOutgoing(payload, context);
-      coordinator.publishOutgoing(stepType, outgoing);
+      coordinator.handoffAfterCompletion(result.validationKey(), stepType, outgoing);
     }
 
     LOG.info(
