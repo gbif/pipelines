@@ -50,6 +50,11 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   }
 
   @Override
+  public Integer getLastSuccessfulAttempt(UUID datasetKey, StepType stepType) {
+    return 0;
+  }
+
+  @Override
   public long createPipelineProcess(PipelineProcessParameters pp) {
     String stringKey = pp.getDatasetKey().toString() + pp.getAttempt();
     if (!pipelineProcessMap.containsKey(stringKey)) {
