@@ -81,7 +81,12 @@ public final class CompletionProcessor {
     registration.runHooks(validation, payload, reporter);
 
     // Only successful jobs hand off to external processing infrastructure.
-    if (result.successful() && coordinator.hasOutgoingDestination(stepType)) {
+    if (result.successful() && registration.hasOutgoingAdapter()) {
+      if (!coordinator.hasOutgoingDestination(stepType)) {
+        throw new IllegalStateException(
+            "Missing outgoing destination for handoff step " + stepType);
+      }
+
       Object outgoing = registration.adaptOutgoing(payload, context);
       coordinator.publishOutgoing(stepType, outgoing);
     }

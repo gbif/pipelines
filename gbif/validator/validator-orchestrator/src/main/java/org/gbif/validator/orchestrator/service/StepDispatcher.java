@@ -5,11 +5,14 @@ import java.util.Objects;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.validator.orchestrator.config.OrchestratorProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /** Routes a step-specific payload using configured transport destinations. */
 @Service
 public class StepDispatcher {
+  private static final Logger LOG = LoggerFactory.getLogger(StepDispatcher.class);
   private final MessagePublisher publisher;
   private final OrchestratorProperties properties;
 
@@ -27,6 +30,11 @@ public class StepDispatcher {
         || isBlank(destination.getRoutingKey())) {
       throw new IllegalStateException("Missing request destination for step " + stepType);
     }
+    LOG.info(
+        "Publishing step request step={} exchange={} routingKey={}",
+        stepType,
+        destination.getExchange(),
+        destination.getRoutingKey());
     publisher.send(payload, destination.getExchange(), destination.getRoutingKey());
   }
 
@@ -48,6 +56,11 @@ public class StepDispatcher {
       throw new IllegalStateException("Missing outgoing destination for step " + completedStep);
     }
 
+    LOG.info(
+        "Publishing outgoing handoff step={} exchange={} routingKey={}",
+        completedStep,
+        destination.getExchange(),
+        destination.getRoutingKey());
     publisher.send(payload, destination.getExchange(), destination.getRoutingKey());
   }
 
