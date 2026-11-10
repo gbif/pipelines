@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.interpreters;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.NameUsageMatchRequest;
@@ -49,6 +50,7 @@ public class NameUsageMatchKeyValueTestStore
                 .withKey("2")
                 .withRank("r2")
                 .build()));
+    response.setEnvironments(List.of("MARINE", "BRACKISH"));
 
     return response;
   }

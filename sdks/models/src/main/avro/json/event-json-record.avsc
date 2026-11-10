@@ -30,6 +30,7 @@
       {"name": "usage", "type": ["null", "TaxonUsage"], "default" : null},
       {"name": "acceptedUsage", "type": ["null", "TaxonUsage"], "default" : null},
       {"name": "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"},
+      {"name": "environments", "type": {"type": "array", "items": "string"}, "default": [], "doc":"Environments of the taxon as provided by the checklist, e.g. MARINE, BRACKISH, FRESHWATER, TERRESTRIAL"},
       {"name":"classification",
         "type":{ "type":"map","values":"string" },
         "default": {}

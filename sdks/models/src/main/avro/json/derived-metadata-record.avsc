@@ -22,6 +22,10 @@
       {"name":"acceptedUsage","type":["null","DerivedTaxonUsage"],"default":null,"doc":""},
       {"name":"status","type":["null","string"],"default":null,"doc":""},
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""},
+      {"name":"environments",
+        "type":{"type":"array","items":"string"},
+        "default":[]
+      },
       {"name":"taxonKeys",
         "type":{"type":"array","items":"string"},
         "default":[]
