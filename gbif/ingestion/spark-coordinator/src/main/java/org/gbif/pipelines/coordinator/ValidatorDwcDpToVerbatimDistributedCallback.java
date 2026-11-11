@@ -37,7 +37,7 @@ public class ValidatorDwcDpToVerbatimDistributedCallback extends ValidatorDwcDpT
   }
 
   private static String getDagName(PipelinesConfig config) {
-    return config.getAirflowConfig().getDwcDpToVerbatimDag();
+    return config.getAirflowConfig().getValidatordwcDpToVerbatimDag();
   }
 
   @Override
