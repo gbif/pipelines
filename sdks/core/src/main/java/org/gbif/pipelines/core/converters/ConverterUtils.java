@@ -66,6 +66,11 @@ public class ConverterUtils {
 
     if (!TermUtils.isInterpretedSourceTerm(term)) {
       Optional.ofNullable(interpretedSchemaField(term, hdfsRecord.getClass()))
+          // The interpreted column is resolved by simple name only, so a term from an unknown
+          // namespace (e.g. http://unknown.org/taxonKey) can resolve to the column of an
+          // interpreted term (gbif:taxonKey). Check the resolved term is not subject to
+          // interpretation either.
+          .filter(field -> !resolvesToInterpretedSourceTerm(term))
           .ifPresent(
               field -> {
                 // Fields that were set by other mappers are ignored
@@ -101,6 +106,15 @@ public class ConverterUtils {
                 }
               });
     }
+  }
+
+  /**
+   * Returns true if the term, resolved by its simple name alone, is a term subject to
+   * interpretation.
+   */
+  private static boolean resolvesToInterpretedSourceTerm(Term term) {
+    Term resolved = TERM_FACTORY.findTerm(term.simpleName());
+    return resolved != null && TermUtils.isInterpretedSourceTerm(resolved);
   }
 
   /** Gets the {@link Schema.Field} associated to a verbatim term. */
