@@ -9,7 +9,7 @@ final class ToStringMasking {
 
   // Header names are case-insensitive, so compare in lower case
   private static final Set<String> SENSITIVE_HEADERS =
-      Set.of("authorization", "proxy-authorization", "x-api-key", "cookie");
+      Set.of("authorization", "proxy-authorization", "x-api-key", "apikey", "cookie");
 
   private ToStringMasking() {}
 

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 class AirflowConfigTest {
   @Test
-  void testCredentialExludedTostring() {
+  void testCredentialExcludedToString() {
     AirflowConfig airflowConfig = new AirflowConfig();
 
     String password = "SuperSecretPassword";
