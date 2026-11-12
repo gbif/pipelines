@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @NoArgsConstructor
@@ -33,7 +34,12 @@ public final class SamplingConfig implements Serializable {
   private int downloadRetries = 5;
 
   // http headers to add to each request
-  private Map<String, String> httpHeaders = Collections.emptyMap();
+  @ToString.Exclude private Map<String, String> httpHeaders = Collections.emptyMap();
+
+  @ToString.Include(name = "httpHeaders")
+  private Map<String, String> maskedHttpHeaders() {
+    return ToStringMasking.maskHeaders(httpHeaders);
+  }
 
   // Retry configuration
   private RetryConfig retryConfig = new RetryConfig();

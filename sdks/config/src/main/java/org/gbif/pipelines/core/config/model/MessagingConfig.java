@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @NoArgsConstructor
@@ -12,7 +13,7 @@ public class MessagingConfig implements Serializable {
   String host;
   Integer port;
   String virtualHost;
-  String username;
-  String password;
+  @ToString.Exclude String username;
+  @ToString.Exclude String password;
   Integer prefetchCount;
 }
