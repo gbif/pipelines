@@ -1,0 +1,39 @@
+# Transport connection is independent of per-step routing.
+# Override these per deployment, including the virtual host when domains split.
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
+# Example for the first DWc-DP validation step.
+# Exchange and routing keys below are placeholders: align with the current
+# validator-ws publisher and dwcdp-analyser-service consumer/publisher settings.
+orchestrator:
+  listen:
+    exchange: test.exchange
+    routing-key: test.orchestrator.request
+    queue: test_orchestrator_request
+    threads: 1
+
+  steps:
+    VALIDATOR_VALIDATE_DWCDP:
+      request:
+        exchange: ${DWCDP_REQUEST_EXCHANGE:occurrence}
+        routing-key: ${DWCDP_REQUEST_ROUTING_KEY:validator.dwcdp.analysis}
+      outgoing:
+        exchange: ${DWCDP_HANDOFF_EXCHANGE:occurrence}
+        routing-key: ${DWCDP_HANDOFF_ROUTING_KEY:occurrence.pipelines.balancer}
+      completion:
+        exchange: ${DWCDP_COMPLETION_EXCHANGE:occurrence}
+        routing-key: ${DWCDP_COMPLETION_ROUTING_KEY:validator.dwcdp.analysis.finished}
+        queue: ${DWCDP_COMPLETION_QUEUE:validator_dwcdp_analysis_finished}
+        threads: 1
+
+  # URL should include the service base URL, excluding /validation.
+  validator-ws:
+    url: ${VALIDATOR_WS_URL:http://localhost:8080}
+    username: ${VALIDATOR_WS_USERNAME:}
+    password: ${VALIDATOR_WS_PASSWORD:}

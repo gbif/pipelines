@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level %logger{40} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Application logging -->
+  <logger name="org.gbif.validator" level="INFO"/>
+
+  <!-- Makes insane amount of WARN logs for ignoring mappings -->
+  <logger name="org.gbif.common.parsers.LanguageParser" level="ERROR"/>
+  <logger name="org.gbif.common.parsers.CountryParser" level="ERROR"/>
+
+  <!-- Noisy dependencies -->
+  <logger name="org.gbif.dwc.terms.TermFactory" level="WARN"/>
+  <logger name="org.gbif.dwc" level="WARN"/>
+  <logger name="org.testcontainers" level="WARN"/>
+  <logger name="com.github.dockerjava" level="WARN"/>
+  <logger name="org.springframework" level="WARN"/>
+  <logger name="org.mybatis" level="WARN"/>
+  <logger name="liquibase" level="WARN"/>
+  <logger name="com.zaxxer.hikari" level="WARN"/>
+  <logger name="org.mockserver" level="WARN"/>
+
+  <root level="WARN">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>

@@ -1,0 +1,37 @@
+package org.gbif.validator.orchestrator.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import org.gbif.validator.orchestrator.step.DwcdpAnalysisStepDefinition;
+import org.gbif.validator.orchestrator.step.DwcdpStageHandoffAdapter;
+import org.gbif.validator.orchestrator.step.DwcdpValidationReportHook;
+import org.gbif.validator.orchestrator.step.HookFailureReporter;
+import org.gbif.validator.orchestrator.step.HookRegistration;
+import org.gbif.validator.orchestrator.step.StepRegistration;
+import org.gbif.validator.orchestrator.step.StepRegistry;
+import org.gbif.validator.ws.client.ValidationWsClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class StepRegistrationConfiguration {
+
+  private static final Logger LOG = LoggerFactory.getLogger(StepRegistrationConfiguration.class);
+
+  @Bean
+  public StepRegistry stepRegistry(ValidationWsClient client, ObjectMapper mapper) {
+    return new StepRegistry(
+        List.of(
+            StepRegistration.builder(new DwcdpAnalysisStepDefinition())
+                .onJobProcessed(HookRegistration.required(new DwcdpValidationReportHook(client)))
+                .adaptOutgoing(new DwcdpStageHandoffAdapter(mapper))
+                .build()));
+  }
+
+  @Bean
+  public HookFailureReporter hookFailureReporter() {
+    return (step, exception) -> LOG.warn("Optional completion hook failed for {}", step, exception);
+  }
+}

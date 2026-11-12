@@ -1,0 +1,70 @@
+package org.gbif.validator.orchestrator.service;
+
+import java.io.IOException;
+import java.util.Objects;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.validator.orchestrator.config.OrchestratorProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+/** Routes a step-specific payload using configured transport destinations. */
+@Service
+public class StepDispatcher {
+  private static final Logger LOG = LoggerFactory.getLogger(StepDispatcher.class);
+  private final MessagePublisher publisher;
+  private final OrchestratorProperties properties;
+
+  public StepDispatcher(MessagePublisher publisher, OrchestratorProperties properties) {
+    this.publisher = Objects.requireNonNull(publisher);
+    this.properties = Objects.requireNonNull(properties);
+  }
+
+  public void dispatch(StepType stepType, Object payload) throws IOException {
+    Objects.requireNonNull(stepType, "stepType must not be null");
+    Objects.requireNonNull(payload, "payload must not be null");
+    OrchestratorProperties.Destination destination = properties.requireStep(stepType).getRequest();
+    if (destination == null
+        || isBlank(destination.getExchange())
+        || isBlank(destination.getRoutingKey())) {
+      throw new IllegalStateException("Missing request destination for step " + stepType);
+    }
+    LOG.info(
+        "Publishing step request step={} exchange={} routingKey={}",
+        stepType,
+        destination.getExchange(),
+        destination.getRoutingKey());
+    publisher.send(payload, destination.getExchange(), destination.getRoutingKey());
+  }
+
+  public boolean hasOutgoingDestination(StepType stepType) {
+    OrchestratorProperties.Destination destination = properties.requireStep(stepType).getOutgoing();
+    return destination != null
+        && !isBlank(destination.getExchange())
+        && !isBlank(destination.getRoutingKey());
+  }
+
+  public void dispatchOutgoing(StepType completedStep, Object payload) throws IOException {
+    Objects.requireNonNull(payload, "payload must not be null");
+    OrchestratorProperties.Destination destination =
+        properties.requireStep(completedStep).getOutgoing();
+
+    if (destination == null
+        || isBlank(destination.getExchange())
+        || isBlank(destination.getRoutingKey())) {
+      throw new IllegalStateException("Missing outgoing destination for step " + completedStep);
+    }
+
+    LOG.info(
+        "Publishing outgoing handoff step={} exchange={} routingKey={}",
+        completedStep,
+        destination.getExchange(),
+        destination.getRoutingKey());
+    publisher.send(payload, destination.getExchange(), destination.getRoutingKey());
+  }
+
+  private static boolean isBlank(String value) {
+    return value == null || value.isBlank();
+  }
+}

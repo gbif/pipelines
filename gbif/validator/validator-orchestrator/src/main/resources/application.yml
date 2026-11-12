@@ -1,0 +1,53 @@
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+# Transport connection is independent of per-step routing.
+# Override these per deployment, including the virtual host when domains split.
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
+# Example for the first DWc-DP validation step.
+# Exchange and routing keys below are placeholders: align with the current
+# validator-ws publisher and dwcdp-analyser-service consumer/publisher settings.
+# Example realized in test resources
+# orchestrator:
+#   steps:
+#     VALIDATOR_VALIDATE_DWCDP:
+#       request:
+#         exchange: ${DWCDP_REQUEST_EXCHANGE:occurrence}
+#         routing-key: ${DWCDP_REQUEST_ROUTING_KEY:validator.dwcdp.analysis}
+#       outgoing:
+#         exchange: ${DWCDP_HANDOFF_EXCHANGE:occurrence}
+#         routing-key: ${DWCDP_HANDOFF_ROUTING_KEY:occurrence.pipelines.balancer}
+#       completion:
+#         exchange: ${DWCDP_COMPLETION_EXCHANGE:occurrence}
+#         routing-key: ${DWCDP_COMPLETION_ROUTING_KEY:validator.dwcdp.analysis.finished}
+#         queue: ${DWCDP_COMPLETION_QUEUE:validator_dwcdp_analysis_finished}
+#        threads: 1
+
+  # URL should include the service base URL, excluding /validation.
+  validator-ws:
+    url: ${VALIDATOR_WS_URL:http://localhost:8080}
+    username: ${VALIDATOR_WS_USERNAME:}
+    password: ${VALIDATOR_WS_PASSWORD:}
+
+  listen:
+    exchange: ${VALIDATION_START_EXCHANGE:occurrence}
+    routing-key: ${VALIDATION_START_ROUTING_KEY:validator.orchestrator.start}
+    queue: ${VALIDATION_START_QUEUE:validator_orchestrator_start}
+    threads: 1
