@@ -3,10 +3,12 @@ package org.gbif.pipelines.core.ws.metadata;
 import com.google.common.annotations.VisibleForTesting;
 import io.github.resilience4j.retry.Retry;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javax.xml.ws.WebServiceException;
+import okhttp3.ResponseBody;
 import org.gbif.pipelines.core.config.model.ContentConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.factory.RetryFactory;
@@ -16,6 +18,7 @@ import org.gbif.pipelines.core.ws.metadata.response.Dataset;
 import org.gbif.pipelines.core.ws.metadata.response.Installation;
 import org.gbif.pipelines.core.ws.metadata.response.Network;
 import org.gbif.pipelines.core.ws.metadata.response.Organization;
+import org.gbif.pipelines.core.ws.metadata.response.PhylogenyFile;
 import org.gbif.pipelines.core.ws.metadata.response.Project;
 import retrofit2.Call;
 import retrofit2.HttpException;
@@ -103,6 +106,35 @@ public class MetadataServiceClient {
       getContentProjectData(dataset).ifPresent(dataset::setProject);
     }
     return dataset;
+  }
+
+  /**
+   * requests https://api.gbif.org/v1/experimental/dataset/{datasetKey}/phylogeny
+   *
+   * @return phylogenetic tree files published with the dataset, empty if there are none
+   */
+  public List<PhylogenyFile> getPhylogenyFiles(String datasetKey) {
+    Objects.requireNonNull(datasetKey);
+    Call<List<PhylogenyFile>> call = rest.getService().getPhylogenyFiles(datasetKey);
+    return Optional.ofNullable(performCall(call)).orElse(Collections.emptyList());
+  }
+
+  /**
+   * requests https://api.gbif.org/v1/experimental/dataset/{datasetKey}/phylogeny/{fileName}
+   *
+   * @return raw content of the tree file (Newick or Nexus)
+   */
+  public String getPhylogenyFileContent(String datasetKey, String fileName) {
+    Objects.requireNonNull(datasetKey);
+    Objects.requireNonNull(fileName);
+    Call<ResponseBody> call = rest.getService().getPhylogenyFile(datasetKey, fileName);
+    try (ResponseBody body = performCall(call)) {
+      // retrofit returns no body for 204/205
+      return body == null ? "" : body.string();
+    } catch (IOException e) {
+      throw new WebServiceException(
+          "Error reading phylogeny file " + fileName + " of dataset " + datasetKey, e);
+    }
   }
 
   /** Gets Contentful data. */

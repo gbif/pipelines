@@ -104,6 +104,7 @@ extensionsAllowedForVerbatimSet:
   - http://rs.tdwg.org/dwc/terms/ResourceRelationship
   - http://rs.gbif.org/terms/1.0/DNADerivedData
   - https://tdwg.github.io/attribution/people/dwc/AgentActions
+  - http://rs.gbif.org/terms/1.0/PhylogeneticMaterialCitation
 tableBuildConfig:
   classifications:
     d7dddbf4-2cf0-4f39-9b2a-bb099caae36c: gbif

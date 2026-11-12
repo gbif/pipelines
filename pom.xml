@@ -126,6 +126,9 @@
     <!-- COL -->
     <col.version>1.5.2</col.version>
 
+    <!-- Phylogenetic trees -->
+    <forester.version>1.039</forester.version>
+
     <!-- Main distributed libraries (overrides from spark-jobs where applicable) -->
     <avro.version>1.11.3</avro.version>
 
@@ -535,6 +538,20 @@
         <groupId>org.catalogueoflife</groupId>
         <artifactId>vocab</artifactId>
         <version>${col.version}</version>
+      </dependency>
+
+      <!-- Phylogenetic trees (BioJava's forester build) -->
+      <dependency>
+        <groupId>org.biojava.thirdparty</groupId>
+        <artifactId>forester</artifactId>
+        <version>${forester.version}</version>
+        <exclusions>
+          <!-- not in Maven Central and only used by the GUI -->
+          <exclusion>
+            <groupId>openchart</groupId>
+            <artifactId>openchart</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Avro -->
