@@ -29,4 +29,5 @@ public class Occurrence {
   String audubon;
   String image;
   String clustering;
+  String dnaTaxon;
 }

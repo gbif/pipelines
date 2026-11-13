@@ -652,6 +652,75 @@ public class OccurrenceHdfsRecordConverterTest {
   }
 
   @Test
+  public void taxonMapperIncludesDnaTaxonRecordTest() {
+    RankedNameWithAuthorship usage =
+        RankedNameWithAuthorship.newBuilder()
+            .setKey("10")
+            .setName("Test species")
+            .setRank(Rank.SPECIES.toString())
+            .build();
+
+    TaxonRecord gbifTaxon =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(Constants.COL_DATASET_KEY.toString())
+            .setUsage(usage)
+            .setClassification(
+                List.of(
+                    RankedName.newBuilder()
+                        .setKey("1")
+                        .setName("KINGDOM")
+                        .setRank(Rank.KINGDOM.toString())
+                        .build(),
+                    RankedName.newBuilder()
+                        .setKey("2")
+                        .setName("PHYLUM")
+                        .setRank(Rank.PHYLUM.toString())
+                        .build()))
+            .build();
+
+    TaxonRecord dnaTaxon =
+        TaxonRecord.newBuilder()
+            .setDatasetKey("dna-dataset-key")
+            .setUsage(usage)
+            .setClassification(
+                List.of(
+                    RankedName.newBuilder()
+                        .setKey("101")
+                        .setName("DNA_KINGDOM")
+                        .setRank(Rank.KINGDOM.toString())
+                        .build(),
+                    RankedName.newBuilder()
+                        .setKey("102")
+                        .setName("DNA_PHYLUM")
+                        .setRank(Rank.PHYLUM.toString())
+                        .build()))
+            .build();
+
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder()
+            .multiTaxonRecord(
+                MultiTaxonRecord.newBuilder()
+                    .setTaxonRecords(new ArrayList<>(List.of(gbifTaxon)))
+                    .build())
+            .dnaTaxonRecord(dnaTaxon)
+            .build()
+            .convert();
+
+    Assert.assertEquals(2, hdfsRecord.getChecklistkey().size());
+    Assert.assertEquals(Constants.COL_DATASET_KEY.toString(), hdfsRecord.getChecklistkey().get(0));
+    Assert.assertEquals("dna-dataset-key", hdfsRecord.getChecklistkey().get(1));
+
+    Assert.assertTrue(
+        hdfsRecord.getClassifications().containsKey(Constants.COL_DATASET_KEY.toString()));
+    Assert.assertTrue(hdfsRecord.getClassifications().containsKey("dna-dataset-key"));
+    Assert.assertEquals(
+        List.of("1", "2"),
+        hdfsRecord.getClassifications().get(Constants.COL_DATASET_KEY.toString()));
+    Assert.assertEquals(
+        List.of("101", "102"), hdfsRecord.getClassifications().get("dna-dataset-key"));
+  }
+
+  @Test
   public void temporalMapperTest() {
     String rawEventDate = "2019-01";
 

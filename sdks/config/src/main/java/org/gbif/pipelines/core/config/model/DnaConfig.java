@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DnaConfig implements Serializable {
 
+  int batchSizeSequenceClassifier = 500;
+  WsConfig sequenceClassifierWsConfig;
+  boolean enableDnaTaxonInterpretation = false;
   float nucleotideSequenceHighNFractionThreshold = 0.05f;
   float nucleotideSequenceHighAmbiguityThreshold = 0.05f;
 }
