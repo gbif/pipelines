@@ -9,11 +9,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,14 +23,19 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.gbif.api.model.crawler.FinishReason;
+import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.PipelinesHistoryClientTestStub;
+import org.gbif.pipelines.tasks.verbatims.IdentifierValidation;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
@@ -106,6 +113,25 @@ public class XmlToAvroCallbackIT {
     assertTrue(path.toFile().exists());
     assertTrue(Files.size(path) > 0L);
     assertEquals(1, PUBLISHER.getMessages().size());
+
+    // tripletValid and occurrenceIdValid are derived from the identifier validation
+    String metaPath =
+        config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + "/" + config.metaFileName;
+    Optional<OccurrenceValidationReport> report =
+        IdentifierValidation.readFromMetaFile(HdfsConfigs.nullConfig(), metaPath);
+    assertTrue(report.isPresent());
+    assertTrue(report.get().getCheckedRecords() > 0);
+    ValidationResult validationResult =
+        new ObjectMapper()
+            .readValue(
+                ((PipelinesBalancerMessage) PUBLISHER.getMessages().get(0)).getPayload(),
+                PipelinesVerbatimMessage.class)
+            .getValidationResult();
+    assertEquals(
+        IdentifierValidation.tripletsValid(report.get()), validationResult.isTripletValid());
+    assertEquals(
+        IdentifierValidation.occurrenceIdsValid(report.get()),
+        validationResult.isOccurrenceIdValid());
 
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
     Assert.assertEquals(6, result.size());
