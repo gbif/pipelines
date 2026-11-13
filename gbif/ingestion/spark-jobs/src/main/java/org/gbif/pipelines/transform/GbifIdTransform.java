@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.GbifIdInterpreter;
+import org.gbif.pipelines.core.interpreters.specific.IdPriority;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
@@ -22,6 +23,9 @@ public class GbifIdTransform implements Serializable {
   private final boolean isOccurrenceIdValid;
   private final boolean useExtendedRecordId;
   private final boolean generateIdIfAbsent;
+  /** The identifier forced to be used and looked up first, null for the default. */
+  private final IdPriority idPriority;
+
   private final BiConsumer<ExtendedRecord, IdentifierRecord> gbifIdFn;
   private final SerializableSupplier<HBaseLockingKey> keygenServiceSupplier;
 
@@ -50,6 +54,7 @@ public class GbifIdTransform implements Serializable {
                 isOccurrenceIdValid,
                 useExtendedRecordId,
                 generateIdIfAbsent,
+                idPriority,
                 gbifIdFn))
         .getOfNullable();
   }

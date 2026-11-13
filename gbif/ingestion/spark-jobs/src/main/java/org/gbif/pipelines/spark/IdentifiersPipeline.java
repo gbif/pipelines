@@ -32,10 +32,13 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.OccurrenceExtensionConverter;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
+import org.gbif.pipelines.core.interpreters.specific.IdPriority;
+import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
@@ -67,6 +70,20 @@ public class IdentifiersPipeline {
   public static final String CURRENT_IDENTIFIERS_COUNT = "currentIdentifiersCount";
   public static final String NEW_IDENTIFIERS_COUNT = "newIdentifiersCount";
   public static final String REMOVED_IDENTIFIERS_COUNT = "removedIdentifiersCount";
+  public static final String FORCE_OCCURRENCE_ID = "forceOccurrenceId";
+  public static final String FORCE_TRIPLET = "forceTriplet";
+  /**
+   * Dataset machine tag (name only, any namespace) that, with the value {@code true}, forces the
+   * occurrenceID to be used and to take priority over the triplet when looking up existing GBIF
+   * ids, ignoring the occurrenceIdValid flag.
+   */
+  public static final String FORCE_OCCURRENCE_ID_TAG = "id_force_occurrence_id";
+  /**
+   * Dataset machine tag (name only, any namespace) that, with the value {@code true}, forces the
+   * triplet to be used and to take priority over the occurrenceID when looking up existing GBIF
+   * ids, ignoring the tripletValid flag.
+   */
+  public static final String FORCE_TRIPLET_TAG = "id_force_triplet";
 
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {
@@ -131,7 +148,8 @@ public class IdentifiersPipeline {
           args.numberOfShards,
           args.tripletValid,
           args.occurrenceIdValid,
-          args.useExtendedRecordId);
+          args.useExtendedRecordId,
+          getIdPriority(config, datasetID));
     } finally {
       if (fileSystem != null) {
         fileSystem.close();
@@ -158,16 +176,62 @@ public class IdentifiersPipeline {
       boolean occurrenceIdValid,
       boolean useExtendedRecordId)
       throws Exception {
+    runValidation(
+        spark,
+        fs,
+        config,
+        datasetID,
+        attempt,
+        numberOfShards,
+        tripletValid,
+        occurrenceIdValid,
+        useExtendedRecordId,
+        IdPriority.DEFAULT);
+  }
+
+  /**
+   * @param idPriority from the dataset machine tags, overrides the tripletValid or
+   *     occurrenceIdValid flag of the forced identifier, see {@link #getIdPriority}
+   */
+  public static void runValidation(
+      SparkSession spark,
+      FileSystem fs,
+      PipelinesConfig config,
+      String datasetID,
+      int attempt,
+      int numberOfShards,
+      boolean tripletValid,
+      boolean occurrenceIdValid,
+      boolean useExtendedRecordId,
+      IdPriority idPriority)
+      throws Exception {
 
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetID);
     ThreadContext.put("attempt", String.valueOf(attempt));
 
+    idPriority = IdPriority.orDefault(idPriority);
     log.info(
-        "Starting validation with tripleValid: {}, occurrenceIdValid: {}, useExtendedRecordId: {}",
+        "Starting validation with tripleValid: {}, occurrenceIdValid: {}, useExtendedRecordId: {},"
+            + " idPriority: {}",
         tripletValid,
         occurrenceIdValid,
-        useExtendedRecordId);
+        useExtendedRecordId,
+        idPriority);
+
+    // the machine tags override the validation flag of the forced identifier, see GbifIdInterpreter
+    if (idPriority.useTriplet(tripletValid) != tripletValid) {
+      log.warn(
+          "Dataset {} has machine tag {}=true, using the triplets although they are not valid",
+          datasetID,
+          FORCE_TRIPLET_TAG);
+    }
+    if (idPriority.useOccurrenceId(occurrenceIdValid) != occurrenceIdValid) {
+      log.warn(
+          "Dataset {} has machine tag {}=true, using the occurrenceIDs although they are not valid",
+          datasetID,
+          FORCE_OCCURRENCE_ID_TAG);
+    }
 
     String inputPath = config.getInputPath() + "/" + datasetID + "/" + attempt;
     String outputPath = config.getOutputPath() + "/" + datasetID + "/" + attempt;
@@ -187,6 +251,8 @@ public class IdentifiersPipeline {
 
     // collect metrics
     Map<String, Long> metrics = new HashMap<>();
+    metrics.put(FORCE_OCCURRENCE_ID, idPriority == IdPriority.OCCURRENCE_ID ? 1L : 0L);
+    metrics.put(FORCE_TRIPLET, idPriority == IdPriority.TRIPLET ? 1L : 0L);
 
     // validate the identifiers from the extended records
     validateIdentifiers(recordsExpanded, metrics);
@@ -198,6 +264,7 @@ public class IdentifiersPipeline {
             tripletValid,
             occurrenceIdValid,
             useExtendedRecordId,
+            idPriority,
             recordsExpanded)
         .repartition(numberOfShards)
         .write()
@@ -512,6 +579,65 @@ public class IdentifiersPipeline {
   }
 
   /**
+   * Reads the {@link #FORCE_OCCURRENCE_ID_TAG} and {@link #FORCE_TRIPLET_TAG} machine tags of the
+   * dataset from the registry. Fails if the registry cannot be reached, rather than silently
+   * changing which identifier is used.
+   *
+   * @throws IllegalArgumentException if both tags are set
+   */
+  public static IdPriority getIdPriority(PipelinesConfig config, String datasetId) {
+    if (config.isBypassRegistry()) {
+      return IdPriority.DEFAULT;
+    }
+    MetadataServiceClient client = MetadataServiceClient.create(config.getGbifApi());
+    try {
+      org.gbif.pipelines.core.ws.metadata.response.Dataset dataset = client.getDataset(datasetId);
+      IdPriority idPriority =
+          dataset == null ? IdPriority.DEFAULT : getIdPriority(datasetId, dataset.getMachineTags());
+      log.info("Dataset {} idPriority {}", datasetId, idPriority);
+      return idPriority;
+    } finally {
+      client.close();
+    }
+  }
+
+  /**
+   * @return the identifier forced by the machine tags, or {@link IdPriority#DEFAULT} if neither tag
+   *     is set to true
+   * @throws IllegalArgumentException if both {@link #FORCE_OCCURRENCE_ID_TAG} and {@link
+   *     #FORCE_TRIPLET_TAG} are set to true
+   */
+  public static IdPriority getIdPriority(String datasetId, List<MachineTag> machineTags) {
+    boolean forceOccurrenceId = hasTrueTag(machineTags, FORCE_OCCURRENCE_ID_TAG);
+    boolean forceTriplet = hasTrueTag(machineTags, FORCE_TRIPLET_TAG);
+    if (forceOccurrenceId && forceTriplet) {
+      throw new IllegalArgumentException(
+          "Bad configuration of dataset "
+              + datasetId
+              + ": machine tags "
+              + FORCE_OCCURRENCE_ID_TAG
+              + " and "
+              + FORCE_TRIPLET_TAG
+              + " are both set to true, only one identifier can be forced");
+    }
+    if (forceOccurrenceId) {
+      return IdPriority.OCCURRENCE_ID;
+    }
+    return forceTriplet ? IdPriority.TRIPLET : IdPriority.DEFAULT;
+  }
+
+  /** @return true if the tags contain the tag name, in any namespace, with the value true */
+  private static boolean hasTrueTag(List<MachineTag> machineTags, String name) {
+    return machineTags != null
+        && machineTags.stream()
+            .anyMatch(
+                mt ->
+                    name.equalsIgnoreCase(mt.getName())
+                        && mt.getValue() != null
+                        && "true".equalsIgnoreCase(mt.getValue().trim()));
+  }
+
+  /**
    * Transforms ExtendedRecord dataset to IdentifierRecord dataset.
    *
    * @param config Pipelines configuration
@@ -529,6 +655,30 @@ public class IdentifiersPipeline {
       boolean isOccurrenceIdValid,
       boolean isUseExtendedRecordId,
       Dataset<ExtendedRecord> records) {
+    return identifierTransform(
+        config,
+        datasetId,
+        isTripletValid,
+        isOccurrenceIdValid,
+        isUseExtendedRecordId,
+        IdPriority.DEFAULT,
+        records);
+  }
+
+  /**
+   * Transforms ExtendedRecord dataset to IdentifierRecord dataset.
+   *
+   * @param idPriority the identifier forced to be used and looked up first, see {@link
+   *     #FORCE_OCCURRENCE_ID_TAG} and {@link #FORCE_TRIPLET_TAG}
+   */
+  public static Dataset<IdentifierRecord> identifierTransform(
+      final PipelinesConfig config,
+      final String datasetId,
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
+      boolean isUseExtendedRecordId,
+      IdPriority idPriority,
+      Dataset<ExtendedRecord> records) {
 
     GbifIdTransform transform =
         GbifIdTransform.builder()
@@ -536,6 +686,7 @@ public class IdentifiersPipeline {
             .isTripletValid(isTripletValid)
             .isOccurrenceIdValid(isOccurrenceIdValid)
             .useExtendedRecordId(isUseExtendedRecordId)
+            .idPriority(idPriority)
             .keygenServiceSupplier(
                 (SerializableSupplier<HBaseLockingKey>)
                     () -> KeygenServiceFactory.create(config, datasetId))

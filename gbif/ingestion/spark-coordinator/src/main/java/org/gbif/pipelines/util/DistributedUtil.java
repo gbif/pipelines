@@ -1,6 +1,8 @@
 package org.gbif.pipelines.util;
 
 import static org.gbif.pipelines.coordinator.PostprocessValidation.getValueByKey;
+import static org.gbif.pipelines.spark.ArgsConstants.OCCURRENCE_ID_VALID_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.TRIPLET_VALID_ARG;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -11,6 +13,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.airflow.AirflowSparkLauncher;
 import org.gbif.pipelines.airflow.AppName;
 import org.gbif.pipelines.common.PipelinesVariables;
@@ -192,5 +195,23 @@ public class DistributedUtil {
                 .orElse("0"));
 
     return Math.max(occRecordCount, erRecordCount);
+  }
+
+  /**
+   * The identifier validation flags of the message as spark job arguments, so that GBIF ids are
+   * looked up and minted with the same identifiers in every step. Empty if the message has no
+   * validation result, leaving the job's defaults.
+   */
+  public static List<String> identifierValidityArgs(PipelinesVerbatimMessage message) {
+    if (message.getValidationResult() == null) {
+      log.warn(
+          "No validation result for dataset {} attempt {}, using the default identifier flags",
+          message.getDatasetUuid(),
+          message.getAttempt());
+      return List.of();
+    }
+    return List.of(
+        TRIPLET_VALID_ARG + "=" + message.getValidationResult().isTripletValid(),
+        OCCURRENCE_ID_VALID_ARG + "=" + message.getValidationResult().isOccurrenceIdValid());
   }
 }

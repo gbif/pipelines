@@ -13,7 +13,6 @@
  */
 package org.gbif.pipelines.coordinator;
 
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -44,7 +43,8 @@ public class ValidatorInterpretationDistributedCallback extends ValidatorInterpr
         pipelinesConfig.getAirflowConfig().validatorInterpretationDag,
         StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
         recordsNumber,
-        List.of());
+        // the same identifier flags as the identifiers step, absent GBIF ids are minted with them
+        DistributedUtil.identifierValidityArgs(message));
   }
 
   @Override

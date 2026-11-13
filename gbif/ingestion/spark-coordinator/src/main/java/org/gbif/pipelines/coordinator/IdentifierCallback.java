@@ -63,8 +63,8 @@ public class IdentifierCallback
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
         message.getValidationResult().getUseExtendedRecordId() != null
-            ? message.getValidationResult().getUseExtendedRecordId()
-            : false);
+            && message.getValidationResult().getUseExtendedRecordId(),
+        IdentifiersPipeline.getIdPriority(pipelinesConfig, message.getDatasetUuid().toString()));
 
     // check if the validation result is valid, if not throw an exception
     checkValidity(message);
