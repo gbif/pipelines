@@ -35,7 +35,6 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.PipelinesHistoryClientTestStub;
-import org.gbif.pipelines.tasks.verbatims.IdentifierValidation;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
@@ -118,7 +117,7 @@ public class XmlToAvroCallbackIT {
     String metaPath =
         config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + "/" + config.metaFileName;
     Optional<OccurrenceValidationReport> report =
-        IdentifierValidation.readFromMetaFile(HdfsConfigs.nullConfig(), metaPath);
+        XmlIdentifierValidation.readFromMetaFile(HdfsConfigs.nullConfig(), metaPath);
     assertTrue(report.isPresent());
     assertTrue(report.get().getCheckedRecords() > 0);
     ValidationResult validationResult =
@@ -128,9 +127,9 @@ public class XmlToAvroCallbackIT {
                 PipelinesVerbatimMessage.class)
             .getValidationResult();
     assertEquals(
-        IdentifierValidation.tripletsValid(report.get()), validationResult.isTripletValid());
+        XmlIdentifierValidation.tripletsValid(report.get()), validationResult.isTripletValid());
     assertEquals(
-        IdentifierValidation.occurrenceIdsValid(report.get()),
+        XmlIdentifierValidation.occurrenceIdsValid(report.get()),
         validationResult.isOccurrenceIdValid());
 
     Map<StepType, PipelineStep> result = historyClient.getStepMap();

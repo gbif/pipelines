@@ -1,4 +1,4 @@
-package org.gbif.pipelines.tasks.verbatims;
+package org.gbif.pipelines.tasks.verbatims.xml;
 
 import com.google.common.base.Strings;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /**
  * Validates the occurrenceIDs and triplets (institutionCode, collectionCode, catalogNumber) of
- * verbatim records, producing the same {@link OccurrenceValidationReport} the crawler produces for
+ * XML verbatim records, producing the same {@link OccurrenceValidationReport} the crawler produces for
  * DwC archives, and decides from it whether the triplets and occurrenceIDs can be used to look up
  * and assign GBIF ids.
  *
@@ -33,7 +33,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class IdentifierValidation {
+public class XmlIdentifierValidation {
 
   // meta file keys, none is a prefix of another as HdfsUtils#getValueByKey matches by prefix
   public static final String CHECKED_RECORDS = "idValidationCheckedRecords";
@@ -138,7 +138,7 @@ public class IdentifierValidation {
             new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)
                 .replace("\u0000", ""));
       }
-      if (body.length() > 0 && body.charAt(body.length() - 1) != '\n') {
+      if (!body.isEmpty() && body.charAt(body.length() - 1) != '\n') {
         body.append('\n');
       }
     }

@@ -20,6 +20,7 @@ import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.tasks.verbatims.xml.XmlIdentifierValidation;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -40,8 +41,8 @@ public class IdentifierValidationTest {
     assertEquals(0, report.getRecordsWithInvalidTriplets());
     assertEquals(2, report.getUniqueOccurrenceIds());
     assertEquals(0, report.getRecordsMissingOccurrenceId());
-    assertTrue(IdentifierValidation.tripletsValid(report));
-    assertTrue(IdentifierValidation.occurrenceIdsValid(report));
+    assertTrue(XmlIdentifierValidation.tripletsValid(report));
+    assertTrue(XmlIdentifierValidation.occurrenceIdsValid(report));
   }
 
   @Test
@@ -50,8 +51,8 @@ public class IdentifierValidationTest {
         validate(record("1", "o1", "IC", "CC", "1"), record("2", "o2", "IC", "CC", "1"));
 
     assertEquals(1, report.getUniqueTriplets());
-    assertFalse(IdentifierValidation.tripletsValid(report));
-    assertTrue(IdentifierValidation.occurrenceIdsValid(report));
+    assertFalse(XmlIdentifierValidation.tripletsValid(report));
+    assertTrue(XmlIdentifierValidation.occurrenceIdsValid(report));
   }
 
   @Test
@@ -61,7 +62,7 @@ public class IdentifierValidationTest {
 
     assertEquals(1, report.getUniqueTriplets());
     assertEquals(1, report.getRecordsWithInvalidTriplets());
-    assertTrue(IdentifierValidation.tripletsValid(report));
+    assertTrue(XmlIdentifierValidation.tripletsValid(report));
   }
 
   @Test
@@ -71,8 +72,8 @@ public class IdentifierValidationTest {
 
     assertEquals(0, report.getUniqueTriplets());
     assertEquals(2, report.getRecordsWithInvalidTriplets());
-    assertFalse(IdentifierValidation.tripletsValid(report));
-    assertTrue(IdentifierValidation.occurrenceIdsValid(report));
+    assertFalse(XmlIdentifierValidation.tripletsValid(report));
+    assertTrue(XmlIdentifierValidation.occurrenceIdsValid(report));
   }
 
   @Test
@@ -81,8 +82,8 @@ public class IdentifierValidationTest {
         validate(record("1", "o1", "IC", "CC", "1"), record("2", "o1", "IC", "CC", "2"));
 
     assertEquals(1, report.getUniqueOccurrenceIds());
-    assertTrue(IdentifierValidation.tripletsValid(report));
-    assertFalse(IdentifierValidation.occurrenceIdsValid(report));
+    assertTrue(XmlIdentifierValidation.tripletsValid(report));
+    assertFalse(XmlIdentifierValidation.occurrenceIdsValid(report));
   }
 
   @Test
@@ -91,13 +92,13 @@ public class IdentifierValidationTest {
         validate(record("1", "o1", "IC", "CC", "1"), record("2", " ", "IC", "CC", "2"));
 
     assertEquals(1, report.getRecordsMissingOccurrenceId());
-    assertFalse(IdentifierValidation.occurrenceIdsValid(report));
+    assertFalse(XmlIdentifierValidation.occurrenceIdsValid(report));
   }
 
   @Test
   public void noReportIsValidTest() {
-    assertTrue(IdentifierValidation.tripletsValid(null));
-    assertTrue(IdentifierValidation.occurrenceIdsValid(null));
+    assertTrue(XmlIdentifierValidation.tripletsValid(null));
+    assertTrue(XmlIdentifierValidation.occurrenceIdsValid(null));
   }
 
   @Test
@@ -111,7 +112,7 @@ public class IdentifierValidationTest {
             record("3", null, "IC", "CC", null)));
 
     OccurrenceValidationReport report =
-        IdentifierValidation.validate(LOCAL, avro.getAbsolutePath());
+        XmlIdentifierValidation.validate(LOCAL, avro.getAbsolutePath());
     assertEquals(3, report.getCheckedRecords());
     assertEquals(2, report.getUniqueTriplets());
     assertEquals(1, report.getRecordsWithInvalidTriplets());
@@ -122,16 +123,16 @@ public class IdentifierValidationTest {
     File meta = tmp.newFile("archive-to-verbatim.yml");
     // as written by ConverterToVerbatim, UTF-16 via writeChars
     Files.write(meta.toPath(), "archiveToOccurrenceCount: 3".getBytes(StandardCharsets.UTF_16BE));
-    IdentifierValidation.appendToMetaFile(LOCAL, meta.getAbsolutePath(), report);
+    XmlIdentifierValidation.appendToMetaFile(LOCAL, meta.getAbsolutePath(), report);
 
     // written with writeChars like the other meta files
     String body =
         new String(Files.readAllBytes(meta.toPath()), StandardCharsets.UTF_8).replace("\u0000", "");
     assertTrue(body, body.startsWith("archiveToOccurrenceCount: 3\n"));
-    assertTrue(body, body.contains(IdentifierValidation.CHECKED_RECORDS + ": 3\n"));
+    assertTrue(body, body.contains(XmlIdentifierValidation.CHECKED_RECORDS + ": 3\n"));
 
     Optional<OccurrenceValidationReport> read =
-        IdentifierValidation.readFromMetaFile(LOCAL, meta.getAbsolutePath());
+        XmlIdentifierValidation.readFromMetaFile(LOCAL, meta.getAbsolutePath());
     assertTrue(read.isPresent());
     assertEquals(report, read.get());
   }
@@ -140,11 +141,12 @@ public class IdentifierValidationTest {
   public void metaFileWithoutReportTest() throws Exception {
     File meta = tmp.newFile("archive-to-verbatim.yml");
     Files.write(meta.toPath(), "archiveToOccurrenceCount: 3\n".getBytes(StandardCharsets.UTF_8));
-    assertFalse(IdentifierValidation.readFromMetaFile(LOCAL, meta.getAbsolutePath()).isPresent());
+    assertFalse(
+        XmlIdentifierValidation.readFromMetaFile(LOCAL, meta.getAbsolutePath()).isPresent());
   }
 
   private static OccurrenceValidationReport validate(ExtendedRecord... records) {
-    return IdentifierValidation.validate(Arrays.asList(records).iterator());
+    return XmlIdentifierValidation.validate(Arrays.asList(records).iterator());
   }
 
   private static ExtendedRecord record(
