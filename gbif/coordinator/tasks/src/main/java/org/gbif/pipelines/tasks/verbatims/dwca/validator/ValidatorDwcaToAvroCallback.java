@@ -45,7 +45,6 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.ValidatorCallback;
-import org.gbif.pipelines.tasks.verbatims.IdentifierValidation;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -226,8 +225,8 @@ public class ValidatorDwcaToAvroCallback extends AbstractMessageCallback<Pipelin
 
     PipelinesVerbatimMessage.ValidationResult validationResult =
         new PipelinesVerbatimMessage.ValidationResult(
-            IdentifierValidation.tripletsValid(report),
-            IdentifierValidation.occurrenceIdsValid(report),
+            tripletsValid(report),
+            occurrenceIdsValid(report),
             null,
             dwcaOccurrenceRecordsNumber,
             dwcaRecordsNumber);
@@ -247,5 +246,31 @@ public class ValidatorDwcaToAvroCallback extends AbstractMessageCallback<Pipelin
         null,
         null,
         datasetType);
+  }
+
+  /**
+   * For XML datasets triplets are always valid. For DwC-A datasets triplets are valid if there are
+   * more than 0 unique triplets in the dataset, and exactly 0 triplets referenced by more than one
+   * record.
+   */
+  private boolean tripletsValid(OccurrenceValidationReport report) {
+    if (report == null) {
+      return true;
+    }
+    return report.getUniqueTriplets() > 0
+        && report.getCheckedRecords() - report.getRecordsWithInvalidTriplets()
+            == report.getUniqueTriplets();
+  }
+
+  /**
+   * For XML datasets occurrenceIds are always accepted. For DwC-A datasets occurrenceIds are valid
+   * if each record has a unique occurrenceId.
+   */
+  private boolean occurrenceIdsValid(OccurrenceValidationReport report) {
+    if (report == null) {
+      return true;
+    }
+    return report.getCheckedRecords() > 0
+        && report.getUniqueOccurrenceIds() == report.getCheckedRecords();
   }
 }

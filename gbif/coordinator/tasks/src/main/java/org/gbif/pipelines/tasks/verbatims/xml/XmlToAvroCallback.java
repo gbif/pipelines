@@ -37,7 +37,6 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
-import org.gbif.pipelines.tasks.verbatims.IdentifierValidation;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -189,14 +188,14 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     OccurrenceValidationReport report =
-        IdentifierValidation.readFromMetaFile(hdfsConfigs, metaPath).orElse(null);
+        XmlIdentifierValidation.readFromMetaFile(hdfsConfigs, metaPath).orElse(null);
     if (report == null) {
       log.warn(
           "No identifier validation found in {}, assuming triplets and occurrenceIDs are valid",
           metaPath);
     }
-    boolean tripletValid = IdentifierValidation.tripletsValid(report);
-    boolean occurrenceIdValid = IdentifierValidation.occurrenceIdsValid(report);
+    boolean tripletValid = XmlIdentifierValidation.tripletsValid(report);
+    boolean occurrenceIdValid = XmlIdentifierValidation.occurrenceIdsValid(report);
     log.info(
         "Dataset {} attempt {}: tripletValid {}, occurrenceIdValid {}",
         message.getDatasetUuid(),
@@ -245,9 +244,9 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
       org.apache.hadoop.fs.Path metaPath) {
     try {
       OccurrenceValidationReport report =
-          IdentifierValidation.validate(hdfsConfigs, avroPath.toString());
+          XmlIdentifierValidation.validate(hdfsConfigs, avroPath.toString());
       log.info("Dataset {} attempt {} identifier validation: {}", datasetId, attempt, report);
-      IdentifierValidation.appendToMetaFile(hdfsConfigs, metaPath.toString(), report);
+      XmlIdentifierValidation.appendToMetaFile(hdfsConfigs, metaPath.toString(), report);
     } catch (Exception ex) {
       log.error(
           "Identifier validation of dataset {} attempt {} failed, {}",
