@@ -26,6 +26,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsService;
+import org.gbif.pipelines.spark.records.IndexSchema;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
 import org.gbif.pipelines.spark.util.IndexSettings;
@@ -38,6 +39,10 @@ import org.gbif.pipelines.spark.util.PipelineArgs;
  * dataset, and updates the alias to point to the new index. It also handles datasets with low
  * record counts by putting them in a shared default index to avoid creating many small indexes in
  * Elasticsearch.
+ *
+ * <p>It doesn't write the HBase records table, {@link FullRecordsTableBuildPipeline} builds it in
+ * batches. With the index _source disabled, the API reads the records from that table, so build it
+ * before switching to the new indices.
  */
 @Slf4j
 public class FullIndexBuildPipeline {
@@ -262,8 +267,14 @@ public class FullIndexBuildPipeline {
       }
     }
 
+    // with the _source disabled the indices only return keys, fields that aren't indexed aren't
+    // sent
+    Dataset<Row> documents =
+        hdfs.drop(IndexSchema.fieldsNotSent(schemaPath, config.getIndexConfig().isSourceEnabled()));
+
     // datasetId + "_" + attempt + "_" + indexVersion + "_" + timestamp;
-    hdfs.join(broadcast(datasetCountsDF), "datasetkey")
+    documents
+        .join(broadcast(datasetCountsDF), "datasetkey")
         .withColumn(
             "index_name",
             when(
@@ -314,6 +325,10 @@ public class FullIndexBuildPipeline {
       }
     }
 
+    if (args.switchOnSuccess) {
+      EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
+    }
+
     if (args.deleteTempParquetOnSuccess) {
       fileSystem.delete(new org.apache.hadoop.fs.Path(config.getRebuildPath() + "/elastic"), true);
     }
@@ -321,10 +336,6 @@ public class FullIndexBuildPipeline {
     fileSystem.close();
     spark.stop();
     spark.close();
-
-    if (args.switchOnSuccess) {
-      EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
-    }
 
     log.info("Full index build completed");
   }

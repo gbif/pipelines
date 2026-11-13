@@ -282,6 +282,14 @@
             <artifactId>hdfs-tables</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.gbif.occurrence</groupId>
+            <artifactId>occurrence-es-mapping</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-api</artifactId>
             <exclusions>
