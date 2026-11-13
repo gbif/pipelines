@@ -3,10 +3,8 @@ package org.gbif.pipelines.tasks.verbatims;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +13,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -73,39 +72,42 @@ public class IdentifierValidation {
 
   /** Counts the unique, missing and incomplete identifiers of the records. */
   public static OccurrenceValidationReport validate(Iterator<ExtendedRecord> records) {
-    Set<String> triplets = new HashSet<>();
-    Set<String> occurrenceIds = new HashSet<>();
     long checked = 0;
+    long uniqueTriplets = 0;
     long invalidTriplets = 0;
+    long uniqueOccurrenceIds = 0;
     long missingOccurrenceIds = 0;
 
-    while (records.hasNext()) {
-      ExtendedRecord er = records.next();
-      checked++;
+    try (UniquenessValidator triplets = UniquenessValidator.getNewInstance();
+        UniquenessValidator occurrenceIds = UniquenessValidator.getNewInstance()) {
+      while (records.hasNext()) {
+        ExtendedRecord er = records.next();
+        checked++;
 
-      // same rules as the keygen, see OccurrenceKeyBuilder#buildKey and GbifIdInterpreter
-      String ic = ModelUtils.extractValue(er, DwcTerm.institutionCode);
-      String cc = ModelUtils.extractValue(er, DwcTerm.collectionCode);
-      String cn = ModelUtils.extractValue(er, DwcTerm.catalogNumber);
-      if (Strings.isNullOrEmpty(ic) || Strings.isNullOrEmpty(cc) || Strings.isNullOrEmpty(cn)) {
-        invalidTriplets++;
-      } else {
-        triplets.add(ic + "|" + cc + "|" + cn);
-      }
+        // same rules as the keygen, see OccurrenceKeyBuilder#buildKey and GbifIdInterpreter
+        String ic = ModelUtils.extractValue(er, DwcTerm.institutionCode);
+        String cc = ModelUtils.extractValue(er, DwcTerm.collectionCode);
+        String cn = ModelUtils.extractValue(er, DwcTerm.catalogNumber);
+        if (Strings.isNullOrEmpty(ic) || Strings.isNullOrEmpty(cc) || Strings.isNullOrEmpty(cn)) {
+          invalidTriplets++;
+        } else if (triplets.isUnique(ic + "|" + cc + "|" + cn)) {
+          uniqueTriplets++;
+        }
 
-      String occurrenceId = ModelUtils.extractValue(er, DwcTerm.occurrenceID);
-      if (Strings.isNullOrEmpty(occurrenceId)) {
-        missingOccurrenceIds++;
-      } else {
-        occurrenceIds.add(occurrenceId);
+        String occurrenceId = ModelUtils.extractValue(er, DwcTerm.occurrenceID);
+        if (Strings.isNullOrEmpty(occurrenceId)) {
+          missingOccurrenceIds++;
+        } else if (occurrenceIds.isUnique(occurrenceId)) {
+          uniqueOccurrenceIds++;
+        }
       }
     }
 
     return new OccurrenceValidationReport(
         Math.toIntExact(checked),
-        triplets.size(),
+        Math.toIntExact(uniqueTriplets),
         Math.toIntExact(invalidTriplets),
-        occurrenceIds.size(),
+        Math.toIntExact(uniqueOccurrenceIds),
         Math.toIntExact(missingOccurrenceIds),
         true);
   }
