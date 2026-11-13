@@ -5,7 +5,7 @@ package org.gbif.pipelines.core.interpreters.specific;
  * regardless of the result of the identifier validation (the tripletValid and occurrenceIdValid
  * flags). Set per dataset with machine tags, see IdentifiersPipeline.
  *
- * This mainly of use with BioCASe datasets.
+ * <p>This mainly of use with BioCASe datasets.
  */
 public enum IdPriority {
 
