@@ -20,6 +20,7 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.keygen.Keygen;
 import org.gbif.pipelines.keygen.SimpleOccurrenceRecord;
+import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 @Slf4j
@@ -34,10 +35,35 @@ public class GbifIdInterpreter {
       boolean useExtendedRecordId,
       boolean generateIdIfAbsent,
       BiConsumer<ExtendedRecord, IdentifierRecord> gbifIdFn) {
+    return interpretGbifId(
+        keygenService,
+        isTripletValid,
+        isOccurrenceIdValid,
+        useExtendedRecordId,
+        generateIdIfAbsent,
+        IdPriority.DEFAULT,
+        gbifIdFn);
+  }
+
+  /**
+   * Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id.
+   *
+   * @param idPriority the identifier forced to be used and looked up first, see {@link
+   *     #interpretGbifId(HBaseLockingKey, boolean, boolean, boolean, IdPriority)}
+   */
+  public static BiConsumer<ExtendedRecord, IdentifierRecord> interpretGbifId(
+      HBaseLockingKey keygenService,
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
+      boolean useExtendedRecordId,
+      boolean generateIdIfAbsent,
+      IdPriority idPriority,
+      BiConsumer<ExtendedRecord, IdentifierRecord> gbifIdFn) {
     gbifIdFn = gbifIdFn == null ? interpretCopyGbifId() : gbifIdFn;
     return useExtendedRecordId
         ? gbifIdFn
-        : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent);
+        : interpretGbifId(
+            keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent, idPriority);
   }
 
   /** Generates or gets existing GBIF id */
@@ -46,11 +72,33 @@ public class GbifIdInterpreter {
       boolean isTripletValid,
       boolean isOccurrenceIdValid,
       boolean generateIdIfAbsent) {
+    return interpretGbifId(
+        keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent, IdPriority.DEFAULT);
+  }
+
+  /**
+   * Generates or gets existing GBIF id.
+   *
+   * <p>By default an existing occurrenceID takes priority over the triplet, and each is only used
+   * if its flag is valid. {@link IdPriority#OCCURRENCE_ID} uses the occurrenceID regardless of its
+   * flag. {@link IdPriority#TRIPLET} uses the triplet regardless of its flag and looks it up first,
+   * using its GBIF id if it exists and leaving the occurrenceID lookup row untouched. If the
+   * triplet is not found, the default lookup is used.
+   */
+  public static BiConsumer<ExtendedRecord, IdentifierRecord> interpretGbifId(
+      HBaseLockingKey keygenService,
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
+      boolean generateIdIfAbsent,
+      IdPriority idPriority) {
+    IdPriority priority = IdPriority.orDefault(idPriority);
+    boolean useTriplet = priority.useTriplet(isTripletValid);
+    boolean useOccurrenceId = priority.useOccurrenceId(isOccurrenceIdValid);
     return (er, ir) -> {
       SimpleOccurrenceRecord occRecords = SimpleOccurrenceRecord.create();
 
       // Adds occurrenceId
-      if (isOccurrenceIdValid) {
+      if (useOccurrenceId) {
         String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
         if (!Strings.isNullOrEmpty(occurrenceId)) {
           occRecords.setOccurrenceId(occurrenceId);
@@ -59,7 +107,7 @@ public class GbifIdInterpreter {
       }
 
       // Adds triplet
-      if (isTripletValid) {
+      if (useTriplet) {
         String ic = extractValue(er, DwcTerm.institutionCode);
         String cc = extractValue(er, DwcTerm.collectionCode);
         String cn = extractValue(er, DwcTerm.catalogNumber);
@@ -71,9 +119,15 @@ public class GbifIdInterpreter {
                 });
       }
 
-      Optional<Long> gbifId =
-          Keygen.getKey(
-              keygenService, isTripletValid, isOccurrenceIdValid, generateIdIfAbsent, occRecords);
+      Optional<Long> gbifId = Optional.empty();
+      if (priority.isTripletFirst()) {
+        gbifId = findTripletKey(keygenService, ir.getAssociatedKey());
+      }
+      if (gbifId.isEmpty()) {
+        gbifId =
+            Keygen.getKey(
+                keygenService, useTriplet, useOccurrenceId, generateIdIfAbsent, occRecords);
+      }
       if (gbifId.isPresent() && !Keygen.getErrorKey().equals(gbifId.get())) {
         ir.setInternalId(gbifId.get().toString());
       } else if (!generateIdIfAbsent) {
@@ -82,6 +136,24 @@ public class GbifIdInterpreter {
         addIssue(ir, GBIF_ID_INVALID);
       }
     };
+  }
+
+  /**
+   * Looks up the GBIF id of a triplet on its own, so that no other lookup rows are filled in.
+   *
+   * @return the GBIF id, the error key if the lookup failed, or empty if there is no triplet or it
+   *     is not found
+   */
+  private static Optional<Long> findTripletKey(HBaseLockingKey keygenService, String triplet) {
+    if (Strings.isNullOrEmpty(triplet)) {
+      return Optional.empty();
+    }
+    try {
+      return keygenService.findKey(Collections.singleton(triplet)).map(KeyLookupResult::getKey);
+    } catch (RuntimeException ex) {
+      log.error(ex.getMessage(), ex);
+      return Optional.of(Keygen.getErrorKey());
+    }
   }
 
   /** Generates or gets existing GBIF id */
