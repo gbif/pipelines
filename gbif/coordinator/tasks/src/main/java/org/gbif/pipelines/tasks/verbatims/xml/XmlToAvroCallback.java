@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.http.client.HttpClient;
 import org.gbif.api.model.crawler.FinishReason;
+import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -36,6 +37,7 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.verbatims.IdentifierValidation;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -122,6 +124,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
       if (isConverted) {
         checkRecordsSize(datasetId.toString(), attempt, expectedRecords);
+        validateIdentifiers(hdfsConfigs, datasetId, attempt, outputPath, metaPath);
       } else {
         throw new IllegalArgumentException(
             "Dataset - "
@@ -175,6 +178,32 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
             .build()
             .get();
 
+    // derived from the identifier validation written to the meta file by the runnable
+    String metaPath =
+        buildOutputPath(
+                config.stepConfig.repositoryPath,
+                message.getDatasetUuid().toString(),
+                message.getAttempt().toString(),
+                config.metaFileName)
+            .toString();
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+    OccurrenceValidationReport report =
+        IdentifierValidation.readFromMetaFile(hdfsConfigs, metaPath).orElse(null);
+    if (report == null) {
+      log.warn(
+          "No identifier validation found in {}, assuming triplets and occurrenceIDs are valid",
+          metaPath);
+    }
+    boolean tripletValid = IdentifierValidation.tripletsValid(report);
+    boolean occurrenceIdValid = IdentifierValidation.occurrenceIdsValid(report);
+    log.info(
+        "Dataset {} attempt {}: tripletValid {}, occurrenceIdValid {}",
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        tripletValid,
+        occurrenceIdValid);
+
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
@@ -183,7 +212,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         null,
         message.getEndpointType(),
         null,
-        new ValidationResult(true, true, false, dwcaOccurrenceRecordsNumber, null),
+        new ValidationResult(
+            tripletValid, occurrenceIdValid, false, dwcaOccurrenceRecordsNumber, null),
         null,
         message.getExecutionId(),
         DatasetType.OCCURRENCE);
@@ -200,6 +230,32 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
       log.info("Skipping, because the reason is {}", message.getReason());
     }
     return isTotalCount && isReason;
+  }
+
+  /**
+   * Counts the unique, missing and incomplete occurrenceIDs and triplets of the converted records
+   * and appends them to the meta file, from which tripletValid and occurrenceIdValid are derived.
+   * If the validation fails the counts are not written, and both are assumed to be valid.
+   */
+  private static void validateIdentifiers(
+      HdfsConfigs hdfsConfigs,
+      UUID datasetId,
+      String attempt,
+      org.apache.hadoop.fs.Path avroPath,
+      org.apache.hadoop.fs.Path metaPath) {
+    try {
+      OccurrenceValidationReport report =
+          IdentifierValidation.validate(hdfsConfigs, avroPath.toString());
+      log.info("Dataset {} attempt {} identifier validation: {}", datasetId, attempt, report);
+      IdentifierValidation.appendToMetaFile(hdfsConfigs, metaPath.toString(), report);
+    } catch (Exception ex) {
+      log.error(
+          "Identifier validation of dataset {} attempt {} failed, {}",
+          datasetId,
+          attempt,
+          "triplets and occurrenceIDs will be assumed valid",
+          ex);
+    }
   }
 
   @SneakyThrows
