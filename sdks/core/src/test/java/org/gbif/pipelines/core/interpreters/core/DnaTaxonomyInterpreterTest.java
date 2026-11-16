@@ -54,7 +54,7 @@ public class DnaTaxonomyInterpreterTest {
             .getIssueList()
             .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
     Assert.assertEquals("42", testRecord.getId());
-    Assert.assertEquals(NUB_DATASET_KEY + "_dna_assisted", testRecord.getDatasetKey());
+    Assert.assertEquals(NUB_DATASET_KEY.toString(), testRecord.getDatasetKey());
   }
 
   @Test
@@ -122,6 +122,6 @@ public class DnaTaxonomyInterpreterTest {
             .getIssueList()
             .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
     Assert.assertEquals("42", testRecord.getId());
-    Assert.assertEquals(NUB_DATASET_KEY + "_dna_assisted", testRecord.getDatasetKey());
+    Assert.assertEquals(NUB_DATASET_KEY.toString(), testRecord.getDatasetKey());
   }
 }

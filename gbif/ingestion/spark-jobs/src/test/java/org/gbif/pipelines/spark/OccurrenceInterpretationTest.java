@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -30,14 +31,15 @@ import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.Constants;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.*;
@@ -130,33 +132,50 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     assertEquals(1, jsonPayloads.size());
     String json = jsonPayloads.get(0);
 
-    String dnaDatasetKey =
-        JsonPath.<List<String>>read(json, "$.checklistKey").stream()
-            .filter(key -> key.endsWith("_dna_assisted"))
-            .findFirst()
-            .orElse(null);
-    assertTrue(dnaDatasetKey != null);
-    assertTrue(JsonPath.read(json, "$.classifications").toString().contains(dnaDatasetKey));
+    // the DNA-assisted classification is kept apart from the classifications
+    String checklistKey = OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY;
+    List<String> checklistKeys = JsonPath.read(json, "$.checklistKey");
+    assertEquals(
+        Set.copyOf(checklistKeys),
+        JsonPath.<Map<String, Object>>read(json, "$.classifications").keySet());
+    assertEquals("Classified from 1 sequence", JsonPath.read(json, "$.dnaClassifications.remarks"));
     assertEquals(
         "Panthera leo (Linnaeus, 1758)",
-        JsonPath.read(json, "$.classifications['" + dnaDatasetKey + "'].usage.name"));
+        JsonPath.read(
+            json, "$.dnaClassifications.classifications['" + checklistKey + "'].usage.name"));
 
     java.nio.file.Path hdfsDir =
         java.nio.file.Path.of(basePath)
             .resolve(testUuid)
             .resolve(String.valueOf(attempt))
             .resolve(Directories.OCCURRENCE_HDFS);
-    Dataset<OccurrenceHdfsRecord> hdfsRecords =
-        spark.read().parquet(hdfsDir.toString()).as(Encoders.bean(OccurrenceHdfsRecord.class));
-    List<OccurrenceHdfsRecord> hdfsOutput = hdfsRecords.collectAsList();
+    List<Row> hdfsOutput = spark.read().parquet(hdfsDir.toString()).collectAsList();
     assertEquals(1, hdfsOutput.size());
-    OccurrenceHdfsRecord hdfsRecord = hdfsOutput.get(0);
-    assertTrue(
-        hdfsRecord.getChecklistkey().stream()
-            .map(Object::toString)
-            .anyMatch(dnaDatasetKey::equals));
-    assertTrue(hdfsRecord.getClassifications().containsKey(dnaDatasetKey));
-    assertFalse(hdfsRecord.getClassifications().get(dnaDatasetKey).isEmpty());
+    Row hdfsRow = hdfsOutput.get(0);
+    assertEquals(checklistKeys, hdfsRow.getList(hdfsRow.fieldIndex("checklistkey")));
+    assertEquals(
+        Set.copyOf(checklistKeys),
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("classifications")).keySet());
+
+    Map<String, scala.collection.Seq<String>> dnaClassifications =
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnaclassifications"));
+    assertEquals(Set.of(checklistKey), dnaClassifications.keySet());
+    assertFalse(dnaClassifications.get(checklistKey).isEmpty());
+
+    // the DNA-assisted classification of the default checklist is configured as "col_dna"
+    Row colDnaClassification = hdfsRow.getStruct(hdfsRow.fieldIndex("col_dna_classification"));
+    assertEquals("Panthera leo (Linnaeus, 1758)", colDnaClassification.getAs("scientificname"));
+    assertFalse(colDnaClassification.<scala.collection.Seq<String>>getAs("taxonkeys").isEmpty());
+    assertEquals(
+        Set.of(checklistKey),
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnataxonomicstatuses")).keySet());
+    assertEquals(
+        Set.of(checklistKey),
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnataxonomicissues")).keySet());
+    // the struct takes the status of the DNA-assisted match
+    assertEquals(
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnataxonomicstatuses")).get(checklistKey),
+        colDnaClassification.getAs("taxonomicstatus"));
   }
 
   private void checkJsonOutputs(String outputFile, String testUuid, int attempt) throws Exception {

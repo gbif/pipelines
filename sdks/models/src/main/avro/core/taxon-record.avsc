@@ -168,5 +168,17 @@
       {"name" : "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name" : "taxonRecords", "type" : { "type" : "array", "items" : "TaxonRecord" }, "default": [] }
     ]
+  },
+  {
+    "name" : "DnaTaxonRecord",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "doc" : "The DNA-assisted taxonomic records of an occurrence, one per checklist",
+    "fields" : [
+      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
+      {"name" : "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+      {"name" : "remarks", "type" : ["null", "string"], "default" : null, "doc":"Remarks of the sequence classifier, common to all the checklists"},
+      {"name" : "taxonRecords", "type" : { "type" : "array", "items" : "TaxonRecord" }, "default": [] }
+    ]
   }
 ]

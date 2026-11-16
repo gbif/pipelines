@@ -189,15 +189,15 @@ public class TaxonomyDnaPipeline {
     }
 
     if (!requests.isEmpty()) {
-      List<TaxonRecord> taxa = classifyAndInterpret(client, taxonomyInterpreter, requests);
+      List<DnaTaxonRecord> taxa = classifyAndInterpret(client, taxonomyInterpreter, requests);
 
-      Map<String, TaxonRecord> dnaTaxonById = new HashMap<>();
-      for (TaxonRecord taxon : taxa) {
+      Map<String, DnaTaxonRecord> dnaTaxonById = new HashMap<>();
+      for (DnaTaxonRecord taxon : taxa) {
         dnaTaxonById.put(taxon.getId(), taxon);
       }
 
       for (Occurrence occurrence : occurrencesRequested) {
-        TaxonRecord taxon = dnaTaxonById.get(occurrence.getId());
+        DnaTaxonRecord taxon = dnaTaxonById.get(occurrence.getId());
         if (taxon != null) {
           occurrence.setDnaTaxon(MAPPER.writeValueAsString(taxon));
         }
@@ -243,18 +243,30 @@ public class TaxonomyDnaPipeline {
     return occurrence;
   }
 
-  private static List<TaxonRecord> classifyAndInterpret(
+  private static List<DnaTaxonRecord> classifyAndInterpret(
       SequenceClassifierServiceClient client,
       BiConsumer<ClassifyOccurrenceResponse, TaxonRecord> taxonomyInterpreter,
       List<ClassifyOccurrenceRequest> batch) {
 
     List<ClassifyOccurrenceResponse> results = client.classifyBatch(batch);
 
-    List<TaxonRecord> records = new ArrayList<>(batch.size());
+    List<DnaTaxonRecord> records = new ArrayList<>(batch.size());
     for (ClassifyOccurrenceResponse result : results) {
-      TaxonRecord tr = TaxonRecord.newBuilder().setCreated(System.currentTimeMillis()).build();
+      long created = System.currentTimeMillis();
+      TaxonRecord tr = TaxonRecord.newBuilder().setCreated(created).build();
       taxonomyInterpreter.accept(result, tr);
-      records.add(tr);
+
+      // the remarks of the classifier are common to all the checklists
+      records.add(
+          DnaTaxonRecord.newBuilder()
+              .setId(result.getGbifID())
+              .setCreated(created)
+              .setRemarks(
+                  result.getClassification() != null
+                      ? result.getClassification().getRemarks()
+                      : null)
+              .setTaxonRecords(new ArrayList<>(List.of(tr)))
+              .build());
     }
     return records;
   }

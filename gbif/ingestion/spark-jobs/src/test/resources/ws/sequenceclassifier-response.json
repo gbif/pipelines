@@ -10,7 +10,8 @@
       "order": "Carnivora",
       "family": "Felidae",
       "genus": "Panthera",
-      "species": "Panthera leo"
+      "species": "Panthera leo",
+      "remarks": "Classified from 1 sequence"
     }
   }
 ]

@@ -33,7 +33,7 @@ public class DnaTaxonomyInterpreter {
 
       // The ws echoes the gbifID of the occurrence it was given
       tr.setId(result.getGbifID());
-      tr.setDatasetKey(checklistKey + "_dna_assisted");
+      tr.setDatasetKey(checklistKey);
 
       NameUsageMatchRequest request =
           createNameUsageMatchRequest(result.getClassification(), checklistKey);

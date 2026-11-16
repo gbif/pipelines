@@ -820,7 +820,7 @@ public class OccurrenceInterpretationPipeline {
                               MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
                           .dnaTaxonRecord(
                               record.getDnaTaxon() != null
-                                  ? MAPPER.readValue(record.getDnaTaxon(), TaxonRecord.class)
+                                  ? MAPPER.readValue(record.getDnaTaxon(), DnaTaxonRecord.class)
                                   : null)
                           .build();
 
@@ -894,7 +894,7 @@ public class OccurrenceInterpretationPipeline {
                               MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
                           .dnaTaxonRecord(
                               record.getDnaTaxon() != null
-                                  ? MAPPER.readValue(record.getDnaTaxon(), TaxonRecord.class)
+                                  ? MAPPER.readValue(record.getDnaTaxon(), DnaTaxonRecord.class)
                                   : null)
                           .build();
 
@@ -902,13 +902,18 @@ public class OccurrenceInterpretationPipeline {
                 },
             Encoders.bean(OccurrenceHdfsRecord.class));
 
-    if (config.getTableBuildConfig() == null
-        || config.getTableBuildConfig().getClassifications() == null
-        || config.getTableBuildConfig().getClassifications().isEmpty()) {
+    if (config.getTableBuildConfig() == null) {
       return dataset.toDF();
     }
 
-    Map<String, String> uuidToColumnPrefix = config.getTableBuildConfig().getClassifications();
+    Map<String, String> uuidToColumnPrefix =
+        Optional.ofNullable(config.getTableBuildConfig().getClassifications()).orElse(Map.of());
+    Map<String, String> dnaUuidToColumnPrefix =
+        Optional.ofNullable(config.getTableBuildConfig().getDnaClassifications()).orElse(Map.of());
+
+    if (uuidToColumnPrefix.isEmpty() && dnaUuidToColumnPrefix.isEmpty()) {
+      return dataset.toDF();
+    }
 
     Dataset<Row> withClassifications = dataset.toDF();
 
@@ -929,53 +934,76 @@ public class OccurrenceInterpretationPipeline {
       withClassifications =
           withClassifications.withColumn(
               newStructName,
-              struct(
-                  element_at(classification, lit("taxonkey")).as("taxonkey"),
-                  element_at(classification, lit("scientificname")).as("scientificname"),
-                  element_at(classification, lit("acceptedtaxonkey")).as("acceptedtaxonkey"),
-                  element_at(classification, lit("acceptednameusageid")).as("acceptednameusageid"),
-                  element_at(classification, lit("acceptedscientificname"))
-                      .as("acceptedscientificname"),
-                  element_at(classification, lit("genericname")).as("genericname"),
-                  element_at(classification, lit("specificepithet")).as("specificepithet"),
-                  element_at(classification, lit("infraspecificepithet"))
-                      .as("infraspecificepithet"),
-                  element_at(classification, lit("infragenericepithet")).as("infragenericepithet"),
-                  element_at(classification, lit("taxonrank")).as("taxonrank"),
-                  element_at(classification, lit("kingdomkey")).as("kingdomkey"),
-                  element_at(classification, lit("phylumkey")).as("phylumkey"),
-                  element_at(classification, lit("classkey")).as("classkey"),
-                  element_at(classification, lit("orderkey")).as("orderkey"),
-                  element_at(classification, lit("superfamilykey")).as("superfamilykey"),
-                  element_at(classification, lit("familykey")).as("familykey"),
-                  element_at(classification, lit("subfamilykey")).as("subfamilykey"),
-                  element_at(classification, lit("tribekey")).as("tribekey"),
-                  element_at(classification, lit("subtribekey")).as("subtribekey"),
-                  element_at(classification, lit("genuskey")).as("genuskey"),
-                  element_at(classification, lit("subgenuskey")).as("subgenuskey"),
-                  element_at(classification, lit("specieskey")).as("specieskey"),
-                  element_at(classification, lit("kingdom")).as("kingdom"),
-                  element_at(classification, lit("phylum")).as("phylum"),
-                  element_at(classification, lit("class")).as("class"),
-                  element_at(classification, lit("order")).as("order"),
-                  element_at(classification, lit("superfamily")).as("superfamily"),
-                  element_at(classification, lit("family")).as("family"),
-                  element_at(classification, lit("subfamily")).as("subfamily"),
-                  element_at(classification, lit("tribe")).as("tribe"),
-                  element_at(classification, lit("subtribe")).as("subtribe"),
-                  element_at(classification, lit("genus")).as("genus"),
-                  element_at(classification, lit("subgenus")).as("subgenus"),
-                  element_at(classification, lit("species")).as("species"),
-                  element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
-                  split(element_at(classification, lit("environments")), ",").as("environments"),
-                  taxonKeys.as("taxonkeys"),
-                  coalesce(taxonomicIssue, array().cast("array<string>")).as("taxonomicissue"),
-                  taxonomicStatus.as("taxonomicstatus")));
+              classificationStruct(classification, taxonomicStatus, taxonomicIssue, taxonKeys));
+    }
+
+    // the DNA-assisted classifications
+    for (Map.Entry<String, String> uuidToColumn : dnaUuidToColumnPrefix.entrySet()) {
+
+      String uuid = uuidToColumn.getKey();
+      String columnPrefix = uuidToColumn.getValue();
+
+      withClassifications =
+          withClassifications.withColumn(
+              columnPrefix + "_classification",
+              classificationStruct(
+                  element_at(col("dnaclassificationdetails"), lit(uuid)),
+                  element_at(col("dnataxonomicstatuses"), lit(uuid)),
+                  element_at(col("dnataxonomicissues"), lit(uuid)),
+                  element_at(col("dnaclassifications"), lit(uuid))));
     }
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
     withClassifications = withClassifications.coalesce(numshards);
     return withClassifications;
+  }
+
+  /**
+   * Builds the struct of a classification column from the entries of a checklist in the HDFS
+   * classification maps.
+   */
+  private static Column classificationStruct(
+      Column classification, Column taxonomicStatus, Column taxonomicIssue, Column taxonKeys) {
+    return struct(
+        element_at(classification, lit("taxonkey")).as("taxonkey"),
+        element_at(classification, lit("scientificname")).as("scientificname"),
+        element_at(classification, lit("acceptedtaxonkey")).as("acceptedtaxonkey"),
+        element_at(classification, lit("acceptednameusageid")).as("acceptednameusageid"),
+        element_at(classification, lit("acceptedscientificname")).as("acceptedscientificname"),
+        element_at(classification, lit("genericname")).as("genericname"),
+        element_at(classification, lit("specificepithet")).as("specificepithet"),
+        element_at(classification, lit("infraspecificepithet")).as("infraspecificepithet"),
+        element_at(classification, lit("infragenericepithet")).as("infragenericepithet"),
+        element_at(classification, lit("taxonrank")).as("taxonrank"),
+        element_at(classification, lit("kingdomkey")).as("kingdomkey"),
+        element_at(classification, lit("phylumkey")).as("phylumkey"),
+        element_at(classification, lit("classkey")).as("classkey"),
+        element_at(classification, lit("orderkey")).as("orderkey"),
+        element_at(classification, lit("superfamilykey")).as("superfamilykey"),
+        element_at(classification, lit("familykey")).as("familykey"),
+        element_at(classification, lit("subfamilykey")).as("subfamilykey"),
+        element_at(classification, lit("tribekey")).as("tribekey"),
+        element_at(classification, lit("subtribekey")).as("subtribekey"),
+        element_at(classification, lit("genuskey")).as("genuskey"),
+        element_at(classification, lit("subgenuskey")).as("subgenuskey"),
+        element_at(classification, lit("specieskey")).as("specieskey"),
+        element_at(classification, lit("kingdom")).as("kingdom"),
+        element_at(classification, lit("phylum")).as("phylum"),
+        element_at(classification, lit("class")).as("class"),
+        element_at(classification, lit("order")).as("order"),
+        element_at(classification, lit("superfamily")).as("superfamily"),
+        element_at(classification, lit("family")).as("family"),
+        element_at(classification, lit("subfamily")).as("subfamily"),
+        element_at(classification, lit("tribe")).as("tribe"),
+        element_at(classification, lit("subtribe")).as("subtribe"),
+        element_at(classification, lit("genus")).as("genus"),
+        element_at(classification, lit("subgenus")).as("subgenus"),
+        element_at(classification, lit("species")).as("species"),
+        element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
+        split(element_at(classification, lit("environments")), ",").as("environments"),
+        taxonKeys.as("taxonkeys"),
+        coalesce(taxonomicIssue, array().cast("array<string>")).as("taxonomicissue"),
+        taxonomicStatus.as("taxonomicstatus"));
   }
 }

@@ -395,15 +395,21 @@ public class OccurrenceJsonConverterTest {
             .setDiagnostics(diagnostic)
             .build();
 
-    TaxonRecord dnaTaxonRecord =
-        TaxonRecord.newBuilder()
+    DnaTaxonRecord dnaTaxonRecord =
+        DnaTaxonRecord.newBuilder()
             .setId("777")
-            .setDatasetKey("dna-dataset-key")
-            .setAcceptedUsage(au)
-            .setClassification(rankedNameList)
-            .setUsage(synonym)
-            .setSynonym(true)
-            .setDiagnostics(diagnostic)
+            .setRemarks("dna remarks")
+            .setTaxonRecords(
+                List.of(
+                    TaxonRecord.newBuilder()
+                        .setId("777")
+                        .setDatasetKey(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY)
+                        .setAcceptedUsage(au)
+                        .setClassification(rankedNameList)
+                        .setUsage(synonym)
+                        .setSynonym(true)
+                        .setDiagnostics(diagnostic)
+                        .build()))
             .build();
 
     // grscicoll
@@ -719,12 +725,19 @@ public class OccurrenceJsonConverterTest {
     assertEquals(2, dnaSequenceID.size());
     dnaSequenceID.forEach(n -> assertFalse(Strings.isNullOrEmpty(n.asText())));
 
+    // the DNA-assisted classification is kept apart from the classifications
+    assertEquals(1, result.path("classifications").size());
     assertTrue(result.path("classifications").has(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY));
-    assertTrue(result.path("classifications").has("dna-dataset-key"));
-    assertEquals(2, result.path("checklistKey").size());
+    assertEquals(1, result.path("checklistKey").size());
     assertEquals(
         OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY, result.path("checklistKey").get(0).asText());
-    assertEquals("dna-dataset-key", result.path("checklistKey").get(1).asText());
+    JsonNode dnaClassifications = result.path("dnaClassifications");
+    assertEquals("dna remarks", dnaClassifications.path("remarks").asText());
+    assertEquals(1, dnaClassifications.path("classifications").size());
+    assertTrue(
+        dnaClassifications
+            .path("classifications")
+            .has(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY));
   }
 
   @Test

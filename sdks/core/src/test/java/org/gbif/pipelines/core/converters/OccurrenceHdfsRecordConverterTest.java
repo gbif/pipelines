@@ -652,7 +652,7 @@ public class OccurrenceHdfsRecordConverterTest {
   }
 
   @Test
-  public void taxonMapperIncludesDnaTaxonRecordTest() {
+  public void dnaTaxonRecordKeptApartTest() {
     RankedNameWithAuthorship usage =
         RankedNameWithAuthorship.newBuilder()
             .setKey("10")
@@ -680,7 +680,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
     TaxonRecord dnaTaxon =
         TaxonRecord.newBuilder()
-            .setDatasetKey("dna-dataset-key")
+            .setDatasetKey(Constants.COL_DATASET_KEY.toString())
             .setUsage(usage)
             .setClassification(
                 List.of(
@@ -694,6 +694,7 @@ public class OccurrenceHdfsRecordConverterTest {
                         .setName("DNA_PHYLUM")
                         .setRank(Rank.PHYLUM.toString())
                         .build()))
+            .setIssues(IssueRecord.newBuilder().setIssueList(List.of("TAXON_MATCH_FUZZY")).build())
             .build();
 
     OccurrenceHdfsRecord hdfsRecord =
@@ -702,22 +703,44 @@ public class OccurrenceHdfsRecordConverterTest {
                 MultiTaxonRecord.newBuilder()
                     .setTaxonRecords(new ArrayList<>(List.of(gbifTaxon)))
                     .build())
-            .dnaTaxonRecord(dnaTaxon)
+            .dnaTaxonRecord(
+                DnaTaxonRecord.newBuilder()
+                    .setRemarks("dna remarks")
+                    .setTaxonRecords(List.of(dnaTaxon))
+                    .build())
             .build()
             .convert();
 
-    Assert.assertEquals(2, hdfsRecord.getChecklistkey().size());
-    Assert.assertEquals(Constants.COL_DATASET_KEY.toString(), hdfsRecord.getChecklistkey().get(0));
-    Assert.assertEquals("dna-dataset-key", hdfsRecord.getChecklistkey().get(1));
-
+    // the DNA-assisted classification doesn't go into the classifications
+    Assert.assertEquals(
+        List.of(Constants.COL_DATASET_KEY.toString()), hdfsRecord.getChecklistkey());
+    Assert.assertEquals(
+        Map.of(Constants.COL_DATASET_KEY.toString(), List.of("1", "2")),
+        hdfsRecord.getClassifications());
+    Assert.assertEquals(
+        Map.of(Constants.COL_DATASET_KEY.toString(), List.of("101", "102")),
+        hdfsRecord.getDnaclassifications());
+    Assert.assertEquals(
+        "DNA_KINGDOM",
+        hdfsRecord
+            .getDnaclassificationdetails()
+            .get(Constants.COL_DATASET_KEY.toString())
+            .get("kingdom"));
     Assert.assertTrue(
-        hdfsRecord.getClassifications().containsKey(Constants.COL_DATASET_KEY.toString()));
-    Assert.assertTrue(hdfsRecord.getClassifications().containsKey("dna-dataset-key"));
+        hdfsRecord.getDnataxonomicstatuses().containsKey(Constants.COL_DATASET_KEY.toString()));
     Assert.assertEquals(
-        List.of("1", "2"),
-        hdfsRecord.getClassifications().get(Constants.COL_DATASET_KEY.toString()));
-    Assert.assertEquals(
-        List.of("101", "102"), hdfsRecord.getClassifications().get("dna-dataset-key"));
+        Map.of(Constants.COL_DATASET_KEY.toString(), List.of("TAXON_MATCH_FUZZY")),
+        hdfsRecord.getDnataxonomicissues());
+  }
+
+  @Test
+  public void noDnaTaxonRecordTest() {
+    Assert.assertTrue(
+        OccurrenceHdfsRecordConverter.builder()
+            .build()
+            .convert()
+            .getDnaclassifications()
+            .isEmpty());
   }
 
   @Test

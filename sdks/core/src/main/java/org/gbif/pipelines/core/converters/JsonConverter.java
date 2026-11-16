@@ -353,7 +353,12 @@ public class JsonConverter {
   }
 
   public static Map<String, Classification> convertToClassifications(MultiTaxonRecord taxon) {
-    return taxon.getTaxonRecords().stream()
+    return convertToClassifications(taxon.getTaxonRecords());
+  }
+
+  public static Map<String, Classification> convertToClassifications(
+      List<TaxonRecord> taxonRecords) {
+    return taxonRecords.stream()
         .filter(
             tr ->
                 tr.getUsage() != null
