@@ -22,8 +22,8 @@ import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /**
- * Validates the occurrenceIDs and triplets (institutionCode, collectionCode, catalogNumber) of
- * XML verbatim records, producing the same {@link OccurrenceValidationReport} the crawler produces for
+ * Validates the occurrenceIDs and triplets (institutionCode, collectionCode, catalogNumber) of XML
+ * verbatim records, producing the same {@link OccurrenceValidationReport} the crawler produces for
  * DwC archives, and decides from it whether the triplets and occurrenceIDs can be used to look up
  * and assign GBIF ids.
  *
@@ -50,9 +50,6 @@ public class XmlIdentifierValidation {
    * Without a report the triplets are assumed to be valid.
    */
   public static boolean tripletsValid(OccurrenceValidationReport report) {
-    if (report == null) {
-      return true;
-    }
     return report.getUniqueTriplets() > 0
         && report.getCheckedRecords() - report.getRecordsWithInvalidTriplets()
             == report.getUniqueTriplets();
@@ -63,9 +60,6 @@ public class XmlIdentifierValidation {
    * occurrenceIds are assumed to be valid.
    */
   public static boolean occurrenceIdsValid(OccurrenceValidationReport report) {
-    if (report == null) {
-      return true;
-    }
     return report.getCheckedRecords() > 0
         && report.getUniqueOccurrenceIds() == report.getCheckedRecords();
   }
