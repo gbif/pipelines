@@ -50,6 +50,9 @@ public class XmlIdentifierValidation {
    * Without a report the triplets are assumed to be valid.
    */
   public static boolean tripletsValid(OccurrenceValidationReport report) {
+    if (report == null) {
+      return true;
+    }
     return report.getUniqueTriplets() > 0
         && report.getCheckedRecords() - report.getRecordsWithInvalidTriplets()
             == report.getUniqueTriplets();
@@ -60,6 +63,9 @@ public class XmlIdentifierValidation {
    * occurrenceIds are assumed to be valid.
    */
   public static boolean occurrenceIdsValid(OccurrenceValidationReport report) {
+    if (report == null) {
+      return true;
+    }
     return report.getCheckedRecords() > 0
         && report.getUniqueOccurrenceIds() == report.getCheckedRecords();
   }
