@@ -13,6 +13,9 @@
  */
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.spark.ArgsConstants.OCCURRENCE_ID_VALID_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.TRIPLET_VALID_ARG;
+
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
@@ -44,7 +47,9 @@ public class ValidatorInterpretationDistributedCallback extends ValidatorInterpr
         pipelinesConfig.getAirflowConfig().validatorInterpretationDag,
         StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
         recordsNumber,
-        List.of());
+        List.of(
+            TRIPLET_VALID_ARG + "=" + message.getValidationResult().isTripletValid(),
+            OCCURRENCE_ID_VALID_ARG + "=" + message.getValidationResult().isOccurrenceIdValid()));
   }
 
   @Override
