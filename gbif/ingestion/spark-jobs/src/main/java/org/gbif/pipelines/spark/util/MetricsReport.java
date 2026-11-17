@@ -65,6 +65,13 @@ import org.gbif.pipelines.spark.TableBuildPipeline;
  * attempt column), joined on dataset key from the registry's dataset export TSV. They are blank for
  * a dataset missing from the export.
  *
+ * <p>Next come {@value #OPEN_ISSUE_COUNT_COLUMN}, {@value #OPEN_ISSUES_COLUMN}, {@value
+ * #CLOSED_ISSUE_COUNT_COLUMN} and {@value #CLOSED_ISSUES_COLUMN} (issues as space separated URLs):
+ * the issues in the GitHub repository {@code --githubRepo} (default {@value #GITHUB_REPO}, blank to
+ * omit the columns) labelled with the dataset key. Fetching every issue takes one API request per
+ * 100 issues, so set {@code githubToken} in the pipelines config to avoid the unauthenticated limit
+ * of 60 an hour.
+ *
  * <p>The {@code extension_*} counts in {@value #ARCHIVE_TO_VERBATIM_FILENAME} (records per DwC-A
  * extension, e.g. {@code extension_rs_Multimedia}) vary by dataset, so the report has one column
  * for every extension found in any dataset, after the fixed metric columns. A dataset without that
@@ -89,10 +96,39 @@ public class MetricsReport {
   static final String ES_FACET_PATH =
       "/occurrence/search?limit=0&facet=datasetKey&facetLimit=120000";
   static final String DATASET_EXPORT_URL = "dataset/search/export";
+  /** Dataset key to the URLs of the open and of the closed GitHub issues labelled with it. */
+  record DatasetIssues(Map<String, List<String>> open, Map<String, List<String>> closed) {
+
+    /** The open then closed issue count and URL cells, each with a leading comma. */
+    String cells(String datasetId) {
+      return issueCells(open, datasetId) + issueCells(closed, datasetId);
+    }
+
+    private static String issueCells(Map<String, List<String>> issues, String datasetId) {
+      List<String> urls = issues.getOrDefault(datasetId, List.of());
+      return "," + urls.size() + "," + csvCell(String.join(" ", urls));
+    }
+  }
+
   /** The report columns taken from the dataset export, in order, and the export column names. */
   static final List<String> DATASET_METADATA_COLUMNS = List.of("title", "type", "sub_type");
 
   static final String DATASET_KEY_COLUMN = "dataset_key";
+
+  static final String GITHUB_REPO = "gbif/ingestion-management";
+  static final String GITHUB_API = "https://api.github.com";
+  static final String OPEN_ISSUE_COUNT_COLUMN = "openIssueCount";
+  static final String OPEN_ISSUES_COLUMN = "openIssues";
+  static final String CLOSED_ISSUE_COUNT_COLUMN = "closedIssueCount";
+  static final String CLOSED_ISSUES_COLUMN = "closedIssues";
+  /** Issues are labelled with the bare dataset key (other keys have a prefix, e.g. "pub: "). */
+  static final java.util.regex.Pattern DATASET_KEY_LABEL =
+      java.util.regex.Pattern.compile(
+          "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          java.util.regex.Pattern.CASE_INSENSITIVE);
+  /** The next page URL in a GitHub API Link header. */
+  static final java.util.regex.Pattern NEXT_LINK =
+      java.util.regex.Pattern.compile("<([^>]+)>;\\s*rel=\"next\"");
 
   /** The report's columns from the dataset export, in {@link #DATASET_METADATA_COLUMNS} order. */
   record DatasetMetadata(String title, String type, String subType) {
@@ -237,6 +273,13 @@ public class MetricsReport {
         names = "--maxPreviousRuns",
         description = "Maximum number of previous runs listed in index.json")
     private int maxPreviousRuns = DEFAULT_MAX_PREVIOUS_RUNS;
+
+    @Parameter(
+        names = "--githubRepo",
+        description =
+            "GitHub repository (owner/name) whose open issues, labelled with the dataset key, are"
+                + " added to the report. Blank to omit")
+    private String githubRepo = GITHUB_REPO;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -262,25 +305,34 @@ public class MetricsReport {
     PipelinesConfig config = loadConfig(args.config);
     log.info("Loaded config, scanning output path {}", config.getOutputPath());
 
-    log.info("Step 1/4: fetching dataset metadata");
+    log.info("Step 1/5: fetching dataset metadata");
     Map<String, DatasetMetadata> datasetMetadata =
         fetchDatasetMetadata(
             config.getGbifApi().getWsUrl() + DATASET_EXPORT_URL, config.getGbifApi());
 
+    DatasetIssues datasetIssues = null;
+    if (args.githubRepo != null && !args.githubRepo.isBlank()) {
+      log.info("Step 2/5: fetching open and closed issues from {}", args.githubRepo);
+      datasetIssues =
+          fetchGithubIssues(args.githubRepo, config.getGithubToken(), config.getGbifApi());
+    } else {
+      log.info("Step 2/5: GitHub issues disabled (--githubRepo is blank)");
+    }
+
     Map<String, Long> esCounts = null;
     if (args.esCounts) {
-      log.info("Step 2/4: fetching Elasticsearch counts");
+      log.info("Step 3/5: fetching Elasticsearch counts");
       esCounts = fetchEsCounts(config);
     } else {
-      log.info("Step 2/4: Elasticsearch counts disabled (--esCounts=true to enable)");
+      log.info("Step 3/5: Elasticsearch counts disabled (--esCounts=true to enable)");
     }
 
     Map<String, Long> icebergCounts = null;
     if (args.icebergCounts) {
-      log.info("Step 3/4: fetching occurrence table counts");
+      log.info("Step 4/5: fetching occurrence table counts");
       icebergCounts = fetchIcebergCounts(config, args.master);
     } else {
-      log.info("Step 3/4: occurrence table counts disabled (--icebergCounts=true to enable)");
+      log.info("Step 4/5: occurrence table counts disabled (--icebergCounts=true to enable)");
     }
 
     Configuration hadoopConf = new Configuration();
@@ -294,13 +346,14 @@ public class MetricsReport {
             : "metrics-report-" + System.currentTimeMillis() + ".csv.gz";
     Path reportPath = new Path(args.outputDir, reportFilename(filename));
 
-    log.info("Step 4/4: scanning datasets and writing report to {}", reportPath);
+    log.info("Step 5/5: scanning datasets and writing report to {}", reportPath);
     int rows =
         writeReport(
             fileSystem,
             config,
             reportPath,
             datasetMetadata,
+            datasetIssues,
             esCounts,
             icebergCounts,
             args.threads,
@@ -416,6 +469,98 @@ public class MetricsReport {
       return "\"" + value.replace("\"", "\"\"") + "\"";
     }
     return value;
+  }
+
+  /**
+   * Fetches all (open and closed) issues of a GitHub repository, following pagination, and returns
+   * dataset key to the URLs of the issues labelled with it.
+   *
+   * @param token GitHub API token sent as a Bearer token, or null/blank for unauthenticated
+   *     requests
+   * @throws IOException if a request fails (e.g. the API rate limit is hit)
+   */
+  static DatasetIssues fetchGithubIssues(String repo, String token, WsConfig api)
+      throws IOException, InterruptedException {
+
+    HttpClient client =
+        HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(api.getTimeoutSec()))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
+    ObjectMapper mapper = new ObjectMapper();
+    long start = System.currentTimeMillis();
+
+    DatasetIssues issues = new DatasetIssues(new HashMap<>(), new HashMap<>());
+    String url = GITHUB_API + "/repos/" + repo + "/issues?state=all&per_page=100";
+    int pages = 0;
+    while (url != null) {
+      log.info("Fetching issues from {}", url);
+      HttpRequest.Builder request =
+          HttpRequest.newBuilder(URI.create(url))
+              .timeout(Duration.ofSeconds(Math.max(api.getTimeoutSec(), 60)))
+              .header("Accept", "application/vnd.github+json")
+              .header("X-GitHub-Api-Version", "2022-11-28")
+              .GET();
+      if (token != null && !token.isBlank()) {
+        request.header("Authorization", "Bearer " + token);
+      }
+      HttpResponse<String> response =
+          client.send(request.build(), HttpResponse.BodyHandlers.ofString(UTF_8));
+      if (response.statusCode() != 200) {
+        throw new IOException(
+            "GitHub returned HTTP "
+                + response.statusCode()
+                + " for "
+                + url
+                + " (rate limit remaining: "
+                + response.headers().firstValue("x-ratelimit-remaining").orElse("?")
+                + "; set githubToken in the pipelines config to raise it)");
+      }
+      addDatasetIssues(mapper.readTree(response.body()), issues);
+      url = nextLink(response.headers().firstValue("link").orElse(null));
+      pages++;
+    }
+    log.info(
+        "Fetched issues from {}: {} datasets with open, {} with closed ({} pages) in {} ms",
+        repo,
+        issues.open().size(),
+        issues.closed().size(),
+        pages,
+        System.currentTimeMillis() - start);
+    return issues;
+  }
+
+  /**
+   * Adds the issues in a GitHub issues API page to the open or closed dataset key to issue URLs, by
+   * their state and dataset key labels. Pull requests (also returned by the issues API) are
+   * skipped.
+   */
+  static void addDatasetIssues(JsonNode page, DatasetIssues issues) {
+    for (JsonNode issue : page) {
+      if (issue.has("pull_request")) {
+        continue;
+      }
+      Map<String, List<String>> byDataset =
+          "closed".equals(issue.path("state").asText()) ? issues.closed() : issues.open();
+      String issueUrl = issue.path("html_url").asText();
+      for (JsonNode label : issue.path("labels")) {
+        String name = label.path("name").asText().trim();
+        if (DATASET_KEY_LABEL.matcher(name).matches()) {
+          byDataset
+              .computeIfAbsent(name.toLowerCase(), k -> new java.util.ArrayList<>())
+              .add(issueUrl);
+        }
+      }
+    }
+  }
+
+  /** The {@code rel="next"} URL in a GitHub Link header, or null on the last page. */
+  static String nextLink(String linkHeader) {
+    if (linkHeader == null) {
+      return null;
+    }
+    java.util.regex.Matcher matcher = NEXT_LINK.matcher(linkHeader);
+    return matcher.find() ? matcher.group(1) : null;
   }
 
   /**
@@ -538,6 +683,8 @@ public class MetricsReport {
    *
    * @param datasetMetadata datasetKey to export metadata (title, type, sub_type); null or a missing
    *     dataset leaves those cells blank
+   * @param datasetIssues datasetKey to open and closed GitHub issue URLs, or null to omit the
+   *     columns
    * @param esCounts datasetKey to Elasticsearch count, or null to omit the column
    * @param icebergCounts datasetKey to occurrence table count, or null to omit the column
    * @param threads number of threads reading the metrics files
@@ -549,6 +696,7 @@ public class MetricsReport {
       PipelinesConfig config,
       Path reportPath,
       Map<String, DatasetMetadata> datasetMetadata,
+      DatasetIssues datasetIssues,
       Map<String, Long> esCounts,
       Map<String, Long> icebergCounts,
       int threads,
@@ -604,6 +752,7 @@ public class MetricsReport {
                           datasetId,
                           attempt,
                           metadata,
+                          datasetIssues,
                           esCounts,
                           icebergCounts);
                   logProgress(completed.incrementAndGet(), total, start);
@@ -644,6 +793,14 @@ public class MetricsReport {
 
       StringBuilder header = new StringBuilder("datasetUUID,attempt");
       DATASET_METADATA_COLUMNS.forEach(column -> header.append(',').append(column));
+      if (datasetIssues != null) {
+        List.of(
+                OPEN_ISSUE_COUNT_COLUMN,
+                OPEN_ISSUES_COLUMN,
+                CLOSED_ISSUE_COUNT_COLUMN,
+                CLOSED_ISSUES_COLUMN)
+            .forEach(column -> header.append(',').append(column));
+      }
       for (MetricsFile metricsFile : METRICS_FILES) {
         for (String column : metricsFile.columns()) {
           header.append(',').append(column);
@@ -680,6 +837,18 @@ public class MetricsReport {
         "  {}: {} datasets not in the dataset export (left blank)",
         DATASET_METADATA_COLUMNS,
         metadataMissing);
+    if (datasetIssues != null) {
+      log.info(
+          "  {}: {} datasets with open issues ({} datasets labelled in the repository)",
+          OPEN_ISSUES_COLUMN,
+          datasetAttempts.keySet().stream().filter(datasetIssues.open()::containsKey).count(),
+          datasetIssues.open().size());
+      log.info(
+          "  {}: {} datasets with closed issues ({} datasets labelled in the repository)",
+          CLOSED_ISSUES_COLUMN,
+          datasetAttempts.keySet().stream().filter(datasetIssues.closed()::containsKey).count(),
+          datasetIssues.closed().size());
+    }
     if (esCounts != null) {
       log.info("  {}: {} datasets not in Elasticsearch (written as 0)", ES_COUNT_COLUMN, esMissing);
     }
@@ -822,6 +991,7 @@ public class MetricsReport {
       String datasetId,
       int attempt,
       Map<String, DatasetMetadata> datasetMetadata,
+      DatasetIssues datasetIssues,
       Map<String, Long> esCounts,
       Map<String, Long> icebergCounts)
       throws IOException {
@@ -834,7 +1004,8 @@ public class MetricsReport {
         new StringBuilder(datasetId)
             .append(',')
             .append(attempt)
-            .append(DatasetMetadata.cells(metadata));
+            .append(DatasetMetadata.cells(metadata))
+            .append(datasetIssues != null ? datasetIssues.cells(datasetId) : "");
     List<String> missingFiles = new java.util.ArrayList<>();
     Map<String, Long> extensionCounts = null;
     for (MetricsFile metricsFile : METRICS_FILES) {
