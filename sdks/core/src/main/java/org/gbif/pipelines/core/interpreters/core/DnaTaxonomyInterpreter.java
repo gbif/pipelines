@@ -38,9 +38,11 @@ public class DnaTaxonomyInterpreter {
       NameUsageMatchRequest request =
           createNameUsageMatchRequest(result.getClassification(), checklistKey);
 
-      // No valid sequences, no match, or the ws failed for this occurrence: nothing to look up
+      // No valid sequences, no match, or the ws failed for this occurrence: nothing to look up,
+      // represented like a name matching without a match
       if (request == null) {
         addIssue(tr, TAXON_MATCH_NONE);
+        TaxonomyInterpreter.setNoMatch(checklistKey, tr);
         return;
       }
 

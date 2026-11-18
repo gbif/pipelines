@@ -114,18 +114,24 @@ public class TaxonomyInterpreter {
         nameUsageMatchRequest,
         kvStore,
         tr,
-        r -> {
-          if (Constants.NUB_DATASET_KEY.toString().equals(checklistKey)) {
-            tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
-            tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
-          } else {
-            tr.setUsage(null);
-            tr.setClassification(Collections.emptyList());
-          }
-        },
+        r -> setNoMatch(checklistKey, tr),
         r -> {
           TaxonRecordConverter.convert(r, tr);
         });
+  }
+
+  /**
+   * Sets the usage of a taxon record without a match: incertae sedis for the GBIF Backbone, none
+   * for the other checklists.
+   */
+  protected static void setNoMatch(String checklistKey, TaxonRecord tr) {
+    if (Constants.NUB_DATASET_KEY.toString().equals(checklistKey)) {
+      tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
+      tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+    } else {
+      tr.setUsage(null);
+      tr.setClassification(Collections.emptyList());
+    }
   }
 
   public static void matchTaxon(

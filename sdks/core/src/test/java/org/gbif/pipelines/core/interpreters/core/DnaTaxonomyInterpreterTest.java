@@ -167,4 +167,53 @@ class DnaTaxonomyInterpreterTest {
         DnaTaxonomyInterpreter.createNameUsageMatchRequest(
             new ClassifyOccurrenceResponse.DnaClassification(), NUB_DATASET_KEY.toString()));
   }
+
+  /** Never called: a blank classification has nothing to look up. */
+  private static final KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> NO_CALLS_KVS =
+      new KeyValueStore<>() {
+        @Override
+        public NameUsageMatchResponse get(NameUsageMatchRequest request) {
+          throw new AssertionError("The name matching shouldn't be called");
+        }
+
+        @Override
+        public void close() {}
+      };
+
+  private static TaxonRecord interpretBlankClassification(String checklistKey) {
+    ClassifyOccurrenceResponse response = new ClassifyOccurrenceResponse();
+    response.setGbifID("42");
+    response.setClassification(new ClassifyOccurrenceResponse.DnaClassification());
+    TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId("42").build();
+    DnaTaxonomyInterpreter.dnaTaxonomyInterpreter(NO_CALLS_KVS, checklistKey)
+        .accept(response, taxonRecord);
+    return taxonRecord;
+  }
+
+  /** A blank classification is represented like a name matching without a match. */
+  @Test
+  void blankClassificationOnTheBackboneIsIncertaeSedis() {
+    TaxonRecord taxonRecord = interpretBlankClassification(NUB_DATASET_KEY.toString());
+
+    assertTrue(
+        taxonRecord
+            .getIssues()
+            .getIssueList()
+            .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
+    assertEquals(TaxonomyInterpreter.INCERTAE_SEDIS_KEY, taxonRecord.getUsage().getKey());
+  }
+
+  @Test
+  void blankClassificationOnOtherChecklistsHasNoUsage() {
+    TaxonRecord taxonRecord =
+        interpretBlankClassification(org.gbif.api.model.Constants.COL_DATASET_KEY.toString());
+
+    assertTrue(
+        taxonRecord
+            .getIssues()
+            .getIssueList()
+            .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
+    assertNull(taxonRecord.getUsage());
+    assertTrue(taxonRecord.getClassification().isEmpty());
+  }
 }
