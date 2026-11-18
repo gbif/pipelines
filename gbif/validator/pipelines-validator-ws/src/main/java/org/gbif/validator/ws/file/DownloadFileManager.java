@@ -4,15 +4,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -20,14 +22,20 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
  * Downloads files from user supplied URLs. Only http(s) URLs of hosts with public addresses are
- * fetched, and redirects are followed here so every hop is checked, to prevent requests to internal
- * services (SSRF).
+ * fetched, to prevent requests to internal services (SSRF). Connections are made to the addresses
+ * that were checked, so a host can't resolve to another address when connecting (DNS rebinding),
+ * and redirects are followed here so every hop is checked.
  */
 @Slf4j
 @Service
@@ -40,59 +48,69 @@ public class DownloadFileManager {
 
   private static final int MAX_REDIRECTS = 5;
 
-  private static final int CONNECT_TIMEOUT_MS = 10_000;
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
 
-  private static final int READ_TIMEOUT_MS = 60_000;
+  private static final Duration READ_TIMEOUT = Duration.ofSeconds(60);
 
   // Hosts allowed even if they resolve to a non-public address, e.g. for tests
   private final Set<String> allowedPrivateHosts;
 
+  private final HostResolver hostResolver;
+
+  private final OkHttpClient client;
+
+  /** Resolves host names, replaceable in tests. */
+  interface HostResolver {
+    InetAddress[] resolve(String host) throws UnknownHostException;
+  }
+
   public DownloadFileManager(
       @Value("${validation.url.allowedPrivateHosts:}") String[] allowedPrivateHosts) {
+    this(allowedPrivateHosts, InetAddress::getAllByName);
+  }
+
+  DownloadFileManager(String[] allowedPrivateHosts, HostResolver hostResolver) {
+    this.hostResolver = hostResolver;
     this.allowedPrivateHosts =
         Arrays.stream(allowedPrivateHosts)
             .map(String::trim)
             .filter(h -> !h.isEmpty())
             .map(h -> h.toLowerCase(Locale.ROOT))
             .collect(Collectors.toSet());
+    this.client =
+        new OkHttpClient.Builder()
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .connectTimeout(CONNECT_TIMEOUT)
+            .readTimeout(READ_TIMEOUT)
+            .dns(this::lookup)
+            .build();
   }
 
   public boolean isAvailable(String url) {
-    HttpURLConnection con = null;
-    try {
-      con = open(url, "HEAD");
-      String content = con.getHeaderField("Content-Type");
+    try (Response response = open(url, "HEAD")) {
+      String content = response.header("Content-Type");
 
-      return con.getResponseCode() == HttpURLConnection.HTTP_OK
+      return response.code() == 200
           && content != null
           && SUPPORTED_CONTENT_TYPES.stream().anyMatch(content::contains);
     } catch (Exception e) {
       log.warn("Error getting file information", e);
       return false;
-    } finally {
-      if (con != null) {
-        con.disconnect();
-      }
     }
   }
 
   /** Gets the URL a HEAD request ends at, after following redirects. */
   public String getFinalUrl(String url) throws IOException {
-    HttpURLConnection con = open(url, "HEAD");
-    try {
-      return con.getURL().toString();
-    } finally {
-      con.disconnect();
+    try (Response response = open(url, "HEAD")) {
+      return response.request().url().toString();
     }
   }
 
   /** Gets a response header of a HEAD request, null if not present. */
   public String getHeader(String url, String header) throws IOException {
-    HttpURLConnection con = open(url, "HEAD");
-    try {
-      return con.getHeaderField(header);
-    } finally {
-      con.disconnect();
+    try (Response response = open(url, "HEAD")) {
+      return response.header(header);
     }
   }
 
@@ -100,14 +118,17 @@ public class DownloadFileManager {
   public File download(String url, Path targetFilePath) {
     Files.createDirectories(targetFilePath.getParent());
     File targetFile = targetFilePath.toFile();
-    HttpURLConnection con = open(url, "GET");
-    try (InputStream body = con.getInputStream();
-        ReadableByteChannel in = Channels.newChannel(body);
-        FileOutputStream fileOutputStream = new FileOutputStream(targetFile)) {
-      fileOutputStream.getChannel().transferFrom(in, 0, Long.MAX_VALUE);
-      return targetFile;
-    } finally {
-      con.disconnect();
+    try (Response response = open(url, "GET")) {
+      ResponseBody responseBody = response.body();
+      if (!response.isSuccessful() || responseBody == null) {
+        throw new IOException("HTTP " + response.code() + " downloading " + url);
+      }
+      try (InputStream body = responseBody.byteStream();
+          ReadableByteChannel in = Channels.newChannel(body);
+          FileOutputStream fileOutputStream = new FileOutputStream(targetFile)) {
+        fileOutputStream.getChannel().transferFrom(in, 0, Long.MAX_VALUE);
+        return targetFile;
+      }
     }
   }
 
@@ -136,26 +157,27 @@ public class DownloadFileManager {
   }
 
   /**
-   * Sends a request, following redirects and checking every URL, and returns the connection of the
-   * final response.
+   * Sends a request, following redirects and checking every URL, and returns the final response.
    */
-  private HttpURLConnection open(String url, String method) throws IOException {
-    URL current = new URL(url);
+  private Response open(String url, String method) throws IOException {
+    HttpUrl current = HttpUrl.parse(url);
+    if (current == null) {
+      throw new UnsafeUrlException("Only http and https URLs are supported: " + url);
+    }
     for (int redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
-      checkUrl(current);
-      HttpURLConnection con = (HttpURLConnection) current.openConnection();
-      con.setInstanceFollowRedirects(false);
-      con.setConnectTimeout(CONNECT_TIMEOUT_MS);
-      con.setReadTimeout(READ_TIMEOUT_MS);
-      con.setRequestMethod(method);
-
-      int status = con.getResponseCode();
-      String location = con.getHeaderField("Location");
-      if (status < 300 || status >= 400 || location == null) {
-        return con;
+      checkUrl(current.url());
+      Response response =
+          client.newCall(new Request.Builder().url(current).method(method, null).build()).execute();
+      String location = response.header("Location");
+      if (!response.isRedirect() || location == null) {
+        return response;
       }
-      con.disconnect();
-      current = new URL(current, location);
+      response.close();
+      HttpUrl next = current.resolve(location);
+      if (next == null) {
+        throw new UnsafeUrlException("Only http and https URLs are supported: " + location);
+      }
+      current = next;
     }
     throw new IOException("Too many redirects for " + url);
   }
@@ -169,14 +191,32 @@ public class DownloadFileManager {
     if (host == null || host.isEmpty()) {
       throw new UnsafeUrlException("URL without host: " + url);
     }
-    if (allowedPrivateHosts.contains(host.toLowerCase(Locale.ROOT))) {
-      return;
+    // IP literals are not resolved through lookup(), so they are only checked here
+    resolve(host);
+  }
+
+  /** DNS used by the HTTP client: connections only go to the addresses checked by resolve. */
+  private List<InetAddress> lookup(String host) throws UnknownHostException {
+    try {
+      return resolve(host);
+    } catch (UnsafeUrlException e) {
+      UnknownHostException unknownHost = new UnknownHostException(e.getMessage());
+      unknownHost.initCause(e);
+      throw unknownHost;
     }
-    for (InetAddress address : InetAddress.getAllByName(host)) {
-      if (!isPublic(address)) {
-        throw new UnsafeUrlException("URL host is not a public address: " + url);
+  }
+
+  /** Resolves a host, failing if any of its addresses is not public, unless the host is allowed. */
+  private List<InetAddress> resolve(String host) throws UnknownHostException, UnsafeUrlException {
+    List<InetAddress> addresses = Arrays.asList(hostResolver.resolve(host));
+    if (!allowedPrivateHosts.contains(host.toLowerCase(Locale.ROOT))) {
+      for (InetAddress address : addresses) {
+        if (!isPublic(address)) {
+          throw new UnsafeUrlException("URL host is not a public address: " + host);
+        }
       }
     }
+    return addresses;
   }
 
   /** True if the address is publicly routable. */

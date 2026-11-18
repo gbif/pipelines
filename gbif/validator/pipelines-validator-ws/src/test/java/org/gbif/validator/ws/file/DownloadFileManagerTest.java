@@ -11,6 +11,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +19,7 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.junit.jupiter.MockServerExtension;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.verify.VerificationTimes;
 
 /** {@link DownloadFileManager} tests. */
 @ExtendWith(MockServerExtension.class)
@@ -80,6 +82,41 @@ class DownloadFileManagerTest extends DownloadFileBaseTest {
           () -> downloadFileManager.checkUrl(new URL(url)),
           url);
     }
+  }
+
+  @Test
+  @SneakyThrows
+  void connectsToResolvedAddressTest() {
+    // files.test resolves to the MockServer, connections must use this resolution
+    DownloadFileManager downloadFileManager =
+        new DownloadFileManager(
+            new String[] {"files.test"},
+            host -> new InetAddress[] {InetAddress.getByName("127.0.0.1")});
+    Path targetFilePath = tempDir.resolve("resolved.zip");
+
+    downloadFileManager.download(
+        "http://files.test:" + clientAndServer.getPort() + "/Archive.zip", targetFilePath);
+
+    assertTrue(Files.exists(targetFilePath));
+  }
+
+  @Test
+  void dnsRebindingTest() {
+    // The first resolution, when checking the URL, is public, later ones point to the MockServer
+    AtomicInteger resolutions = new AtomicInteger();
+    DownloadFileManager downloadFileManager =
+        new DownloadFileManager(
+            new String[0],
+            host ->
+                new InetAddress[] {
+                  InetAddress.getByName(
+                      resolutions.getAndIncrement() == 0 ? "8.8.8.8" : "127.0.0.1")
+                });
+    String url = "http://rebind.test:" + clientAndServer.getPort() + "/rebind.zip";
+
+    assertFalse(downloadFileManager.isAvailable(url));
+    clientAndServer.verify(
+        HttpRequest.request().withPath("/rebind.zip"), VerificationTimes.never());
   }
 
   @Test
