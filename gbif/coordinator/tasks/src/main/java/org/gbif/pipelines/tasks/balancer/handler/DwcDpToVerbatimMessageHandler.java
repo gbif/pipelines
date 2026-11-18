@@ -54,6 +54,7 @@ public class DwcDpToVerbatimMessageHandler {
             m.isContainsOccurrences(),
             m.isContainsEvents(),
             maxCount <= config.switchFileSizeMb);
+    out.setStepHeader(m.getStepHeader());
 
     if (validator) {
       publisher.send(out, ExchangeType.OCCURRENCE.getValue(), "validator." + out.getRoutingKey());

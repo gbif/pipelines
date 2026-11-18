@@ -84,11 +84,11 @@ public class DwcDpVerbatimConverter {
   static final String AVRO_EXTENDED_RECORD_AVSC = "avro/extended-record.avsc";
   static final String REPORT_DIRECTORY = "dwcdp-to-verbatim-report";
   static final String INGEST_PLAN_COMPACT = REPORT_DIRECTORY + "/compact.txt";
-  static final String INGEST_PLAN_COMPACT_JSON = REPORT_DIRECTORY + "/compact.json";
+  public static final String INGEST_PLAN_COMPACT_JSON = REPORT_DIRECTORY + "/compact.json";
   static final String INGEST_PLAN_DETAILED = REPORT_DIRECTORY + "/detailed.txt";
   static final String INGEST_PLAN_DETAILED_JSON = REPORT_DIRECTORY + "/detailed.json";
   static final String STATISTICS_REPORT = REPORT_DIRECTORY + "/statistics.txt";
-  static final String STATISTICS_REPORT_JSON = REPORT_DIRECTORY + "/statistics.json";
+  public static final String STATISTICS_REPORT_JSON = REPORT_DIRECTORY + "/statistics.json";
 
   private DwcDpVerbatimConverter() {}
 

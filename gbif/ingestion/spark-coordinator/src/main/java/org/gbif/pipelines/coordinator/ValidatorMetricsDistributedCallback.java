@@ -45,7 +45,9 @@ public class ValidatorMetricsDistributedCallback extends ValidatorMetricsCallbac
         pipelinesConfig.getAirflowConfig().validatorMetricsDag,
         StepType.VALIDATOR_COLLECT_METRICS,
         recordsNumber,
-        List.of());
+        OrchestratorReplies.header(message).isPresent()
+            ? List.of("--orchestrated=true")
+            : List.of());
   }
 
   @Override

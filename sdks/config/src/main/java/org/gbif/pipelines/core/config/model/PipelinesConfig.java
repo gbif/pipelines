@@ -121,6 +121,8 @@ public class PipelinesConfig implements Serializable {
 
   private AirflowConfig airflowConfig = new AirflowConfig();
 
+  private OrchestratorConfig orchestrator = new OrchestratorConfig();
+
   private Map<String, SparkJobConfig> processingConfigs;
 
   private IndexConfig indexConfig = new IndexConfig();
