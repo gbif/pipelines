@@ -62,6 +62,7 @@ public class DnaTaxonomyInterpreter {
     String order = trimToNull(c.getOrder());
     String family = trimToNull(c.getFamily());
     String genus = trimToNull(c.getGenus());
+    String species = trimToNull(c.getSpecies());
 
     if (scientificName == null
         && kingdom == null
@@ -69,7 +70,8 @@ public class DnaTaxonomyInterpreter {
         && clazz == null
         && order == null
         && family == null
-        && genus == null) {
+        && genus == null
+        && species == null) {
       return null;
     }
 
@@ -83,6 +85,7 @@ public class DnaTaxonomyInterpreter {
         .withOrder(order)
         .withFamily(family)
         .withGenus(genus)
+        .withSpecies(species)
         .build();
   }
 

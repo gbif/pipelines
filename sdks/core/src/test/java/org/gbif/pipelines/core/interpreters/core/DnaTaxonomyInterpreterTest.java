@@ -1,6 +1,11 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.api.model.Constants.NUB_DATASET_KEY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.kvs.KeyValueStore;
@@ -10,13 +15,12 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 import org.gbif.rest.client.species.NameUsageMatchResponse.Diagnostics;
 import org.gbif.rest.client.species.NameUsageMatchResponse.MatchType;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DnaTaxonomyInterpreterTest {
+class DnaTaxonomyInterpreterTest {
 
   @Test
-  public void checkDnaClassificationNoMatchAddsIssue() {
+  void checkDnaClassificationNoMatchAddsIssue() {
     TaxonRecord testRecord = TaxonRecord.newBuilder().setId("123").build();
 
     ClassifyOccurrenceResponse.DnaClassification classification =
@@ -47,18 +51,18 @@ public class DnaTaxonomyInterpreterTest {
             NUB_DATASET_KEY.toString())
         .accept(response, testRecord);
 
-    Assert.assertNotNull(testRecord.getIssues());
-    Assert.assertTrue(
+    assertNotNull(testRecord.getIssues());
+    assertTrue(
         testRecord
             .getIssues()
             .getIssueList()
             .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
-    Assert.assertEquals("42", testRecord.getId());
-    Assert.assertEquals(NUB_DATASET_KEY.toString(), testRecord.getDatasetKey());
+    assertEquals("42", testRecord.getId());
+    assertEquals(NUB_DATASET_KEY.toString(), testRecord.getDatasetKey());
   }
 
   @Test
-  public void checkDnaClassificationUsesMatchedTaxonResponse() {
+  void checkDnaClassificationUsesMatchedTaxonResponse() {
     TaxonRecord testRecord = TaxonRecord.newBuilder().setId("123").build();
 
     ClassifyOccurrenceResponse.DnaClassification classification =
@@ -113,15 +117,54 @@ public class DnaTaxonomyInterpreterTest {
             NUB_DATASET_KEY.toString())
         .accept(response, testRecord);
 
-    Assert.assertNotNull(testRecord.getUsage());
-    Assert.assertEquals("Panthera leo", testRecord.getUsage().getName());
-    Assert.assertEquals("12345", testRecord.getUsage().getKey());
-    Assert.assertFalse(
+    assertNotNull(testRecord.getUsage());
+    assertEquals("Panthera leo", testRecord.getUsage().getName());
+    assertEquals("12345", testRecord.getUsage().getKey());
+    assertFalse(
         testRecord
             .getIssues()
             .getIssueList()
             .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
-    Assert.assertEquals("42", testRecord.getId());
-    Assert.assertEquals(NUB_DATASET_KEY.toString(), testRecord.getDatasetKey());
+    assertEquals("42", testRecord.getId());
+    assertEquals(NUB_DATASET_KEY.toString(), testRecord.getDatasetKey());
+  }
+
+  /** The species of the classifier is sent to the name matching like the other ranks. */
+  @Test
+  void speciesIsSentToTheNameMatching() {
+    ClassifyOccurrenceResponse.DnaClassification classification =
+        new ClassifyOccurrenceResponse.DnaClassification();
+    classification.setGenus("Panthera");
+    classification.setSpecies(" Panthera leo ");
+
+    NameUsageMatchRequest request =
+        DnaTaxonomyInterpreter.createNameUsageMatchRequest(
+            classification, NUB_DATASET_KEY.toString());
+
+    assertEquals("Panthera", request.getGenus());
+    assertEquals("Panthera leo", request.getSpecies());
+    assertNull(request.getScientificName());
+  }
+
+  /** A classification with only the species has something to match on. */
+  @Test
+  void onlySpeciesIsEnoughToMatch() {
+    ClassifyOccurrenceResponse.DnaClassification classification =
+        new ClassifyOccurrenceResponse.DnaClassification();
+    classification.setSpecies("Panthera leo");
+
+    NameUsageMatchRequest request =
+        DnaTaxonomyInterpreter.createNameUsageMatchRequest(
+            classification, NUB_DATASET_KEY.toString());
+
+    assertNotNull(request);
+    assertEquals("Panthera leo", request.getSpecies());
+  }
+
+  @Test
+  void emptyClassificationHasNothingToMatch() {
+    assertNull(
+        DnaTaxonomyInterpreter.createNameUsageMatchRequest(
+            new ClassifyOccurrenceResponse.DnaClassification(), NUB_DATASET_KEY.toString()));
   }
 }
