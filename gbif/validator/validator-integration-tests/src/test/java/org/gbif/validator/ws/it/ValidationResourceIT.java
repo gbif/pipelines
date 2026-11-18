@@ -20,6 +20,8 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
@@ -34,6 +36,7 @@ import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
+import org.gbif.validator.it.mocks.GatedFileStoreManager;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -84,8 +87,11 @@ public class ValidationResourceIT {
 
   private final ValidationWsClient otherUserWsClient;
 
+  private final GatedFileStoreManager fileStoreManager;
+
   @Autowired
-  public ValidationResourceIT(@LocalServerPort int port) {
+  public ValidationResourceIT(@LocalServerPort int port, GatedFileStoreManager fileStoreManager) {
+    this.fileStoreManager = fileStoreManager;
     validationWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, TEST_USER.getUserName(), TEST_USER_PASSWORD);
@@ -364,14 +370,21 @@ public class ValidationResourceIT {
   @Test
   public void deleteWhileSubmittingValidationIT() throws Exception {
     File archive = readTestFileInputStream("/archive.zip");
-    Validation validation = validationWsClient.submitFile(archive);
-    assertNotNull(validation);
+    // Hold the end of the submission until the validation is deleted
+    CompletableFuture<Void> gate = fileStoreManager.hold();
+    Validation validation;
+    try {
+      validation = validationWsClient.submitFile(archive);
+      assertNotNull(validation);
+      validationWsClient.delete(validation.getKey());
+    } finally {
+      gate.complete(null);
+    }
 
-    // Delete before the internal async task has finished
-    validationWsClient.delete(validation.getKey());
+    // Wait for the extraction and the update after it, both run in the common pool
+    assertTrue(ForkJoinPool.commonPool().awaitQuiescence(30, TimeUnit.SECONDS));
 
-    // The async task must not undo the deletion
-    TimeUnit.SECONDS.sleep(6L);
+    // The end of the submission must not undo the deletion
     Validation deletedValidation = validationWsClient.get(validation.getKey());
     assertNotNull(deletedValidation.getDeleted());
     assertEquals(Status.SUBMITTED, deletedValidation.getStatus());
