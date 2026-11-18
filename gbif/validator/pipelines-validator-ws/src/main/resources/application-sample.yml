@@ -26,7 +26,7 @@ gbif:
     url: @gbif.api.url@
   ws:
     security:
-      wrappedContent: false
+      wrapContent: false
   portal:
     url: @gbif.portal.url@
   mail:
