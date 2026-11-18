@@ -13,6 +13,7 @@
  */
 package org.gbif.pipelines.spark;
 
+import static org.gbif.pipelines.core.utils.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
@@ -36,6 +37,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.util.LongAccumulator;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.core.ws.sequenceclassifier.SequenceClassifierServiceClient;
@@ -51,9 +54,10 @@ import org.gbif.pipelines.transform.factory.MultiTaxonomyKVSFactory;
 @Slf4j
 public class TaxonomyDnaPipeline {
 
-  static final ObjectMapper MAPPER = MapperUtil.MAPPER;
+  // same as the other fields of the occurrence, written by OccurrenceInterpretationPipeline
+  static final ObjectMapper MAPPER = MapperUtil.MAPPER_NON_EMPTY;
 
-  public static final String METRICS_FILENAME = "taxonomy.yml";
+  public static final String METRICS_FILENAME = "dna-taxonomy.yml";
 
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {}
@@ -109,7 +113,32 @@ public class TaxonomyDnaPipeline {
 
     long recordCount = simpleRecords.count();
 
-    runDnaTaxonomyTransform(config, simpleRecords, outputPath);
+    // task retries can count a partition more than once, so they are approximate on failures
+    LongAccumulator classified = spark.sparkContext().longAccumulator("dnaTaxonRecords");
+    LongAccumulator failed = spark.sparkContext().longAccumulator("dnaTaxonFailedRecords");
+    LongAccumulator missing = spark.sparkContext().longAccumulator("dnaTaxonMissingRecords");
+
+    runDnaTaxonomyTransform(
+        config, simpleRecords, outputPath, datasetId, classified, failed, missing);
+
+    writeMetricsYaml(
+        fs,
+        Map.of(
+            PipelinesVariables.Metrics.DNA_TAXON_RECORDS_COUNT,
+            classified.value(),
+            PipelinesVariables.Metrics.DNA_TAXON_FAILED_RECORDS_COUNT,
+            failed.value(),
+            PipelinesVariables.Metrics.DNA_TAXON_MISSING_RECORDS_COUNT,
+            missing.value()),
+        outputPath + "/" + METRICS_FILENAME);
+    if (failed.value() > 0) {
+      log.warn(
+          "The DNA classification failed for {} occurrences, they are kept without it",
+          failed.value());
+    }
+    if (missing.value() > 0) {
+      log.warn("The DNA classifier returned no result for {} occurrences", missing.value());
+    }
 
     // replace directories
     fs.delete(new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE), true);
@@ -140,7 +169,13 @@ public class TaxonomyDnaPipeline {
    * result to the existing {@link Occurrence} record.
    */
   private static void runDnaTaxonomyTransform(
-      PipelinesConfig config, Dataset<Occurrence> input, String outputPath) {
+      PipelinesConfig config,
+      Dataset<Occurrence> input,
+      String outputPath,
+      String datasetId,
+      LongAccumulator classified,
+      LongAccumulator failed,
+      LongAccumulator missing) {
 
     Dataset<Occurrence> output =
         input.mapPartitions(
@@ -151,11 +186,15 @@ public class TaxonomyDnaPipeline {
                       SequenceClassifierServiceClient.create(
                           config.getDnaConfig().getSequenceClassifierWsConfig());
 
-                  BiConsumer<ClassifyOccurrenceResponse, TaxonRecord> taxonomyInterpreter =
-                      org.gbif.pipelines.core.interpreters.core.DnaTaxonomyInterpreter
-                          .dnaTaxonomyInterpreter(
-                              MultiTaxonomyKVSFactory.getKvStore(config),
-                              OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY);
+                  // one interpreter per checklist to match the DNA-assisted classifications against
+                  List<BiConsumer<ClassifyOccurrenceResponse, TaxonRecord>> taxonomyInterpreters =
+                      new ArrayList<>();
+                  for (String checklistKey : getDnaChecklistKeys(config)) {
+                    taxonomyInterpreters.add(
+                        org.gbif.pipelines.core.interpreters.core.DnaTaxonomyInterpreter
+                            .dnaTaxonomyInterpreter(
+                                MultiTaxonomyKVSFactory.getKvStore(config), checklistKey));
+                  }
 
                   int batchSize = config.getDnaConfig().getBatchSizeSequenceClassifier();
 
@@ -163,7 +202,14 @@ public class TaxonomyDnaPipeline {
                       Iterators.transform(
                           Iterators.partition(occurrenceIterator, batchSize),
                           partition ->
-                              interpretOccurrenceDnaTaxon(partition, client, taxonomyInterpreter)
+                              interpretOccurrenceDnaTaxon(
+                                      partition,
+                                      client,
+                                      taxonomyInterpreters,
+                                      datasetId,
+                                      classified,
+                                      failed,
+                                      missing)
                                   .iterator()));
                 },
             Encoders.bean(Occurrence.class));
@@ -171,12 +217,29 @@ public class TaxonomyDnaPipeline {
     output.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + DNA_TAXON_TEMP);
   }
 
-  /** Sets dnaTaxon on the occurrences of the group that have sequences, the rest are untouched. */
+  /** The configured DNA checklists, or the default taxonomy if none is configured. */
+  static List<String> getDnaChecklistKeys(PipelinesConfig config) {
+    List<String> checklistKeys = config.getDnaConfig().getChecklistKeys();
+    return checklistKeys == null || checklistKeys.isEmpty()
+        ? List.of(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY)
+        : checklistKeys;
+  }
+
+  /**
+   * Sets dnaTaxon on the occurrences of the group that have sequences, the rest are untouched. The
+   * DNA classification is an enrichment, like the name matching: if it fails, the error is logged,
+   * counted as failed and the occurrences are kept without it. The occurrences the classifier
+   * returns no result for are counted as missing.
+   */
   @SneakyThrows
-  private static List<Occurrence> interpretOccurrenceDnaTaxon(
+  static List<Occurrence> interpretOccurrenceDnaTaxon(
       List<Occurrence> occurrencePartition,
       SequenceClassifierServiceClient client,
-      BiConsumer<ClassifyOccurrenceResponse, TaxonRecord> taxonomyInterpreter) {
+      List<BiConsumer<ClassifyOccurrenceResponse, TaxonRecord>> taxonomyInterpreters,
+      String datasetId,
+      LongAccumulator classified,
+      LongAccumulator failed,
+      LongAccumulator missing) {
 
     List<ClassifyOccurrenceRequest> requests = new ArrayList<>();
     List<Occurrence> occurrencesRequested = new ArrayList<>();
@@ -189,19 +252,28 @@ public class TaxonomyDnaPipeline {
     }
 
     if (!requests.isEmpty()) {
-      List<DnaTaxonRecord> taxa = classifyAndInterpret(client, taxonomyInterpreter, requests);
-
-      Map<String, DnaTaxonRecord> dnaTaxonById = new HashMap<>();
-      for (DnaTaxonRecord taxon : taxa) {
-        dnaTaxonById.put(taxon.getId(), taxon);
+      Map<String, DnaTaxonRecord> taxaById;
+      try {
+        taxaById = classifyAndInterpret(client, taxonomyInterpreters, requests);
+      } catch (Exception ex) {
+        log.error(
+            "DNA classification failed for {} occurrences of dataset {}, kept without it",
+            requests.size(),
+            datasetId,
+            ex);
+        failed.add(requests.size());
+        return occurrencePartition;
       }
-
+      long classifiedCount = 0;
       for (Occurrence occurrence : occurrencesRequested) {
-        DnaTaxonRecord taxon = dnaTaxonById.get(occurrence.getId());
+        DnaTaxonRecord taxon = taxaById.get(occurrence.getId());
         if (taxon != null) {
           occurrence.setDnaTaxon(MAPPER.writeValueAsString(taxon));
+          classifiedCount++;
         }
       }
+      classified.add(classifiedCount);
+      missing.add(occurrencesRequested.size() - classifiedCount);
     }
     return occurrencePartition;
   }
@@ -209,6 +281,9 @@ public class TaxonomyDnaPipeline {
   /** Returns null if the occurrence has no valid nucleotide sequences. */
   @SneakyThrows
   static ClassifyOccurrenceRequest toClassifyOccurrenceRequest(Occurrence record) {
+    if (record.getDnaDerivedData() == null) {
+      return null;
+    }
     DnaDerivedDataRecord dna =
         MAPPER.readValue(record.getDnaDerivedData(), DnaDerivedDataRecord.class);
     if (dna == null || dna.getDnaDerivedDataItems() == null) {
@@ -234,7 +309,10 @@ public class TaxonomyDnaPipeline {
     occurrence.setGbifID(record.getId());
     occurrence.setNucleotideSequence(sequences);
 
-    LocationRecord location = MAPPER.readValue(record.getLocation(), LocationRecord.class);
+    LocationRecord location =
+        record.getLocation() != null
+            ? MAPPER.readValue(record.getLocation(), LocationRecord.class)
+            : null;
     if (location != null) {
       occurrence.setDecimalLatitude(location.getDecimalLatitude());
       occurrence.setDecimalLongitude(location.getDecimalLongitude());
@@ -243,21 +321,35 @@ public class TaxonomyDnaPipeline {
     return occurrence;
   }
 
-  private static List<DnaTaxonRecord> classifyAndInterpret(
+  /**
+   * Classifies the batch and matches each result against every DNA checklist. The records are keyed
+   * by the gbifID echoed by the classifier, the results without it are ignored.
+   */
+  private static Map<String, DnaTaxonRecord> classifyAndInterpret(
       SequenceClassifierServiceClient client,
-      BiConsumer<ClassifyOccurrenceResponse, TaxonRecord> taxonomyInterpreter,
+      List<BiConsumer<ClassifyOccurrenceResponse, TaxonRecord>> taxonomyInterpreters,
       List<ClassifyOccurrenceRequest> batch) {
 
     List<ClassifyOccurrenceResponse> results = client.classifyBatch(batch);
 
-    List<DnaTaxonRecord> records = new ArrayList<>(batch.size());
+    Map<String, DnaTaxonRecord> records = new HashMap<>(batch.size());
     for (ClassifyOccurrenceResponse result : results) {
+      if (result.getGbifID() == null) {
+        continue;
+      }
       long created = System.currentTimeMillis();
-      TaxonRecord tr = TaxonRecord.newBuilder().setCreated(created).build();
-      taxonomyInterpreter.accept(result, tr);
+      List<TaxonRecord> taxonRecords = new ArrayList<>(taxonomyInterpreters.size());
+      for (BiConsumer<ClassifyOccurrenceResponse, TaxonRecord> taxonomyInterpreter :
+          taxonomyInterpreters) {
+        TaxonRecord tr = TaxonRecord.newBuilder().setCreated(created).build();
+        taxonomyInterpreter.accept(result, tr);
+        taxonRecords.add(tr);
+      }
 
       // the remarks of the classifier are common to all the checklists
-      records.add(
+      // the first result wins if the classifier repeats a gbifID
+      records.putIfAbsent(
+          result.getGbifID(),
           DnaTaxonRecord.newBuilder()
               .setId(result.getGbifID())
               .setCreated(created)
@@ -265,7 +357,7 @@ public class TaxonomyDnaPipeline {
                   result.getClassification() != null
                       ? result.getClassification().getRemarks()
                       : null)
-              .setTaxonRecords(new ArrayList<>(List.of(tr)))
+              .setTaxonRecords(taxonRecords)
               .build());
     }
     return records;

@@ -178,6 +178,36 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
         colDnaClassification.getAs("taxonomicstatus"));
   }
 
+  /** The DNA-assisted classification is matched against every configured DNA checklist. */
+  @Test
+  public void testDnaTaxonInterpretationWithSeveralChecklists() throws Exception {
+    String testUuid = "c2a0e7d4-58b1-4f6e-a3c9-1d7e5b8f2a60";
+    int attempt = 1;
+    String basePath = getClass().getResource("/").getFile();
+
+    generateIdentifierParquet(basePath, testUuid, attempt);
+    generateMinimalDnaVerbatimParquet(basePath, testUuid, attempt);
+
+    PipelinesConfig config = loadConfig(basePath + "/pipelines.yaml");
+    config.getDnaConfig().setEnableDnaTaxonInterpretation(true);
+    String col = Constants.COL_DATASET_KEY.toString();
+    String nub = Constants.NUB_DATASET_KEY.toString();
+    config.getDnaConfig().setChecklistKeys(List.of(col, nub));
+
+    OccurrenceInterpretationPipeline.runInterpretation(
+        spark, getFileSystem(spark, config), config, testUuid, attempt, 1, false, true, null);
+
+    String attemptPath = basePath + "/" + testUuid + "/" + attempt + "/";
+    String json = spark.read().parquet(attemptPath + Directories.OCCURRENCE_JSON).toJSON().first();
+    assertEquals(
+        Set.of(col, nub),
+        JsonPath.<Map<String, Object>>read(json, "$.dnaClassifications.classifications").keySet());
+
+    Row hdfsRow = spark.read().parquet(attemptPath + Directories.OCCURRENCE_HDFS).first();
+    assertEquals(
+        Set.of(col, nub), hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnaclassifications")).keySet());
+  }
+
   private void checkJsonOutputs(String outputFile, String testUuid, int attempt) throws Exception {
     java.nio.file.Path dir =
         java.nio.file.Path.of(outputFile)
