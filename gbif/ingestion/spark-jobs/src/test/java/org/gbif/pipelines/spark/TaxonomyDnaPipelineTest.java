@@ -1,8 +1,11 @@
 package org.gbif.pipelines.spark;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -13,6 +16,7 @@ import javax.xml.ws.WebServiceException;
 import org.apache.spark.util.LongAccumulator;
 import org.gbif.pipelines.core.config.model.DnaConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.core.ws.sequenceclassifier.SequenceClassifierServiceClient;
 import org.gbif.pipelines.core.ws.sequenceclassifier.request.ClassifyOccurrenceRequest;
@@ -41,6 +45,38 @@ class TaxonomyDnaPipelineTest {
     assertEquals("1", request.getGbifID());
     assertEquals(1, request.getNucleotideSequence().size());
     assertNull(request.getDecimalLatitude());
+  }
+
+  /** A missing classifier ws fails on the driver with a clear message, not inside a Spark task. */
+  @Test
+  void missingSequenceClassifierWsFailsFast() {
+    PipelinesConfig config = new PipelinesConfig();
+    config.setDnaConfig(new DnaConfig());
+
+    IllegalStateException ex =
+        assertThrows(
+            IllegalStateException.class, () -> TaxonomyDnaPipeline.validateDnaConfig(config));
+    assertTrue(ex.getMessage().contains("dnaConfig.sequenceClassifierWsConfig.wsUrl"));
+  }
+
+  @Test
+  void missingSequenceClassifierWsUrlFailsFast() {
+    PipelinesConfig config = new PipelinesConfig();
+    config.setDnaConfig(new DnaConfig());
+    config.getDnaConfig().setSequenceClassifierWsConfig(new WsConfig());
+
+    assertThrows(IllegalStateException.class, () -> TaxonomyDnaPipeline.validateDnaConfig(config));
+  }
+
+  @Test
+  void configuredSequenceClassifierWsIsValid() {
+    PipelinesConfig config = new PipelinesConfig();
+    config.setDnaConfig(new DnaConfig());
+    WsConfig wsConfig = new WsConfig();
+    wsConfig.setWsUrl("http://localhost:8080");
+    config.getDnaConfig().setSequenceClassifierWsConfig(wsConfig);
+
+    assertDoesNotThrow(() -> TaxonomyDnaPipeline.validateDnaConfig(config));
   }
 
   @Test

@@ -98,9 +98,25 @@ public class TaxonomyDnaPipeline {
     System.exit(0);
   }
 
+  /**
+   * Checks the configuration needed by the DNA taxonomy on the driver, so a missing setting fails
+   * before running any Spark task, with a clear message.
+   */
+  static void validateDnaConfig(PipelinesConfig config) {
+    if (config.getDnaConfig() == null
+        || config.getDnaConfig().getSequenceClassifierWsConfig() == null
+        || config.getDnaConfig().getSequenceClassifierWsConfig().getWsUrl() == null) {
+      throw new IllegalStateException(
+          "The DNA taxonomy needs the sequence classifier ws: set"
+              + " dnaConfig.sequenceClassifierWsConfig.wsUrl in the pipelines config");
+    }
+  }
+
   public static Dataset<Occurrence> runDnaTaxonomy(
       SparkSession spark, FileSystem fs, PipelinesConfig config, String datasetId, int attempt)
       throws Exception {
+
+    validateDnaConfig(config);
 
     long start = System.currentTimeMillis();
 
