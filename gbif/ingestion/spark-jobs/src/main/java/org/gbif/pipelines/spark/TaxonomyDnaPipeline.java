@@ -242,7 +242,8 @@ public class TaxonomyDnaPipeline {
   }
 
   /**
-   * Sets dnaTaxon on the occurrences of the group that have sequences, the rest are untouched. The
+   * Sets dnaTaxon on the occurrences of the group that have sequences. The dnaTaxon of a previous
+   * run is always replaced, so the occurrences without a result in this run end up without it. The
    * DNA classification is an enrichment, like the name matching: if it fails, the error is logged,
    * counted as failed and the occurrences are kept without it. The occurrences the classifier
    * returns no result for are counted as missing.
@@ -260,6 +261,8 @@ public class TaxonomyDnaPipeline {
     List<ClassifyOccurrenceRequest> requests = new ArrayList<>();
     List<Occurrence> occurrencesRequested = new ArrayList<>();
     for (Occurrence occurrence : occurrencePartition) {
+      // a rerun replaces the classification of a previous run, also when it gets none now
+      occurrence.setDnaTaxon(null);
       ClassifyOccurrenceRequest request = toClassifyOccurrenceRequest(occurrence);
       if (request != null) { // nothing to classify: don't spend a ws call on it
         requests.add(request);

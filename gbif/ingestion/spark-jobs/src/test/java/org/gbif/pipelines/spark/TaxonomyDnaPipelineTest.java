@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -170,5 +171,66 @@ class TaxonomyDnaPipelineTest {
     assertEquals(0L, classified.value().longValue());
     assertEquals(0L, failed.value().longValue());
     assertEquals(1L, missing.value().longValue());
+  }
+
+  private static final String PREVIOUS_DNA_TAXON = "{\"id\": \"previous run\"}";
+
+  /** Occurrences classified by a previous run, as in a DNA_TAXONOMY rerun. */
+  private static List<Occurrence> previouslyClassifiedOccurrences() {
+    return List.of(
+        Occurrence.builder()
+            .id("1")
+            .dnaDerivedData(DNA_DERIVED_DATA)
+            .dnaTaxon(PREVIOUS_DNA_TAXON)
+            .build(),
+        // no sequences now: not sent to the classifier
+        Occurrence.builder().id("2").dnaTaxon(PREVIOUS_DNA_TAXON).build());
+  }
+
+  private static List<Occurrence> rerun(SequenceClassifierServiceClient client) {
+    return TaxonomyDnaPipeline.interpretOccurrenceDnaTaxon(
+        previouslyClassifiedOccurrences(),
+        client,
+        INTERPRETERS,
+        "dataset",
+        new LongAccumulator(),
+        new LongAccumulator(),
+        new LongAccumulator());
+  }
+
+  @Test
+  void rerunReplacesThePreviousDnaTaxon() {
+    SequenceClassifierServiceClient client = mock(SequenceClassifierServiceClient.class);
+    ClassifyOccurrenceResponse response = new ClassifyOccurrenceResponse();
+    response.setGbifID("1");
+    when(client.classifyBatch(any())).thenReturn(List.of(response));
+
+    List<Occurrence> occurrences = rerun(client);
+
+    assertNotNull(occurrences.get(0).getDnaTaxon());
+    assertNotEquals(PREVIOUS_DNA_TAXON, occurrences.get(0).getDnaTaxon());
+    assertNull(occurrences.get(1).getDnaTaxon());
+  }
+
+  @Test
+  void rerunWithoutResultClearsThePreviousDnaTaxon() {
+    SequenceClassifierServiceClient client = mock(SequenceClassifierServiceClient.class);
+    when(client.classifyBatch(any())).thenReturn(List.of());
+
+    List<Occurrence> occurrences = rerun(client);
+
+    assertNull(occurrences.get(0).getDnaTaxon());
+    assertNull(occurrences.get(1).getDnaTaxon());
+  }
+
+  @Test
+  void failedRerunClearsThePreviousDnaTaxon() {
+    SequenceClassifierServiceClient client = mock(SequenceClassifierServiceClient.class);
+    when(client.classifyBatch(any())).thenThrow(new WebServiceException("ws down"));
+
+    List<Occurrence> occurrences = rerun(client);
+
+    assertNull(occurrences.get(0).getDnaTaxon());
+    assertNull(occurrences.get(1).getDnaTaxon());
   }
 }
