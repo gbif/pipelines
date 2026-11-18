@@ -20,6 +20,7 @@ import org.mockserver.junit.jupiter.MockServerExtension;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.verify.VerificationTimes;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /** {@link DownloadFileManager} tests. */
 @ExtendWith(MockServerExtension.class)
@@ -34,6 +35,15 @@ class DownloadFileManagerTest extends DownloadFileBaseTest {
     // Non-existing url
     assertFalse(
         ctx.getBean(DownloadFileManager.class).isAvailable(testPath("/ThisDoesNotExist.zip")));
+  }
+
+  /** Spring creates the bean through component scanning, as the application does. */
+  @Test
+  void springCreatesBeanTest() {
+    try (AnnotationConfigApplicationContext context =
+        new AnnotationConfigApplicationContext(DownloadFileManager.class)) {
+      assertTrue(context.getBean(DownloadFileManager.class) != null);
+    }
   }
 
   @Test
