@@ -1,11 +1,14 @@
 package org.gbif.validator.ws.it;
 
+import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.OTHER_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -51,6 +54,7 @@ import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -77,11 +81,16 @@ public class ValidationResourceIT {
 
   private final ValidationWsClient validationWsClient;
 
+  private final ValidationWsClient otherUserWsClient;
+
   @Autowired
   public ValidationResourceIT(@LocalServerPort int port) {
     validationWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, TEST_USER.getUserName(), TEST_USER_PASSWORD);
+    otherUserWsClient =
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, OTHER_USER.getUserName(), TEST_USER_PASSWORD);
   }
 
   @BeforeAll
@@ -314,6 +323,46 @@ public class ValidationResourceIT {
     assertTrue(
         validations.getResults().stream()
             .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));
+  }
+
+  @Test
+  public void otherUserCannotModifyValidationIT() throws Exception {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    assertNotNull(validation);
+
+    // Validations can be read by everyone
+    Validation persistedValidation = otherUserWsClient.get(validation.getKey());
+    assertNotNull(persistedValidation);
+
+    persistedValidation.setStatus(Status.FINISHED);
+    assertThrows(AccessDeniedException.class, () -> otherUserWsClient.update(persistedValidation));
+    assertThrows(AccessDeniedException.class, () -> otherUserWsClient.cancel(validation.getKey()));
+    assertThrows(AccessDeniedException.class, () -> otherUserWsClient.delete(validation.getKey()));
+
+    Validation unchanged = validationWsClient.get(validation.getKey());
+    assertNull(unchanged.getDeleted());
+    assertNotEquals(Status.FINISHED, unchanged.getStatus());
+
+    // The owner can delete it
+    validationWsClient.delete(validation.getKey());
+    assertNotNull(validationWsClient.get(validation.getKey()).getDeleted());
+  }
+
+  @Test
+  public void deleteWhileSubmittingValidationIT() throws Exception {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    assertNotNull(validation);
+
+    // Delete before the internal async task has finished
+    validationWsClient.delete(validation.getKey());
+
+    // The async task must not undo the deletion
+    TimeUnit.SECONDS.sleep(6L);
+    Validation deletedValidation = validationWsClient.get(validation.getKey());
+    assertNotNull(deletedValidation.getDeleted());
+    assertEquals(Status.SUBMITTED, deletedValidation.getStatus());
   }
 
   @Test

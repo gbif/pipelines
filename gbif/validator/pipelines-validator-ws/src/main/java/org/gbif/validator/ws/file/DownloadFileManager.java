@@ -50,6 +50,11 @@ public class DownloadFileManager {
     }
   }
 
+  /** Downloads a file asynchronously. */
+  public CompletableFuture<File> downloadAsync(String url, Path targetFilePath) {
+    return CompletableFuture.supplyAsync(() -> download(url, targetFilePath));
+  }
+
   @Async
   @SneakyThrows
   public CompletableFuture<File> downloadAsync(
@@ -57,7 +62,7 @@ public class DownloadFileManager {
       Path targetFilePath,
       Consumer<File> successCallback,
       Consumer<Throwable> errorCallback) {
-    return CompletableFuture.supplyAsync(() -> download(url, targetFilePath))
+    return downloadAsync(url, targetFilePath)
         .whenComplete(
             (result, error) -> {
               if (error != null) {

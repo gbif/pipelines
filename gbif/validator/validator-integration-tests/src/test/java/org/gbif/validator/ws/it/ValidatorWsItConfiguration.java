@@ -81,6 +81,13 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
           .build();
   public static final String TEST_USER_PASSWORD = "hi";
 
+  public static final LoggedUser OTHER_USER =
+      LoggedUser.builder()
+          .userName("other")
+          .email("other@gbif.org")
+          .roles(Collections.singleton(UserRole.USER.name()))
+          .build();
+
   /**
    * Created from here to avoid scanning this class package in which other test configuration are
    * located.
@@ -107,7 +114,7 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
 
   @Bean
   public RemoteAuthClient remoteAuthClient() {
-    return RemoteAuthClientMock.builder().testUser(TEST_USER).build();
+    return RemoteAuthClientMock.builder().testUser(TEST_USER).otherUser(OTHER_USER).build();
   }
 
   @Bean
