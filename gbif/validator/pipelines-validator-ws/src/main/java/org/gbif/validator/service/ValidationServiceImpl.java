@@ -2,6 +2,8 @@ package org.gbif.validator.service;
 
 import static org.gbif.validator.service.ValidationFactory.metricsSubmitError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
+import static org.gbif.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.ws.security.UserRoles.APP_ROLE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -43,6 +46,7 @@ import org.gbif.validator.ws.file.FileStoreManager;
 import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -99,6 +103,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     log.info("Staring validation for the file {}", file.getOriginalFilename());
     UUID key = UUID.randomUUID();
     FileStoreManager.AsyncDataFileTask task = fileStoreManager.uploadDataFile(file, key.toString());
+    Validation validation =
+        create(key, task.getStart(), Validation.Status.SUBMITTED, validationRequest);
+    // Attached once the validation is persisted, so its update can't run before the insert
     task.getTask()
         .whenCompleteAsync(
             (df, tr) -> {
@@ -114,7 +121,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                 updateFailedValidation(key, message + tr.getCause().getMessage());
               }
             });
-    return create(key, task.getStart(), Validation.Status.SUBMITTED, validationRequest);
+    return validation;
   }
 
   private GbifUserPrincipal getPrincipal() {
@@ -127,6 +134,22 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     throw new SecurityException("User credentials not found");
   }
 
+  /** Asserts the current user created the validation, or is an admin or an app. */
+  private void checkCanModify(Validation validation) {
+    GbifUserPrincipal principal = getPrincipal();
+    boolean adminOrApp =
+        principal.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(role -> ADMIN_ROLE.equals(role) || APP_ROLE.equals(role));
+    if (!adminOrApp && !principal.getUsername().equals(validation.getUsername())) {
+      log.warn(
+          "User {} is not allowed to modify validation {}",
+          principal.getUsername(),
+          validation.getKey());
+      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    }
+  }
+
   @Override
   public Validation validateFileFromUrl(String fileURL, ValidationRequest validationRequest) {
     try {
@@ -135,40 +158,38 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       log.info("Starting validation for the URL {}", fileURL);
       UUID key = UUID.randomUUID();
       String encodedFileURL = EncodingUtil.encode(fileURL);
-      Optional<String> redirectedUrl = EncodingUtil.getRedirectedUrl(encodedFileURL);
-      if (redirectedUrl.isPresent()) {
-        encodedFileURL = redirectedUrl.get();
-      }
 
       // this should also become asynchronous at some point
       FileStoreManager.AsyncDownloadResult downloadResult =
-          fileStoreManager.downloadDataFile(
-              encodedFileURL,
-              key.toString(),
-              resultDataFile -> {
-                if (resultDataFile == null) {
+          fileStoreManager.downloadDataFile(encodedFileURL, key.toString());
+      Validation validation =
+          create(
+              key, downloadResult.getDataFile(), Validation.Status.DOWNLOADING, validationRequest);
+      // Attached once the validation is persisted, so its update can't run before the insert
+      downloadResult
+          .getDownloadTask()
+          .whenCompleteAsync(
+              (resultDataFile, err) -> {
+                if (err != null) {
+                  Throwable cause =
+                      err instanceof CompletionException && err.getCause() != null
+                          ? err.getCause()
+                          : err;
+                  log.error("Error processing file", cause);
+                  updateFailedValidation(key, cause.getMessage());
+                } else if (resultDataFile == null) {
                   log.error("Downloaded file is null for URL {}, key {}", fileURL, key);
                   updateFailedValidation(key, "Downloaded file from " + fileURL + " is null");
-                  return;
-                }
-                try {
+                } else {
                   log.info(
-                      "File has been downloaded and decompressed from URL {}, key {} to path {} with size {} bytes",
+                      "File has been downloaded and decompressed from URL {}, key {} to path {}",
                       fileURL,
                       key,
-                      resultDataFile.getFilePath().toAbsolutePath(),
-                      Files.size(resultDataFile.getFilePath()));
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
+                      resultDataFile.getFilePath().toAbsolutePath());
+                  updateAndNotifySubmitted(key, resultDataFile);
                 }
-                updateAndNotifySubmitted(key, resultDataFile);
-              },
-              err -> {
-                log.error("Error processing file", err);
-                updateFailedValidation(key, err.getMessage());
               });
-      return create(
-          key, downloadResult.getDataFile(), Validation.Status.DOWNLOADING, validationRequest);
+      return validation;
     } catch (FileSizeException ex) {
       log.error("File limit error", ex);
       throw errorMapper.apply(Validation.ErrorCode.MAX_FILE_SIZE_VIOLATION);
@@ -194,17 +215,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Updates validation data. */
   @Override
   public Validation update(Validation validation) {
-    if (validation.getKey() != null) {
-      Optional.ofNullable(get(validation.getKey()))
-          .ifPresent(
-              v ->
-                  log.info(
-                      "Updating validation key {}, status {}",
-                      validation.getKey(),
-                      validation.getStatus()));
-    } else {
+    if (validation.getKey() == null) {
       throw errorMapper.apply(Validation.ErrorCode.NOT_FOUND);
     }
+    checkCanModify(get(validation.getKey()));
+    log.info("Updating validation key {}, status {}", validation.getKey(), validation.getStatus());
     return updateAndGet(validation);
   }
 
@@ -212,6 +227,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   @Override
   public Validation cancel(UUID key) {
     Validation validation = get(key);
+    checkCanModify(validation);
     if (!validation.isExecuting()) {
       throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
     }
@@ -223,10 +239,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   @Override
   public void delete(UUID key) {
-    UUID keyToDelete = get(key).getKey();
+    Validation validation = get(key);
+    checkCanModify(validation);
     log.info("Delete validation record for key {}", key);
-    // A get is executed to check if the validation exists and current user has access
-    validationMapper.delete(keyToDelete);
+    validationMapper.delete(validation.getKey());
     fileStoreManager.deleteIfExist(key.toString());
   }
 
@@ -282,7 +298,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         .filter(step -> step.getStepType().equals(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()))
         .forEach(step -> step.setStatus(newStatus));
     validation.setStatus(newStatus);
-    update(validation);
+    updateAndGet(validation);
   }
 
   /** Persists a validation entity. */
@@ -319,8 +335,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
       v.setDataset(readEml(dataFile.getFilePath().getParent()));
 
-      // Update DB
-      updateAndGet(v);
+      // Update DB, unless the validation was cancelled or deleted meanwhile
+      if (!updateIfExecuting(v)) {
+        return;
+      }
 
       // Sent RabbitMQ message
       notify(key, dataFile, pipelinesSteps);
@@ -356,11 +374,30 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   }
 
   /** Updates the status of a validation process. */
-  private Validation updateFailedValidation(UUID key, String errorMessage) {
+  private void updateFailedValidation(UUID key, String errorMessage) {
     log.error("Failed validation for key {} with error {}", key, errorMessage);
     Validation validation =
         newValidationInstance(key, Validation.Status.FAILED, metricsSubmitError(errorMessage));
-    return updateAndGet(validation);
+    updateIfExecuting(validation);
+  }
+
+  /**
+   * Updates a validation unless it was finished, cancelled or deleted meanwhile, e.g. while its
+   * file was being submitted.
+   *
+   * @return true if the validation was updated
+   */
+  private boolean updateIfExecuting(Validation validation) {
+    if (validationMapper.updateIfExecuting(validation) == 0) {
+      log.info("Validation {} is not executing anymore, not updated", validation.getKey());
+      return false;
+    }
+    if (validation.hasFinished()) {
+      log.info(
+          "Validation {} finished with status {}", validation.getKey(), validation.getStatus());
+      emailService.sendEmailNotification(validation);
+    }
+    return true;
   }
 
   /** Updates and gets the updated validation */

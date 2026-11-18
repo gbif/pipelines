@@ -1,20 +1,16 @@
 package org.gbif.validator.ws.file;
 
-import static org.gbif.validator.ws.file.DownloadFileManager.isAvailable;
 import static org.gbif.validator.ws.file.MediaTypeAndFormatDetector.detectMediaType;
 import static org.gbif.validator.ws.file.MediaTypeAndFormatDetector.evaluateMediaTypeAndFormat;
 import static org.gbif.validator.ws.file.SupportedMediaTypes.COMPRESS_CONTENT_TYPE;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Builder;
@@ -22,6 +18,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.gbif.utils.file.CompressionUtil;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,7 +33,7 @@ public class FileStoreManager {
   @Builder
   public static class AsyncDownloadResult {
     private final DataFile dataFile;
-    private final CompletableFuture<File> downloadTask;
+    private final CompletableFuture<DataFile> downloadTask;
   }
 
   @Data
@@ -104,7 +101,7 @@ public class FileStoreManager {
 
   @SneakyThrows
   public AsyncDataFileTask uploadDataFile(MultipartFile multipartFile, String targetDirectory) {
-    String fileName = multipartFile.getOriginalFilename();
+    String fileName = sanitizeFileName(multipartFile.getOriginalFilename());
     Path destinationFolder = getDestinationPath(targetDirectory);
     Path dataFilePath = destinationFolder.resolve(fileName);
 
@@ -120,24 +117,28 @@ public class FileStoreManager {
         .build();
   }
 
+  /**
+   * Starts downloading and extracting a file. The returned task completes with the extracted file
+   * info, or exceptionally if the download or the extraction fails.
+   */
   @SneakyThrows
-  public AsyncDownloadResult downloadDataFile(
-      String url,
-      String targetDirectory,
-      Consumer<DataFile> resultCallback,
-      Consumer<Throwable> errorCallback)
+  public AsyncDownloadResult downloadDataFile(String url, String targetDirectory)
       throws IOException {
 
-    if (!isAvailable(url)) {
+    // also false for URLs the validator doesn't fetch, see DownloadFileManager
+    if (!downloadFileManager.isAvailable(url)) {
       throw new IllegalArgumentException(
           "Failed to download file from "
               + url
               + ". The resource is not reachable. Please check that the URL is correct");
     }
 
+    // the file name is taken from the redirected URL, if there are redirects
+    String finalUrl = downloadFileManager.getFinalUrl(url);
+
     // extract the file name from http headers if available
-    String headerFileName = getFileNameFromContentDisposition(url);
-    final String fileName = headerFileName != null ? headerFileName : getFileName(url);
+    String headerFileName = getFileNameFromContentDisposition(finalUrl);
+    final String fileName = headerFileName != null ? headerFileName : getFileName(finalUrl);
     Path destinationFolder = getDestinationPath(targetDirectory);
     createIfNotExists(destinationFolder);
     Path dataFilePath = getDestinationPath(targetDirectory).resolve(fileName);
@@ -145,33 +146,15 @@ public class FileStoreManager {
     return AsyncDownloadResult.builder()
         .dataFile(DataFile.builder().sourceFileName(fileName).filePath(dataFilePath).build())
         .downloadTask(
-            downloadFileManager.downloadAsync(
-                url,
-                dataFilePath,
-                file ->
-                    resultCallback.accept(
-                        extractAndGetFileInfo(dataFilePath, destinationFolder, fileName)),
-                errorCallback))
+            downloadFileManager
+                .downloadAsync(finalUrl, dataFilePath)
+                .thenApply(
+                    file -> extractAndGetFileInfo(dataFilePath, destinationFolder, fileName)))
         .build();
   }
 
   public String getFileNameFromContentDisposition(String url) throws IOException {
-    HttpURLConnection connection = null;
-    try {
-      connection = (HttpURLConnection) new URL(url).openConnection();
-      connection.setInstanceFollowRedirects(true);
-      connection.setConnectTimeout(10_000);
-      connection.setReadTimeout(10_000);
-      connection.setRequestMethod("HEAD");
-      // Force the request so headers are available
-      connection.getResponseCode();
-      String contentDisposition = connection.getHeaderField("Content-Disposition");
-      return extractFileName(contentDisposition);
-    } finally {
-      if (connection != null) {
-        connection.disconnect();
-      }
-    }
+    return extractFileName(downloadFileManager.getHeader(url, "Content-Disposition"));
   }
 
   private String extractFileName(String contentDisposition) {
@@ -190,6 +173,18 @@ public class FileStoreManager {
     if (file.exists()) {
       FileUtils.deleteDirectory(file);
     }
+  }
+
+  /**
+   * Strips any directory, '/' or '\' separated, from a client supplied file name, so the file can't
+   * be written outside its target directory.
+   */
+  static String sanitizeFileName(String fileName) {
+    String name = FilenameUtils.getName(fileName);
+    if (name == null || name.isBlank() || name.equals(".") || name.equals("..")) {
+      throw new IllegalArgumentException("Invalid file name: " + fileName);
+    }
+    return name;
   }
 
   @SneakyThrows

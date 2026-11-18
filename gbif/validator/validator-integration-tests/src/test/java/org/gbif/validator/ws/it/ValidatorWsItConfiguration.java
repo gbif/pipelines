@@ -1,11 +1,13 @@
 package org.gbif.validator.ws.it;
 
 import com.zaxxer.hikari.HikariDataSource;
+import java.io.IOException;
 import java.util.Collections;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.validator.it.EmbeddedPostgresServer;
+import org.gbif.validator.it.mocks.GatedFileStoreManager;
 import org.gbif.validator.it.mocks.IdentityServiceClientMock;
 import org.gbif.validator.it.mocks.MessagePublisherMock;
 import org.gbif.validator.it.mocks.RemoteAuthClientMock;
@@ -22,6 +24,7 @@ import org.gbif.ws.security.GbifAuthenticationManagerImpl;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
@@ -81,13 +84,32 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
           .build();
   public static final String TEST_USER_PASSWORD = "hi";
 
+  public static final LoggedUser OTHER_USER =
+      LoggedUser.builder()
+          .userName("other")
+          .email("other@gbif.org")
+          .roles(Collections.singleton(UserRole.USER.name()))
+          .build();
+
   /**
    * Created from here to avoid scanning this class package in which other test configuration are
    * located.
    */
   @Bean
   public DownloadFileManager downloadFileManager() {
-    return new DownloadFileManager();
+    // the MockServer serving test files runs on the loopback address
+    return new DownloadFileManager(new String[] {"127.0.0.1"});
+  }
+
+  /** Lets tests hold the end of submissions. */
+  @Bean
+  @Override
+  public GatedFileStoreManager uploadedFileManager(
+      @Value("${spring.servlet.multipart.location}") String uploadWorkingDirectory,
+      @Value("${storePath}") String storePath,
+      DownloadFileManager downloadFileManager)
+      throws IOException {
+    return new GatedFileStoreManager(uploadWorkingDirectory, storePath, downloadFileManager);
   }
 
   @Bean
@@ -107,7 +129,7 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
 
   @Bean
   public RemoteAuthClient remoteAuthClient() {
-    return RemoteAuthClientMock.builder().testUser(TEST_USER).build();
+    return RemoteAuthClientMock.builder().testUser(TEST_USER).otherUser(OTHER_USER).build();
   }
 
   @Bean

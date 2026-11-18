@@ -41,6 +41,10 @@ public class ErrorMapper implements Function<ErrorCode, ResponseStatusException>
         status = HttpStatus.BAD_REQUEST;
         message = "Notification emails must be provided when installation key is present";
         break;
+      case AUTHORIZATION_ERROR:
+        status = HttpStatus.FORBIDDEN;
+        message = "Not allowed to modify this validation";
+        break;
       case WRONG_KEY_IN_REQUEST:
         status = HttpStatus.BAD_REQUEST;
         message = "Wrong validation key for this url";
