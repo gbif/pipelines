@@ -59,7 +59,7 @@ public class ValidatorIdentifierDistributedCallback extends ValidatorIdentifierC
             .build()
             .validate();
 
-    checkValidity(validationResult);
+    checkValidity(message, validationResult);
   }
 
   @Override

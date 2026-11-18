@@ -13,13 +13,22 @@
  */
 package org.gbif.pipelines.coordinator;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.orchestrator.api.json.OrchestratorJson;
+import org.gbif.orchestrator.api.report.ReportTypes;
+import org.gbif.orchestrator.api.step.Report;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.IndexingPipeline;
 import org.gbif.pipelines.spark.ValidatorMetricsPipeline;
@@ -49,8 +58,29 @@ public class ValidatorMetricsCallback
         fileSystem,
         pipelinesConfig,
         message.getDatasetUuid().toString(),
-        message.getAttempt());
+        message.getAttempt(),
+        OrchestratorReplies.header(message).isPresent());
     log.info("Finished metrics for validation: {}", message.getDatasetUuid());
+  }
+
+  /** The metrics the job wrote, reported as {@code INTERPRETATION_METRICS}. */
+  @Override
+  protected OrchestratorResult orchestratorResult(PipelinesInterpretedMessage message)
+      throws IOException {
+    Path path =
+        new Path(
+            String.format(
+                "%s/%s/%d/%s",
+                pipelinesConfig.getOutputPath(),
+                message.getDatasetUuid(),
+                message.getAttempt(),
+                ValidatorMetricsPipeline.METRICS_FILENAME));
+    JsonNode metrics;
+    try (InputStream in = fileSystem.open(path)) {
+      metrics = OrchestratorJson.mapper().readTree(in);
+    }
+    return new OrchestratorResult(
+        Map.of(), List.of(new Report(ReportTypes.INTERPRETATION_METRICS, metrics, null)));
   }
 
   @Override

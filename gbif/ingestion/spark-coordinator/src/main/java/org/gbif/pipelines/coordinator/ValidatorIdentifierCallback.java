@@ -15,7 +15,12 @@ package org.gbif.pipelines.coordinator;
 
 import static org.gbif.pipelines.util.DistributedUtil.getRecordsNumber;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
@@ -23,6 +28,9 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.orchestrator.api.json.OrchestratorJson;
+import org.gbif.orchestrator.api.report.ReportTypes;
+import org.gbif.orchestrator.api.step.Report;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.IdentifiersPipeline;
@@ -77,7 +85,37 @@ public class ValidatorIdentifierCallback
             .build()
             .validate();
 
-    checkValidity(validationResult);
+    checkValidity(message, validationResult);
+  }
+
+  /** Results of orchestrated runs, from the check until the reply is built. */
+  private final Map<PipelinesVerbatimMessage, IdentifierValidationResult> orchestratedResults =
+      Collections.synchronizedMap(new IdentityHashMap<>());
+
+  /**
+   * Runs for validator-ws fail on bad identifiers, as before. For the flow-orchestrator the result
+   * is reported as {@code IDENTIFIERS} and the orchestrator decides (it applies the same rule).
+   */
+  protected void checkValidity(
+      PipelinesVerbatimMessage message, IdentifierValidationResult validationResult) {
+    if (OrchestratorReplies.header(message).isEmpty()) {
+      checkValidity(validationResult);
+    } else {
+      log.info("Identifier validation for the orchestrator: {}", validationResult);
+      orchestratedResults.put(message, validationResult);
+    }
+  }
+
+  @Override
+  protected OrchestratorResult orchestratorResult(PipelinesVerbatimMessage message) {
+    IdentifierValidationResult result = orchestratedResults.remove(message);
+    if (result == null) {
+      throw new IllegalStateException(
+          "No identifier validation result for " + message.getDatasetUuid());
+    }
+    JsonNode content = OrchestratorJson.mapper().valueToTree(result);
+    return new OrchestratorResult(
+        Map.of(), List.of(new Report(ReportTypes.IDENTIFIERS, content, null)));
   }
 
   /**
