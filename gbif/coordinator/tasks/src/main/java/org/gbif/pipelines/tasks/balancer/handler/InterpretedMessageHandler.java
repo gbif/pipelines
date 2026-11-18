@@ -59,6 +59,7 @@ public class InterpretedMessageHandler {
             m.getValidationResult(),
             m.getInterpretTypes(),
             DatasetType.OCCURRENCE);
+    outputMessage.setStepHeader(m.getStepHeader());
 
     publisher.send(outputMessage);
     log.info("The message has been sent - {}", outputMessage);

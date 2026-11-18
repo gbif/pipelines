@@ -8,6 +8,7 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 
 import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -61,7 +62,11 @@ public class ValidatorMetricsPipeline {
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Parameters(separators = "=")
-  private static class Args extends SingleDatasetPipelineArgs {}
+  private static class Args extends SingleDatasetPipelineArgs {
+    /** Dispatched by the flow-orchestrator: no validator-ws calls, see {@link #run}. */
+    @Parameter(names = "--orchestrated", arity = 1)
+    boolean orchestrated = false;
+  }
 
   private static final List<String> classificationFields =
       Stream.of(
@@ -115,7 +120,7 @@ public class ValidatorMetricsPipeline {
       spark = getSparkSession(args.master, args.appName, config, (b, c) -> {});
       fileSystem = getFileSystem(spark, config);
 
-      run(spark, fileSystem, config, args.datasetId, args.attempt);
+      run(spark, fileSystem, config, args.datasetId, args.attempt, args.orchestrated);
     } finally {
       if (fileSystem != null) fileSystem.close();
       if (spark != null) {
@@ -136,12 +141,29 @@ public class ValidatorMetricsPipeline {
   public static void run(
       SparkSession spark, FileSystem fs, PipelinesConfig config, String datasetId, Integer attempt)
       throws IOException {
+    run(spark, fs, config, datasetId, attempt, false);
+  }
+
+  /**
+   * Like {@link #run(SparkSession, FileSystem, PipelinesConfig, String, Integer)}. When {@code
+   * orchestrated}, validator-ws is not called: the supplied terms are taken from the verbatim data
+   * and the metrics are only written to {@code collect-metrics.json}, which the step reports to the
+   * flow-orchestrator.
+   */
+  public static void run(
+      SparkSession spark,
+      FileSystem fs,
+      PipelinesConfig config,
+      String datasetId,
+      Integer attempt,
+      boolean orchestrated)
+      throws IOException {
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     log.info("Running ValidatorMetricsPipeline for {}", outputPath);
 
-    ValidationClient client = ValidationUtil.createValidationClient(config);
-    Validation validation = client.get(UUID.fromString(datasetId));
+    ValidationClient client = orchestrated ? null : ValidationUtil.createValidationClient(config);
+    Validation validation = orchestrated ? null : client.get(UUID.fromString(datasetId));
 
     Dataset<OccurrenceJsonRecord> records =
         spark
@@ -157,7 +179,9 @@ public class ValidatorMetricsPipeline {
       List<IssueInfo> issues = computeIssues(records);
       log.info("Computed {} distinct issues", issues.size());
 
-      List<TermInfo> termInfos = computeInterpretedFieldCounts(records, validation);
+      List<String> suppliedTerms =
+          orchestrated ? suppliedTermsFromData(records) : suppliedTermsFromValidation(validation);
+      List<TermInfo> termInfos = computeInterpretedFieldCounts(records, suppliedTerms);
       log.info("Computed interpreted counts for {} terms", termInfos.size());
 
       // add extensions
@@ -183,8 +207,10 @@ public class ValidatorMetricsPipeline {
       FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
 
-      // update the stored validation via the API
-      ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
+      if (!orchestrated) {
+        // update the stored validation via the API
+        ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
+      }
 
     } finally {
       records.unpersist();
@@ -342,23 +368,36 @@ public class ValidatorMetricsPipeline {
    * {@link TermInfo} per term with only {@code interpretedIndexed} set; {@code rawIndexed} is left
    * null and filled in by {@code SparkMetricsCollector} from the archive.
    */
+  /** The verbatim terms the occurrence file supplied, as recorded by the archive validation. */
+  private static List<String> suppliedTermsFromValidation(Validation validation) {
+    return validation.getMetrics().getFileInfos().stream()
+        .filter(
+            fileInfo ->
+                fileInfo.getRowType() != null
+                    && fileInfo.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
+        .flatMap(fileInfo -> fileInfo.getTerms().stream())
+        .map(TermInfo::getTerm)
+        .toList();
+  }
+
+  /** The verbatim terms that occur in the data (the keys of the verbatim core records). */
+  static List<String> suppliedTermsFromData(Dataset<OccurrenceJsonRecord> records) {
+    return records
+        .select(explode(map_keys(col("verbatim.core"))).as("term"))
+        .distinct()
+        .collectAsList()
+        .stream()
+        .map(row -> row.getString(0))
+        .sorted()
+        .toList();
+  }
+
   private static List<TermInfo> computeInterpretedFieldCounts(
-      Dataset<OccurrenceJsonRecord> records, Validation validation) {
+      Dataset<OccurrenceJsonRecord> records, List<String> suppliedTermsURIs) {
 
     List<String> columnNames =
         Arrays.asList(records.schema().fieldNames()); // force schema evaluation
     log.info("Interpreted fields: {}", columnNames);
-
-    // find the occurrence CORE or EXTENSION which is rowType == occurrence
-    List<String> suppliedTermsURIs =
-        validation.getMetrics().getFileInfos().stream()
-            .filter(
-                fileInfo ->
-                    fileInfo.getRowType() != null
-                        && fileInfo.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
-            .flatMap(fileInfo -> fileInfo.getTerms().stream())
-            .map(TermInfo::getTerm)
-            .toList();
 
     // build a list of expected columns
     List<String> termURIsToCheck = new ArrayList<>();

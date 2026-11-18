@@ -87,6 +87,24 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- StepCompleted and StepHeader: replies of validator steps dispatched by the flow-orchestrator -->
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>flow-orchestrator-api</artifactId>
+            <version>${flow-orchestrator.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- java.time support: postal and the orchestrator contracts need it at runtime -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
@@ -246,6 +264,11 @@
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-model</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

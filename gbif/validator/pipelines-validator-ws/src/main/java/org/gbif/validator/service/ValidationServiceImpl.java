@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,7 +30,6 @@ import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.utils.file.CompressionUtil.UnsupportedCompressionType;
 import org.gbif.validator.api.ClbDatasetImport;
-import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
@@ -62,10 +60,13 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private final ObjectMapper objectMapper;
 
+  private final StepResolverService stepResolverService;
+
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
 
   private final ErrorMapper errorMapper;
+  private final ValidationMessageService validationMessageService;
 
   /** Asserts the user has not reached the maximum number of executing validations. */
   @Override
@@ -309,7 +310,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
           Optional.ofNullable(validationMapper.get(key))
               .orElse(newValidationInstance(key, dataFile, Status.QUEUED));
 
-      Set<StepType> pipelinesSteps = getPipelineSteps(dataFile);
+      Set<StepType> pipelinesSteps = stepResolverService.resolve(dataFile.getFileFormat());
 
       // Set future steps
       v.setStatus(Status.QUEUED);
@@ -323,8 +324,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       updateAndGet(v);
 
       // Sent RabbitMQ message
-      notify(key, dataFile, pipelinesSteps);
+      validationMessageService.send(key, dataFile.getFileFormat(), pipelinesSteps);
     } catch (Exception ex) {
+      log.error("Failed to submit validation {}", key, ex);
       updateFailedValidation(key, ex.getMessage());
     }
   }
@@ -387,33 +389,5 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
     log.info("Send the MQ message to the validator queue for key - {}", key);
     messagePublisher.send(message);
-  }
-
-  private Set<StepType> getPipelineSteps(DataFile dataFile) {
-    if (dataFile.getFileFormat() == FileFormat.COLDP) {
-      return Set.of(StepType.VALIDATOR_VALIDATE_ARCHIVE);
-    }
-
-    StepType stepType;
-    if (dataFile.getFileFormat() == FileFormat.DWCA
-        || dataFile.getFileFormat() == FileFormat.TABULAR
-        || dataFile.getFileFormat() == FileFormat.SPREADSHEET) {
-      stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM;
-    } else if (dataFile.getFileFormat() == FileFormat.XML) {
-      stepType = StepType.VALIDATOR_XML_TO_VERBATIM;
-    } else {
-      throw new IllegalArgumentException(
-          dataFile.getFileFormat()
-              + " file format is not supported, file name: "
-              + dataFile.getSourceFileName());
-    }
-
-    return new LinkedHashSet<>(
-        List.of(
-            StepType.VALIDATOR_VALIDATE_ARCHIVE,
-            stepType,
-            StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
-            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
-            StepType.VALIDATOR_COLLECT_METRICS));
   }
 }

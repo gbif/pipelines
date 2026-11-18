@@ -46,3 +46,9 @@ clb:
   cleaner:
     hoursOld: 24
     cron: 0 0 */6 ? * *
+
+validator:
+  dwcdp:
+    messaging:
+      exchange: "occurrence_it"
+      routing-key: "occurrence.pipelines.dwcdp.validator.validator"

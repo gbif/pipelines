@@ -10,6 +10,11 @@ import feign.httpclient.ApacheHttpClient;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +30,10 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.orchestrator.api.step.Outcome;
+import org.gbif.orchestrator.api.step.Report;
+import org.gbif.orchestrator.api.step.StepCompleted;
+import org.gbif.orchestrator.api.step.StepHeader;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.util.CallbackUtil;
 import org.gbif.validator.api.Validation;
@@ -44,6 +53,7 @@ public abstract class ValidatorCallback<
   protected final ValidatorStatusService validatorStatusService;
   protected final PipelinesConfig pipelinesConfig;
   protected final MessagePublisher publisher;
+  protected final OrchestratorReplies orchestratorReplies;
   protected SparkSession sparkSession;
   protected FileSystem fileSystem;
   protected final String sparkMaster;
@@ -80,6 +90,8 @@ public abstract class ValidatorCallback<
             .target(
                 ValidationClient.class, pipelinesConfig.getStandalone().getRegistry().getWsUrl());
     this.validatorStatusService = new ValidatorStatusService(validationClient);
+    this.orchestratorReplies =
+        new OrchestratorReplies(publisher, pipelinesConfig.getOrchestrator());
   }
 
   protected abstract StepType getStepType();
@@ -139,6 +151,14 @@ public abstract class ValidatorCallback<
           message.getDatasetUuid() != null ? message.getDatasetUuid().toString() : "NO_DATASET");
       log.debug("Received message: {}", message);
 
+      if (isMessageCorrect(message)) {
+        Optional<StepHeader> header = OrchestratorReplies.header(message);
+        if (header.isPresent()) {
+          runForOrchestrator(message, header.get());
+          return;
+        }
+      }
+
       if (!isMessageCorrect(message) || isProcessingStopped(message)) {
         if (log.isDebugEnabled()) {
           log.debug(
@@ -188,6 +208,86 @@ public abstract class ValidatorCallback<
     } finally {
       runningCounter.decrementAndGet();
     }
+  }
+
+  /** What an orchestrated step reports besides its outcome: outputs for later steps and reports. */
+  protected record OrchestratorResult(Map<String, String> outputs, List<Report> reports) {
+    public static OrchestratorResult none() {
+      return new OrchestratorResult(Map.of(), List.of());
+    }
+  }
+
+  /**
+   * Runs before {@link #runPipeline} for a step dispatched by the orchestrator, for example to read
+   * the data shape from the step's input instead of from message flags.
+   */
+  protected void prepareForOrchestrator(I message) throws Exception {}
+
+  /** The outputs and reports of a successful step dispatched by the orchestrator. */
+  protected OrchestratorResult orchestratorResult(I message) throws Exception {
+    return OrchestratorResult.none();
+  }
+
+  /**
+   * Runs a step dispatched by the flow-orchestrator: no validator-ws calls and no next message; the
+   * result goes back to the orchestrator as a {@link StepCompleted}, also when the step fails.
+   */
+  private void runForOrchestrator(I message, StepHeader header) {
+    ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+    ThreadContext.put("attempt", message.getAttempt().toString());
+    ThreadContext.put("step", getStepType().name());
+    ThreadContext.put("workflowId", header.workflowId().toString());
+    Instant started = Instant.now();
+    StepCompleted completed;
+    CONCURRENT_DATASETS.inc();
+    try {
+      log.info(
+          "Processing step {} for the orchestrator, step attempt {}",
+          getStepType(),
+          header.stepAttempt());
+      prepareForOrchestrator(message);
+      runPipeline(message);
+      OrchestratorResult result = orchestratorResult(message);
+      COMPLETED_DATASETS.inc();
+      completed =
+          new StepCompleted(
+              UUID.randomUUID(),
+              header,
+              Outcome.SUCCEEDED,
+              null,
+              result.outputs(),
+              result.reports(),
+              started,
+              Instant.now());
+    } catch (Exception ex) {
+      log.error("Step {} failed for the orchestrator", getStepType(), ex);
+      DATASETS_ERRORED_COUNT.inc();
+      LAST_DATASETS_ERROR.set(System.currentTimeMillis());
+      completed =
+          new StepCompleted(
+              UUID.randomUUID(),
+              header,
+              Outcome.FAILED,
+              diagnostic(ex),
+              null,
+              null,
+              started,
+              Instant.now());
+    } finally {
+      CONCURRENT_DATASETS.dec();
+    }
+    try {
+      orchestratorReplies.send(completed);
+    } catch (Exception e) {
+      // The step stays dispatched in the orchestrator until its timeout handling (round 6).
+      log.error("Could not send the {} completion to the orchestrator", completed.outcome(), e);
+    }
+  }
+
+  private static String diagnostic(Exception ex) {
+    String message = ex.getMessage();
+    return ex.getClass().getSimpleName()
+        + (message == null || message.isBlank() ? "" : ": " + message);
   }
 
   protected boolean isMessageCorrect(I message) {
