@@ -34,6 +34,9 @@ gbif:
     from: @gbif.mail.url@`
 maxRunningValidationPerUser: 3
 validation:
+  url:
+    # comma separated hosts that may be fetched even if they resolve to non-public addresses
+    allowedPrivateHosts:
   datasource:
     url: @validation.datasource.url@
     password: @validation.datasource.password@

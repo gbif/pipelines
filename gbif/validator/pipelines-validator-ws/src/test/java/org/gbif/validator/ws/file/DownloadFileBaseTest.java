@@ -28,7 +28,8 @@ public abstract class DownloadFileBaseTest {
 
     @Bean
     public DownloadFileManager downloadFileManager() {
-      return new DownloadFileManager();
+      // the MockServer runs on the loopback address
+      return new DownloadFileManager(new String[] {"127.0.0.1"});
     }
   }
 

@@ -158,10 +158,6 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       log.info("Starting validation for the URL {}", fileURL);
       UUID key = UUID.randomUUID();
       String encodedFileURL = EncodingUtil.encode(fileURL);
-      Optional<String> redirectedUrl = EncodingUtil.getRedirectedUrl(encodedFileURL);
-      if (redirectedUrl.isPresent()) {
-        encodedFileURL = redirectedUrl.get();
-      }
 
       // this should also become asynchronous at some point
       FileStoreManager.AsyncDownloadResult downloadResult =

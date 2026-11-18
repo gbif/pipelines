@@ -1,15 +1,12 @@
 package org.gbif.validator.ws.file;
 
-import static org.gbif.validator.ws.file.DownloadFileManager.isAvailable;
 import static org.gbif.validator.ws.file.MediaTypeAndFormatDetector.detectMediaType;
 import static org.gbif.validator.ws.file.MediaTypeAndFormatDetector.evaluateMediaTypeAndFormat;
 import static org.gbif.validator.ws.file.SupportedMediaTypes.COMPRESS_CONTENT_TYPE;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -128,16 +125,20 @@ public class FileStoreManager {
   public AsyncDownloadResult downloadDataFile(String url, String targetDirectory)
       throws IOException {
 
-    if (!isAvailable(url)) {
+    // also false for URLs the validator doesn't fetch, see DownloadFileManager
+    if (!downloadFileManager.isAvailable(url)) {
       throw new IllegalArgumentException(
           "Failed to download file from "
               + url
               + ". The resource is not reachable. Please check that the URL is correct");
     }
 
+    // the file name is taken from the redirected URL, if there are redirects
+    String finalUrl = downloadFileManager.getFinalUrl(url);
+
     // extract the file name from http headers if available
-    String headerFileName = getFileNameFromContentDisposition(url);
-    final String fileName = headerFileName != null ? headerFileName : getFileName(url);
+    String headerFileName = getFileNameFromContentDisposition(finalUrl);
+    final String fileName = headerFileName != null ? headerFileName : getFileName(finalUrl);
     Path destinationFolder = getDestinationPath(targetDirectory);
     createIfNotExists(destinationFolder);
     Path dataFilePath = getDestinationPath(targetDirectory).resolve(fileName);
@@ -146,29 +147,14 @@ public class FileStoreManager {
         .dataFile(DataFile.builder().sourceFileName(fileName).filePath(dataFilePath).build())
         .downloadTask(
             downloadFileManager
-                .downloadAsync(url, dataFilePath)
+                .downloadAsync(finalUrl, dataFilePath)
                 .thenApply(
                     file -> extractAndGetFileInfo(dataFilePath, destinationFolder, fileName)))
         .build();
   }
 
   public String getFileNameFromContentDisposition(String url) throws IOException {
-    HttpURLConnection connection = null;
-    try {
-      connection = (HttpURLConnection) new URL(url).openConnection();
-      connection.setInstanceFollowRedirects(true);
-      connection.setConnectTimeout(10_000);
-      connection.setReadTimeout(10_000);
-      connection.setRequestMethod("HEAD");
-      // Force the request so headers are available
-      connection.getResponseCode();
-      String contentDisposition = connection.getHeaderField("Content-Disposition");
-      return extractFileName(contentDisposition);
-    } finally {
-      if (connection != null) {
-        connection.disconnect();
-      }
-    }
+    return extractFileName(downloadFileManager.getHeader(url, "Content-Disposition"));
   }
 
   private String extractFileName(String contentDisposition) {

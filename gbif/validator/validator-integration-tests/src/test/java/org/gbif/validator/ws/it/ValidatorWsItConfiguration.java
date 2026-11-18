@@ -94,7 +94,8 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
    */
   @Bean
   public DownloadFileManager downloadFileManager() {
-    return new DownloadFileManager();
+    // the MockServer serving test files runs on the loopback address
+    return new DownloadFileManager(new String[] {"127.0.0.1"});
   }
 
   @Bean

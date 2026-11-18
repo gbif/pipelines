@@ -47,6 +47,7 @@ import org.mockserver.junit.jupiter.MockServerExtension;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.verify.VerificationTimes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -245,6 +246,17 @@ public class ValidationResourceIT {
                     .sourceId(UUID.randomUUID().toString())
                     .installationKey(UUID.randomUUID())
                     .build()));
+  }
+
+  @Test
+  public void validationSubmitPrivateUrlIT() {
+    // localhost is not an allowed private host, only 127.0.0.1 is
+    String url = "http://localhost:" + clientAndServer.getPort() + "/private.zip";
+    Assertions.assertThrows(
+        RuntimeException.class,
+        () -> validationWsClient.validateFileFromUrl(url, testValidationRequest()));
+    clientAndServer.verify(
+        HttpRequest.request().withPath("/private.zip"), VerificationTimes.never());
   }
 
   @Test
