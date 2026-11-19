@@ -74,6 +74,9 @@ public class FragmenterPipeline {
   private static final String FRAGMENT_DATE_CREATED_COLUMN = "dateCreated";
   private static final String FRAGMENT_PROTOCOL_COLUMN = "protocol";
   private static final String FRAGMENT_RECORD_COLUMN = "record";
+  // 5 attempts with 2s, 4s, 8s, 16s waits between them (~30s plus the ZK timeouts)
+  private static final int HBASE_CONNECT_MAX_ATTEMPTS = 5;
+  private static final long HBASE_CONNECT_INITIAL_BACKOFF_MS = 2_000L;
 
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {
@@ -171,11 +174,11 @@ public class FragmenterPipeline {
       hbaseConf.addResource(new Path(config.getCoreSiteConfig()));
     }
 
-    try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
+    TableName fragmentsTable = TableName.valueOf(config.getFragmentsTable());
+    try (Connection connection = openConnectionWithRetry(hbaseConf, fragmentsTable);
         Admin admin = connection.getAdmin();
-        Table table = connection.getTable(TableName.valueOf(config.getFragmentsTable()));
-        RegionLocator regionLocator =
-            connection.getRegionLocator(TableName.valueOf(config.getFragmentsTable()))) {
+        Table table = connection.getTable(fragmentsTable);
+        RegionLocator regionLocator = connection.getRegionLocator(fragmentsTable)) {
 
       // read verbatim records
       Dataset<ExtendedRecord> verbatim =
@@ -284,6 +287,37 @@ public class FragmenterPipeline {
       ThreadContext.remove("datasetKey");
       ThreadContext.remove("attempt");
       ThreadContext.remove("step");
+    }
+  }
+
+  /**
+   * Opens an HBase connection and looks up the table's regions straight away, retrying if it fails.
+   * The region lookup is what reads from ZooKeeper, and a slow ZooKeeper read fails with a
+   * DoNotRetryIOException that the HBase client never retries itself. The connection caches the
+   * region locations, so later calls in the step don't need ZooKeeper again.
+   */
+  private static Connection openConnectionWithRetry(Configuration hbaseConf, TableName tableName)
+      throws IOException, InterruptedException {
+    long backoffMs = HBASE_CONNECT_INITIAL_BACKOFF_MS;
+    for (int attempt = 1; ; attempt++) {
+      Connection connection = ConnectionFactory.createConnection(hbaseConf);
+      try (RegionLocator locator = connection.getRegionLocator(tableName)) {
+        locator.getStartKeys();
+        return connection;
+      } catch (IOException e) {
+        connection.close();
+        if (attempt >= HBASE_CONNECT_MAX_ATTEMPTS) {
+          throw e;
+        }
+        log.warn(
+            "HBase connection attempt {}/{} failed: {}. Retrying in {} ms",
+            attempt,
+            HBASE_CONNECT_MAX_ATTEMPTS,
+            e.getMessage(),
+            backoffMs);
+        Thread.sleep(backoffMs);
+        backoffMs *= 2;
+      }
     }
   }
 
