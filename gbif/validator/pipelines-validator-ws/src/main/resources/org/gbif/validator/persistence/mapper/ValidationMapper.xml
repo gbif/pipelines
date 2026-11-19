@@ -84,8 +84,7 @@
     <if test="clbValidationMessage != null">
       clb_validation_message = #{clbValidationMessage,jdbcType=VARCHAR},
     </if>
-    modified = now(),
-    deleted = null
+    modified = now()
   </sql>
 
   <sql id="WRITABLE_VALIDATION_FIELD_TYPES">
@@ -138,6 +137,14 @@
     UPDATE validation
     SET <include refid="VALIDATION_UPDATE"/>
     WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <!-- Only updates validations still executing, so a cancellation or deletion is not undone -->
+  <update id="updateIfExecuting" parameterType="org.gbif.validator.api.Validation">
+    UPDATE validation
+    SET <include refid="VALIDATION_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
+    AND status IN ('QUEUED', 'DOWNLOADING' , 'SUBMITTED', 'RUNNING', 'WAITING_FOR_CHECKLISTBANK')
   </update>
 
   <!-- For safety, should it be already deleted nothing is done -->

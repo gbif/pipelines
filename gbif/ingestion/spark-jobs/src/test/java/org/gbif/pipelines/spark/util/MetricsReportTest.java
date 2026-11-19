@@ -26,6 +26,7 @@ public class MetricsReportTest {
   private static final String DATASET_A = "11111111-1111-1111-1111-111111111111";
   private static final String DATASET_B = "22222222-2222-2222-2222-222222222222";
   private static final String DATASET_C = "33333333-3333-3333-3333-333333333333";
+  private static final String ISSUE_URL = "https://github.com/gbif/ingestion-management/issues/1";
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
@@ -66,7 +67,18 @@ public class MetricsReportTest {
             DATASET_B,
                 new MetricsReport.DatasetMetadata("Plants, \"B\"", "SAMPLING_EVENT", "INVENTORY"));
 
-    int rows = MetricsReport.writeReport(fs, config, reportPath, metadata, null, null, 2, 60);
+    int rows =
+        MetricsReport.writeReport(
+            fs,
+            config,
+            reportPath,
+            metadata,
+            new MetricsReport.DatasetIssues(
+                Map.of(DATASET_A, List.of(ISSUE_URL)), Map.of(DATASET_B, List.of("c1", "c2"))),
+            null,
+            null,
+            2,
+            60);
 
     assertEquals(3, rows);
     // the .csv extension is replaced and the report gzipped
@@ -83,11 +95,25 @@ public class MetricsReportTest {
 
     // dataset metadata follows the attempt; B's title is quoted as it has a comma and quotes
     assertEquals(
-        List.of("datasetUUID", "attempt", "title", "type", "sub_type"), header.subList(0, 5));
-    assertTrue(lines.get(1).startsWith(DATASET_A + ",1,Dataset A,OCCURRENCE,,"));
+        List.of(
+            "datasetUUID",
+            "attempt",
+            "title",
+            "type",
+            "sub_type",
+            "openIssueCount",
+            "openIssues",
+            "closedIssueCount",
+            "closedIssues"),
+        header.subList(0, 9));
     assertTrue(
-        lines.get(2).startsWith(DATASET_B + ",1,\"Plants, \"\"B\"\"\",SAMPLING_EVENT,INVENTORY,"));
-    assertTrue(lines.get(3).startsWith(DATASET_C + ",1,,,,"));
+        lines.get(1).startsWith(DATASET_A + ",1,Dataset A,OCCURRENCE,,1," + ISSUE_URL + ",0,,"));
+    assertTrue(
+        lines
+            .get(2)
+            .startsWith(
+                DATASET_B + ",1,\"Plants, \"\"B\"\"\",SAMPLING_EVENT,INVENTORY,0,,2,c1 c2,"));
+    assertTrue(lines.get(3).startsWith(DATASET_C + ",1,,,,0,,0,,"));
 
     String[] a = lines.get(1).split(",", -1);
     String[] b = lines.get(2).replace("\"Plants, \"\"B\"\"\"", "B").split(",", -1);
@@ -122,7 +148,7 @@ public class MetricsReportTest {
     long modified = report.lastModified();
 
     MetricsReport.writeReport(
-        fs, config, new Path(report.getAbsolutePath()), null, null, null, 1, 60);
+        fs, config, new Path(report.getAbsolutePath()), null, null, null, null, 1, 60);
 
     File backup =
         new File(
@@ -209,9 +235,9 @@ public class MetricsReportTest {
     File report = new File(reportDir, "report.csv.gz");
     Path reportPath = new Path(report.getAbsolutePath());
 
-    MetricsReport.writeReport(fs, config, reportPath, null, null, null, 1, 60);
+    MetricsReport.writeReport(fs, config, reportPath, null, null, null, null, 1, 60);
     long modified = report.lastModified();
-    MetricsReport.writeReport(fs, config, reportPath, null, null, null, 1, 60);
+    MetricsReport.writeReport(fs, config, reportPath, null, null, null, null, 1, 60);
 
     String backup =
         "report-"
@@ -256,6 +282,54 @@ public class MetricsReportTest {
                         run.path("file").asText(),
                         run.path("timestamp").isNull() ? null : run.path("timestamp").asText())));
     assertEquals(previousRuns, runs);
+  }
+
+  @Test
+  public void groupsIssuesByStateAndDatasetKeyLabel() throws Exception {
+    String page =
+        "["
+            + "{\"html_url\": \"u1\", \"state\": \"open\", \"labels\": [{\"name\": \"Contacted\"},"
+            + " {\"name\": \"pub: 64ee55c9-570a-42af-b7da-3f13c6b4e5a9\"},"
+            + " {\"name\": \""
+            + DATASET_A
+            + "\"}]},"
+            + "{\"html_url\": \"u2\", \"state\": \"open\", \"labels\": [{\"name\": \""
+            + DATASET_A.toUpperCase()
+            + "\"}, {\"name\": \""
+            + DATASET_B
+            + "\"}]},"
+            + "{\"html_url\": \"pr\", \"pull_request\": {}, \"labels\": [{\"name\": \""
+            + DATASET_C
+            + "\"}]},"
+            + "{\"html_url\": \"u3\", \"state\": \"open\", \"labels\": []},"
+            + "{\"html_url\": \"c1\", \"state\": \"closed\", \"labels\": [{\"name\": \""
+            + DATASET_A
+            + "\"}]}"
+            + "]";
+    MetricsReport.DatasetIssues issues =
+        new MetricsReport.DatasetIssues(new java.util.HashMap<>(), new java.util.HashMap<>());
+    MetricsReport.addDatasetIssues(
+        new com.fasterxml.jackson.databind.ObjectMapper().readTree(page), issues);
+
+    assertEquals(Map.of(DATASET_A, List.of("u1", "u2"), DATASET_B, List.of("u2")), issues.open());
+    assertEquals(Map.of(DATASET_A, List.of("c1")), issues.closed());
+    assertEquals(",2,u1 u2,1,c1", issues.cells(DATASET_A));
+    assertEquals(",1,u2,0,", issues.cells(DATASET_B));
+    assertEquals(",0,,0,", issues.cells(DATASET_C));
+  }
+
+  @Test
+  public void followsGithubNextLink() {
+    assertEquals(
+        "https://api.github.com/repositories/1/issues?page=2",
+        MetricsReport.nextLink(
+            "<https://api.github.com/repositories/1/issues?page=2>; rel=\"next\","
+                + " <https://api.github.com/repositories/1/issues?page=5>; rel=\"last\""));
+    assertEquals(
+        null,
+        MetricsReport.nextLink(
+            "<https://api.github.com/repositories/1/issues?page=1>; rel=\"prev\""));
+    assertEquals(null, MetricsReport.nextLink(null));
   }
 
   @Test
