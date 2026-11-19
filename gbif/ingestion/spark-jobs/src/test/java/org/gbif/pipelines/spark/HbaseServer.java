@@ -4,6 +4,7 @@ import java.io.IOException;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -44,6 +45,11 @@ public class HbaseServer extends ExternalResource {
   public void truncateTable() throws IOException {
     log.info("Truncate the table");
     TEST_UTIL.truncateTable(FRAGMENT_TABLE);
+  }
+
+  /** HDFS of the mini-cluster */
+  public FileSystem getDfs() throws IOException {
+    return TEST_UTIL.getDFSCluster().getFileSystem();
   }
 
   @Override
