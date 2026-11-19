@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 
@@ -89,13 +90,5 @@ public class DnaTaxonomyInterpreter {
         .withGenus(genus)
         .withSpecies(species)
         .build();
-  }
-
-  private static String trimToNull(String s) {
-    if (s == null) {
-      return null;
-    }
-    String t = s.trim();
-    return t.isEmpty() ? null : t;
   }
 }

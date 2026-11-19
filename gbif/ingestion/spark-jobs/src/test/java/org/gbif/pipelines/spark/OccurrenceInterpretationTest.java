@@ -5,6 +5,7 @@ import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -206,6 +207,35 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     Row hdfsRow = spark.read().parquet(attemptPath + Directories.OCCURRENCE_HDFS).first();
     assertEquals(
         Set.of(col, nub), hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnaclassifications")).keySet());
+  }
+
+  /** A missing classifier ws fails before interpreting anything, not after the transforms. */
+  @Test
+  public void testDnaTaxonInterpretationWithoutWsFailsBeforeInterpreting() throws Exception {
+    String testUuid = "d3b1f8e5-69c2-4a7f-b4da-2e8f6c9a3b71";
+    int attempt = 1;
+    String basePath = getClass().getResource("/").getFile();
+
+    generateIdentifierParquet(basePath, testUuid, attempt);
+    generateMinimalDnaVerbatimParquet(basePath, testUuid, attempt);
+
+    PipelinesConfig config = loadConfig(basePath + "/pipelines.yaml");
+    config.getDnaConfig().setEnableDnaTaxonInterpretation(true);
+    config.getDnaConfig().setSequenceClassifierWsConfig(null);
+    FileSystem fileSystem = getFileSystem(spark, config);
+
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            OccurrenceInterpretationPipeline.runInterpretation(
+                spark, fileSystem, config, testUuid, attempt, 1, false, true, null));
+
+    assertFalse(
+        Files.exists(
+            java.nio.file.Path.of(basePath)
+                .resolve(testUuid)
+                .resolve(String.valueOf(attempt))
+                .resolve(Directories.SIMPLE_OCCURRENCE)));
   }
 
   private void checkJsonOutputs(String outputFile, String testUuid, int attempt) throws Exception {

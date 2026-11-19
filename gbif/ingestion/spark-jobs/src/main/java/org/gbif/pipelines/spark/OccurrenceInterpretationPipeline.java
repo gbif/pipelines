@@ -319,6 +319,11 @@ public class OccurrenceInterpretationPipeline {
       }
     }
 
+    // fail before interpreting anything if the DNA taxonomy is enabled without its config
+    if (config.getDnaConfig().isEnableDnaTaxonInterpretation()) {
+      TaxonomyDnaPipeline.validateDnaConfig(config);
+    }
+
     long start = System.currentTimeMillis();
 
     ThreadContext.put("datasetKey", datasetId);

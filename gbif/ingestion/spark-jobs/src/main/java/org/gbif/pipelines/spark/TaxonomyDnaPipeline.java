@@ -127,8 +127,6 @@ public class TaxonomyDnaPipeline {
 
     Dataset<Occurrence> simpleRecords = loadSimpleRecords(spark, outputPath);
 
-    long recordCount = simpleRecords.count();
-
     // task retries can count a partition more than once, so they are approximate on failures
     LongAccumulator classified = spark.sparkContext().longAccumulator("dnaTaxonRecords");
     LongAccumulator failed = spark.sparkContext().longAccumulator("dnaTaxonFailedRecords");
@@ -163,9 +161,9 @@ public class TaxonomyDnaPipeline {
         new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE));
 
     log.info(
-        "Finished taxonomy re-interpretation in {} secs, records: {}",
+        "Finished DNA taxonomy interpretation in {} secs, classified occurrences: {}",
         (System.currentTimeMillis() - start) / 1000,
-        recordCount);
+        classified.value());
 
     return spark
         .read()
@@ -188,7 +186,7 @@ public class TaxonomyDnaPipeline {
       PipelinesConfig config,
       Dataset<Occurrence> input,
       String outputPath,
-      String datasetId,
+      String datasetKey,
       LongAccumulator classified,
       LongAccumulator failed,
       LongAccumulator missing) {
@@ -222,7 +220,7 @@ public class TaxonomyDnaPipeline {
                                       partition,
                                       client,
                                       taxonomyInterpreters,
-                                      datasetId,
+                                      datasetKey,
                                       classified,
                                       failed,
                                       missing)
@@ -253,7 +251,7 @@ public class TaxonomyDnaPipeline {
       List<Occurrence> occurrencePartition,
       SequenceClassifierServiceClient client,
       List<BiConsumer<ClassifyOccurrenceResponse, TaxonRecord>> taxonomyInterpreters,
-      String datasetId,
+      String datasetKey,
       LongAccumulator classified,
       LongAccumulator failed,
       LongAccumulator missing) {
@@ -278,7 +276,7 @@ public class TaxonomyDnaPipeline {
         log.error(
             "DNA classification failed for {} occurrences of dataset {}, kept without it",
             requests.size(),
-            datasetId,
+            datasetKey,
             ex);
         failed.add(requests.size());
         return occurrencePartition;
