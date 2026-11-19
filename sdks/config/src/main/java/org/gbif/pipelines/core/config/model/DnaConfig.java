@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DnaConfig implements Serializable {
 
-  int batchSizeSequenceClassifier = 500;
+  int batchSizeSequenceClassifier = 50;
   WsConfig sequenceClassifierWsConfig;
   boolean enableDnaTaxonInterpretation = false;
   // checklists to match the DNA-assisted classifications against, the default taxonomy when empty
