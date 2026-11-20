@@ -4,6 +4,8 @@ import static org.apache.parquet.hadoop.ParquetFileWriter.Mode.OVERWRITE;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +17,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -29,10 +32,13 @@ import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.Constants;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
@@ -95,6 +101,141 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     // check hdfs outputs in detail
     checkHdfsTableOutputs(basePath, testUuid, attempt);
     checkJsonOutputs(basePath, testUuid, attempt);
+  }
+
+  @Test
+  public void testDnaTaxonInterpretationEnabled() throws Exception {
+    String testUuid = "ab1f2f60-690a-40cf-9d82-75ec7db7e97f";
+    int attempt = 1;
+    String basePath = getClass().getResource("/").getFile();
+
+    generateIdentifierParquet(basePath, testUuid, attempt);
+    generateMinimalDnaVerbatimParquet(basePath, testUuid, attempt);
+
+    URL testRootUrl = getClass().getResource("/");
+    assert testRootUrl != null;
+    String testResourcesRoot = testRootUrl.getFile();
+    PipelinesConfig config = loadConfig(testResourcesRoot + "/pipelines.yaml");
+    config.getDnaConfig().setEnableDnaTaxonInterpretation(true);
+
+    FileSystem fileSystem = getFileSystem(spark, config);
+    OccurrenceInterpretationPipeline.runInterpretation(
+        spark, fileSystem, config, testUuid, attempt, 1, false, true, null);
+
+    java.nio.file.Path jsonDir =
+        java.nio.file.Path.of(basePath)
+            .resolve(testUuid)
+            .resolve(String.valueOf(attempt))
+            .resolve(Directories.OCCURRENCE_JSON);
+    Dataset<OccurrenceJsonRecord> jsonRecords =
+        spark.read().parquet(jsonDir.toString()).as(Encoders.bean(OccurrenceJsonRecord.class));
+    List<String> jsonPayloads = jsonRecords.toJSON().collectAsList();
+    assertEquals(1, jsonPayloads.size());
+    String json = jsonPayloads.get(0);
+
+    // the DNA-assisted classification is kept apart from the classifications
+    String checklistKey = OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY;
+    List<String> checklistKeys = JsonPath.read(json, "$.checklistKey");
+    assertEquals(
+        Set.copyOf(checklistKeys),
+        JsonPath.<Map<String, Object>>read(json, "$.classifications").keySet());
+    assertEquals("Classified from 1 sequence", JsonPath.read(json, "$.dnaClassifications.remarks"));
+    assertEquals(
+        "Panthera leo (Linnaeus, 1758)",
+        JsonPath.read(
+            json, "$.dnaClassifications.classifications['" + checklistKey + "'].usage.name"));
+
+    java.nio.file.Path hdfsDir =
+        java.nio.file.Path.of(basePath)
+            .resolve(testUuid)
+            .resolve(String.valueOf(attempt))
+            .resolve(Directories.OCCURRENCE_HDFS);
+    List<Row> hdfsOutput = spark.read().parquet(hdfsDir.toString()).collectAsList();
+    assertEquals(1, hdfsOutput.size());
+    Row hdfsRow = hdfsOutput.get(0);
+    assertEquals(checklistKeys, hdfsRow.getList(hdfsRow.fieldIndex("checklistkey")));
+    assertEquals(
+        Set.copyOf(checklistKeys),
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("classifications")).keySet());
+
+    Map<String, scala.collection.Seq<String>> dnaClassifications =
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnaclassifications"));
+    assertEquals(Set.of(checklistKey), dnaClassifications.keySet());
+    assertFalse(dnaClassifications.get(checklistKey).isEmpty());
+
+    // the DNA-assisted classification of the default checklist is configured as "col_dna"
+    Row colDnaClassification = hdfsRow.getStruct(hdfsRow.fieldIndex("col_dna_classification"));
+    assertEquals("Panthera leo (Linnaeus, 1758)", colDnaClassification.getAs("scientificname"));
+    assertFalse(colDnaClassification.<scala.collection.Seq<String>>getAs("taxonkeys").isEmpty());
+    assertEquals(
+        Set.of(checklistKey),
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnataxonomicstatuses")).keySet());
+    assertEquals(
+        Set.of(checklistKey),
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnataxonomicissues")).keySet());
+    // the struct takes the status of the DNA-assisted match
+    assertEquals(
+        hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnataxonomicstatuses")).get(checklistKey),
+        colDnaClassification.getAs("taxonomicstatus"));
+  }
+
+  /** The DNA-assisted classification is matched against every configured DNA checklist. */
+  @Test
+  public void testDnaTaxonInterpretationWithSeveralChecklists() throws Exception {
+    String testUuid = "c2a0e7d4-58b1-4f6e-a3c9-1d7e5b8f2a60";
+    int attempt = 1;
+    String basePath = getClass().getResource("/").getFile();
+
+    generateIdentifierParquet(basePath, testUuid, attempt);
+    generateMinimalDnaVerbatimParquet(basePath, testUuid, attempt);
+
+    PipelinesConfig config = loadConfig(basePath + "/pipelines.yaml");
+    config.getDnaConfig().setEnableDnaTaxonInterpretation(true);
+    String col = Constants.COL_DATASET_KEY.toString();
+    String nub = Constants.NUB_DATASET_KEY.toString();
+    config.getDnaConfig().setChecklistKeys(List.of(col, nub));
+
+    OccurrenceInterpretationPipeline.runInterpretation(
+        spark, getFileSystem(spark, config), config, testUuid, attempt, 1, false, true, null);
+
+    String attemptPath = basePath + "/" + testUuid + "/" + attempt + "/";
+    String json = spark.read().parquet(attemptPath + Directories.OCCURRENCE_JSON).toJSON().first();
+    assertEquals(
+        Set.of(col, nub),
+        JsonPath.<Map<String, Object>>read(json, "$.dnaClassifications.classifications").keySet());
+
+    Row hdfsRow = spark.read().parquet(attemptPath + Directories.OCCURRENCE_HDFS).first();
+    assertEquals(
+        Set.of(col, nub), hdfsRow.getJavaMap(hdfsRow.fieldIndex("dnaclassifications")).keySet());
+  }
+
+  /** A missing classifier ws fails before interpreting anything, not after the transforms. */
+  @Test
+  public void testDnaTaxonInterpretationWithoutWsFailsBeforeInterpreting() throws Exception {
+    String testUuid = "d3b1f8e5-69c2-4a7f-b4da-2e8f6c9a3b71";
+    int attempt = 1;
+    String basePath = getClass().getResource("/").getFile();
+
+    generateIdentifierParquet(basePath, testUuid, attempt);
+    generateMinimalDnaVerbatimParquet(basePath, testUuid, attempt);
+
+    PipelinesConfig config = loadConfig(basePath + "/pipelines.yaml");
+    config.getDnaConfig().setEnableDnaTaxonInterpretation(true);
+    config.getDnaConfig().setSequenceClassifierWsConfig(null);
+    FileSystem fileSystem = getFileSystem(spark, config);
+
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            OccurrenceInterpretationPipeline.runInterpretation(
+                spark, fileSystem, config, testUuid, attempt, 1, false, true, null));
+
+    assertFalse(
+        Files.exists(
+            java.nio.file.Path.of(basePath)
+                .resolve(testUuid)
+                .resolve(String.valueOf(attempt))
+                .resolve(Directories.SIMPLE_OCCURRENCE)));
   }
 
   private void checkJsonOutputs(String outputFile, String testUuid, int attempt) throws Exception {
@@ -730,6 +871,43 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
 
     try (ParquetWriter<ExtendedRecord> writer =
         AvroParquetWriter.<ExtendedRecord>builder(path)
+            .withSchema(schema)
+            .withDataModel(ReflectData.get())
+            .withCompressionCodec(CompressionCodecName.SNAPPY)
+            .withConf(new org.apache.hadoop.conf.Configuration())
+            .withWriteMode(OVERWRITE)
+            .build()) {
+      writer.write(er);
+    }
+  }
+
+  private void generateMinimalDnaVerbatimParquet(String basePath, String uuid, int attempt)
+      throws IOException {
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").build();
+    er.setCoreRowType(DwcTerm.Occurrence.qualifiedName());
+    Map<String, String> coreTerms = new HashMap<>();
+    coreTerms.put(DwcTerm.occurrenceID.qualifiedName(), "occ-1");
+    coreTerms.put(DwcTerm.scientificName.qualifiedName(), "Panthera leo");
+    coreTerms.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
+    coreTerms.put(DwcTerm.phylum.qualifiedName(), "Chordata");
+    coreTerms.put(DwcTerm.class_.qualifiedName(), "Mammalia");
+    coreTerms.put(DwcTerm.order.qualifiedName(), "Carnivora");
+    coreTerms.put(DwcTerm.family.qualifiedName(), "Felidae");
+    coreTerms.put(DwcTerm.genus.qualifiedName(), "Panthera");
+    coreTerms.put(DwcTerm.specificEpithet.qualifiedName(), "leo");
+    coreTerms.put(DwcTerm.taxonRank.qualifiedName(), "species");
+    er.setCoreTerms(coreTerms);
+
+    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
+    Map<String, String> dnaTerms = new HashMap<>();
+    dnaTerms.put(GbifDnaTerm.dna_sequence.qualifiedName(), "ACGTACGTACGTACGTACGT");
+    extensions.put("http://rs.gbif.org/terms/1.0/DNADerivedData", List.of(dnaTerms));
+    er.setExtensions(extensions);
+
+    Schema schema = ReflectData.AllowNull.get().getSchema(ExtendedRecord.class);
+    String outputPath = basePath + "/" + uuid + "/" + attempt + "/verbatim/verbatim.parquet";
+    try (ParquetWriter<ExtendedRecord> writer =
+        AvroParquetWriter.<ExtendedRecord>builder(new Path(outputPath))
             .withSchema(schema)
             .withDataModel(ReflectData.get())
             .withCompressionCodec(CompressionCodecName.SNAPPY)

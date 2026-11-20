@@ -1,0 +1,17 @@
+[
+  {
+    "gbifID": "1",
+    "classification": {
+      "scientificName": "Panthera leo",
+      "taxonRank": "SPECIES",
+      "kingdom": "Animalia",
+      "phylum": "Chordata",
+      "class": "Mammalia",
+      "order": "Carnivora",
+      "family": "Felidae",
+      "genus": "Panthera",
+      "species": "Panthera leo",
+      "remarks": "Classified from 1 sequence"
+    }
+  }
+]

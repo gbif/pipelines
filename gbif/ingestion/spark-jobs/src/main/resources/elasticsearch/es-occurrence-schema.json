@@ -10,7 +10,7 @@
     },
     {
       "classifications_usage_key": {
-        "path_match": "classifications.*.usage.key",
+        "path_match": ["classifications.*.usage.key", "dnaClassifications.classifications.*.usage.key"],
         "mapping": {
           "type": "keyword"
         }
@@ -18,7 +18,7 @@
     },
     {
       "classifications_usage_rank": {
-        "path_match": "classifications.*.usage.rank",
+        "path_match": ["classifications.*.usage.rank", "dnaClassifications.classifications.*.usage.rank"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -38,7 +38,7 @@
     },
     {
       "classifications_usage_genericName": {
-        "path_match": "classifications.*.usage.genericName",
+        "path_match": ["classifications.*.usage.genericName", "dnaClassifications.classifications.*.usage.genericName"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -47,7 +47,7 @@
     },
     {
       "classifications_usage_infraspecificEpithet": {
-        "path_match": "classifications.*.usage.infraspecificEpithet",
+        "path_match": ["classifications.*.usage.infraspecificEpithet", "dnaClassifications.classifications.*.usage.infraspecificEpithet"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -56,7 +56,7 @@
     },
     {
       "classifications_usage_specificEpithet": {
-        "path_match": "classifications.*.usage.specificEpithet",
+        "path_match": ["classifications.*.usage.specificEpithet", "dnaClassifications.classifications.*.usage.specificEpithet"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -65,7 +65,7 @@
     },
     {
       "classifications_usage_authorship": {
-        "path_match": "classifications.*.usage.authorship",
+        "path_match": ["classifications.*.usage.authorship", "dnaClassifications.classifications.*.usage.authorship"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -74,7 +74,7 @@
     },
     {
       "classifications_usage_code": {
-        "path_match": "classifications.*.usage.code",
+        "path_match": ["classifications.*.usage.code", "dnaClassifications.classifications.*.usage.code"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -83,7 +83,7 @@
     },
     {
       "classifications_usage_formattedName": {
-        "path_match": "classifications.*.usage.formattedName",
+        "path_match": ["classifications.*.usage.formattedName", "dnaClassifications.classifications.*.usage.formattedName"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -92,7 +92,7 @@
     },
     {
       "classifications_acceptedUsage_key": {
-        "path_match": "classifications.*.acceptedUsage.key",
+        "path_match": ["classifications.*.acceptedUsage.key", "dnaClassifications.classifications.*.acceptedUsage.key"],
         "mapping": {
           "type": "keyword"
         }
@@ -100,7 +100,7 @@
     },
     {
       "classifications_acceptedUsage_rank": {
-        "path_match": "classifications.*.acceptedUsage.rank",
+        "path_match": ["classifications.*.acceptedUsage.rank", "dnaClassifications.classifications.*.acceptedUsage.rank"],
         "mapping": {
           "type": "keyword", "index": false, "doc_values": false
         }
@@ -119,7 +119,7 @@
     },
     {
       "classifications_acceptedUsage_authorship": {
-        "path_match": "classifications.*.acceptedUsage.authorship",
+        "path_match": ["classifications.*.acceptedUsage.authorship", "dnaClassifications.classifications.*.acceptedUsage.authorship"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -128,7 +128,7 @@
     },
     {
       "classifications_acceptedUsage_code": {
-        "path_match": "classifications.*.acceptedUsage.code",
+        "path_match": ["classifications.*.acceptedUsage.code", "dnaClassifications.classifications.*.acceptedUsage.code"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -137,7 +137,7 @@
     },
     {
       "classifications_acceptedUsage_genericName": {
-        "path_match": "classifications.*.acceptedUsage.genericName",
+        "path_match": ["classifications.*.acceptedUsage.genericName", "dnaClassifications.classifications.*.acceptedUsage.genericName"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -146,7 +146,7 @@
     },
     {
       "classifications_acceptedUsage_infraspecificEpithet": {
-        "path_match": "classifications.*.acceptedUsage.infraspecificEpithet",
+        "path_match": ["classifications.*.acceptedUsage.infraspecificEpithet", "dnaClassifications.classifications.*.acceptedUsage.infraspecificEpithet"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -155,7 +155,7 @@
     },
     {
       "classifications_acceptedUsage_specificEpithet": {
-        "path_match": "classifications.*.acceptedUsage.specificEpithet",
+        "path_match": ["classifications.*.acceptedUsage.specificEpithet", "dnaClassifications.classifications.*.acceptedUsage.specificEpithet"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -164,7 +164,7 @@
     },
     {
       "classifications_acceptedUsage_formattedName": {
-        "path_match": "classifications.*.acceptedUsage.formattedName",
+        "path_match": ["classifications.*.acceptedUsage.formattedName", "dnaClassifications.classifications.*.acceptedUsage.formattedName"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -173,7 +173,7 @@
     },
     {
       "classifications_status": {
-        "path_match": "classifications.*.status",
+        "path_match": ["classifications.*.status", "dnaClassifications.classifications.*.status"],
         "mapping": {
           "type": "keyword"
         }
@@ -181,7 +181,7 @@
     },
     {
       "classifications_classification_rank": {
-        "path_match": "classifications.*.classification.*",
+        "path_match": ["classifications.*.classification.*", "dnaClassifications.classifications.*.classification.*"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -190,7 +190,7 @@
     },
     {
       "classifications_classification_name": {
-        "path_match": "classifications.*.classification.*.*",
+        "path_match": ["classifications.*.classification.*.*", "dnaClassifications.classifications.*.classification.*.*"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -199,7 +199,7 @@
     },
     {
       "classifications_classificationKeys_rank": {
-        "path_match": "classifications.*.classificationKeys.*",
+        "path_match": ["classifications.*.classificationKeys.*", "dnaClassifications.classifications.*.classificationKeys.*"],
         "mapping": {
           "type": "keyword"
         }
@@ -207,7 +207,7 @@
     },
     {
       "classifications_classificationKeys_key": {
-        "path_match": "classifications.*.classificationKeys.*.*",
+        "path_match": ["classifications.*.classificationKeys.*.*", "dnaClassifications.classifications.*.classificationKeys.*.*"],
         "mapping": {
           "type": "keyword"
         }
@@ -215,7 +215,7 @@
     },
     {
       "classifications_classificationDepth_idx": {
-        "path_match": "classifications.*.classificationDepth.*",
+        "path_match": ["classifications.*.classificationDepth.*", "dnaClassifications.classifications.*.classificationDepth.*"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -224,7 +224,7 @@
     },
     {
       "classifications_classificationDepth_key": {
-        "path_match": "classifications.*.classificationDepth.*.*",
+        "path_match": ["classifications.*.classificationDepth.*.*", "dnaClassifications.classifications.*.classificationDepth.*.*"],
         "mapping": {
           "type": "keyword",
           "index": false, "doc_values": false
@@ -233,7 +233,7 @@
     },
     {
       "classifications_taxonKeys": {
-        "path_match": "classifications.*.taxonKeys",
+        "path_match": ["classifications.*.taxonKeys", "dnaClassifications.classifications.*.taxonKeys"],
         "mapping": {
           "type": "keyword"
         }
@@ -241,7 +241,7 @@
     },
     {
       "classifications_iucnRedListCategoryCode": {
-        "path_match": "classifications.*.iucnRedListCategoryCode",
+        "path_match": ["classifications.*.iucnRedListCategoryCode", "dnaClassifications.classifications.*.iucnRedListCategoryCode"],
         "mapping": {
           "type": "keyword"
         }
@@ -249,7 +249,7 @@
     },
     {
       "classifications_environments": {
-        "path_match": "classifications.*.environments",
+        "path_match": ["classifications.*.environments", "dnaClassifications.classifications.*.environments"],
         "mapping": {
           "type": "keyword"
         }
@@ -257,9 +257,19 @@
     },
     {
       "classifications_issues": {
-        "path_match": "classifications.*.issues",
+        "path_match": ["classifications.*.issues", "dnaClassifications.classifications.*.issues"],
         "mapping": {
           "type": "keyword"
+        }
+      }
+    },
+    {
+      "dnaClassifications_names": {
+        "path_match": ["dnaClassifications.classifications.*.usage.name", "dnaClassifications.classifications.*.acceptedUsage.name"],
+        "mapping": {
+          "type": "keyword",
+          "index": true,
+          "doc_values": true
         }
       }
     }
@@ -683,6 +693,11 @@
     "extensions": {"type": "keyword"},
 
     "checklistKey": {"type": "keyword"},
+    "dnaClassifications": {
+      "properties": {
+        "remarks": {"type": "text", "index": false}
+      }
+    },
     "mediaTypes": {"type": "keyword", "copy_to": "all"},
     "mediaLicenses": {"type": "keyword", "copy_to": "all"},
     "multimediaItems": {

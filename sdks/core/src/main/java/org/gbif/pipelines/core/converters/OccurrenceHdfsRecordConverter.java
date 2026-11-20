@@ -44,6 +44,7 @@ public class OccurrenceHdfsRecordConverter {
   private final MetadataRecord metadataRecord;
   private final MultimediaRecord multimediaRecord;
   private final DnaDerivedDataRecord dnaDerivedDataRecord;
+  private final DnaTaxonRecord dnaTaxonRecord;
 
   // required taxonomic terms
   static final Set<String> REQUIRED_TAXONOMIC_FIELDS =
@@ -103,6 +104,7 @@ public class OccurrenceHdfsRecordConverter {
     mapTemporalRecord(occurrenceHdfsRecord);
     mapLocationRecord(occurrenceHdfsRecord);
     mapMultiTaxonRecord(occurrenceHdfsRecord);
+    mapDnaTaxonRecord(occurrenceHdfsRecord);
     mapGrscicollRecord(occurrenceHdfsRecord);
     mapMultimediaRecord(occurrenceHdfsRecord);
     mapExtendedRecord(occurrenceHdfsRecord);
@@ -326,51 +328,20 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setClassifications(new LinkedHashMap<>());
       return;
     }
+
     occurrenceHdfsRecord.setChecklistkey(
         multiTaxonRecord.getTaxonRecords().stream()
             .map(TaxonRecord::getDatasetKey)
             .collect(Collectors.toList()));
 
-    occurrenceHdfsRecord.setClassifications(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    OccurrenceHdfsRecordConverter::getTaxonKeys,
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
+    occurrenceHdfsRecord.setClassifications(toClassifications(multiTaxonRecord.getTaxonRecords()));
 
-    Map<String, String> statuses = new LinkedHashMap<>();
-    multiTaxonRecord
-        .getTaxonRecords()
-        .forEach(
-            tr ->
-                statuses.put(
-                    tr.getDatasetKey(), tr.getUsage() == null ? null : tr.getUsage().getStatus()));
-    occurrenceHdfsRecord.setTaxonomicstatuses(statuses);
-
-    occurrenceHdfsRecord.setTaxonomicissues(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr ->
-                        tr.getIssues() != null && tr.getIssues().getIssueList() != null
-                            ? tr.getIssues().getIssueList()
-                            : List.of(),
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
+    occurrenceHdfsRecord.setTaxonomicstatuses(
+        toTaxonomicStatuses(multiTaxonRecord.getTaxonRecords()));
+    occurrenceHdfsRecord.setTaxonomicissues(toTaxonomicIssues(multiTaxonRecord.getTaxonRecords()));
 
     occurrenceHdfsRecord.setClassificationdetails(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .filter(tr -> tr.getDatasetKey() != null)
-            .filter(tr -> tr.getUsage() != null)
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr -> classificationToMap(extendedRecord, tr),
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
+        toClassificationDetails(multiTaxonRecord.getTaxonRecords()));
 
     // find the GBIF taxonomy
     Optional<TaxonRecord> defaultTaxonomyRecord =
@@ -379,6 +350,66 @@ public class OccurrenceHdfsRecordConverter {
             .findFirst();
 
     defaultTaxonomyRecord.ifPresent(tr -> mapDefaultTaxonRecord(occurrenceHdfsRecord, tr));
+  }
+
+  /** The DNA-assisted classifications are kept apart from the classifications */
+  private void mapDnaTaxonRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (dnaTaxonRecord == null
+        || dnaTaxonRecord.getTaxonRecords() == null
+        || dnaTaxonRecord.getTaxonRecords().isEmpty()) {
+      return;
+    }
+
+    occurrenceHdfsRecord.setDnaclassifications(toClassifications(dnaTaxonRecord.getTaxonRecords()));
+    occurrenceHdfsRecord.setDnaclassificationdetails(
+        toClassificationDetails(dnaTaxonRecord.getTaxonRecords()));
+    occurrenceHdfsRecord.setDnataxonomicstatuses(
+        toTaxonomicStatuses(dnaTaxonRecord.getTaxonRecords()));
+    occurrenceHdfsRecord.setDnataxonomicissues(toTaxonomicIssues(dnaTaxonRecord.getTaxonRecords()));
+  }
+
+  private static Map<String, String> toTaxonomicStatuses(List<TaxonRecord> taxonRecords) {
+    Map<String, String> statuses = new LinkedHashMap<>();
+    taxonRecords.forEach(
+        tr ->
+            statuses.put(
+                tr.getDatasetKey(), tr.getUsage() == null ? null : tr.getUsage().getStatus()));
+    return statuses;
+  }
+
+  private static Map<String, List<String>> toTaxonomicIssues(List<TaxonRecord> taxonRecords) {
+    return taxonRecords.stream()
+        .collect(
+            Collectors.toMap(
+                TaxonRecord::getDatasetKey,
+                tr ->
+                    tr.getIssues() != null && tr.getIssues().getIssueList() != null
+                        ? tr.getIssues().getIssueList()
+                        : List.of(),
+                (a, b) -> a,
+                LinkedHashMap::new));
+  }
+
+  private Map<String, Map<String, String>> toClassificationDetails(List<TaxonRecord> taxonRecords) {
+    return taxonRecords.stream()
+        .filter(tr -> tr.getDatasetKey() != null)
+        .filter(tr -> tr.getUsage() != null)
+        .collect(
+            Collectors.toMap(
+                TaxonRecord::getDatasetKey,
+                tr -> classificationToMap(extendedRecord, tr),
+                (a, b) -> a,
+                LinkedHashMap::new));
+  }
+
+  private static Map<String, List<String>> toClassifications(List<TaxonRecord> taxonRecords) {
+    return taxonRecords.stream()
+        .collect(
+            Collectors.toMap(
+                TaxonRecord::getDatasetKey,
+                OccurrenceHdfsRecordConverter::getTaxonKeys,
+                (a, b) -> a,
+                LinkedHashMap::new));
   }
 
   private static @NonNull ArrayList<String> getTaxonKeys(TaxonRecord tr) {

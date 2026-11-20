@@ -29,6 +29,7 @@ import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -142,31 +143,11 @@ public class OccurrenceInterpretationPipeline {
 
       if (interpretTypeOpt.isPresent() && interpretTypeOpt.get() != OccurrenceInterpretType.ALL) {
         OccurrenceInterpretType it = interpretTypeOpt.get();
-        switch (it) {
-          case MULTI_TAXONOMY:
-            log.info("Running only taxonomy interpretation");
-            TaxonomyRefreshPipeline.runTaxonomy(
-                spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-            break;
-          case CLUSTERING:
-            log.info("Running only clustering interpretation");
-            ClusteringRefreshPipeline.runClustering(
-                spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-            break;
-          case REGEN_OUTPUTS:
-            log.info("Running output regeneration");
-            regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
-            break;
-          case REGEN_JSON_OUTPUTS:
-            log.info("Running JSON output regeneration");
-            regenJsonOutput(spark, config, datasetId, attempt, args.numberOfShards);
-            break;
-          case REGEN_HDFS_OUTPUTS:
-            log.info("Running HDFS output regeneration");
-            regenHdfsOutput(spark, config, datasetId, attempt, args.numberOfShards);
-            break;
-          default:
-            throw new IllegalArgumentException("Unsupported interpretation type: " + it);
+        boolean handled =
+            handleInterpretTypes(
+                it, spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+        if (!handled) {
+          throw new IllegalArgumentException("Unsupported interpretation type: " + it);
         }
       } else {
         runInterpretation(
@@ -251,6 +232,24 @@ public class OccurrenceInterpretationPipeline {
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
   }
 
+  public static void interpretDnaTaxonomyAndRegenOutput(
+      SparkSession spark,
+      PipelinesConfig config,
+      FileSystem fs,
+      String datasetId,
+      int attempt,
+      int numberOfShards)
+      throws Exception {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
+
+    Dataset<Occurrence> interpreted =
+        TaxonomyDnaPipeline.runDnaTaxonomy(spark, fs, config, datasetId, attempt);
+
+    generateOutputs(spark, config, numberOfShards, interpreted, metadata, outputPath);
+  }
+
   /** Helper to load the simple interpreted occurrences from disk. */
   private static Dataset<Occurrence> loadSimpleInterpreted(SparkSession spark, String outputPath) {
     return spark
@@ -312,32 +311,17 @@ public class OccurrenceInterpretationPipeline {
             : Optional.empty();
 
     if (interpretTypeOpt.isPresent()) {
-      switch (interpretTypeOpt.get()) {
-        case MULTI_TAXONOMY:
-          log.info("Running only taxonomy interpretation");
-          TaxonomyRefreshPipeline.runTaxonomy(
-              spark, fs, config, datasetId, attempt, numberOfShards);
-          return;
-        case CLUSTERING:
-          log.info("Running only clustering interpretation");
-          ClusteringRefreshPipeline.runClustering(
-              spark, fs, config, datasetId, attempt, numberOfShards);
-          return;
-        case REGEN_OUTPUTS:
-          log.info("Running only output regeneration");
-          regenOutput(spark, config, datasetId, attempt, numberOfShards);
-          return;
-        case REGEN_HDFS_OUTPUTS:
-          log.info("Running only hdfs output regeneration");
-          regenHdfsOutput(spark, config, datasetId, attempt, numberOfShards);
-          return;
-        case REGEN_JSON_OUTPUTS:
-          log.info("Running only json output regeneration");
-          regenJsonOutput(spark, config, datasetId, attempt, numberOfShards);
-          return;
-        default:
-          // no-op
+      boolean handled =
+          handleInterpretTypes(
+              interpretTypeOpt.get(), spark, fs, config, datasetId, attempt, numberOfShards);
+      if (handled) {
+        return;
       }
+    }
+
+    // fail before interpreting anything if the DNA taxonomy is enabled without its config
+    if (config.getDnaConfig().isEnableDnaTaxonInterpretation()) {
+      TaxonomyDnaPipeline.validateDnaConfig(config);
     }
 
     long start = System.currentTimeMillis();
@@ -385,6 +369,11 @@ public class OccurrenceInterpretationPipeline {
     Dataset<Occurrence> interpreted =
         runTransforms(spark, config, simpleRecords, metadata, outputPath);
 
+    // interpret DNA taxonomy
+    if (config.getDnaConfig().isEnableDnaTaxonInterpretation()) {
+      interpreted = TaxonomyDnaPipeline.runDnaTaxonomy(spark, fs, config, datasetId, attempt);
+    }
+
     // FIXME move to configuration
     Integer numberOfOutputShards = numberOfShards;
     if (identifiersCount > 50_000 && identifiersCount <= 100_000) {
@@ -411,6 +400,47 @@ public class OccurrenceInterpretationPipeline {
 
     ThreadContext.put("datasetKey", datasetId);
     log.info(timeAndRecPerSecond("interpretation", start, identifiersCount));
+  }
+
+  @SneakyThrows
+  private static boolean handleInterpretTypes(
+      OccurrenceInterpretType interpretType,
+      SparkSession spark,
+      FileSystem fs,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      int numberOfShards) {
+
+    switch (interpretType) {
+      case MULTI_TAXONOMY:
+        log.info("Running only taxonomy interpretation");
+        TaxonomyRefreshPipeline.runTaxonomy(spark, fs, config, datasetId, attempt, numberOfShards);
+        return true;
+      case CLUSTERING:
+        log.info("Running only clustering interpretation");
+        ClusteringRefreshPipeline.runClustering(
+            spark, fs, config, datasetId, attempt, numberOfShards);
+        return true;
+      case REGEN_OUTPUTS:
+        log.info("Running only output regeneration");
+        regenOutput(spark, config, datasetId, attempt, numberOfShards);
+        return true;
+      case REGEN_HDFS_OUTPUTS:
+        log.info("Running only hdfs output regeneration");
+        regenHdfsOutput(spark, config, datasetId, attempt, numberOfShards);
+        return true;
+      case REGEN_JSON_OUTPUTS:
+        log.info("Running only json output regeneration");
+        regenJsonOutput(spark, config, datasetId, attempt, numberOfShards);
+        return true;
+      case DNA_TAXONOMY:
+        log.info("Running DNA taxonomy reinterpretation and output regeneration");
+        interpretDnaTaxonomyAndRegenOutput(spark, config, fs, datasetId, attempt, numberOfShards);
+        return true;
+      default:
+        return false;
+    }
   }
 
   private static void checkIdentifiers(Dataset<IdentifierRecord> identifiers) {
@@ -793,6 +823,10 @@ public class OccurrenceInterpretationPipeline {
                                   record.getDnaDerivedData(), DnaDerivedDataRecord.class))
                           .clustering(
                               MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
+                          .dnaTaxonRecord(
+                              record.getDnaTaxon() != null
+                                  ? MAPPER.readValue(record.getDnaTaxon(), DnaTaxonRecord.class)
+                                  : null)
                           .build();
 
                   return c.convert();
@@ -863,19 +897,28 @@ public class OccurrenceInterpretationPipeline {
                                   record.getDnaDerivedData(), DnaDerivedDataRecord.class))
                           .clusteringRecord(
                               MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
+                          .dnaTaxonRecord(
+                              record.getDnaTaxon() != null
+                                  ? MAPPER.readValue(record.getDnaTaxon(), DnaTaxonRecord.class)
+                                  : null)
                           .build();
 
                   return c.convert();
                 },
             Encoders.bean(OccurrenceHdfsRecord.class));
 
-    if (config.getTableBuildConfig() == null
-        || config.getTableBuildConfig().getClassifications() == null
-        || config.getTableBuildConfig().getClassifications().isEmpty()) {
+    if (config.getTableBuildConfig() == null) {
       return dataset.toDF();
     }
 
-    Map<String, String> uuidToColumnPrefix = config.getTableBuildConfig().getClassifications();
+    Map<String, String> uuidToColumnPrefix =
+        Optional.ofNullable(config.getTableBuildConfig().getClassifications()).orElse(Map.of());
+    Map<String, String> dnaUuidToColumnPrefix =
+        Optional.ofNullable(config.getTableBuildConfig().getDnaClassifications()).orElse(Map.of());
+
+    if (uuidToColumnPrefix.isEmpty() && dnaUuidToColumnPrefix.isEmpty()) {
+      return dataset.toDF();
+    }
 
     Dataset<Row> withClassifications = dataset.toDF();
 
@@ -896,53 +939,76 @@ public class OccurrenceInterpretationPipeline {
       withClassifications =
           withClassifications.withColumn(
               newStructName,
-              struct(
-                  element_at(classification, lit("taxonkey")).as("taxonkey"),
-                  element_at(classification, lit("scientificname")).as("scientificname"),
-                  element_at(classification, lit("acceptedtaxonkey")).as("acceptedtaxonkey"),
-                  element_at(classification, lit("acceptednameusageid")).as("acceptednameusageid"),
-                  element_at(classification, lit("acceptedscientificname"))
-                      .as("acceptedscientificname"),
-                  element_at(classification, lit("genericname")).as("genericname"),
-                  element_at(classification, lit("specificepithet")).as("specificepithet"),
-                  element_at(classification, lit("infraspecificepithet"))
-                      .as("infraspecificepithet"),
-                  element_at(classification, lit("infragenericepithet")).as("infragenericepithet"),
-                  element_at(classification, lit("taxonrank")).as("taxonrank"),
-                  element_at(classification, lit("kingdomkey")).as("kingdomkey"),
-                  element_at(classification, lit("phylumkey")).as("phylumkey"),
-                  element_at(classification, lit("classkey")).as("classkey"),
-                  element_at(classification, lit("orderkey")).as("orderkey"),
-                  element_at(classification, lit("superfamilykey")).as("superfamilykey"),
-                  element_at(classification, lit("familykey")).as("familykey"),
-                  element_at(classification, lit("subfamilykey")).as("subfamilykey"),
-                  element_at(classification, lit("tribekey")).as("tribekey"),
-                  element_at(classification, lit("subtribekey")).as("subtribekey"),
-                  element_at(classification, lit("genuskey")).as("genuskey"),
-                  element_at(classification, lit("subgenuskey")).as("subgenuskey"),
-                  element_at(classification, lit("specieskey")).as("specieskey"),
-                  element_at(classification, lit("kingdom")).as("kingdom"),
-                  element_at(classification, lit("phylum")).as("phylum"),
-                  element_at(classification, lit("class")).as("class"),
-                  element_at(classification, lit("order")).as("order"),
-                  element_at(classification, lit("superfamily")).as("superfamily"),
-                  element_at(classification, lit("family")).as("family"),
-                  element_at(classification, lit("subfamily")).as("subfamily"),
-                  element_at(classification, lit("tribe")).as("tribe"),
-                  element_at(classification, lit("subtribe")).as("subtribe"),
-                  element_at(classification, lit("genus")).as("genus"),
-                  element_at(classification, lit("subgenus")).as("subgenus"),
-                  element_at(classification, lit("species")).as("species"),
-                  element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
-                  split(element_at(classification, lit("environments")), ",").as("environments"),
-                  taxonKeys.as("taxonkeys"),
-                  coalesce(taxonomicIssue, array().cast("array<string>")).as("taxonomicissue"),
-                  taxonomicStatus.as("taxonomicstatus")));
+              classificationStruct(classification, taxonomicStatus, taxonomicIssue, taxonKeys));
+    }
+
+    // the DNA-assisted classifications
+    for (Map.Entry<String, String> uuidToColumn : dnaUuidToColumnPrefix.entrySet()) {
+
+      String uuid = uuidToColumn.getKey();
+      String columnPrefix = uuidToColumn.getValue();
+
+      withClassifications =
+          withClassifications.withColumn(
+              columnPrefix + "_classification",
+              classificationStruct(
+                  element_at(col("dnaclassificationdetails"), lit(uuid)),
+                  element_at(col("dnataxonomicstatuses"), lit(uuid)),
+                  element_at(col("dnataxonomicissues"), lit(uuid)),
+                  element_at(col("dnaclassifications"), lit(uuid))));
     }
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
     withClassifications = withClassifications.coalesce(numshards);
     return withClassifications;
+  }
+
+  /**
+   * Builds the struct of a classification column from the entries of a checklist in the HDFS
+   * classification maps.
+   */
+  private static Column classificationStruct(
+      Column classification, Column taxonomicStatus, Column taxonomicIssue, Column taxonKeys) {
+    return struct(
+        element_at(classification, lit("taxonkey")).as("taxonkey"),
+        element_at(classification, lit("scientificname")).as("scientificname"),
+        element_at(classification, lit("acceptedtaxonkey")).as("acceptedtaxonkey"),
+        element_at(classification, lit("acceptednameusageid")).as("acceptednameusageid"),
+        element_at(classification, lit("acceptedscientificname")).as("acceptedscientificname"),
+        element_at(classification, lit("genericname")).as("genericname"),
+        element_at(classification, lit("specificepithet")).as("specificepithet"),
+        element_at(classification, lit("infraspecificepithet")).as("infraspecificepithet"),
+        element_at(classification, lit("infragenericepithet")).as("infragenericepithet"),
+        element_at(classification, lit("taxonrank")).as("taxonrank"),
+        element_at(classification, lit("kingdomkey")).as("kingdomkey"),
+        element_at(classification, lit("phylumkey")).as("phylumkey"),
+        element_at(classification, lit("classkey")).as("classkey"),
+        element_at(classification, lit("orderkey")).as("orderkey"),
+        element_at(classification, lit("superfamilykey")).as("superfamilykey"),
+        element_at(classification, lit("familykey")).as("familykey"),
+        element_at(classification, lit("subfamilykey")).as("subfamilykey"),
+        element_at(classification, lit("tribekey")).as("tribekey"),
+        element_at(classification, lit("subtribekey")).as("subtribekey"),
+        element_at(classification, lit("genuskey")).as("genuskey"),
+        element_at(classification, lit("subgenuskey")).as("subgenuskey"),
+        element_at(classification, lit("specieskey")).as("specieskey"),
+        element_at(classification, lit("kingdom")).as("kingdom"),
+        element_at(classification, lit("phylum")).as("phylum"),
+        element_at(classification, lit("class")).as("class"),
+        element_at(classification, lit("order")).as("order"),
+        element_at(classification, lit("superfamily")).as("superfamily"),
+        element_at(classification, lit("family")).as("family"),
+        element_at(classification, lit("subfamily")).as("subfamily"),
+        element_at(classification, lit("tribe")).as("tribe"),
+        element_at(classification, lit("subtribe")).as("subtribe"),
+        element_at(classification, lit("genus")).as("genus"),
+        element_at(classification, lit("subgenus")).as("subgenus"),
+        element_at(classification, lit("species")).as("species"),
+        element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
+        split(element_at(classification, lit("environments")), ",").as("environments"),
+        taxonKeys.as("taxonkeys"),
+        coalesce(taxonomicIssue, array().cast("array<string>")).as("taxonomicissue"),
+        taxonomicStatus.as("taxonomicstatus"));
   }
 }
