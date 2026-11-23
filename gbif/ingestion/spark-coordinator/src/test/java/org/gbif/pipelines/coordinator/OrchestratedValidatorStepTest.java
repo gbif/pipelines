@@ -30,6 +30,7 @@ import org.gbif.orchestrator.api.step.StepHeader;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.MetricsUtil;
+import org.gbif.pipelines.orchestrator.OrchestratorReplies;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

@@ -35,6 +35,7 @@ import org.gbif.orchestrator.api.step.Report;
 import org.gbif.orchestrator.api.step.StepCompleted;
 import org.gbif.orchestrator.api.step.StepHeader;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.orchestrator.OrchestratorReplies;
 import org.gbif.pipelines.util.CallbackUtil;
 import org.gbif.validator.api.Validation;
 

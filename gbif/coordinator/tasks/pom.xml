@@ -155,6 +155,16 @@
       <version>${dwc-dp-analyser.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>orchestrator-client</artifactId>
+    </dependency>
+    <!-- EML checks of the archive validator (bundled schemas, GBIF quality rules) -->
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-eml-validation</artifactId>
+      <version>${gbif-eml-validation.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-postal-service</artifactId>
       <version>${gbif-postal-service.version}</version>

@@ -39,4 +39,7 @@ public class StepConfiguration {
 
   @Parameter(names = "--events-enabled")
   public boolean eventsEnabled = false;
+
+  @ParametersDelegate @Valid @NotNull
+  public OrchestratorConfiguration orchestrator = new OrchestratorConfiguration();
 }

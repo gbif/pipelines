@@ -14,4 +14,15 @@ public interface ArchiveValidator {
   default Validation.Status getFinalValidationStatus() {
     return Validation.Status.FINISHED;
   }
+
+  /**
+   * Orchestrator mode: validates without validator-ws (no GET or PUT); the result goes into the
+   * step's completion. A checklist is submitted to ChecklistBank and the submission awaited.
+   *
+   * @throws UnsupportedOperationException for formats the orchestrated validation does not cover
+   */
+  default OrchestratedArchiveValidation validateForOrchestrator() throws Exception {
+    throw new UnsupportedOperationException(
+        getClass().getSimpleName() + " has no orchestrated validation");
+  }
 }

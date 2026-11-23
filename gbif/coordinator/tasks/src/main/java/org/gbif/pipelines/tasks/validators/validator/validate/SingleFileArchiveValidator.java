@@ -1,6 +1,8 @@
 package org.gbif.pipelines.tasks.validators.validator.validate;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
+import org.gbif.orchestrator.api.step.OutputKeys;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -20,6 +23,13 @@ public class SingleFileArchiveValidator implements ArchiveValidator {
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;
   private final PipelinesArchiveValidatorMessage message;
+
+  /** Orchestrator mode: no checks (as before); a single data file is occurrences. */
+  @Override
+  public OrchestratedArchiveValidation validateForOrchestrator() {
+    return new OrchestratedArchiveValidation(
+        List.of(), Map.of(OutputKeys.DATASET_TYPE, DatasetType.OCCURRENCE.name()));
+  }
 
   @Override
   @SneakyThrows

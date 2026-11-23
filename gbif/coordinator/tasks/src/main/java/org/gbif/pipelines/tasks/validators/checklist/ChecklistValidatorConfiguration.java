@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.pipelines.common.configs.ChecklistBankConfiguration;
+import org.gbif.pipelines.common.configs.OrchestratorConfiguration;
 import org.gbif.pipelines.common.configs.RegistryConfiguration;
 
 /** Configuration required to validate downloaded archive */
@@ -30,4 +31,7 @@ public class ChecklistValidatorConfiguration {
 
   @ParametersDelegate @Valid @NotNull
   public ChecklistBankConfiguration clbConfig = new ChecklistBankConfiguration();
+
+  @ParametersDelegate @Valid @NotNull
+  public OrchestratorConfiguration orchestrator = new OrchestratorConfiguration();
 }

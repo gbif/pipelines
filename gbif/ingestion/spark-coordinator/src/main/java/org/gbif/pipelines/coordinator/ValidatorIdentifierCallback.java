@@ -33,6 +33,7 @@ import org.gbif.orchestrator.api.report.ReportTypes;
 import org.gbif.orchestrator.api.step.Report;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.orchestrator.OrchestratorReplies;
 import org.gbif.pipelines.spark.IdentifiersPipeline;
 import org.gbif.pipelines.util.SparkConfUtil;
 

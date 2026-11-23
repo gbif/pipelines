@@ -16,10 +16,17 @@ package org.gbif.pipelines.tasks.verbatims.dwca.validator;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllValidatorInterpretationAsString;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
+import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -38,11 +45,15 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
+import org.gbif.orchestrator.api.step.OutputKeys;
+import org.gbif.orchestrator.api.step.StepCompleted;
+import org.gbif.orchestrator.api.step.StepHeader;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
+import org.gbif.pipelines.orchestrator.OrchestratorReplies;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.ValidatorCallback;
 import org.gbif.registry.ws.client.DatasetClient;
@@ -64,6 +75,11 @@ public class ValidatorDwcaToAvroCallback extends AbstractMessageCallback<Pipelin
   @Override
   public void handleMessage(PipelinesDwcaMessage message) {
     log.debug("Handling DwcaToAvroValidatorCallback for message: {}", message);
+    Optional<StepHeader> header = OrchestratorReplies.header(message);
+    if (header.isPresent()) {
+      handleForOrchestrator(message, header.get());
+      return;
+    }
     ValidatorCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
         .datasetClient(datasetClient)
         .validationClient(validationClient)
@@ -74,6 +90,86 @@ public class ValidatorDwcaToAvroCallback extends AbstractMessageCallback<Pipelin
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  /**
+   * Orchestrator mode: converts the archive (as for validator-ws), then replies with what the
+   * shared steps need instead of sending the next message: the record counts, the dataset type, the
+   * interpretation types, and the identifier flags. The orchestrator built the message from the
+   * archive check, so only its dataset type is required (no crawler report).
+   */
+  void handleForOrchestrator(PipelinesDwcaMessage message, StepHeader header) {
+    Instant started = Instant.now();
+    StepCompleted completed;
+    try {
+      if (message.getDatasetType() == null) {
+        throw new IllegalArgumentException("No dataset type in " + message);
+      }
+      createRunnable(message).run();
+      completed =
+          OrchestratorReplies.succeeded(header, started, orchestratorOutputs(message), List.of());
+    } catch (Exception e) {
+      log.error("DwC-A to verbatim of {} failed", message.getDatasetUuid(), e);
+      completed = OrchestratorReplies.failed(header, started, e);
+    }
+    try {
+      new OrchestratorReplies(publisher, config.stepConfig.orchestrator.toConfig()).send(completed);
+    } catch (Exception e) {
+      // The step stays dispatched until the orchestrator's timeout handling.
+      log.error("Could not reply to the orchestrator for {}", header, e);
+    }
+  }
+
+  /**
+   * As {@link #createOutgoingMessage} puts them in the next message: occurrence (and for sampling
+   * events, event) counts from the conversion's meta file, the archive's extensions plus the
+   * validator interpretation types, and the identifier flags. The legacy message carried a fixed
+   * crawler report, which made both identifier flags true; they stay true.
+   */
+  private Map<String, String> orchestratorOutputs(PipelinesDwcaMessage message) throws IOException {
+    long occurrences = recordCount(message, PipelinesVariables.Metrics.ARCHIVE_TO_OCC_COUNT);
+    long events =
+        message.getDatasetType() == DatasetType.SAMPLING_EVENT
+            ? recordCount(message, PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT)
+            : 0L;
+    Map<String, String> outputs = new LinkedHashMap<>();
+    outputs.put(OutputKeys.DATASET_TYPE, message.getDatasetType().name());
+    outputs.put(OutputKeys.OCCURRENCE_RECORDS, String.valueOf(occurrences));
+    outputs.put(OutputKeys.EVENT_RECORDS, String.valueOf(events));
+    outputs.put(OutputKeys.INTERPRET_TYPES, String.join(",", interpretTypes(message)));
+    outputs.put(OutputKeys.TRIPLET_VALID, "true");
+    outputs.put(OutputKeys.OCCURRENCE_ID_VALID, "true");
+    return outputs;
+  }
+
+  private long recordCount(PipelinesDwcaMessage message, String metric) throws IOException {
+    return RecordCountReader.builder()
+        .stepConfig(config.stepConfig)
+        .datasetKey(message.getDatasetUuid().toString())
+        .attempt(message.getAttempt().toString())
+        .metaFileName(config.metaFileName)
+        .metricName(metric)
+        .build()
+        .get();
+  }
+
+  /**
+   * The archive's extensions and all validator interpretation types; the configured ones if the
+   * archive can't be read.
+   */
+  private Set<String> interpretTypes(PipelinesDwcaMessage message) {
+    try {
+      Archive archive =
+          DwcaUtils.fromLocationSkipValidation(
+              buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
+      Set<String> types = new TreeSet<>(DwcaUtils.getExtensionAsTerms(archive));
+      types.addAll(getAllValidatorInterpretationAsString());
+      types.remove(null);
+      return types;
+    } catch (IllegalStateException | UnsupportedArchiveException ex) {
+      log.warn(ex.getMessage(), ex);
+      return new TreeSet<>(config.interpretTypes);
+    }
   }
 
   @Override

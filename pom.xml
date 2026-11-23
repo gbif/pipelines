@@ -105,8 +105,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.69</gbif-parsers.version>
     <dwca-io.version>3.0.1</dwca-io.version>
-    <gbif-api.version>2.4.30</gbif-api.version>
-
+    <gbif-api.version>2.4.30-FEATURE-ORCHESTRATION-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <dwc-api.version>2.1.16</dwc-api.version>
     <gbif-kvs.version>3.1.4</gbif-kvs.version>
@@ -117,6 +116,7 @@
     <gbif-common-ws.version>2.1.4</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.16-FEATURE-ORCHESTRATION-SNAPSHOT</gbif-postal-service.version>
     <flow-orchestrator.version>0.0.1-SNAPSHOT</flow-orchestrator.version>
+    <gbif-eml-validation.version>1.0.0-SNAPSHOT</gbif-eml-validation.version>
     <dwc-dp-analyser.version>0.0.15</dwc-dp-analyser.version>
     <dwc-dp-schemas.version>0.0.3</dwc-dp-schemas.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
@@ -342,6 +342,11 @@
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>config</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>orchestrator-client</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

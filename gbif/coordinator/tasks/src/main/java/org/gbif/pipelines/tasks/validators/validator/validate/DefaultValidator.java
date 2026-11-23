@@ -21,6 +21,13 @@ public class DefaultValidator implements ArchiveValidator {
         "File format " + message.getFileFormat() + " is not supported");
   }
 
+  /** Orchestrator mode: the format is not supported, the step fails. */
+  @Override
+  public OrchestratedArchiveValidation validateForOrchestrator() {
+    throw new IllegalArgumentException(
+        "File format " + message.getFileFormat() + " is not supported");
+  }
+
   @Override
   public void validate() {
     log.info("File format {} is not supported!", message.getFileFormat());

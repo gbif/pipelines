@@ -30,6 +30,7 @@ import org.gbif.orchestrator.api.json.OrchestratorJson;
 import org.gbif.orchestrator.api.report.ReportTypes;
 import org.gbif.orchestrator.api.step.Report;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.orchestrator.OrchestratorReplies;
 import org.gbif.pipelines.spark.IndexingPipeline;
 import org.gbif.pipelines.spark.ValidatorMetricsPipeline;
 

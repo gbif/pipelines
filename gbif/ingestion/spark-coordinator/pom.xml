@@ -87,6 +87,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- Replies of validator steps dispatched by the flow-orchestrator (OrchestratorReplies) -->
+        <dependency>
+            <groupId>org.gbif.pipelines</groupId>
+            <artifactId>orchestrator-client</artifactId>
+        </dependency>
         <!-- StepCompleted and StepHeader: replies of validator steps dispatched by the flow-orchestrator -->
         <dependency>
             <groupId>org.gbif</groupId>

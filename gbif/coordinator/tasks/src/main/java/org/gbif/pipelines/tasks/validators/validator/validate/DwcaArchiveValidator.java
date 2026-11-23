@@ -5,6 +5,8 @@ import static org.gbif.pipelines.tasks.validators.validator.validate.DatasetType
 
 import java.net.URI;
 import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.orchestrator.api.step.OutputKeys;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.Validations;
@@ -165,6 +168,22 @@ public class DwcaArchiveValidator extends BaseDwcaArchiveValidator {
         .issues(
             Collections.singletonList(Metrics.IssueInfo.create(type, Level.FATAL.name(), message)))
         .build();
+  }
+
+  /**
+   * Orchestrator mode: the archive checks and the occurrence checks (the validator's), without
+   * validator-ws. Reports the core's shape as {@code datasetType}.
+   */
+  @Override
+  public OrchestratedArchiveValidation validateForOrchestrator() {
+    Validation validation =
+        validateDwcaArchive(Validation.builder().key(message.getDatasetUuid()).build());
+    validateOccurrencesPresent().ifPresent(fi -> Validations.mergeFileInfo(validation, fi));
+    Map<String, String> outputs = new HashMap<>();
+    getDatasetType(config.archiveRepository, message.getDatasetUuid())
+        .ifPresent(type -> outputs.put(OutputKeys.DATASET_TYPE, type.name()));
+    return new OrchestratedArchiveValidation(
+        OrchestratedArchiveValidation.files(validation), outputs);
   }
 
   @Override

@@ -4,12 +4,12 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 import static org.gbif.pipelines.tasks.validators.validator.validate.DatasetTypeUtils.getDatasetType;
 import static org.gbif.validator.api.DwcFileType.CORE;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -19,14 +19,16 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.eml.validation.ArchiveMetadata;
+import org.gbif.eml.validation.EmlIssue;
+import org.gbif.eml.validation.EmlSchema;
+import org.gbif.eml.validation.EmlValidator;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.DwcaFileTermCounter;
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.pipelines.validator.Validations;
-import org.gbif.pipelines.validator.rules.BasicMetadataEvaluator;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationType;
 import org.gbif.validator.api.Level;
@@ -67,6 +69,37 @@ public abstract class BaseDwcaArchiveValidator implements ArchiveValidator {
 
   protected abstract Validation runValidations(Validation validation);
 
+  /**
+   * The archive's EML: validated against the schema it declares (bundled; GBIF profile 1.3 when it
+   * declares none or an unknown one), then the GBIF metadata quality rules.
+   */
+  private static final EmlValidator EML_VALIDATOR =
+      EmlValidator.builder().defaultSchema(EmlSchema.GBIF_PROFILE_1_3).qualityRules(true).build();
+
+  /**
+   * An issue of gbif-eml-validation in the shape validator-ws showed: schema problems as {@code
+   * EML_GBIF_SCHEMA} with the severity and the parser's message (and position); the quality rules
+   * under their own evaluation types; metadata that could not be read as {@code EML_GBIF_SCHEMA}.
+   */
+  static Metrics.IssueInfo toIssueInfo(EmlIssue issue) {
+    switch (issue.type()) {
+      case TITLE_MISSING_OR_TOO_SHORT:
+      case LICENSE_MISSING_OR_UNKNOWN:
+      case DESCRIPTION_MISSING_OR_TOO_SHORT:
+      case RESOURCE_CONTACTS_MISSING_OR_INCOMPLETE:
+        return Metrics.IssueInfo.create(EvaluationType.valueOf(issue.type().name()));
+      case METADATA_UNREADABLE:
+        return Metrics.IssueInfo.create(EvaluationType.EML_GBIF_SCHEMA);
+      default:
+        String message =
+            issue.line() == null
+                ? issue.message()
+                : "line " + issue.line() + ", column " + issue.column() + ": " + issue.message();
+        return Metrics.IssueInfo.create(
+            EvaluationType.EML_GBIF_SCHEMA, issue.severity().name(), message);
+    }
+  }
+
   protected Validation validateDwcaArchive(Validation validation) {
     // EML
     Metrics.FileInfo emlFile = validateEmlFile();
@@ -93,7 +126,7 @@ public abstract class BaseDwcaArchiveValidator implements ArchiveValidator {
 
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
 
-    Optional<Path> emlPath = MetadataPath.parsePath(inputPath);
+    Optional<Path> emlPath = ArchiveMetadata.find(inputPath);
 
     Metrics.FileInfo.FileInfoBuilder fileInfoBuilder =
         Metrics.FileInfo.builder().fileType(DwcFileType.METADATA);
@@ -110,13 +143,11 @@ public abstract class BaseDwcaArchiveValidator implements ArchiveValidator {
     }
 
     try {
-      String xmlDoc = Files.readString(emlPath.get());
-
-      List<Metrics.IssueInfo> issueInfos = new ArrayList<>();
-      // Validate XML file
-      issueInfos.addAll(schemaValidatorFactory.validate(xmlDoc));
-      // Check licence, authors and etc
-      issueInfos.addAll(BasicMetadataEvaluator.evaluate(xmlDoc));
+      // Schema (bundled, no network) and the GBIF quality rules: gbif-eml-validation
+      List<Metrics.IssueInfo> issueInfos =
+          EML_VALIDATOR.validate(emlPath.get()).issues().stream()
+              .map(BaseDwcaArchiveValidator::toIssueInfo)
+              .collect(Collectors.toList());
 
       return fileInfoBuilder
           .issues(issueInfos)

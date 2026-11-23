@@ -19,6 +19,7 @@
 
   <modules>
     <module>config</module>
+    <module>orchestrator-client</module>
     <module>plugins</module>
     <module>models</module>
     <module>models-pojo</module>

@@ -5,12 +5,16 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildChecklistDwcaInputPa
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.orchestrator.api.step.OutputKeys;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.checklist.ChecklistValidator;
 import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
@@ -87,6 +91,24 @@ public class ColDPArchiveValidator implements ArchiveValidator {
                 validationClient.update(currentValidation);
               }
             });
+  }
+
+  /**
+   * Orchestrator mode: the submission to ChecklistBank (ColDP has no local checks), awaited so the
+   * step can report the ChecklistBank dataset; the wait for its import is the next step's.
+   */
+  @Override
+  public OrchestratedArchiveValidation validateForOrchestrator() throws Exception {
+    int clbDatasetKey =
+        ChecklistbankSubmission.submit(
+            checklistValidator, config.archiveRepository, message.getDatasetUuid());
+    return new OrchestratedArchiveValidation(
+        List.of(),
+        Map.of(
+            OutputKeys.DATASET_TYPE,
+            DatasetType.CHECKLIST.name(),
+            OutputKeys.CLB_DATASET_KEY,
+            String.valueOf(clbDatasetKey)));
   }
 
   @Override

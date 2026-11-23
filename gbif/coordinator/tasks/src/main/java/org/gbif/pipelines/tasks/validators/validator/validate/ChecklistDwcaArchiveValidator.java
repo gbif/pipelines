@@ -4,16 +4,21 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildChecklistDwcaInputPa
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.orchestrator.api.step.OutputKeys;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.validator.checklist.ChecklistValidator;
 import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
+import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -79,6 +84,34 @@ public class ChecklistDwcaArchiveValidator extends BaseDwcaArchiveValidator {
             });
 
     return validation;
+  }
+
+  /**
+   * Orchestrator mode: the archive checks, then (if no fatal issue) the submission to
+   * ChecklistBank, awaited so the step can report the ChecklistBank dataset; the wait for its
+   * import is the next step's.
+   */
+  @Override
+  public OrchestratedArchiveValidation validateForOrchestrator() throws Exception {
+    Validation validation =
+        validateDwcaArchive(Validation.builder().key(message.getDatasetUuid()).build());
+    List<Metrics.FileInfo> files = OrchestratedArchiveValidation.files(validation);
+    OrchestratedArchiveValidation checked =
+        new OrchestratedArchiveValidation(
+            files, Map.of(OutputKeys.DATASET_TYPE, DatasetType.CHECKLIST.name()));
+    if (!checked.valid()) {
+      return checked; // rejected: nothing to submit
+    }
+    int clbDatasetKey =
+        ChecklistbankSubmission.submit(
+            checklistValidator, config.archiveRepository, message.getDatasetUuid());
+    return new OrchestratedArchiveValidation(
+        files,
+        Map.of(
+            OutputKeys.DATASET_TYPE,
+            DatasetType.CHECKLIST.name(),
+            OutputKeys.CLB_DATASET_KEY,
+            String.valueOf(clbDatasetKey)));
   }
 
   @Override

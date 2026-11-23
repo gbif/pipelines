@@ -38,6 +38,8 @@ public class PipelinesDwcaMessageHandler {
             m.getEndpointType(),
             m.getPlatform(),
             m.getExecutionId());
+    // The orchestrator's step header, present when it dispatched the step, travels on.
+    outputMessage.setStepHeader(m.getStepHeader());
 
     publisher.send(outputMessage);
 

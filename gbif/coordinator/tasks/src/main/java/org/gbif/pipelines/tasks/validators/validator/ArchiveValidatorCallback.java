@@ -1,6 +1,9 @@
 package org.gbif.pipelines.tasks.validators.validator;
 
+import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -10,10 +13,15 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.orchestrator.api.report.ReportTypes;
+import org.gbif.orchestrator.api.step.StepCompleted;
+import org.gbif.orchestrator.api.step.StepHeader;
+import org.gbif.pipelines.orchestrator.OrchestratorReplies;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.ValidatorCallback;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
+import org.gbif.pipelines.tasks.validators.validator.validate.OrchestratedArchiveValidation;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -33,6 +41,11 @@ public class ArchiveValidatorCallback
 
   @Override
   public void handleMessage(PipelinesArchiveValidatorMessage message) {
+    Optional<StepHeader> header = OrchestratorReplies.header(message);
+    if (header.isPresent()) {
+      handleForOrchestrator(message, header.get());
+      return;
+    }
 
     if (config.validatorOnly) {
       ValidatorCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
@@ -55,6 +68,47 @@ public class ArchiveValidatorCallback
           .handler(this)
           .build()
           .handleMessage();
+    }
+  }
+
+  /**
+   * Orchestrator mode: checks the archive without validator-ws, then replies with the {@code
+   * ARCHIVE_VALIDATION} report and the outputs later steps need. An invalid archive is a successful
+   * step whose report the orchestrator rejects; an error (or an unsupported format) fails the step.
+   * No next message: the orchestrator dispatches.
+   */
+  void handleForOrchestrator(PipelinesArchiveValidatorMessage message, StepHeader header) {
+    Instant started = Instant.now();
+    StepCompleted completed;
+    try {
+      if (!isMessageCorrect(message)) {
+        throw new IllegalArgumentException("No file format or validation key in " + message);
+      }
+      OrchestratedArchiveValidation result =
+          ArchiveValidatorFactory.builder()
+              .config(config)
+              .message(message)
+              .schemaValidatorFactory(schemaValidatorFactory)
+              .build()
+              .create()
+              .validateForOrchestrator();
+      log.info(
+          "Archive of validation {} checked: valid={}", message.getDatasetUuid(), result.valid());
+      completed =
+          OrchestratorReplies.succeeded(
+              header,
+              started,
+              result.outputs(),
+              List.of(OrchestratorReplies.report(ReportTypes.ARCHIVE_VALIDATION, result.report())));
+    } catch (Exception e) {
+      log.error("Archive validation of {} failed", message.getDatasetUuid(), e);
+      completed = OrchestratorReplies.failed(header, started, e);
+    }
+    try {
+      new OrchestratorReplies(publisher, config.stepConfig.orchestrator.toConfig()).send(completed);
+    } catch (Exception e) {
+      // The step stays dispatched until the orchestrator's timeout handling.
+      log.error("Could not reply to the orchestrator for {}", header, e);
     }
   }
 
