@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import java.io.Serializable;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -17,6 +18,8 @@ public class DefaultValuesTransform implements Serializable {
   private PipelinesConfig config;
   private MetadataRecord metadata;
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
+  private static final String DEFAULT_TERM_NAMESPACE =
+      TagNamespace.GBIF_DEFAULT_TERM.getNamespace();
 
   private DefaultValuesTransform(PipelinesConfig config, MetadataRecord metadata) {
     this.config = config;
@@ -32,8 +35,10 @@ public class DefaultValuesTransform implements Serializable {
       return source;
     }
 
-    metadata
-        .getMachineTags()
+    // Only machine tags in the default-term namespace define verbatim default values. Other
+    // registry tags (crawler, orphan, etc.) must not leak into the verbatim record.
+    metadata.getMachineTags().stream()
+        .filter(tag -> DEFAULT_TERM_NAMESPACE.equalsIgnoreCase(tag.getNamespace()))
         .forEach(
             tag -> {
               try {
