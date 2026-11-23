@@ -2,6 +2,7 @@ package org.gbif.validator.ws.it;
 
 import com.zaxxer.hikari.HikariDataSource;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Set;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.common.messaging.api.MessagePublisher;
