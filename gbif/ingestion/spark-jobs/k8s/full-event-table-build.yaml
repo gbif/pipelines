@@ -27,6 +27,7 @@ spec:
           bucketName: spark-history-lab-bucket
   args:
     - "--coreDwcTerm=event"
+    - "--datasetType=SAMPLING_EVENT"
     - "--sourceDirectory=event-hdfs"
     - "--appName=full-event-table-build"
     - "--numberOfShards=2400"
