@@ -67,6 +67,41 @@ class NestedOccurrenceContextPipelineDiagnosticTest {
   }
 
   @Test
+  void sharedSequenceDoesNotReassignOccurrenceWithDeclaredParent() {
+    Fixture fixture =
+        fixture(
+            occurrences(row("O1", "occ-1", "E1"), row("O2", "occ-2", "E2")),
+            materials(
+                row("M1", "E1", null, null, "CAT-1", "preserved"),
+                row("M2", "E2", null, null, "CAT-2", "preserved")),
+            identifications(row("I1", null, null, "S1", "O1"), row("I2", null, null, "S1", "O2")),
+            analyses(row("A1", "M1", "S1"), row("A2", "M2", "S1")),
+            sequences("S1"));
+    // The fixture's Event table contains E1. Discovery must never import O2 from E2 simply
+    // because the same sequence was observed in E1's sample.
+    SparkNestedContextDiscovery.Result discovery =
+        new SparkNestedContextDiscovery(graph, context).discover(fixture.loader());
+
+    assertTriples(discovery.ownership(), List.of(List.of("E1", "O1")));
+    assertTriples(discovery.uniqueContext(), List.of(List.of("E1", "O1", "M1")));
+  }
+
+  @Test
+  void conflictingDirectMaterialRouteDoesNotOverrideDeclaredParent() {
+    Fixture fixture =
+        fixture(
+            occurrences(row("O1", "occ-1", "E2")),
+            materials(row("M1", "E1", null, null, "CAT-1", "preserved")),
+            identifications(row("I1", "M1", null, null, "O1")),
+            null,
+            null);
+    SparkNestedContextDiscovery.Result discovery =
+        new SparkNestedContextDiscovery(graph, context).discover(fixture.loader());
+
+    assertEquals(0, discovery.ownership().count());
+  }
+
+  @Test
   void indirectMaterialIdentificationDiscoveryCarriesMaterialIdentity() {
     Fixture fixture = directMaterialIdentificationFixture();
 
