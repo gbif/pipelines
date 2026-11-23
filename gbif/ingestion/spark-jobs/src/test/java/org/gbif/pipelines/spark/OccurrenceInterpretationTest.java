@@ -137,7 +137,6 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
                   "KE",
                   "Felidae",
                   "30",
-                  "96",
                   "Panthera",
                   "Carnivora",
                   "Narok",
