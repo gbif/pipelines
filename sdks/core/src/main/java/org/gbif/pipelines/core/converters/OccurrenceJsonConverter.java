@@ -320,7 +320,7 @@ public class OccurrenceJsonConverter {
     }
 
     builder.setDnaChecklistKey(
-        TaxonomyInterpreter.matchedChecklistKeys(dnaTaxonRecord.getTaxonRecords()));
+        TaxonomyInterpreter.interpretedChecklistKeys(dnaTaxonRecord.getTaxonRecords()));
 
     Map<String, Classification> classifications =
         JsonConverter.convertToClassifications(dnaTaxonRecord.getTaxonRecords());
@@ -343,7 +343,7 @@ public class OccurrenceJsonConverter {
           JsonConverter.convertToClassifications(multiTaxon);
       builder.setClassifications(classifications);
       builder.setChecklistKey(
-          TaxonomyInterpreter.matchedChecklistKeys(multiTaxon.getTaxonRecords()));
+          TaxonomyInterpreter.interpretedChecklistKeys(multiTaxon.getTaxonRecords()));
 
       // Raw to index classification
       if (verbatim != null) {

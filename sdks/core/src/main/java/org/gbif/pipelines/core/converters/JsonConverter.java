@@ -356,16 +356,42 @@ public class JsonConverter {
     return convertToClassifications(taxon.getTaxonRecords());
   }
 
+  /**
+   * The classifications of the taxon records. A record without a match only keeps its issues, e.g.
+   * TAXON_MATCH_NONE, so they can be searched as the issues of the matched ones.
+   */
   public static Map<String, Classification> convertToClassifications(
       List<TaxonRecord> taxonRecords) {
     return taxonRecords.stream()
-        .filter(TaxonomyInterpreter::hasMatch)
+        .filter(tr -> TaxonomyInterpreter.hasMatch(tr) || !getIssues(tr).isEmpty())
         .collect(
             Collectors.toMap(
                 TaxonRecord::getDatasetKey,
-                JsonConverter::convertToClassification,
-                (a, b) -> a,
+                tr ->
+                    TaxonomyInterpreter.hasMatch(tr)
+                        ? convertToClassification(tr)
+                        : convertToIssuesOnlyClassification(tr),
+                // a match wins over a record without one of the same checklist
+                (a, b) -> a.getUsage() != null ? a : b,
                 LinkedHashMap::new));
+  }
+
+  /** A classification without a match: only its issues, and empty values like a match has. */
+  private static Classification convertToIssuesOnlyClassification(TaxonRecord tr) {
+    return Classification.newBuilder()
+        .setClassification(Collections.emptyMap())
+        .setClassificationKeys(Collections.emptyMap())
+        .setClassificationDepth(Collections.emptyMap())
+        .setTaxonKeys(Collections.emptyList())
+        .setEnvironments(Collections.emptyList())
+        .setIssues(getIssues(tr))
+        .build();
+  }
+
+  private static List<String> getIssues(TaxonRecord tr) {
+    return tr.getIssues() != null && tr.getIssues().getIssueList() != null
+        ? tr.getIssues().getIssueList()
+        : Collections.emptyList();
   }
 
   private static LinkedHashMap<String, String> convertToMap(

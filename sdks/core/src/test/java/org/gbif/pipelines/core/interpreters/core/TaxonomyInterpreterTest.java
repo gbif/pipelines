@@ -4,12 +4,14 @@ import static org.gbif.api.model.Constants.COL_DATASET_KEY;
 import static org.gbif.api.model.Constants.NUB_DATASET_KEY;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.RankedNameWithAuthorship;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 import org.gbif.rest.client.species.NameUsageMatchResponse.Diagnostics;
@@ -180,5 +182,31 @@ public class TaxonomyInterpreterTest {
             .getIssueList()
             .contains(OccurrenceIssue.TAXON_MATCH_NONE.toString()));
     Assert.assertNull(testRecord.getUsage());
+  }
+
+  /** The checklists the record was interpreted against, with or without a match, once each. */
+  @Test
+  public void interpretedChecklistKeysTest() {
+    TaxonRecord colMatch =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(COL_DATASET_KEY.toString())
+            .setUsage(
+                RankedNameWithAuthorship.newBuilder()
+                    .setKey("10")
+                    .setName("Puma concolor")
+                    .setRank("SPECIES")
+                    .build())
+            .build();
+    TaxonRecord nubNoMatch =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(NUB_DATASET_KEY.toString())
+            .setUsage(TaxonomyInterpreter.INCERTAE_SEDIS_WITH_AUTHORSHIP)
+            .build();
+    TaxonRecord withoutChecklist = TaxonRecord.newBuilder().build();
+
+    Assert.assertEquals(
+        List.of(COL_DATASET_KEY.toString(), NUB_DATASET_KEY.toString()),
+        TaxonomyInterpreter.interpretedChecklistKeys(
+            List.of(colMatch, nubNoMatch, withoutChecklist, colMatch)));
   }
 }

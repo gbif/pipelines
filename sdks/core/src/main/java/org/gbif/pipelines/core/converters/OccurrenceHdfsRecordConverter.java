@@ -330,9 +330,8 @@ public class OccurrenceHdfsRecordConverter {
       return;
     }
 
-    // only the checklists with a match, as in the search index
     occurrenceHdfsRecord.setChecklistkey(
-        TaxonomyInterpreter.matchedChecklistKeys(multiTaxonRecord.getTaxonRecords()));
+        TaxonomyInterpreter.interpretedChecklistKeys(multiTaxonRecord.getTaxonRecords()));
 
     occurrenceHdfsRecord.setClassifications(toClassifications(multiTaxonRecord.getTaxonRecords()));
 
@@ -361,7 +360,7 @@ public class OccurrenceHdfsRecordConverter {
     }
 
     occurrenceHdfsRecord.setDnachecklistkey(
-        TaxonomyInterpreter.matchedChecklistKeys(dnaTaxonRecord.getTaxonRecords()));
+        TaxonomyInterpreter.interpretedChecklistKeys(dnaTaxonRecord.getTaxonRecords()));
     occurrenceHdfsRecord.setDnaclassifications(toClassifications(dnaTaxonRecord.getTaxonRecords()));
     occurrenceHdfsRecord.setDnaclassificationdetails(
         toClassificationDetails(dnaTaxonRecord.getTaxonRecords()));

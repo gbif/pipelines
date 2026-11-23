@@ -10,6 +10,7 @@ import com.google.common.base.Strings;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -127,13 +128,14 @@ public class TaxonomyInterpreter {
   }
 
   /**
-   * The checklists of the taxon records with a match, without duplicates: a checklist can be
-   * matched twice, e.g. when a country checklist is also one of the configured checklists.
+   * The checklists the record was interpreted against, with or without a match (TAXON_MATCH_NONE),
+   * and without duplicates: a checklist can be used twice, e.g. when a country checklist is also
+   * one of the configured checklists.
    */
-  public static List<String> matchedChecklistKeys(List<TaxonRecord> taxonRecords) {
+  public static List<String> interpretedChecklistKeys(List<TaxonRecord> taxonRecords) {
     return taxonRecords.stream()
-        .filter(TaxonomyInterpreter::hasMatch)
         .map(TaxonRecord::getDatasetKey)
+        .filter(Objects::nonNull)
         .distinct()
         .collect(Collectors.toList());
   }

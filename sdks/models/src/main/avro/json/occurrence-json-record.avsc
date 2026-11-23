@@ -204,8 +204,8 @@
         "default": {},
         "doc":""
       },
-      {"name":"checklistKey","type":{"type":"array","items":"string"},"default":[],"doc":""},
-      {"name":"dnaChecklistKey","type":{"type":"array","items":"string"},"default":[],"doc":"Checklists with a DNA-assisted match"},
+      {"name":"checklistKey","type":{"type":"array","items":"string"},"default":[],"doc":"Checklists of the interpretation, with or without a match"},
+      {"name":"dnaChecklistKey","type":{"type":"array","items":"string"},"default":[],"doc":"Checklists of the DNA-assisted interpretation, with or without a match"},
       {"name":"dnaClassifications","type":["null","DnaClassifications"],"default":null,"doc":""},
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},

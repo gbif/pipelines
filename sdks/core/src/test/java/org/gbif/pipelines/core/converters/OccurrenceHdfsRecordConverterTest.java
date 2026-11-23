@@ -736,9 +736,12 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord.getDnataxonomicissues());
   }
 
-  /** The checklist keys only have the checklists with a match, as in the search index. */
+  /**
+   * The checklist keys are the checklists the record was interpreted against, with or without a
+   * match.
+   */
   @Test
-  public void checklistKeysOnlyHaveMatchesTest() {
+  public void checklistKeysAreTheInterpretedChecklistsTest() {
     String zaKey = "f5dc22ca-0bb1-4692-8a97-cc7ac54d7ed9";
     RankedNameWithAuthorship usage =
         RankedNameWithAuthorship.newBuilder()
@@ -775,9 +778,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .build()
             .convert();
 
+    // COL only once
     Assert.assertEquals(
-        List.of(Constants.COL_DATASET_KEY.toString()), hdfsRecord.getChecklistkey());
-    Assert.assertEquals(List.of(zaKey), hdfsRecord.getDnachecklistkey());
+        List.of(Constants.COL_DATASET_KEY.toString(), Constants.NUB_DATASET_KEY.toString(), zaKey),
+        hdfsRecord.getChecklistkey());
+    Assert.assertEquals(
+        List.of(Constants.COL_DATASET_KEY.toString(), zaKey), hdfsRecord.getDnachecklistkey());
   }
 
   @Test
