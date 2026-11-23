@@ -8,6 +8,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.*;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -118,6 +119,23 @@ public class TaxonomyInterpreter {
         r -> {
           TaxonRecordConverter.convert(r, tr);
         });
+  }
+
+  /** Whether the taxon record has a match, i.e. a usage that isn't incertae sedis. */
+  public static boolean hasMatch(TaxonRecord tr) {
+    return tr.getUsage() != null && !INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey());
+  }
+
+  /**
+   * The checklists of the taxon records with a match, without duplicates: a checklist can be
+   * matched twice, e.g. when a country checklist is also one of the configured checklists.
+   */
+  public static List<String> matchedChecklistKeys(List<TaxonRecord> taxonRecords) {
+    return taxonRecords.stream()
+        .filter(TaxonomyInterpreter::hasMatch)
+        .map(TaxonRecord::getDatasetKey)
+        .distinct()
+        .collect(Collectors.toList());
   }
 
   /**

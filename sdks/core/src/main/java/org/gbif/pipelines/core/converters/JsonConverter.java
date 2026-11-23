@@ -359,10 +359,7 @@ public class JsonConverter {
   public static Map<String, Classification> convertToClassifications(
       List<TaxonRecord> taxonRecords) {
     return taxonRecords.stream()
-        .filter(
-            tr ->
-                tr.getUsage() != null
-                    && !TaxonomyInterpreter.INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey()))
+        .filter(TaxonomyInterpreter::hasMatch)
         .collect(
             Collectors.toMap(
                 TaxonRecord::getDatasetKey,

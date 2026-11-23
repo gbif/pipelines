@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.*;
+import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
@@ -329,10 +330,9 @@ public class OccurrenceHdfsRecordConverter {
       return;
     }
 
+    // only the checklists with a match, as in the search index
     occurrenceHdfsRecord.setChecklistkey(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .map(TaxonRecord::getDatasetKey)
-            .collect(Collectors.toList()));
+        TaxonomyInterpreter.matchedChecklistKeys(multiTaxonRecord.getTaxonRecords()));
 
     occurrenceHdfsRecord.setClassifications(toClassifications(multiTaxonRecord.getTaxonRecords()));
 
@@ -360,6 +360,8 @@ public class OccurrenceHdfsRecordConverter {
       return;
     }
 
+    occurrenceHdfsRecord.setDnachecklistkey(
+        TaxonomyInterpreter.matchedChecklistKeys(dnaTaxonRecord.getTaxonRecords()));
     occurrenceHdfsRecord.setDnaclassifications(toClassifications(dnaTaxonRecord.getTaxonRecords()));
     occurrenceHdfsRecord.setDnaclassificationdetails(
         toClassificationDetails(dnaTaxonRecord.getTaxonRecords()));

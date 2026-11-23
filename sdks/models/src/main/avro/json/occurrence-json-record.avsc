@@ -205,6 +205,7 @@
         "doc":""
       },
       {"name":"checklistKey","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"dnaChecklistKey","type":{"type":"array","items":"string"},"default":[],"doc":"Checklists with a DNA-assisted match"},
       {"name":"dnaClassifications","type":["null","DnaClassifications"],"default":null,"doc":""},
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},

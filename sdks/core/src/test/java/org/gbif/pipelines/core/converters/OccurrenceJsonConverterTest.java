@@ -738,6 +738,10 @@ public class OccurrenceJsonConverterTest {
         dnaClassifications
             .path("classifications")
             .has(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY));
+    assertEquals(1, result.path("dnaChecklistKey").size());
+    assertEquals(
+        OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY,
+        result.path("dnaChecklistKey").get(0).asText());
   }
 
   @Test

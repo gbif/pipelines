@@ -319,6 +319,9 @@ public class OccurrenceJsonConverter {
       return;
     }
 
+    builder.setDnaChecklistKey(
+        TaxonomyInterpreter.matchedChecklistKeys(dnaTaxonRecord.getTaxonRecords()));
+
     Map<String, Classification> classifications =
         JsonConverter.convertToClassifications(dnaTaxonRecord.getTaxonRecords());
     if (classifications.isEmpty() && dnaTaxonRecord.getRemarks() == null) {
@@ -339,16 +342,8 @@ public class OccurrenceJsonConverter {
       Map<String, Classification> classifications =
           JsonConverter.convertToClassifications(multiTaxon);
       builder.setClassifications(classifications);
-      List<String> checklistKeys =
-          multiTaxon.getTaxonRecords().stream()
-              .filter(
-                  tr ->
-                      tr.getUsage() != null
-                          && !TaxonomyInterpreter.INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey()))
-              .map(TaxonRecord::getDatasetKey)
-              .collect(Collectors.toList());
-
-      builder.setChecklistKey(checklistKeys);
+      builder.setChecklistKey(
+          TaxonomyInterpreter.matchedChecklistKeys(multiTaxon.getTaxonRecords()));
 
       // Raw to index classification
       if (verbatim != null) {

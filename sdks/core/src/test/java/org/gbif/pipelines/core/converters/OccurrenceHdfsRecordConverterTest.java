@@ -10,6 +10,7 @@ import org.gbif.api.vocabulary.*;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.ObisTerm;
+import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.NamePart;
@@ -721,6 +722,8 @@ public class OccurrenceHdfsRecordConverterTest {
         Map.of(Constants.COL_DATASET_KEY.toString(), List.of("101", "102")),
         hdfsRecord.getDnaclassifications());
     Assert.assertEquals(
+        List.of(Constants.COL_DATASET_KEY.toString()), hdfsRecord.getDnachecklistkey());
+    Assert.assertEquals(
         "DNA_KINGDOM",
         hdfsRecord
             .getDnaclassificationdetails()
@@ -731,6 +734,50 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(
         Map.of(Constants.COL_DATASET_KEY.toString(), List.of("TAXON_MATCH_FUZZY")),
         hdfsRecord.getDnataxonomicissues());
+  }
+
+  /** The checklist keys only have the checklists with a match, as in the search index. */
+  @Test
+  public void checklistKeysOnlyHaveMatchesTest() {
+    String zaKey = "f5dc22ca-0bb1-4692-8a97-cc7ac54d7ed9";
+    RankedNameWithAuthorship usage =
+        RankedNameWithAuthorship.newBuilder()
+            .setKey("10")
+            .setName("Test species")
+            .setRank(Rank.SPECIES.toString())
+            .build();
+    TaxonRecord colMatch =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(Constants.COL_DATASET_KEY.toString())
+            .setUsage(usage)
+            .build();
+    // no match: incertae sedis for the GBIF Backbone, no usage for the other checklists
+    TaxonRecord nubNoMatch =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(Constants.NUB_DATASET_KEY.toString())
+            .setUsage(TaxonomyInterpreter.INCERTAE_SEDIS_WITH_AUTHORSHIP)
+            .build();
+    TaxonRecord zaNoMatch = TaxonRecord.newBuilder().setDatasetKey(zaKey).build();
+    TaxonRecord zaMatch = TaxonRecord.newBuilder().setDatasetKey(zaKey).setUsage(usage).build();
+    TaxonRecord colNoMatch =
+        TaxonRecord.newBuilder().setDatasetKey(Constants.COL_DATASET_KEY.toString()).build();
+
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder()
+            .multiTaxonRecord(
+                MultiTaxonRecord.newBuilder()
+                    // COL twice, e.g. as a configured and a country checklist
+                    .setTaxonRecords(
+                        new ArrayList<>(List.of(colMatch, nubNoMatch, zaNoMatch, colMatch)))
+                    .build())
+            .dnaTaxonRecord(
+                DnaTaxonRecord.newBuilder().setTaxonRecords(List.of(colNoMatch, zaMatch)).build())
+            .build()
+            .convert();
+
+    Assert.assertEquals(
+        List.of(Constants.COL_DATASET_KEY.toString()), hdfsRecord.getChecklistkey());
+    Assert.assertEquals(List.of(zaKey), hdfsRecord.getDnachecklistkey());
   }
 
   @Test

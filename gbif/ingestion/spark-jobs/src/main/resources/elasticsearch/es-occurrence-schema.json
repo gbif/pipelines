@@ -693,6 +693,7 @@
     "extensions": {"type": "keyword"},
 
     "checklistKey": {"type": "keyword"},
+    "dnaChecklistKey": {"type": "keyword"},
     "dnaClassifications": {
       "properties": {
         "remarks": {"type": "text", "index": false}
