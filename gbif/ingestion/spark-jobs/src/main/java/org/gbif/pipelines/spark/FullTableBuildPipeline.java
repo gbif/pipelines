@@ -22,9 +22,9 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
-import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
 import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
@@ -167,10 +167,7 @@ public class FullTableBuildPipeline {
 
     // load hdfs view
     Dataset<Row> hdfs =
-        readHdfsParquet(
-                spark,
-                expectedHdfsSchema(spark, config, args.datasetType),
-                scanResult.successfulPaths())
+        readHdfsParquet(spark, expectedHdfsSchema(args.datasetType), scanResult.successfulPaths())
             .coalesce(args.numberOfShards);
 
     String coreDwcTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
@@ -339,16 +336,13 @@ public class FullTableBuildPipeline {
    * which file it picks. Reading with this schema makes fields missing from older files read as
    * NULL.
    */
-  static StructType expectedHdfsSchema(
-      SparkSession spark, PipelinesConfig config, DatasetType datasetType) {
+  static StructType expectedHdfsSchema(DatasetType datasetType) {
     if (datasetType == DatasetType.SAMPLING_EVENT) {
       return Encoders.bean(EventHdfsRecord.class).schema();
     }
     // derive from the same transformation the interpretation uses, so the classification
     // structs match the configured classifications exactly
-    return OccurrenceInterpretationPipeline.toHdfs(
-            config, spark.emptyDataset(Encoders.bean(Occurrence.class)), null, 1)
-        .schema();
+    return Encoders.bean(OccurrenceHdfsRecord.class).schema();
   }
 
   static Dataset<Row> readHdfsParquet(SparkSession spark, StructType schema, List<String> paths) {
