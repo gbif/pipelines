@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.function.BiConsumer;
 import javax.xml.ws.WebServiceException;
@@ -118,10 +119,18 @@ class TaxonomyDnaPipelineTest {
     LongAccumulator classified = new LongAccumulator();
     LongAccumulator failed = new LongAccumulator();
     LongAccumulator missing = new LongAccumulator();
+    LongAccumulator noClassification = new LongAccumulator();
 
     List<Occurrence> occurrences =
         TaxonomyDnaPipeline.interpretOccurrenceDnaTaxon(
-            occurrences(), client, INTERPRETERS, "dataset", classified, failed, missing);
+            occurrences(),
+            client,
+            INTERPRETERS,
+            "dataset",
+            classified,
+            failed,
+            missing,
+            noClassification);
 
     assertEquals(2, occurrences.size());
     assertNull(occurrences.get(0).getDnaTaxon());
@@ -140,16 +149,67 @@ class TaxonomyDnaPipelineTest {
     LongAccumulator classified = new LongAccumulator();
     LongAccumulator failed = new LongAccumulator();
     LongAccumulator missing = new LongAccumulator();
+    LongAccumulator noClassification = new LongAccumulator();
 
     List<Occurrence> occurrences =
         TaxonomyDnaPipeline.interpretOccurrenceDnaTaxon(
-            occurrences(), client, INTERPRETERS, "dataset", classified, failed, missing);
+            occurrences(),
+            client,
+            INTERPRETERS,
+            "dataset",
+            classified,
+            failed,
+            missing,
+            noClassification);
 
     assertNotNull(occurrences.get(0).getDnaTaxon());
     assertNull(occurrences.get(1).getDnaTaxon());
     assertEquals(1L, classified.value().longValue());
     assertEquals(0L, failed.value().longValue());
     assertEquals(0L, missing.value().longValue());
+    // the response has no classification: classified, and also counted apart
+    assertEquals(1L, noClassification.value().longValue());
+  }
+
+  /** The classifier returns no classification without saying why, so a default remark is set. */
+  @Test
+  void noClassificationGetsTheDefaultRemarks() throws Exception {
+    ClassifyOccurrenceResponse response = new ClassifyOccurrenceResponse();
+    response.setGbifID("1");
+
+    assertEquals(TaxonomyDnaPipeline.NO_CLASSIFICATION_REMARKS, classifiedRemarks(response));
+  }
+
+  @Test
+  void classificationKeepsItsRemarks() throws Exception {
+    ClassifyOccurrenceResponse.DnaClassification classification =
+        new ClassifyOccurrenceResponse.DnaClassification();
+    classification.setScientificName("Zoarces viviparus");
+    classification.setRemarks("1 sequence(s) matched");
+    ClassifyOccurrenceResponse response = new ClassifyOccurrenceResponse();
+    response.setGbifID("1");
+    response.setClassification(classification);
+
+    assertEquals("1 sequence(s) matched", classifiedRemarks(response));
+  }
+
+  /** The remarks of the DNA taxon of the occurrence classified with the response. */
+  private static String classifiedRemarks(ClassifyOccurrenceResponse response) throws Exception {
+    SequenceClassifierServiceClient client = mock(SequenceClassifierServiceClient.class);
+    when(client.classifyBatch(any())).thenReturn(List.of(response));
+
+    List<Occurrence> occurrences =
+        TaxonomyDnaPipeline.interpretOccurrenceDnaTaxon(
+            occurrences(),
+            client,
+            INTERPRETERS,
+            "dataset",
+            new LongAccumulator(),
+            new LongAccumulator(),
+            new LongAccumulator(),
+            new LongAccumulator());
+
+    return new ObjectMapper().readTree(occurrences.get(0).getDnaTaxon()).path("remarks").asText();
   }
 
   /** An occurrence without a result, or with a result for another gbifID, is counted as missing. */
@@ -162,10 +222,18 @@ class TaxonomyDnaPipelineTest {
     LongAccumulator classified = new LongAccumulator();
     LongAccumulator failed = new LongAccumulator();
     LongAccumulator missing = new LongAccumulator();
+    LongAccumulator noClassification = new LongAccumulator();
 
     List<Occurrence> occurrences =
         TaxonomyDnaPipeline.interpretOccurrenceDnaTaxon(
-            occurrences(), client, INTERPRETERS, "dataset", classified, failed, missing);
+            occurrences(),
+            client,
+            INTERPRETERS,
+            "dataset",
+            classified,
+            failed,
+            missing,
+            noClassification);
 
     assertNull(occurrences.get(0).getDnaTaxon());
     assertEquals(0L, classified.value().longValue());
@@ -193,6 +261,7 @@ class TaxonomyDnaPipelineTest {
         client,
         INTERPRETERS,
         "dataset",
+        new LongAccumulator(),
         new LongAccumulator(),
         new LongAccumulator(),
         new LongAccumulator());

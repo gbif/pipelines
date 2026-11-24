@@ -146,6 +146,8 @@ public class PipelinesVariables {
     public static final String DNA_TAXON_FAILED_RECORDS_COUNT = "dnaTaxonFailedRecordsCount";
     // occurrences sent to the DNA sequence classifier that got no result back
     public static final String DNA_TAXON_MISSING_RECORDS_COUNT = "dnaTaxonMissingRecordsCount";
+    public static final String DNA_TAXON_NO_CLASSIFICATION_RECORDS_COUNT =
+        "dnaTaxonNoClassificationRecordsCount";
     public static final String GRSCICOLL_RECORDS_COUNT = "grscicollRecordsCount";
     public static final String VERBATIM_RECORDS_COUNT = "verbatimRecordsCount";
     // Event core types

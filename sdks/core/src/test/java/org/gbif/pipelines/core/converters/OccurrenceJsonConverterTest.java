@@ -786,7 +786,10 @@ public class OccurrenceJsonConverterTest {
                     .setTaxonRecords(List.of(defaultMatch, zaNoMatch))
                     .build())
             .dnaTaxonRecord(
-                DnaTaxonRecord.newBuilder().setTaxonRecords(List.of(dnaNoMatch)).build())
+                DnaTaxonRecord.newBuilder()
+                    .setRemarks("no species-level match")
+                    .setTaxonRecords(List.of(dnaNoMatch))
+                    .build())
             .grscicoll(GrscicollRecord.newBuilder().setId("777").build())
             .multimedia(MultimediaRecord.newBuilder().setId("777").build())
             .dnaDerivedData(DnaDerivedDataRecord.newBuilder().setId("777").build())
@@ -814,6 +817,9 @@ public class OccurrenceJsonConverterTest {
             .path(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY);
     assertEquals(OccurrenceIssue.TAXON_MATCH_NONE.name(), dna.path("issues").get(0).asText());
     assertEquals(0, dna.path("taxonKeys").size());
+    // and the remarks of the classifier are kept without a match
+    assertEquals(
+        "no species-level match", result.path("dnaClassifications").path("remarks").asText());
     assertEquals(1, result.path("dnaChecklistKey").size());
     assertEquals(
         OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY,
