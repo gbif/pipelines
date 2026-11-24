@@ -28,13 +28,15 @@ public class DnaTaxonomyInterpreter {
   public static BiConsumer<ClassifyOccurrenceResponse, TaxonRecord> dnaTaxonomyInterpreter(
       KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore, String checklistKey) {
     return (result, tr) -> {
+      // The ws echoes the gbifID of the occurrence it was given
+      tr.setId(result.getGbifID());
+      // set before the kvStore check, so the record is still indexed with the checklist it was
+      // interpreted against (dnaChecklistKey)
+      tr.setDatasetKey(checklistKey);
+
       if (kvStore == null) {
         return;
       }
-
-      // The ws echoes the gbifID of the occurrence it was given
-      tr.setId(result.getGbifID());
-      tr.setDatasetKey(checklistKey);
 
       NameUsageMatchRequest request =
           createNameUsageMatchRequest(result.getClassification(), checklistKey);

@@ -62,6 +62,21 @@ class DnaTaxonomyInterpreterTest {
   }
 
   @Test
+  void checkDnaClassificationWithoutKvStoreKeepsChecklistKey() {
+    TaxonRecord testRecord = TaxonRecord.newBuilder().setId("123").build();
+
+    ClassifyOccurrenceResponse response = new ClassifyOccurrenceResponse();
+    response.setGbifID("42");
+
+    DnaTaxonomyInterpreter.dnaTaxonomyInterpreter(null, NUB_DATASET_KEY.toString())
+        .accept(response, testRecord);
+
+    assertEquals("42", testRecord.getId());
+    assertEquals(NUB_DATASET_KEY.toString(), testRecord.getDatasetKey());
+    assertNull(testRecord.getUsage());
+  }
+
+  @Test
   void checkDnaClassificationUsesMatchedTaxonResponse() {
     TaxonRecord testRecord = TaxonRecord.newBuilder().setId("123").build();
 
