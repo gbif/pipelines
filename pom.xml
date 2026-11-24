@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>4.0.55-SNAPSHOT</version>
+  <version>4.0.56-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -975,6 +975,11 @@
       <dependency>
         <groupId>io.prometheus</groupId>
         <artifactId>prometheus-metrics-core</artifactId>
+        <version>${prometheus-metrics.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>prometheus-metrics-model</artifactId>
         <version>${prometheus-metrics.version}</version>
       </dependency>
       <dependency>
