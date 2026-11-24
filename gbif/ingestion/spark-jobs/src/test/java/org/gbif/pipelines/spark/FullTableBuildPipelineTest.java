@@ -60,7 +60,8 @@ public class FullTableBuildPipelineTest {
 
   @Test
   public void expectedSchemaIncludesEnvironments() {
-    StructType schema = FullTableBuildPipeline.expectedHdfsSchema(DatasetType.OCCURRENCE);
+    StructType schema =
+        FullTableBuildPipeline.expectedHdfsSchema(spark, config(), DatasetType.OCCURRENCE);
 
     assertTrue(Arrays.asList(schema.fieldNames()).contains("environments"));
     StructType gbifClassification = (StructType) schema.apply("gbif_classification").dataType();
@@ -69,7 +70,8 @@ public class FullTableBuildPipelineTest {
 
   @Test
   public void oldParquetWithoutEnvironmentsDoesNotDropItFromNewParquet() throws Exception {
-    StructType full = FullTableBuildPipeline.expectedHdfsSchema(DatasetType.OCCURRENCE);
+    StructType full =
+        FullTableBuildPipeline.expectedHdfsSchema(spark, config(), DatasetType.OCCURRENCE);
     StructField gbifid = full.apply("gbifid");
     StructField environments = full.apply("environments");
     StructType classification = (StructType) full.apply("gbif_classification").dataType();

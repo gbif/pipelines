@@ -167,7 +167,10 @@ public class FullTableBuildPipeline {
 
     // load hdfs view
     Dataset<Row> hdfs =
-        readHdfsParquet(spark, expectedHdfsSchema(args.datasetType), scanResult.successfulPaths())
+        readHdfsParquet(
+                spark,
+                expectedHdfsSchema(spark, config, args.datasetType),
+                scanResult.successfulPaths())
             .coalesce(args.numberOfShards);
 
     String coreDwcTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
@@ -336,13 +339,17 @@ public class FullTableBuildPipeline {
    * which file it picks. Reading with this schema makes fields missing from older files read as
    * NULL.
    */
-  static StructType expectedHdfsSchema(DatasetType datasetType) {
+  static StructType expectedHdfsSchema(
+      SparkSession spark, PipelinesConfig config, DatasetType datasetType) {
     if (datasetType == DatasetType.SAMPLING_EVENT) {
       return Encoders.bean(EventHdfsRecord.class).schema();
     }
-    // derive from the same transformation the interpretation uses, so the classification
-    // structs match the configured classifications exactly
-    return Encoders.bean(OccurrenceHdfsRecord.class).schema();
+    // add the classification structs with the same transformation the interpretation uses, so
+    // they match the configured classifications exactly
+    Dataset<Row> empty =
+        spark.createDataFrame(
+            Collections.emptyList(), Encoders.bean(OccurrenceHdfsRecord.class).schema());
+    return OccurrenceInterpretationPipeline.withClassificationColumns(config, empty).schema();
   }
 
   static Dataset<Row> readHdfsParquet(SparkSession spark, StructType schema, List<String> paths) {
