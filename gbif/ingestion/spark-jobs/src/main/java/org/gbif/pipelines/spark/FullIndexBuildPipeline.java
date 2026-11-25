@@ -88,6 +88,15 @@ public class FullIndexBuildPipeline {
             "Delete the temporary parquet files used for writing to Elastic after a successful build. ",
         arity = 1)
     private boolean deleteTempParquetOnSuccess = true;
+
+    @Parameter(
+        names = "--mergeSchema",
+        description =
+            "Merge the schemas of the parquet of all the datasets when reading them. Needed when the "
+                + "attempts were written by different versions, so the columns added later are kept. "
+                + "Slower, as Spark reads the footer of every file.",
+        arity = 1)
+    private boolean mergeSchema = false;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -155,9 +164,7 @@ public class FullIndexBuildPipeline {
 
     // load all hdfs view parquet
     Dataset<Row> hdfs =
-        spark
-            .read()
-            .parquet(scanResult.successfulPaths().toArray(new String[0]))
+        readJsonParquet(spark, scanResult.successfulPaths(), args.mergeSchema)
             .coalesce(args.numberOfShards);
 
     spark
@@ -327,6 +334,18 @@ public class FullIndexBuildPipeline {
     }
 
     log.info("Full index build completed");
+  }
+
+  /**
+   * Reads the parquet of all the datasets, optionally merging their schemas. The attempts can be
+   * written by different versions, and without merging Spark takes the schema of one of the files,
+   * so the columns added later (e.g. dnaChecklistKey) would be dropped for all the datasets.
+   */
+  static Dataset<Row> readJsonParquet(SparkSession spark, List<String> paths, boolean mergeSchema) {
+    return spark
+        .read()
+        .option("mergeSchema", String.valueOf(mergeSchema))
+        .parquet(paths.toArray(new String[0]));
   }
 
   private static Integer getIndexNumberShards(
