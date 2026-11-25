@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import org.apache.spark.sql.Dataset;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.io.TempDir;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SparkExtensionMaterializerTest {
@@ -44,9 +46,10 @@ class SparkExtensionMaterializerTest {
   private SchemaGraph graph;
 
   @BeforeAll
-  void setup() {
+  void setup(@TempDir Path checkpoints) {
     spark =
         SparkTestSession.createBuilder().appName("SparkExtensionMaterializerTest").getOrCreate();
+    spark.sparkContext().setCheckpointDir(checkpoints.toUri().toString());
     graph = new DwcDpSchemaLoader().current();
   }
 

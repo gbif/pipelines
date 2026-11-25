@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import org.apache.spark.sql.Dataset;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.io.TempDir;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AgentRoleMappingTest {
@@ -45,8 +47,9 @@ class AgentRoleMappingTest {
   private SchemaGraph graph;
 
   @BeforeAll
-  void setup() {
+  void setup(@TempDir Path checkpoints) {
     spark = SparkTestSession.createBuilder().appName("AgentRoleMappingTest").getOrCreate();
+    spark.sparkContext().setCheckpointDir(checkpoints.toUri().toString());
     graph = new DwcDpSchemaLoader().current();
   }
 

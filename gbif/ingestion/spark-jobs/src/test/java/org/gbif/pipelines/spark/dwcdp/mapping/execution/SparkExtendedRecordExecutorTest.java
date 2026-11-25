@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.apache.spark.sql.Dataset;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.io.TempDir;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SparkExtendedRecordExecutorTest {
@@ -47,9 +49,10 @@ class SparkExtendedRecordExecutorTest {
   private SchemaGraph graph;
 
   @BeforeAll
-  void setup() {
+  void setup(@TempDir Path checkpoints) {
     spark =
         SparkTestSession.createBuilder().appName("SparkExtendedRecordExecutorTest").getOrCreate();
+    spark.sparkContext().setCheckpointDir(checkpoints.toUri().toString());
     graph = new DwcDpSchemaLoader().current();
   }
 

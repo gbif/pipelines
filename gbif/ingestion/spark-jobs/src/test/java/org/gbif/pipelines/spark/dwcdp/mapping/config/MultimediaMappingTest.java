@@ -3,6 +3,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Path;
 import java.util.List;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.io.TempDir;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MultimediaMappingTest {
@@ -31,8 +33,9 @@ class MultimediaMappingTest {
   private SchemaGraph graph;
 
   @BeforeAll
-  void setup() {
+  void setup(@TempDir Path checkpoints) {
     spark = SparkTestSession.createBuilder().appName("MultimediaMappingTest").getOrCreate();
+    spark.sparkContext().setCheckpointDir(checkpoints.toUri().toString());
     graph = new DwcDpSchemaLoader().current();
   }
 
