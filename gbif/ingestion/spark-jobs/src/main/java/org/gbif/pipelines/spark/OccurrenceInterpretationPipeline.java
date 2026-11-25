@@ -22,6 +22,7 @@ import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
+import static org.gbif.pipelines.spark.util.SparkUtil.readParquetAs;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -250,12 +251,12 @@ public class OccurrenceInterpretationPipeline {
     generateOutputs(spark, config, numberOfShards, interpreted, metadata, outputPath);
   }
 
-  /** Helper to load the simple interpreted occurrences from disk. */
+  /**
+   * Helper to load the simple interpreted occurrences from disk. When only regenerating the outputs
+   * they can be from an older version, e.g. without the DNA taxonomy.
+   */
   private static Dataset<Occurrence> loadSimpleInterpreted(SparkSession spark, String outputPath) {
-    return spark
-        .read()
-        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-        .as(Encoders.bean(Occurrence.class));
+    return readParquetAs(spark, outputPath + "/" + SIMPLE_OCCURRENCE, Occurrence.class);
   }
 
   private static void generateOutputs(

@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoder;
+import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 
@@ -43,5 +46,16 @@ public class SparkUtil {
       fileSystem = FileSystem.getLocal(hadoopConf);
     }
     return fileSystem;
+  }
+
+  /**
+   * Reads parquet as the given bean class, with the schema of the class instead of the one of the
+   * files. Parquet written before a field was added to the class (e.g. by an older version, for a
+   * dataset not interpreted again) is read with that field as null, instead of failing as
+   * unresolved.
+   */
+  public static <T> Dataset<T> readParquetAs(SparkSession spark, String path, Class<T> clazz) {
+    Encoder<T> encoder = Encoders.bean(clazz);
+    return spark.read().schema(encoder.schema()).parquet(path).as(encoder);
   }
 }

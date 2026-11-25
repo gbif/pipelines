@@ -18,6 +18,7 @@ import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
+import static org.gbif.pipelines.spark.util.SparkUtil.readParquetAs;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
@@ -188,10 +189,8 @@ public class TaxonomyDnaPipeline {
   }
 
   private static Dataset<Occurrence> loadSimpleRecords(SparkSession spark, String outputPath) {
-    return spark
-        .read()
-        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-        .as(Encoders.bean(Occurrence.class));
+    // the simple records can be from an older version, e.g. without the DNA taxonomy
+    return readParquetAs(spark, outputPath + "/" + SIMPLE_OCCURRENCE, Occurrence.class);
   }
 
   /**
