@@ -114,7 +114,7 @@
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <vocabulary-lookup.version>2.0.14</vocabulary-lookup.version>
     <registry.version>4.2.35</registry.version>
-    <gbif-common-ws.version>2.1.4</gbif-common-ws.version>
+    <gbif-common-ws.version>2.1.5</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.14</gbif-postal-service.version>
     <dwc-dp-analyser.version>0.0.15</dwc-dp-analyser.version>
     <dwc-dp-schemas.version>0.0.3</dwc-dp-schemas.version>
@@ -191,7 +191,6 @@
     <commons-httpclient.version>3.1</commons-httpclient.version>
     <parquet-avro.version>1.17.0</parquet-avro.version>
     <old-jackson.version>1.9.13</old-jackson.version>
-    <prometheus-metrics.version>1.4.3</prometheus-metrics.version>
 
     <!-- Java / Test -->
     <junit4.version>4.13.2</junit4.version>
@@ -970,27 +969,6 @@
         <groupId>org.freemarker</groupId>
         <artifactId>freemarker</artifactId>
         <version>${freemarker.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>prometheus-metrics-core</artifactId>
-        <version>${prometheus-metrics.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>prometheus-metrics-model</artifactId>
-        <version>${prometheus-metrics.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
-        <version>${prometheus-metrics.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
-        <version>${prometheus-metrics.version}</version>
       </dependency>
 
       <!-- Mini Pipeline-->

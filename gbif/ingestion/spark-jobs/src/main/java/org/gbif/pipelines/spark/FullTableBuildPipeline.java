@@ -22,9 +22,9 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
-import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
 import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
@@ -344,11 +344,12 @@ public class FullTableBuildPipeline {
     if (datasetType == DatasetType.SAMPLING_EVENT) {
       return Encoders.bean(EventHdfsRecord.class).schema();
     }
-    // derive from the same transformation the interpretation uses, so the classification
-    // structs match the configured classifications exactly
-    return OccurrenceInterpretationPipeline.toHdfs(
-            config, spark.emptyDataset(Encoders.bean(Occurrence.class)), null, 1)
-        .schema();
+    // add the classification structs with the same transformation the interpretation uses, so
+    // they match the configured classifications exactly
+    Dataset<Row> empty =
+        spark.createDataFrame(
+            Collections.emptyList(), Encoders.bean(OccurrenceHdfsRecord.class).schema());
+    return OccurrenceInterpretationPipeline.withClassificationColumns(config, empty).schema();
   }
 
   static Dataset<Row> readHdfsParquet(SparkSession spark, StructType schema, List<String> paths) {

@@ -907,20 +907,44 @@ public class OccurrenceInterpretationPipeline {
                 },
             Encoders.bean(OccurrenceHdfsRecord.class));
 
-    if (config.getTableBuildConfig() == null) {
+    if (!hasClassifications(config)) {
       return dataset.toDF();
     }
 
-    Map<String, String> uuidToColumnPrefix =
-        Optional.ofNullable(config.getTableBuildConfig().getClassifications()).orElse(Map.of());
-    Map<String, String> dnaUuidToColumnPrefix =
-        Optional.ofNullable(config.getTableBuildConfig().getDnaClassifications()).orElse(Map.of());
+    // for small datasets, to reduce the number of small files created, we coalesce to a single
+    // shard
+    return withClassificationColumns(config, dataset.toDF()).coalesce(numshards);
+  }
 
-    if (uuidToColumnPrefix.isEmpty() && dnaUuidToColumnPrefix.isEmpty()) {
-      return dataset.toDF();
+  private static Map<String, String> getClassifications(PipelinesConfig config) {
+    return Optional.ofNullable(config.getTableBuildConfig().getClassifications()).orElse(Map.of());
+  }
+
+  private static Map<String, String> getDnaClassifications(PipelinesConfig config) {
+    return Optional.ofNullable(config.getTableBuildConfig().getDnaClassifications())
+        .orElse(Map.of());
+  }
+
+  private static boolean hasClassifications(PipelinesConfig config) {
+    return config.getTableBuildConfig() != null
+        && (!getClassifications(config).isEmpty() || !getDnaClassifications(config).isEmpty());
+  }
+
+  /**
+   * Adds a struct column per configured classification (e.g. "gbif_classification") and per
+   * configured DNA-assisted classification, derived from the classification maps of an {@link
+   * OccurrenceHdfsRecord} dataframe.
+   */
+  public static Dataset<Row> withClassificationColumns(
+      PipelinesConfig config, Dataset<Row> hdfsRecords) {
+    if (!hasClassifications(config)) {
+      return hdfsRecords;
     }
 
-    Dataset<Row> withClassifications = dataset.toDF();
+    Map<String, String> uuidToColumnPrefix = getClassifications(config);
+    Map<String, String> dnaUuidToColumnPrefix = getDnaClassifications(config);
+
+    Dataset<Row> withClassifications = hdfsRecords;
 
     for (Map.Entry<String, String> uuidToColumn : uuidToColumnPrefix.entrySet()) {
 
@@ -957,10 +981,6 @@ public class OccurrenceInterpretationPipeline {
                   element_at(col("dnataxonomicissues"), lit(uuid)),
                   element_at(col("dnaclassifications"), lit(uuid))));
     }
-
-    // for small datasets, to reduce the number of small files created, we coalesce to a single
-    // shard
-    withClassifications = withClassifications.coalesce(numshards);
     return withClassifications;
   }
 
