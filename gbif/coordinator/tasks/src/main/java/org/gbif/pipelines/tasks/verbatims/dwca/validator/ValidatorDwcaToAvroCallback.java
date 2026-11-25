@@ -162,14 +162,25 @@ public class ValidatorDwcaToAvroCallback extends AbstractMessageCallback<Pipelin
       Archive archive =
           DwcaUtils.fromLocationSkipValidation(
               buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
-      Set<String> types = new TreeSet<>(DwcaUtils.getExtensionAsTerms(archive));
-      types.addAll(getAllValidatorInterpretationAsString());
-      types.remove(null);
-      return types;
+      return interpretTypes(DwcaUtils.getExtensionAsTerms(archive));
     } catch (IllegalStateException | UnsupportedArchiveException ex) {
       log.warn(ex.getMessage(), ex);
       return new TreeSet<>(config.interpretTypes);
     }
+  }
+
+  /**
+   * The archive's extension types (unknown extensions map to null and are dropped) and all
+   * validator interpretation types, sorted. Nulls are filtered before the TreeSet, which rejects
+   * them (even in remove).
+   */
+  static Set<String> interpretTypes(Set<String> extensionTypes) {
+    Set<String> types =
+        extensionTypes.stream()
+            .filter(Objects::nonNull)
+            .collect(Collectors.toCollection(TreeSet::new));
+    types.addAll(getAllValidatorInterpretationAsString());
+    return types;
   }
 
   @Override
