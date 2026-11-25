@@ -114,7 +114,7 @@
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <vocabulary-lookup.version>2.0.14</vocabulary-lookup.version>
     <registry.version>4.2.35</registry.version>
-    <gbif-common-ws.version>2.1.4</gbif-common-ws.version>
+    <gbif-common-ws.version>2.1.5</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.14</gbif-postal-service.version>
     <dwc-dp-analyser.version>0.0.15</dwc-dp-analyser.version>
     <dwc-dp-schemas.version>0.0.3</dwc-dp-schemas.version>
