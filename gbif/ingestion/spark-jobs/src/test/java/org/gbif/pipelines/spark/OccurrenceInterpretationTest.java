@@ -137,7 +137,6 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
                   "KE",
                   "Felidae",
                   "30",
-                  "96",
                   "Panthera",
                   "Carnivora",
                   "Narok",
@@ -348,8 +347,6 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
           JsonPath.read(
               json,
               "$.verbatim.core['http://rs.tdwg.org/dwc/terms/coordinateUncertaintyInMeters']"));
-      assertEquals(
-          "96", JsonPath.read(json, "$.verbatim.core['http://unknown.org/crawl_attempt']"));
       assertEquals(
           "Mammalia", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/class']"));
       assertEquals(

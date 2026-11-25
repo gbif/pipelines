@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>4.0.51-SNAPSHOT</version>
+  <version>4.0.56-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -105,16 +105,16 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.69</gbif-parsers.version>
     <dwca-io.version>3.0.1</dwca-io.version>
-    <gbif-api.version>2.4.28</gbif-api.version>
+    <gbif-api.version>2.4.30</gbif-api.version>
 
     <gbif-common.version>0.60</gbif-common.version>
-    <dwc-api.version>2.1.16-SNAPSHOT</dwc-api.version>
-    <gbif-kvs.version>3.1.4-SNAPSHOT</gbif-kvs.version>
+    <dwc-api.version>2.1.16</dwc-api.version>
+    <gbif-kvs.version>3.1.4</gbif-kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <vocabulary-lookup.version>2.0.14</vocabulary-lookup.version>
-    <registry.version>4.2.24</registry.version>
-    <gbif-common-ws.version>2.1.3</gbif-common-ws.version>
+    <registry.version>4.2.35</registry.version>
+    <gbif-common-ws.version>2.1.5</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.14</gbif-postal-service.version>
     <dwc-dp-analyser.version>0.0.15</dwc-dp-analyser.version>
     <dwc-dp-schemas.version>0.0.3</dwc-dp-schemas.version>
@@ -191,7 +191,6 @@
     <commons-httpclient.version>3.1</commons-httpclient.version>
     <parquet-avro.version>1.17.0</parquet-avro.version>
     <old-jackson.version>1.9.13</old-jackson.version>
-    <prometheus-metrics.version>1.4.3</prometheus-metrics.version>
 
     <!-- Java / Test -->
     <junit4.version>4.13.2</junit4.version>
@@ -232,7 +231,7 @@
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <super-csv.version>2.4.0</super-csv.version>
     <lz4.version>1.3.0</lz4.version>
-    <hdfs-tables.version>1.3.13-SNAPSHOT</hdfs-tables.version>
+    <hdfs-tables.version>1.3.13</hdfs-tables.version>
   </properties>
 
   <build>
@@ -972,22 +971,6 @@
         <version>${freemarker.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>prometheus-metrics-core</artifactId>
-        <version>${prometheus-metrics.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
-        <version>${prometheus-metrics.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.prometheus</groupId>
-        <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
-        <version>${prometheus-metrics.version}</version>
-      </dependency>
-
       <!-- Mini Pipeline-->
       <dependency>
         <groupId>org.apache.spark</groupId>
@@ -1089,6 +1072,18 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter</artifactId>
+        <version>${junit5.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit5.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
         <version>${junit5.version}</version>
         <scope>test</scope>
       </dependency>
