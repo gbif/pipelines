@@ -12,11 +12,14 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -204,7 +207,7 @@ public class ValidatorMetricsPipeline {
           Metrics.builder().indexeable(indexedCount > 0).fileInfos(all).build();
 
       String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(generatedMetrics);
-      FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
+      writeMetricsJson(fs, outputPath + "/" + METRICS_FILENAME, json);
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
 
       if (!orchestrated) {
@@ -214,6 +217,17 @@ public class ValidatorMetricsPipeline {
 
     } finally {
       records.unpersist();
+    }
+  }
+
+  /**
+   * Writes the metrics as UTF-8. Not {@link FsUtils#createFile}: it writes one byte per char
+   * (writeBytes), which breaks any name outside ASCII (for example "ø" becomes the invalid UTF-8
+   * byte 0xf8) for the coordinator's JSON reader.
+   */
+  static void writeMetricsJson(FileSystem fs, String path, String json) throws IOException {
+    try (FSDataOutputStream out = fs.create(new Path(FsUtils.convertLocalHdfsPath(path)), true)) {
+      out.write(json.getBytes(StandardCharsets.UTF_8));
     }
   }
 
