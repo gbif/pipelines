@@ -11,6 +11,7 @@ public record RelationStep(
     Optional<String> sourceColumn,
     Optional<String> targetColumn,
     FilterExpression filter,
+    Optional<PredicateExpression> joinPredicate,
     Optional<CardinalityStrategy> cardinalityStrategy,
     RelationRequirement requirement) {
 
@@ -21,6 +22,7 @@ public record RelationStep(
     sourceColumn = sourceColumn == null ? Optional.empty() : sourceColumn;
     targetColumn = targetColumn == null ? Optional.empty() : targetColumn;
     filter = filter == null ? FilterExpression.none() : filter;
+    joinPredicate = joinPredicate == null ? Optional.empty() : joinPredicate;
     cardinalityStrategy = cardinalityStrategy == null ? Optional.empty() : cardinalityStrategy;
     requirement = requirement == null ? RelationRequirement.OPTIONAL : requirement;
     if (sourceColumn.isPresent() != targetColumn.isPresent()) {
@@ -38,6 +40,7 @@ public record RelationStep(
         Optional.empty(),
         FilterExpression.none(),
         Optional.empty(),
+        Optional.empty(),
         RelationRequirement.OPTIONAL);
   }
 
@@ -49,6 +52,7 @@ public record RelationStep(
         sourceColumn,
         targetColumn,
         filter,
+        joinPredicate,
         cardinalityStrategy,
         requirement);
   }
@@ -61,6 +65,7 @@ public record RelationStep(
         sourceColumn,
         targetColumn,
         filter,
+        joinPredicate,
         cardinalityStrategy,
         requirement);
   }
@@ -76,6 +81,7 @@ public record RelationStep(
         Optional.of(fromColumn),
         Optional.of(toColumn),
         filter,
+        joinPredicate,
         cardinalityStrategy,
         requirement);
   }
@@ -92,6 +98,20 @@ public record RelationStep(
         sourceColumn,
         targetColumn,
         newFilter,
+        joinPredicate,
+        cardinalityStrategy,
+        requirement);
+  }
+
+  public RelationStep andOn(PredicateExpression predicate) {
+    return new RelationStep(
+        targetResource,
+        viaColumn,
+        schemaPredicate,
+        sourceColumn,
+        targetColumn,
+        filter,
+        Optional.of(predicate),
         cardinalityStrategy,
         requirement);
   }
@@ -104,6 +124,7 @@ public record RelationStep(
         sourceColumn,
         targetColumn,
         filter,
+        joinPredicate,
         Optional.of(strategy),
         requirement);
   }
@@ -116,6 +137,7 @@ public record RelationStep(
         sourceColumn,
         targetColumn,
         filter,
+        joinPredicate,
         cardinalityStrategy,
         newRequirement);
   }

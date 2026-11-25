@@ -211,19 +211,55 @@ public final class SparkExtensionMaterializer {
   private ExtensionMaterializationResult materializeUnion(
       TableLoader loader, CompiledExtension extension) {
     List<FragmentResult> rows = new ArrayList<>();
-    List<CompiledFragment> enrichments = new ArrayList<>();
+    List<CompiledFragment> enrichments =
+        extension.fragments().stream().filter(fragment -> fragment.rowMatch().isPresent()).toList();
+    Set<CompiledFragment> branchEnrichments = new HashSet<>();
     Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
 
     for (CompiledFragment fragment : extension.fragments()) {
       if (fragment.rowMatch().isPresent()) {
-        enrichments.add(fragment);
         continue;
       }
       if (loader.load(fragment.sourceResource()).isEmpty()) {
         continue;
       }
+      // Scope enrichments rooted on a row-producing branch to that branch's identity.
+      List<CompiledFragment> matchingEnrichments =
+          enrichments.stream()
+              .filter(enrichment -> fragment.scopeKey().equals(enrichment.scopeKey()))
+              .filter(enrichment -> fragment.rowIdentity().equals(enrichment.rowMatch()))
+              .filter(
+                  enrichment -> !enrichment.scopeKey().equals(enrichment.rowMatch().orElseThrow()))
+              .toList();
+      branchEnrichments.addAll(matchingEnrichments);
       FragmentResult materialized =
-          materializeFragment(loader, fragment, true, true, Set.of(), Map.of());
+          materializeFragment(
+              loader, fragment, true, matchingEnrichments.isEmpty(), Set.of(), Map.of());
+      for (CompiledFragment enrichment : matchingEnrichments) {
+        FragmentResult contribution =
+            materializeFragment(loader, enrichment, false, false, Set.of(), Map.of());
+        Map<String, MaterializedTarget> branchTargets = new LinkedHashMap<>(materialized.targets());
+        ensureNoDuplicateTargets(branchTargets, contribution.targets(), Set.of());
+        branchTargets.putAll(contribution.targets());
+        Dataset<Row> left = materialized.dataset();
+        Dataset<Row> right = contribution.dataset();
+        Dataset<Row> joined =
+            left.join(right, keyedJoinCondition(left, right, true), "left_outer")
+                .drop(right.col(COL_PARENT_KEY))
+                .drop(right.col(COL_ROW_KEY));
+        materialized = new FragmentResult(joined, materialized.parentKeySource(), branchTargets);
+      }
+      if (!matchingEnrichments.isEmpty()) {
+        materialized =
+            new FragmentResult(
+                filterEmptyPayloadRows(
+                    materialized.dataset(),
+                    materialized.targets().values().stream()
+                        .map(MaterializedTarget::physicalColumn)
+                        .toList()),
+                materialized.parentKeySource(),
+                materialized.targets());
+      }
       if (fragment.rowIdentity().isPresent()) {
         materialized =
             new FragmentResult(
@@ -261,7 +297,8 @@ public final class SparkExtensionMaterializer {
     }
 
     for (CompiledFragment fragment : enrichments) {
-      if (loader.load(fragment.sourceResource()).isEmpty()) {
+      if (branchEnrichments.contains(fragment)
+          || loader.load(fragment.sourceResource()).isEmpty()) {
         continue;
       }
       FragmentResult enrichment =

@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression.field;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.GbifDnaTerm;
@@ -10,8 +11,10 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilde
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.PredicateExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 
@@ -74,6 +77,49 @@ public final class NucleotideMapping {
             .scopeKey("event_pk")
             .rowMatch(paths.analysis().field("nucleotideAnalysis_pk"));
 
+    addMolecularProtocolFields(graph, protocol, builder);
+    return builder.build();
+  }
+
+  /** Sequences and matching analysis and protocol metadata linked through identifications. */
+  public static ExtensionFragment identificationSequencesForOccurrence(SchemaGraph graph) {
+    MappingPath occurrence = MappingPath.root(graph, "occurrence");
+    MappingPath identification =
+        occurrence.join("identification").via("occurrence_fk").optional().fanOut();
+    MappingPath sequence =
+        identification
+            .join("nucleotide-sequence")
+            .via("nucleotideSequence_fk")
+            .optional()
+            .exactlyOne();
+
+    MappingPath analysis =
+        sequence.join("nucleotide-analysis").via("nucleotideSequence_fk").optional().fanOut();
+    ValueExpression extract = field(identification.field("materialEntity_fk"));
+    MappingPath protocol =
+        analysis
+            .andOn(
+                PredicateExpression.any(
+                    PredicateExpression.equals(extract, field(analysis.field("materialEntity_fk"))),
+                    PredicateExpression.all(
+                        PredicateExpression.isNull(extract),
+                        PredicateExpression.equals(
+                            field(occurrence.field("event_fk")),
+                            field(analysis.field("event_fk"))))))
+            .join("molecular-protocol")
+            .via("molecularProtocol_fk")
+            .optional()
+            .exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "identification-nucleotide-sequence-for-occurrence",
+                ROW_TYPE_DNA_DERIVED_DATA,
+                protocol)
+            .scopeKey("occurrence_pk");
+
+    addSequenceFields(graph, sequence, builder);
+    DirectFieldMappings.from(graph, "nucleotide-analysis", analysis).addTo(builder);
     addMolecularProtocolFields(graph, protocol, builder);
     return builder.build();
   }

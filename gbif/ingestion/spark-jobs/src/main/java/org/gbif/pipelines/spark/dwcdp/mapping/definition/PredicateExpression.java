@@ -20,6 +20,10 @@ public interface PredicateExpression extends Serializable {
     return new Equals(left, right);
   }
 
+  static PredicateExpression isNull(ValueExpression expression) {
+    return new IsNull(expression);
+  }
+
   static In in(ValueExpression expression, Object... values) {
     return new In(expression, Arrays.asList(Arrays.copyOf(values, values.length)));
   }
@@ -41,6 +45,17 @@ public interface PredicateExpression extends Serializable {
     @Override
     public Set<FieldRef> requiredFields() {
       return union(left.requiredFields(), right.requiredFields());
+    }
+  }
+
+  record IsNull(ValueExpression expression) implements PredicateExpression {
+    public IsNull {
+      Objects.requireNonNull(expression, "expression");
+    }
+
+    @Override
+    public Set<FieldRef> requiredFields() {
+      return expression.requiredFields();
     }
   }
 

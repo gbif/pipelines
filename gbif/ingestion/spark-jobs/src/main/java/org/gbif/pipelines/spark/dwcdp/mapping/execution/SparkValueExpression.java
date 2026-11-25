@@ -66,9 +66,12 @@ public final class SparkValueExpression {
     return result.otherwise(build(expression.otherwise(), fields));
   }
 
-  private static Column build(PredicateExpression predicate, Function<FieldRef, Column> fields) {
+  static Column build(PredicateExpression predicate, Function<FieldRef, Column> fields) {
     if (predicate instanceof PredicateExpression.Equals equals) {
       return build(equals.left(), fields).equalTo(build(equals.right(), fields));
+    }
+    if (predicate instanceof PredicateExpression.IsNull isNull) {
+      return build(isNull.expression(), fields).isNull();
     }
     if (predicate instanceof PredicateExpression.In in) {
       return build(in.expression(), fields).isin(in.values().toArray());

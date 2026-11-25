@@ -69,7 +69,8 @@ public final class SparkPathPrefixCache implements AutoCloseable {
     // FilterExpression currently exposes dependencies but not a semantic fingerprint. Sharing a
     // filtered prefix based only on dependency columns could conflate predicates with different
     // literal values, so filtered prefixes remain deliberately one-off.
-    return relations.stream().noneMatch(step -> step.filter().isPresent());
+    return relations.stream()
+        .noneMatch(step -> step.filter().isPresent() || step.joinPredicate().isPresent());
   }
 
   @Override

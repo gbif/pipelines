@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CardinalityStrategy;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.PredicateExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationRequirement;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationStep;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
@@ -14,12 +15,23 @@ public record CompiledRelationStep(
     boolean explicitColumns,
     RelationRequirement requirement,
     Optional<CardinalityStrategy> cardinalityStrategy,
-    FilterExpression filter) {
+    FilterExpression filter,
+    Optional<PredicateExpression> joinPredicate) {
+
+  public CompiledRelationStep(
+      SchemaRelation relation,
+      boolean explicitColumns,
+      RelationRequirement requirement,
+      Optional<CardinalityStrategy> cardinalityStrategy,
+      FilterExpression filter) {
+    this(relation, explicitColumns, requirement, cardinalityStrategy, filter, Optional.empty());
+  }
 
   public CompiledRelationStep {
     Objects.requireNonNull(relation, "relation");
     Objects.requireNonNull(requirement, "requirement");
     cardinalityStrategy = cardinalityStrategy == null ? Optional.empty() : cardinalityStrategy;
+    Objects.requireNonNull(joinPredicate, "joinPredicate");
     filter = filter == null ? FilterExpression.none() : filter;
   }
 
@@ -32,6 +44,7 @@ public record CompiledRelationStep(
           Optional.of(relation.sourceColumn()),
           Optional.of(relation.targetColumn()),
           filter,
+          joinPredicate,
           cardinalityStrategy,
           requirement);
     }
@@ -46,6 +59,7 @@ public record CompiledRelationStep(
         Optional.empty(),
         Optional.empty(),
         filter,
+        joinPredicate,
         cardinalityStrategy,
         requirement);
   }
@@ -66,6 +80,9 @@ public record CompiledRelationStep(
     cardinalityStrategy.ifPresent(strategy -> out.append(" [").append(strategy).append(']'));
     if (filter.isPresent()) {
       out.append(" [filter=Spark expression]");
+    }
+    if (joinPredicate.isPresent()) {
+      out.append(" [additional join predicate]");
     }
     return out.toString();
   }

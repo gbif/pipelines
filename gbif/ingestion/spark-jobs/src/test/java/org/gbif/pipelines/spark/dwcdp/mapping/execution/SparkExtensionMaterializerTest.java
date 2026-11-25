@@ -12,8 +12,15 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.dwc.terms.GbifDnaTerm;
+import org.gbif.dwc.terms.MixsTerm;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompilationException;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingCompiler;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingDecisionType;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingInputRequirementsAnalyzer;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.NucleotideMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionMapping;
@@ -26,6 +33,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 import org.gbif.pipelines.spark.util.SparkTestSession;
+import org.gbif.pipelines.spark.util.TableLoader;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -53,6 +61,104 @@ class SparkExtensionMaterializerTest {
   @AfterAll
   void teardown() {
     spark.stop();
+  }
+
+  @Test
+  void occurrenceDnaUsesSequenceAndMaterialOrEventToFindProtocols() {
+    CompiledMapping mapping =
+        new MappingCompiler(graph).compile(OccurrenceDwcaMapping.current(graph));
+    var extension =
+        mapping.extensions().stream()
+            .filter(
+                candidate ->
+                    candidate.rowType().equals(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA))
+            .findFirst()
+            .orElseThrow();
+    TableLoader loader =
+        TestTableLoader.of(
+            "occurrence",
+            spark.createDataFrame(
+                List.of(
+                    RowFactory.create("O1", "occ-1", "E1"),
+                    RowFactory.create("O2", "occ-2", "E1"),
+                    RowFactory.create("O3", "occ-3", "E1"),
+                    RowFactory.create("O4", "occ-4", "E1")),
+                stringSchema("occurrence_pk", "occurrenceID", "event_fk")),
+            "identification",
+            spark.createDataFrame(
+                List.of(
+                    RowFactory.create("I1", "O1", "1", "M2"),
+                    RowFactory.create("I2", "O1", "1", "M2"),
+                    RowFactory.create("I3", "O2", "1", null),
+                    RowFactory.create("I4", "O3", "1", "no-match"),
+                    RowFactory.create("I5", "O4", null, null),
+                    RowFactory.create("I6", "O4", "missing", null),
+                    RowFactory.create("I7", "O1", "2", "M1")),
+                stringSchema(
+                    "identification_pk",
+                    "occurrence_fk",
+                    "nucleotideSequence_fk",
+                    "materialEntity_fk")),
+            "nucleotide-sequence",
+            spark.createDataFrame(
+                List.of(RowFactory.create("1", "ACGT"), RowFactory.create("2", "TGCA")),
+                stringSchema("nucleotideSequence_pk", "sequence")),
+            "material",
+            spark.createDataFrame(
+                List.of(RowFactory.create("M1", "occ-1")),
+                stringSchema("materialEntity_pk", "evidenceForOccurrenceID")),
+            "nucleotide-analysis",
+            spark.createDataFrame(
+                List.of(
+                    RowFactory.create("1", "M1", "2", "E1", "P1", "10"),
+                    RowFactory.create("2", "M2", "1", "E2", "P2", "20"),
+                    RowFactory.create("3", null, "1", "E1", "P3", "30"),
+                    RowFactory.create("4", "M2", "2", "E2", "P4", "40"),
+                    RowFactory.create("5", null, "1", "E3", "P4", "40")),
+                stringSchema(
+                    "nucleotideAnalysis_pk",
+                    "materialEntity_fk",
+                    "nucleotideSequence_fk",
+                    "event_fk",
+                    "molecularProtocol_fk",
+                    "readCount")),
+            "molecular-protocol",
+            spark.createDataFrame(
+                List.of(
+                    RowFactory.create("P1", "COI"),
+                    RowFactory.create("P2", "18S"),
+                    RowFactory.create("P3", "16S"),
+                    RowFactory.create("P4", "ITS")),
+                stringSchema("molecularProtocol_pk", "target_gene")));
+
+    TableLoader projected =
+        ProjectedTableLoader.wrap(
+            loader, new MappingInputRequirementsAnalyzer(graph).analyze(mapping));
+    ExtensionMaterializationResult result =
+        new SparkExtensionMaterializer(graph).materialize(projected, extension);
+    String sequence = result.columnName(GbifDnaTerm.dna_sequence.qualifiedName());
+    String gene = result.columnName(MixsTerm.target_gene.qualifiedName());
+    String readCount = result.columnName("readCount");
+
+    assertEquals(
+        List.of(
+            RowFactory.create("O1", "ACGT", "18S", "20"),
+            RowFactory.create("O1", "TGCA", "COI", "10"),
+            RowFactory.create("O2", "ACGT", "16S", "30"),
+            RowFactory.create("O3", "ACGT", null, null)),
+        result
+            .dataset()
+            .select(result.parentKeyColumn(), sequence, gene, readCount)
+            .orderBy(result.parentKeyColumn(), sequence)
+            .collectAsList());
+  }
+
+  private static StructType stringSchema(String... fields) {
+    StructType schema = new StructType();
+    for (String field : fields) {
+      schema = schema.add(field, DataTypes.StringType);
+    }
+    return schema;
   }
 
   @Test
