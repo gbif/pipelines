@@ -15,11 +15,42 @@
   <name>Pipelines :: GBIF :: Ingestion</name>
   <description>Spark pipelines and coordination</description>
 
+  <properties>
+    <!-- Keep this pin in ingestion. Validator WS uses Prometheus 1.3.10 from Spring Boot 3.5.8.
+         A shared parent pin mixed Prometheus versions and broke metrics initialization. -->
+    <prometheus-metrics.version>1.4.3</prometheus-metrics.version>
+  </properties>
+
   <modules>
     <module>healthcheck</module>
     <module>spark-jobs</module>
     <module>spark-coordinator</module>
       <!--    <module>pre-backbone-release</module>-->
   </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>prometheus-metrics-core</artifactId>
+        <version>${prometheus-metrics.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>prometheus-metrics-model</artifactId>
+        <version>${prometheus-metrics.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
+        <version>${prometheus-metrics.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
+        <version>${prometheus-metrics.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
 </project>
