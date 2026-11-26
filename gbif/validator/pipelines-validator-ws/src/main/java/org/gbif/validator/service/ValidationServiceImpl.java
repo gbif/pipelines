@@ -7,7 +7,6 @@ import static org.gbif.ws.security.UserRoles.APP_ROLE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -30,6 +29,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.dwca.validation.MetadataPath;
+import org.gbif.dwca.validation.xml.XmlSecurity;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.utils.file.CompressionUtil.UnsupportedCompressionType;
@@ -55,6 +55,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RequiredArgsConstructor
 public class ValidationServiceImpl implements ValidationService<MultipartFile> {
+
+  private static final long MAX_EML_SIZE = 10L * 1024 * 1024;
 
   private final FileStoreManager fileStoreManager;
 
@@ -347,7 +349,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     }
   }
 
-  private Dataset readEml(Path pathToArchive) {
+  /** Reads the archive metadata, null if missing, too large, invalid or with a DOCTYPE. */
+  static Dataset readEml(Path pathToArchive) {
     try {
       Optional<Path> existedPath = MetadataPath.parsePath(pathToArchive);
 
@@ -356,13 +359,19 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         return null;
       }
 
-      String eml = Files.readString(existedPath.get());
+      if (Files.size(existedPath.get()) > MAX_EML_SIZE) {
+        log.error("Metadata file is too large: {}", existedPath.get());
+        return null;
+      }
+      byte[] eml = Files.readAllBytes(existedPath.get());
+      // DatasetEmlParser resolves external entities, documents with a DOCTYPE are not parsed
+      XmlSecurity.assertNoDoctype(eml);
       // Set the context classloader to ensure Digester can find GBIF classes
       Thread currentThread = Thread.currentThread();
       ClassLoader originalClassLoader = currentThread.getContextClassLoader();
       try {
-        currentThread.setContextClassLoader(getClass().getClassLoader());
-        return DatasetEmlParser.build(eml.getBytes(StandardCharsets.UTF_8));
+        currentThread.setContextClassLoader(ValidationServiceImpl.class.getClassLoader());
+        return DatasetEmlParser.build(eml);
       } finally {
         currentThread.setContextClassLoader(originalClassLoader);
       }
