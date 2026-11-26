@@ -14,10 +14,10 @@ import org.gbif.validator.it.mocks.RemoteAuthClientMock;
 import org.gbif.validator.ws.config.ValidatorWsConfiguration;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.security.RegistrySecurityConfiguration;
+import org.gbif.validator.ws.security.ValidatorWebSecurityConfigurer;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.remoteauth.LoggedUser;
 import org.gbif.ws.remoteauth.RemoteAuthClient;
-import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
 import org.gbif.ws.security.AppKeySigningService;
 import org.gbif.ws.security.FileSystemKeyStore;
 import org.gbif.ws.security.GbifAuthenticationManagerImpl;
@@ -166,5 +166,5 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   }
 
   @Configuration
-  public class SecurityConfiguration extends RemoteAuthWebSecurityConfigurer {}
+  public class SecurityConfiguration extends ValidatorWebSecurityConfigurer {}
 }

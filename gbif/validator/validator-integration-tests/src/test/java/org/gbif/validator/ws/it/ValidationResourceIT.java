@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -90,11 +91,14 @@ public class ValidationResourceIT {
 
   private final ValidationWsClient adminWsClient;
 
+  private final int port;
+
   private final GatedFileStoreManager fileStoreManager;
 
   @Autowired
   public ValidationResourceIT(@LocalServerPort int port, GatedFileStoreManager fileStoreManager) {
     this.fileStoreManager = fileStoreManager;
+    this.port = port;
     validationWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, TEST_USER.getUserName(), TEST_USER_PASSWORD);
@@ -331,6 +335,39 @@ public class ValidationResourceIT {
     assertThrows(IllegalArgumentException.class, () -> adminWsClient.update(cancelled));
     assertEquals(
         Validation.Status.ABORTED, validationWsClient.get(validation.getKey()).getStatus());
+  }
+
+  private java.net.http.HttpResponse<String> anonymous(String method, String path, String body)
+      throws Exception {
+    java.net.http.HttpRequest.Builder request =
+        java.net.http.HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+            .method(
+                method,
+                body == null
+                    ? java.net.http.HttpRequest.BodyPublishers.noBody()
+                    : java.net.http.HttpRequest.BodyPublishers.ofString(body));
+    if (body != null) {
+      request.header("Content-Type", "application/xml");
+    }
+    return java.net.http.HttpClient.newHttpClient()
+        .send(request.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+  }
+
+  @Test
+  public void anonymousRequestsIT() throws Exception {
+    // authentication required
+    java.net.http.HttpResponse<String> list = anonymous("GET", "/validation", null);
+    assertEquals(401, list.statusCode());
+    assertEquals("GBIF realm=\"GBIF\"", list.headers().firstValue("WWW-Authenticate").orElse(null));
+    assertEquals(401, anonymous("GET", "/validation/" + UUID.randomUUID(), null).statusCode());
+    assertEquals(401, anonymous("GET", "/actuator/env", null).statusCode());
+    assertEquals(401, anonymous("GET", "/unknown", null).statusCode());
+
+    // public
+    assertEquals(200, anonymous("GET", "/validation/eml/schemas", null).statusCode());
+    assertEquals(200, anonymous("GET", "/validation/enumeration/FileFormat", null).statusCode());
+    assertEquals(200, anonymous("GET", "/validation/sequence?sequence=ACGT", null).statusCode());
+    assertEquals(201, anonymous("POST", "/validation/eml", "<eml/>").statusCode());
   }
 
   @Test

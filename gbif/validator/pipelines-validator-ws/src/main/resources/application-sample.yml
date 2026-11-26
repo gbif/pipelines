@@ -75,3 +75,9 @@ spring:
       location: @upload.workingDirectory@
       max-file-size: @upload.maxUploadSize@
       max-request-size: @upload.maxUploadSize@
+management:
+  endpoints:
+    web:
+      exposure:
+        # other endpoints are for admins only, see RegistrySecurityConfiguration
+        include: health
