@@ -16,6 +16,7 @@ import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
 import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
+import org.gbif.validator.ws.file.ArchiveLimits;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileStoreManager;
 import org.gbif.ws.client.ClientBuilder;
@@ -26,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 /** Ws Validation application Spring configuration. */
@@ -66,9 +68,15 @@ public class ValidatorWsConfiguration {
   public FileStoreManager uploadedFileManager(
       @Value("${spring.servlet.multipart.location}") String uploadWorkingDirectory,
       @Value("${storePath}") String storePath,
+      @Value("${validation.maxUnpackedSize:20GB}") String maxUnpackedSize,
+      @Value("${validation.maxUnpackedEntries:10000}") int maxUnpackedEntries,
       DownloadFileManager downloadFileManager)
       throws IOException {
-    return new FileStoreManager(uploadWorkingDirectory, storePath, downloadFileManager);
+    return new FileStoreManager(
+        uploadWorkingDirectory,
+        storePath,
+        downloadFileManager,
+        new ArchiveLimits(DataSize.parse(maxUnpackedSize), maxUnpackedEntries));
   }
 
   @Bean("multipartResolver")

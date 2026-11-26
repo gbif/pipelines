@@ -157,6 +157,19 @@ class DownloadFileManagerTest extends DownloadFileBaseTest {
     assertTrue(Files.exists(targetFilePath));
   }
 
+  /** Files larger than the maximum size are not downloaded. */
+  @Test
+  void downloadTooLargeTest() {
+    Path targetFilePath = tempDir.resolve("TooLarge.zip");
+    DownloadFileManager downloadFileManager =
+        new DownloadFileManager(new String[] {"127.0.0.1"}, InetAddress::getAllByName, 100);
+
+    assertThrows(
+        FileSizeException.class,
+        () -> downloadFileManager.download(testPath("/Archive.zip"), targetFilePath));
+    assertFalse(Files.exists(targetFilePath));
+  }
+
   /** Asynchronous download test. */
   @Test
   @SneakyThrows

@@ -37,6 +37,14 @@ validation:
   url:
     # comma separated hosts that may be fetched even if they resolve to non-public addresses
     allowedPrivateHosts:
+  # largest file downloaded from a URL, defaults to spring.servlet.multipart.max-file-size
+  maxFileSize: @upload.maxUploadSize@
+  # limits on what a zip or gzip file unpacks to
+  maxUnpackedSize: 20GB
+  maxUnpackedEntries: 10000
+  eml:
+    # largest document accepted by /validation/eml
+    maxSize: 10MB
   datasource:
     url: @validation.datasource.url@
     password: @validation.datasource.password@

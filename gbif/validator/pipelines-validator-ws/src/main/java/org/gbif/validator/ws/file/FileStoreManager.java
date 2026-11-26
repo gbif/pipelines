@@ -2,6 +2,7 @@ package org.gbif.validator.ws.file;
 
 import static org.gbif.validator.ws.file.MediaTypeAndFormatDetector.detectMediaType;
 import static org.gbif.validator.ws.file.MediaTypeAndFormatDetector.evaluateMediaTypeAndFormat;
+import static org.gbif.validator.ws.file.SupportedMediaTypes.APPLICATION_GZIP;
 import static org.gbif.validator.ws.file.SupportedMediaTypes.COMPRESS_CONTENT_TYPE;
 
 import java.io.File;
@@ -47,12 +48,24 @@ public class FileStoreManager {
 
   private final DownloadFileManager downloadFileManager;
 
+  private final ArchiveLimits archiveLimits;
+
   public FileStoreManager(
       String workingDirectory, String storeDirectory, DownloadFileManager downloadFileManager)
+      throws IOException {
+    this(workingDirectory, storeDirectory, downloadFileManager, ArchiveLimits.DEFAULT);
+  }
+
+  public FileStoreManager(
+      String workingDirectory,
+      String storeDirectory,
+      DownloadFileManager downloadFileManager,
+      ArchiveLimits archiveLimits)
       throws IOException {
     Path workingDirectory1 = Paths.get(workingDirectory);
     this.storePath = Paths.get(storeDirectory);
     this.downloadFileManager = downloadFileManager;
+    this.archiveLimits = archiveLimits;
     createIfNotExists(workingDirectory1);
     createIfNotExists(storePath);
   }
@@ -71,6 +84,7 @@ public class FileStoreManager {
       // check if we have something to unzip
       String detectedMediaType = detectMediaType(dataFilePath);
       if (COMPRESS_CONTENT_TYPE.contains(detectedMediaType)) {
+        archiveLimits.check(dataFilePath, !APPLICATION_GZIP.equals(detectedMediaType));
         CompressionUtil.decompressFile(destinationFolder.toFile(), dataFilePath.toFile());
       }
 
@@ -132,6 +146,8 @@ public class FileStoreManager {
               + url
               + ". The resource is not reachable. Please check that the URL is correct");
     }
+
+    downloadFileManager.checkSize(url);
 
     // the file name is taken from the redirected URL, if there are redirects
     String finalUrl = downloadFileManager.getFinalUrl(url);

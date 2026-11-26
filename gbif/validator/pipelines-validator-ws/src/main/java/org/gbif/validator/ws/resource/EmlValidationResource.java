@@ -36,7 +36,7 @@ public class EmlValidationResource {
   private final SchemaValidatorFactory schemaValidatorFactory;
 
   @Value("${validation.eml.maxSize:10MB}")
-  private DataSize maxSize;
+  private String maxSize;
 
   /** Validates an EML document. */
   @Operation(
@@ -58,7 +58,7 @@ public class EmlValidationResource {
               description = "EML document as XML bytes")
           @RequestBody
           byte[] document) {
-    if (document.length > maxSize.toBytes()) {
+    if (document.length > DataSize.parse(maxSize).toBytes()) {
       throw new ResponseStatusException(
           HttpStatus.PAYLOAD_TOO_LARGE, "EML document exceeds " + maxSize);
     }
