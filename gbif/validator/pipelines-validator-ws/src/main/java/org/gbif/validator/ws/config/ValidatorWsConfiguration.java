@@ -6,13 +6,17 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
-import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.validator.checklist.ChecklistbankWsClient;
 import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
+import org.gbif.validator.ws.file.ArchiveLimits;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileStoreManager;
 import org.gbif.ws.client.ClientBuilder;
@@ -23,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 /** Ws Validation application Spring configuration. */
@@ -39,6 +44,8 @@ public class ValidatorWsConfiguration {
     private String eml;
     private String emlGbifProfile;
     private String[] dwcMeta;
+    // hosts whose schemas can be loaded besides the ones above
+    private Set<String> trustedHosts = SchemaValidatorFactory.DEFAULT_TRUSTED_HOSTS;
   }
 
   @Bean
@@ -50,20 +57,26 @@ public class ValidatorWsConfiguration {
   @Bean
   @SneakyThrows
   public SchemaValidatorFactory schemaValidatorFactory(XmlSchemaLocations xmlSchemaLocations) {
-    SchemaValidatorFactory schemaValidatorFactory =
-        new SchemaValidatorFactory(xmlSchemaLocations.getDwcMeta());
-    schemaValidatorFactory.load(new URI(xmlSchemaLocations.getEml()));
-    schemaValidatorFactory.load(new URI(xmlSchemaLocations.getEmlGbifProfile()));
-    return schemaValidatorFactory;
+    List<String> schemas = new ArrayList<>(Arrays.asList(xmlSchemaLocations.getDwcMeta()));
+    schemas.add(xmlSchemaLocations.getEml());
+    schemas.add(xmlSchemaLocations.getEmlGbifProfile());
+    return new SchemaValidatorFactory(
+        xmlSchemaLocations.getTrustedHosts(), schemas.toArray(new String[0]));
   }
 
   @Bean
   public FileStoreManager uploadedFileManager(
       @Value("${spring.servlet.multipart.location}") String uploadWorkingDirectory,
       @Value("${storePath}") String storePath,
+      @Value("${validation.maxUnpackedSize:20GB}") String maxUnpackedSize,
+      @Value("${validation.maxUnpackedEntries:10000}") int maxUnpackedEntries,
       DownloadFileManager downloadFileManager)
       throws IOException {
-    return new FileStoreManager(uploadWorkingDirectory, storePath, downloadFileManager);
+    return new FileStoreManager(
+        uploadWorkingDirectory,
+        storePath,
+        downloadFileManager,
+        new ArchiveLimits(DataSize.parse(maxUnpackedSize), maxUnpackedEntries));
   }
 
   @Bean("multipartResolver")

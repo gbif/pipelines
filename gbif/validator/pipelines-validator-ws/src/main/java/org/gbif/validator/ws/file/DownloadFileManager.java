@@ -1,15 +1,13 @@
 package org.gbif.validator.ws.file;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -31,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.unit.DataSize;
 
 /**
  * Downloads files from user supplied URLs. Only http(s) URLs of hosts with public addresses are
@@ -60,6 +59,11 @@ public class DownloadFileManager {
 
   private final OkHttpClient client;
 
+  // Largest file downloaded, in bytes
+  private final long maxFileSize;
+
+  private static final DataSize DEFAULT_MAX_FILE_SIZE = DataSize.ofGigabytes(1);
+
   /** Resolves host names, replaceable in tests. */
   interface HostResolver {
     InetAddress[] resolve(String host) throws UnknownHostException;
@@ -67,12 +71,23 @@ public class DownloadFileManager {
 
   @Autowired
   public DownloadFileManager(
-      @Value("${validation.url.allowedPrivateHosts:}") String[] allowedPrivateHosts) {
+      @Value("${validation.url.allowedPrivateHosts:}") String[] allowedPrivateHosts,
+      @Value("${validation.maxFileSize:${spring.servlet.multipart.max-file-size:1GB}}")
+          String maxFileSize) {
+    this(allowedPrivateHosts, InetAddress::getAllByName, DataSize.parse(maxFileSize).toBytes());
+  }
+
+  public DownloadFileManager(String[] allowedPrivateHosts) {
     this(allowedPrivateHosts, InetAddress::getAllByName);
   }
 
   DownloadFileManager(String[] allowedPrivateHosts, HostResolver hostResolver) {
+    this(allowedPrivateHosts, hostResolver, DEFAULT_MAX_FILE_SIZE.toBytes());
+  }
+
+  DownloadFileManager(String[] allowedPrivateHosts, HostResolver hostResolver, long maxFileSize) {
     this.hostResolver = hostResolver;
+    this.maxFileSize = maxFileSize;
     this.allowedPrivateHosts =
         Arrays.stream(allowedPrivateHosts)
             .map(String::trim)
@@ -125,12 +140,41 @@ public class DownloadFileManager {
       if (!response.isSuccessful() || responseBody == null) {
         throw new IOException("HTTP " + response.code() + " downloading " + url);
       }
+      checkSize(responseBody.contentLength());
       try (InputStream body = responseBody.byteStream();
-          ReadableByteChannel in = Channels.newChannel(body);
-          FileOutputStream fileOutputStream = new FileOutputStream(targetFile)) {
-        fileOutputStream.getChannel().transferFrom(in, 0, Long.MAX_VALUE);
+          OutputStream out = Files.newOutputStream(targetFilePath)) {
+        byte[] buffer = new byte[64 * 1024];
+        long total = 0;
+        int read;
+        while ((read = body.read(buffer)) != -1) {
+          total += read;
+          checkSize(total);
+          out.write(buffer, 0, read);
+        }
         return targetFile;
+      } catch (FileSizeException ex) {
+        Files.deleteIfExists(targetFilePath);
+        throw ex;
       }
+    }
+  }
+
+  /** Fails if the file announced by the URL is larger than the maximum file size. */
+  public void checkSize(String url) throws IOException {
+    String contentLength = getHeader(url, "Content-Length");
+    if (contentLength != null) {
+      try {
+        checkSize(Long.parseLong(contentLength.trim()));
+      } catch (NumberFormatException ex) {
+        log.debug("Ignoring invalid Content-Length {}", contentLength);
+      }
+    }
+  }
+
+  private void checkSize(long size) throws FileSizeException {
+    if (size > maxFileSize) {
+      throw new FileSizeException(
+          "File exceeds the maximum size of " + DataSize.ofBytes(maxFileSize).toMegabytes() + "MB");
     }
   }
 
@@ -164,7 +208,7 @@ public class DownloadFileManager {
   private Response open(String url, String method) throws IOException {
     HttpUrl current = HttpUrl.parse(url);
     if (current == null) {
-      throw new UnsafeUrlException("Only http and https URLs are supported: " + url);
+      throw new UnsafeUrlException("Only http and https URLs are supported");
     }
     for (int redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
       checkUrl(current.url());
@@ -177,7 +221,7 @@ public class DownloadFileManager {
       response.close();
       HttpUrl next = current.resolve(location);
       if (next == null) {
-        throw new UnsafeUrlException("Only http and https URLs are supported: " + location);
+        throw new UnsafeUrlException("Only http and https URLs are supported");
       }
       current = next;
     }
@@ -187,11 +231,11 @@ public class DownloadFileManager {
   /** Asserts the URL is http(s) and its host has only public addresses. */
   void checkUrl(URL url) throws IOException {
     if (!SUPPORTED_SCHEMES.contains(url.getProtocol().toLowerCase(Locale.ROOT))) {
-      throw new UnsafeUrlException("Only http and https URLs are supported: " + url);
+      throw new UnsafeUrlException("Only http and https URLs are supported");
     }
     String host = url.getHost();
     if (host == null || host.isEmpty()) {
-      throw new UnsafeUrlException("URL without host: " + url);
+      throw new UnsafeUrlException("URL without host");
     }
     // IP literals are not resolved through lookup(), so they are only checked here
     resolve(host);
@@ -214,7 +258,7 @@ public class DownloadFileManager {
     if (!allowedPrivateHosts.contains(host.toLowerCase(Locale.ROOT))) {
       for (InetAddress address : addresses) {
         if (!isPublic(address)) {
-          throw new UnsafeUrlException("URL host is not a public address: " + host);
+          throw new UnsafeUrlException("URL host is not a public address");
         }
       }
     }
@@ -253,6 +297,20 @@ public class DownloadFileManager {
       } catch (IOException e) {
         return false;
       }
+    }
+    int w0 = ((b[0] & 0xff) << 8) | (b[1] & 0xff);
+    int w1 = ((b[2] & 0xff) << 8) | (b[3] & 0xff);
+    // 6to4 (2002::/16) embeds an IPv4 address in bytes 2-5
+    if (w0 == 0x2002) {
+      try {
+        return isPublic(InetAddress.getByAddress(Arrays.copyOfRange(b, 2, 6)));
+      } catch (IOException e) {
+        return false;
+      }
+    }
+    // Teredo (2001::/32) and documentation (2001:db8::/32) addresses
+    if (w0 == 0x2001 && (w1 == 0 || w1 == 0x0db8)) {
+      return false;
     }
     // fc00::/7, unique local addresses
     return (b[0] & 0xfe) != 0xfc;
