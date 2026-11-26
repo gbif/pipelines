@@ -45,6 +45,10 @@ validation:
   eml:
     # largest document accepted by /validation/eml
     maxSize: 10MB
+  clbCallback:
+    # signs ChecklistBank callback URLs, same value as --clb-callback-secret of the validator tasks;
+    # if empty, callbacks are not authenticated
+    secret: @validation.clbCallback.secret@
   datasource:
     url: @validation.datasource.url@
     password: @validation.datasource.password@

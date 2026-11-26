@@ -28,6 +28,7 @@ import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.validator.serde.ObjectMapperUtils;
+import org.gbif.validator.api.ClbCallbackToken;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -44,6 +45,7 @@ public class ChecklistValidator {
 
   private final ChecklistbankWsClient checklistbankWsClient;
   private final String callbackUrl;
+  private final String callbackSecret;
   private final String registryUrl;
 
   public ChecklistValidator(
@@ -52,17 +54,38 @@ public class ChecklistValidator {
       String clbApiUser,
       String clbApiPassword,
       String callbackUrl) {
+    this(registryUrl, clbApiUrl, clbApiUser, clbApiPassword, callbackUrl, null);
+  }
+
+  public ChecklistValidator(
+      String registryUrl,
+      String clbApiUrl,
+      String clbApiUser,
+      String clbApiPassword,
+      String callbackUrl,
+      String callbackSecret) {
     this(
         buildChecklistbankWsClient(clbApiUrl, clbApiUser, clbApiPassword),
         registryUrl,
-        callbackUrl);
+        callbackUrl,
+        callbackSecret);
   }
 
   public ChecklistValidator(
       ChecklistbankWsClient checklistbankWsClient, String registryUrl, String callbackUrl) {
+    this(checklistbankWsClient, registryUrl, callbackUrl, null);
+  }
+
+  /** The callback URL is signed with the callbackSecret, if set. */
+  public ChecklistValidator(
+      ChecklistbankWsClient checklistbankWsClient,
+      String registryUrl,
+      String callbackUrl,
+      String callbackSecret) {
     this.checklistbankWsClient = checklistbankWsClient;
     this.registryUrl = registryUrl;
     this.callbackUrl = callbackUrl;
+    this.callbackSecret = callbackSecret;
   }
 
   private static ChecklistbankWsClient buildChecklistbankWsClient(
@@ -81,7 +104,8 @@ public class ChecklistValidator {
           try {
             ChecklistbankWsClient.ValidatorResponse validatorResponse =
                 checklistbankWsClient.validateArchive(
-                    callbackUrl + "/" + validationKey, Files.readAllBytes(archivePath));
+                    ClbCallbackToken.callbackUrl(callbackUrl, validationKey, callbackSecret),
+                    Files.readAllBytes(archivePath));
 
             int datasetKey = validatorResponse.getKey();
             if (datasetKey == 0) {

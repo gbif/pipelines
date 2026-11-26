@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -21,12 +22,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.validator.api.ClbCallbackToken;
 import org.gbif.validator.api.ClbDatasetImport;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.service.ErrorMapper;
 import org.gbif.validator.service.ValidationService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Validation resource services, it allows validating files (synchronous) and url (asynchronously).
@@ -57,6 +62,18 @@ public class ValidationResource {
   private final ValidationService<MultipartFile> validationService;
 
   private final ErrorMapper errorMapper;
+
+  // authenticates ChecklistBank callbacks, see ClbCallbackToken
+  @Value("${validation.clbCallback.secret:}")
+  private String clbCallbackSecret;
+
+  @PostConstruct
+  void warnIfCallbackIsUnauthenticated() {
+    if (clbCallbackSecret == null || clbCallbackSecret.isEmpty()) {
+      log.warn(
+          "validation.clbCallback.secret is not set, ChecklistBank callbacks are not authenticated");
+    }
+  }
 
   /** Uploads a file and starts the validation process. */
   @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
@@ -222,6 +239,7 @@ public class ValidationResource {
     return validationService.getRunningValidations(min);
   }
 
+  /** ChecklistBank callback without token, only accepted if no callback secret is configured. */
   @Hidden
   @PostMapping(
       path = "/clbValidationCallback/{validationKey}",
@@ -229,6 +247,24 @@ public class ValidationResource {
   public void clbValidationCallback(
       @PathVariable("validationKey") UUID validationKey,
       @RequestBody ClbDatasetImport clbDatasetImport) {
+    clbValidationCallback(validationKey, null, clbDatasetImport);
+  }
+
+  /** ChecklistBank callback, the token authenticates it. */
+  @Hidden
+  @PostMapping(
+      path = "/clbValidationCallback/{validationKey}/{token}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void clbValidationCallback(
+      @PathVariable("validationKey") UUID validationKey,
+      @PathVariable("token") String token,
+      @RequestBody ClbDatasetImport clbDatasetImport) {
+    if (clbCallbackSecret != null && !clbCallbackSecret.isEmpty()) {
+      if (!ClbCallbackToken.isValid(validationKey, token, clbCallbackSecret)) {
+        log.warn("Rejected ChecklistBank callback for validation {}", validationKey);
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid callback token");
+      }
+    }
     log.info(
         "ClbValidationCallback import received for validation {}: {} ",
         validationKey,
