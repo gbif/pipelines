@@ -135,9 +135,18 @@ public final class CompiledMappingDatasetPruner {
               fragment -> !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
           .forEach(fragments::add);
     } else {
+      List<CompiledFragment> contributors =
+          structurallyAvailable.stream()
+              .filter(
+                  fragment ->
+                      !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
+              .toList();
       structurallyAvailable.stream()
           .filter(
-              fragment -> !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
+              fragment ->
+                  contributors.contains(fragment)
+                      || contributors.stream()
+                          .anyMatch(candidate -> candidate.enrichesBranch(fragment)))
           .forEach(fragments::add);
     }
 

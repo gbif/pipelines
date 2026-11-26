@@ -387,7 +387,7 @@ class DataPackageFixtures {
     return dp;
   }
 
-  private static DataPackageResource resource(String name, String path, String... fieldNames) {
+  static DataPackageResource resource(String name, String path, String... fieldNames) {
     DataPackageResource r = new DataPackageResource();
     r.setName(name);
     r.setPath(path);

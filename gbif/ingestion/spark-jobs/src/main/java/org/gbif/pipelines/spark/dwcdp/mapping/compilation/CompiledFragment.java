@@ -29,4 +29,12 @@ public record CompiledFragment(
     rowMatch = rowMatch == null ? Optional.empty() : rowMatch;
     targets = List.copyOf(targets);
   }
+
+  /** Whether this enrichment and its base share a parent scope and row identity path. */
+  public boolean enrichesBranch(CompiledFragment base) {
+    return rowMatch.isPresent()
+        && !rowMatch.get().equals(scopeKey)
+        && scopeKey.equals(base.scopeKey())
+        && rowMatch.equals(base.rowIdentity());
+  }
 }

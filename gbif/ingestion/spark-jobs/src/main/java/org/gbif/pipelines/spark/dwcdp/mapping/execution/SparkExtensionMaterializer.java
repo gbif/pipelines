@@ -225,12 +225,7 @@ public final class SparkExtensionMaterializer {
       }
       // Scope enrichments rooted on a row-producing branch to that branch's identity.
       List<CompiledFragment> matchingEnrichments =
-          enrichments.stream()
-              .filter(enrichment -> fragment.scopeKey().equals(enrichment.scopeKey()))
-              .filter(enrichment -> fragment.rowIdentity().equals(enrichment.rowMatch()))
-              .filter(
-                  enrichment -> !enrichment.scopeKey().equals(enrichment.rowMatch().orElseThrow()))
-              .toList();
+          enrichments.stream().filter(enrichment -> enrichment.enrichesBranch(fragment)).toList();
       branchEnrichments.addAll(matchingEnrichments);
       FragmentResult materialized =
           materializeFragment(

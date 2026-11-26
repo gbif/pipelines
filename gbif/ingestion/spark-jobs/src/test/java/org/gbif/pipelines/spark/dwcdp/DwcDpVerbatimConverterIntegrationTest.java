@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -24,8 +25,14 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifDnaTerm;
+import org.gbif.dwc.terms.MixsTerm;
+import org.gbif.pipelines.core.converters.OccurrenceExtensionConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TableLoader;
@@ -62,6 +69,103 @@ class DwcDpVerbatimConverterIntegrationTest {
   @AfterAll
   void teardown() {
     spark.stop();
+  }
+
+  @Test
+  void dnaFromEventCoreIsRoutedToItsOccurrence() {
+    SparkSession session = spark.newSession();
+    session.conf().set("spark.sql.adaptive.enabled", false);
+    session.conf().set("spark.sql.autoBroadcastJoinThreshold", -1);
+    Map<String, Dataset<Row>> tables =
+        Map.of(
+            "event",
+                table(session, List.of(RowFactory.create("E1", "event-1")), "event_pk", "eventID"),
+            "occurrence",
+                table(
+                    session,
+                    List.of(
+                        RowFactory.create("O1", "occ-1", "E1"),
+                        RowFactory.create("O2", null, "E1")),
+                    "occurrence_pk",
+                    "occurrenceID",
+                    "event_fk"),
+            "identification",
+                table(
+                    session,
+                    List.of(
+                        RowFactory.create("I1", "O1", "S1", "M1"),
+                        RowFactory.create("I2", "O2", "missing", null)),
+                    "identification_pk",
+                    "occurrence_fk",
+                    "nucleotideSequence_fk",
+                    "materialEntity_fk"),
+            "nucleotide-sequence",
+                table(
+                    session,
+                    List.of(RowFactory.create("S1", "ACGT")),
+                    "nucleotideSequence_pk",
+                    "sequence"),
+            "nucleotide-analysis",
+                table(
+                    session,
+                    List.of(
+                        RowFactory.create("A1", "S1", "E1", "M1", "P1"),
+                        RowFactory.create("A2", "S1", "E1", null, "P2")),
+                    "nucleotideAnalysis_pk",
+                    "nucleotideSequence_fk",
+                    "event_fk",
+                    "materialEntity_fk",
+                    "molecularProtocol_fk"),
+            "molecular-protocol",
+                table(
+                    session,
+                    List.of(
+                        RowFactory.create("P1", "COI", "Illumina"),
+                        RowFactory.create("P2", "ITS", "Nanopore")),
+                    "molecularProtocol_pk",
+                    "target_gene",
+                    "seq_meth"));
+
+    DataPackage dataPackage = new DataPackage();
+    dataPackage.setResources(
+        tables.entrySet().stream()
+            .map(
+                table ->
+                    DataPackageFixtures.resource(
+                        table.getKey(), table.getKey(), table.getValue().columns()))
+            .toList());
+    DwcDpMappingEngine engine = DwcDpMappingEngine.currentSchema();
+    ExtendedRecord event =
+        engine
+            .execute(
+                TestTableLoader.of(tables),
+                EventDwcaMapping.current(engine.schemaGraph()),
+                dataPackage)
+            .first();
+    String dna = Extension.DNA_DERIVED_DATA.getRowType();
+    assertEquals(2, event.getExtensions().get(dna).size());
+    Map<String, ExtendedRecord> occurrences =
+        OccurrenceExtensionConverter.convert(event).stream()
+            .collect(Collectors.toMap(ExtendedRecord::getId, record -> record));
+    assertEquals(2, occurrences.size());
+    String occurrenceId = DwcTerm.occurrenceID.qualifiedName();
+    assertEquals(
+        List.of(
+            Map.of(
+                occurrenceId,
+                "occ-1",
+                GbifDnaTerm.dna_sequence.qualifiedName(),
+                "ACGT",
+                MixsTerm.target_gene.qualifiedName(),
+                "COI",
+                MixsTerm.seq_meth.qualifiedName(),
+                "Illumina")),
+        occurrences.get("occ-1").getExtensions().get(dna));
+    assertNull(occurrences.get("gbif:dwcdp:occurrence:occurrence_pk:O2").getExtensions().get(dna));
+  }
+
+  private static Dataset<Row> table(SparkSession session, List<Row> rows, String... columns) {
+    return session.createDataFrame(rows, schema(columns));
   }
 
   // ---- avro schema compliance ----

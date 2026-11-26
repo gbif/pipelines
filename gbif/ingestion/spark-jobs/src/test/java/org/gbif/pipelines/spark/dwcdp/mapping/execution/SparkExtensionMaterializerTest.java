@@ -125,11 +125,14 @@ class SparkExtensionMaterializerTest {
             "molecular-protocol",
             spark.createDataFrame(
                 List.of(
-                    RowFactory.create("P1", "COI"),
-                    RowFactory.create("P2", "18S"),
-                    RowFactory.create("P3", "16S"),
-                    RowFactory.create("P4", "ITS")),
-                stringSchema("molecularProtocol_pk", "target_gene")));
+                    RowFactory.create("P1", "COI", null, null),
+                    RowFactory.create(
+                        "P2", "18S", "negative material control", "positive material control"),
+                    RowFactory.create(
+                        "P3", "16S", "negative event control", "positive event control"),
+                    RowFactory.create("P4", "ITS", null, null)),
+                stringSchema(
+                    "molecularProtocol_pk", "target_gene", "neg_cont_type", "pos_cont_type")));
 
     TableLoader projected =
         ProjectedTableLoader.wrap(
@@ -139,16 +142,31 @@ class SparkExtensionMaterializerTest {
     String sequence = result.columnName(GbifDnaTerm.dna_sequence.qualifiedName());
     String gene = result.columnName(MixsTerm.target_gene.qualifiedName());
     String readCount = result.columnName("readCount");
+    String negativeControl = result.columnName("https://w3id.org/mixs/0001321");
+    String positiveControl = result.columnName("https://w3id.org/mixs/0001322");
 
     assertEquals(
         List.of(
-            RowFactory.create("O1", "ACGT", "18S", "20"),
-            RowFactory.create("O1", "TGCA", "COI", "10"),
-            RowFactory.create("O2", "ACGT", "16S", "30"),
-            RowFactory.create("O3", "ACGT", null, null)),
+            RowFactory.create(
+                "O1",
+                "ACGT",
+                "18S",
+                "20",
+                "negative material control",
+                "positive material control"),
+            RowFactory.create("O1", "TGCA", "COI", "10", null, null),
+            RowFactory.create(
+                "O2", "ACGT", "16S", "30", "negative event control", "positive event control"),
+            RowFactory.create("O3", "ACGT", null, null, null, null)),
         result
             .dataset()
-            .select(result.parentKeyColumn(), sequence, gene, readCount)
+            .select(
+                result.parentKeyColumn(),
+                sequence,
+                gene,
+                readCount,
+                negativeControl,
+                positiveControl)
             .orderBy(result.parentKeyColumn(), sequence)
             .collectAsList());
   }
