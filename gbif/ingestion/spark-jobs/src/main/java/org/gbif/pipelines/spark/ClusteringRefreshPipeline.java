@@ -19,6 +19,7 @@ import static org.gbif.pipelines.spark.OccurrenceInterpretationPipeline.*;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
+import static org.gbif.pipelines.spark.util.SparkUtil.readParquetAs;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
@@ -144,10 +145,8 @@ public class ClusteringRefreshPipeline {
   }
 
   private static Dataset<Occurrence> loadSimpleRecords(SparkSession spark, String outputPath) {
-    return spark
-        .read()
-        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-        .as(Encoders.bean(Occurrence.class));
+    // the simple records can be from an older version, e.g. without the DNA taxonomy
+    return readParquetAs(spark, outputPath + "/" + SIMPLE_OCCURRENCE, Occurrence.class);
   }
 
   /**
@@ -189,6 +188,7 @@ public class ClusteringRefreshPipeline {
                       .dnaDerivedData(simpleRecord.getDnaDerivedData())
                       .multimedia(simpleRecord.getMultimedia())
                       .clustering(MAPPER.writeValueAsString(cr))
+                      .dnaTaxon(simpleRecord.getDnaTaxon())
                       .build();
                 },
             Encoders.bean(Occurrence.class));

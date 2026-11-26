@@ -11,6 +11,16 @@
     ]
   },
   {
+    "name":"DnaClassifications",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"DNA-assisted classifications keyed by checklistKey, plus remarks common to all of them",
+    "fields":[
+      {"name":"remarks","type":["null","string"],"default":null,"doc":""},
+      {"name":"classifications","type":{"type":"map","values":"Classification"},"default":{},"doc":""}
+    ]
+  },
+  {
     "name":"GeologicalContext",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -194,7 +204,9 @@
         "default": {},
         "doc":""
       },
-      {"name":"checklistKey","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"checklistKey","type":{"type":"array","items":"string"},"default":[],"doc":"Checklists of the interpretation, with or without a match"},
+      {"name":"dnaChecklistKey","type":{"type":"array","items":"string"},"default":[],"doc":"Checklists of the DNA-assisted interpretation, with or without a match"},
+      {"name":"dnaClassifications","type":["null","DnaClassifications"],"default":null,"doc":""},
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":[],"doc":""},

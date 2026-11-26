@@ -16,6 +16,9 @@ public class TableBuildConfig implements Serializable {
 
   Map<String, String> classifications = new HashMap<>();
 
+  // checklist key to column prefix of the DNA-assisted classifications
+  Map<String, String> dnaClassifications = new HashMap<>();
+
   String write_format_default = "parquet";
   String parquet_compression = "ZSTD";
   String auto_purge = "true";

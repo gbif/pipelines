@@ -876,7 +876,8 @@ public class DerivedMetadataUtil implements Serializable {
     Path successMarker = new Path(occurrencePath, "_SUCCESS");
 
     if (fs.exists(occurrencePath) && fs.exists(successMarker)) {
-      return spark.read().parquet(occurrencePath.toString()).as(encoder);
+      // the occurrences can be from an older version, e.g. without the DNA taxonomy
+      return SparkUtil.readParquetAs(spark, occurrencePath.toString(), Occurrence.class);
     }
 
     return spark.emptyDataset(encoder);

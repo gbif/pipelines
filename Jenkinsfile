@@ -46,9 +46,17 @@ pipeline {
         script {
           // NEW: branch-qualified version, workspace only, never committed
           if (env.BRANCH_NAME != 'dev' && env.BRANCH_NAME != 'master' && !params.RELEASE) {
-            def suffix = env.BRANCH_NAME.replaceAll('[^a-zA-Z0-9.-]', '-').toUpperCase()
+            // PR builds have BRANCH_NAME=PR-<n>, so use the source branch name instead
+            def suffix = (env.CHANGE_BRANCH ?: env.BRANCH_NAME).replaceAll('[^a-zA-Z0-9.-]', '-').toUpperCase()
+            // PR builds are merged with the target branch, so take the version from the PR head (first parent)
+            def pomFile = 'pom.xml'
+            if (env.CHANGE_ID && sh(returnStatus: true, script: 'git rev-parse -q --verify HEAD^2 >/dev/null') == 0) {
+              pomFile = '.pr-head-pom.xml'
+              sh "git show HEAD^1:pom.xml > ${pomFile}"
+            }
             sh """
-              BASE_VERSION=\$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+              BASE_VERSION=\$(mvn -N -f ${pomFile} help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+              rm -f .pr-head-pom.xml
               mvn versions:set -DnewVersion=\${BASE_VERSION}-${suffix}-SNAPSHOT -DgenerateBackupPoms=false -DprocessAllModules=true
             """
           }

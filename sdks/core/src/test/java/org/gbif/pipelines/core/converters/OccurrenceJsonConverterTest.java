@@ -395,6 +395,23 @@ public class OccurrenceJsonConverterTest {
             .setDiagnostics(diagnostic)
             .build();
 
+    DnaTaxonRecord dnaTaxonRecord =
+        DnaTaxonRecord.newBuilder()
+            .setId("777")
+            .setRemarks("dna remarks")
+            .setTaxonRecords(
+                List.of(
+                    TaxonRecord.newBuilder()
+                        .setId("777")
+                        .setDatasetKey(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY)
+                        .setAcceptedUsage(au)
+                        .setClassification(rankedNameList)
+                        .setUsage(synonym)
+                        .setSynonym(true)
+                        .setDiagnostics(diagnostic)
+                        .build()))
+            .build();
+
     // grscicoll
     Match institutionMatch =
         Match.newBuilder()
@@ -486,7 +503,9 @@ public class OccurrenceJsonConverterTest {
             .verbatim(er)
             .temporal(tmr)
             .location(lr)
-            .multiTaxon(MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(tr)).build())
+            .multiTaxon(
+                MultiTaxonRecord.newBuilder().setTaxonRecords(new ArrayList<>(List.of(tr))).build())
+            .dnaTaxonRecord(dnaTaxonRecord)
             .grscicoll(gr)
             .multimedia(mmr)
             .dnaDerivedData(dnar)
@@ -705,6 +724,106 @@ public class OccurrenceJsonConverterTest {
     JsonNode dnaSequenceID = result.path("dnaSequenceID");
     assertEquals(2, dnaSequenceID.size());
     dnaSequenceID.forEach(n -> assertFalse(Strings.isNullOrEmpty(n.asText())));
+
+    // the DNA-assisted classification is kept apart from the classifications
+    assertEquals(1, result.path("classifications").size());
+    assertTrue(result.path("classifications").has(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY));
+    assertEquals(1, result.path("checklistKey").size());
+    assertEquals(
+        OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY, result.path("checklistKey").get(0).asText());
+    JsonNode dnaClassifications = result.path("dnaClassifications");
+    assertEquals("dna remarks", dnaClassifications.path("remarks").asText());
+    assertEquals(1, dnaClassifications.path("classifications").size());
+    assertTrue(
+        dnaClassifications
+            .path("classifications")
+            .has(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY));
+    assertEquals(1, result.path("dnaChecklistKey").size());
+    assertEquals(
+        OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY,
+        result.path("dnaChecklistKey").get(0).asText());
+  }
+
+  /** A record without a match keeps its issues, regular or DNA-assisted, to search them. */
+  @Test
+  public void noMatchIssuesTest() throws Exception {
+    String zaKey = "f5dc22ca-0bb1-4692-8a97-cc7ac54d7ed9";
+    IssueRecord noMatch =
+        IssueRecord.newBuilder()
+            .setIssueList(List.of(OccurrenceIssue.TAXON_MATCH_NONE.name()))
+            .build();
+    TaxonRecord defaultMatch =
+        TaxonRecord.newBuilder()
+            .setId("777")
+            .setDatasetKey(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY)
+            .setUsage(
+                RankedNameWithAuthorship.newBuilder()
+                    .setKey("10")
+                    .setName("Test species")
+                    .setRank("SPECIES")
+                    .build())
+            .build();
+    TaxonRecord zaNoMatch =
+        TaxonRecord.newBuilder().setId("777").setDatasetKey(zaKey).setIssues(noMatch).build();
+    TaxonRecord dnaNoMatch =
+        TaxonRecord.newBuilder()
+            .setId("777")
+            .setDatasetKey(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY)
+            .setIssues(noMatch)
+            .build();
+
+    String json =
+        OccurrenceJsonConverter.builder()
+            .basic(BasicRecord.newBuilder().setId("777").build())
+            .identifier(IdentifierRecord.newBuilder().setId("777").setInternalId("1").build())
+            .clustering(ClusteringRecord.newBuilder().setId("777").build())
+            .metadata(MetadataRecord.newBuilder().setId("777").build())
+            .verbatim(ExtendedRecord.newBuilder().setId("777").build())
+            .temporal(TemporalRecord.newBuilder().setId("777").build())
+            .location(LocationRecord.newBuilder().setId("777").build())
+            .multiTaxon(
+                MultiTaxonRecord.newBuilder()
+                    .setTaxonRecords(List.of(defaultMatch, zaNoMatch))
+                    .build())
+            .dnaTaxonRecord(
+                DnaTaxonRecord.newBuilder()
+                    .setRemarks("no species-level match")
+                    .setTaxonRecords(List.of(dnaNoMatch))
+                    .build())
+            .grscicoll(GrscicollRecord.newBuilder().setId("777").build())
+            .multimedia(MultimediaRecord.newBuilder().setId("777").build())
+            .dnaDerivedData(DnaDerivedDataRecord.newBuilder().setId("777").build())
+            .indexLegacyTaxonomy(true)
+            .indexMultiTaxonomy(true)
+            .build()
+            .toJsonWithNulls();
+
+    JsonNode result = MAPPER.readTree(json);
+
+    // only the issues of the checklist without a match, which is still one it was interpreted
+    // against
+    JsonNode za = result.path("classifications").path(zaKey);
+    assertEquals(OccurrenceIssue.TAXON_MATCH_NONE.name(), za.path("issues").get(0).asText());
+    assertTrue(za.path("usage").isMissingNode() || za.path("usage").isNull());
+    assertEquals(0, za.path("taxonKeys").size());
+    assertEquals(2, result.path("checklistKey").size());
+    assertEquals(zaKey, result.path("checklistKey").get(1).asText());
+
+    // the same for the DNA-assisted classification
+    JsonNode dna =
+        result
+            .path("dnaClassifications")
+            .path("classifications")
+            .path(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY);
+    assertEquals(OccurrenceIssue.TAXON_MATCH_NONE.name(), dna.path("issues").get(0).asText());
+    assertEquals(0, dna.path("taxonKeys").size());
+    // and the remarks of the classifier are kept without a match
+    assertEquals(
+        "no species-level match", result.path("dnaClassifications").path("remarks").asText());
+    assertEquals(1, result.path("dnaChecklistKey").size());
+    assertEquals(
+        OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY,
+        result.path("dnaChecklistKey").get(0).asText());
   }
 
   @Test

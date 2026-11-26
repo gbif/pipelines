@@ -27,6 +27,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DnaDerivedData;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
+import org.gbif.pipelines.io.avro.DnaTaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -38,6 +39,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.io.avro.json.Classification;
+import org.gbif.pipelines.io.avro.json.DnaClassifications;
 import org.gbif.pipelines.io.avro.json.GeologicalContext;
 import org.gbif.pipelines.io.avro.json.GeologicalRange;
 import org.gbif.pipelines.io.avro.json.NucleotideSequenceObject;
@@ -60,6 +62,7 @@ public class OccurrenceJsonConverter {
   private final MultimediaRecord multimedia;
   private final DnaDerivedDataRecord dnaDerivedData;
   private final ExtendedRecord verbatim;
+  private final DnaTaxonRecord dnaTaxonRecord;
 
   private final boolean indexLegacyTaxonomy;
   private final boolean indexMultiTaxonomy;
@@ -79,6 +82,7 @@ public class OccurrenceJsonConverter {
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
     mapMultiTaxonRecord(builder);
+    mapDnaTaxonRecord(builder);
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapDnaDerivedDataRecord(builder);
@@ -310,6 +314,27 @@ public class OccurrenceJsonConverter {
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
   }
 
+  private void mapDnaTaxonRecord(OccurrenceJsonRecord.Builder builder) {
+    if (dnaTaxonRecord == null || dnaTaxonRecord.getTaxonRecords() == null) {
+      return;
+    }
+
+    builder.setDnaChecklistKey(
+        TaxonomyInterpreter.interpretedChecklistKeys(dnaTaxonRecord.getTaxonRecords()));
+
+    Map<String, Classification> classifications =
+        JsonConverter.convertToClassifications(dnaTaxonRecord.getTaxonRecords());
+    if (classifications.isEmpty() && dnaTaxonRecord.getRemarks() == null) {
+      return;
+    }
+
+    builder.setDnaClassifications(
+        DnaClassifications.newBuilder()
+            .setRemarks(dnaTaxonRecord.getRemarks())
+            .setClassifications(classifications)
+            .build());
+  }
+
   private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
     if (multiTaxon != null
         && multiTaxon.getTaxonRecords() != null
@@ -317,16 +342,8 @@ public class OccurrenceJsonConverter {
       Map<String, Classification> classifications =
           JsonConverter.convertToClassifications(multiTaxon);
       builder.setClassifications(classifications);
-      List<String> checklistKeys =
-          multiTaxon.getTaxonRecords().stream()
-              .filter(
-                  tr ->
-                      tr.getUsage() != null
-                          && !TaxonomyInterpreter.INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey()))
-              .map(TaxonRecord::getDatasetKey)
-              .collect(Collectors.toList());
-
-      builder.setChecklistKey(checklistKeys);
+      builder.setChecklistKey(
+          TaxonomyInterpreter.interpretedChecklistKeys(multiTaxon.getTaxonRecords()));
 
       // Raw to index classification
       if (verbatim != null) {

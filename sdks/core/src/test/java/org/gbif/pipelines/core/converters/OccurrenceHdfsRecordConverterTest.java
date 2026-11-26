@@ -10,6 +10,7 @@ import org.gbif.api.vocabulary.*;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.ObisTerm;
+import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.NamePart;
@@ -649,6 +650,150 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(
         List.of("2", "79", "8016360", "292", "7785", "1000002", "1000003"),
         hdfsRecord.getTaxonkeys());
+  }
+
+  @Test
+  public void dnaTaxonRecordKeptApartTest() {
+    RankedNameWithAuthorship usage =
+        RankedNameWithAuthorship.newBuilder()
+            .setKey("10")
+            .setName("Test species")
+            .setRank(Rank.SPECIES.toString())
+            .build();
+
+    TaxonRecord gbifTaxon =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(Constants.COL_DATASET_KEY.toString())
+            .setUsage(usage)
+            .setClassification(
+                List.of(
+                    RankedName.newBuilder()
+                        .setKey("1")
+                        .setName("KINGDOM")
+                        .setRank(Rank.KINGDOM.toString())
+                        .build(),
+                    RankedName.newBuilder()
+                        .setKey("2")
+                        .setName("PHYLUM")
+                        .setRank(Rank.PHYLUM.toString())
+                        .build()))
+            .build();
+
+    TaxonRecord dnaTaxon =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(Constants.COL_DATASET_KEY.toString())
+            .setUsage(usage)
+            .setClassification(
+                List.of(
+                    RankedName.newBuilder()
+                        .setKey("101")
+                        .setName("DNA_KINGDOM")
+                        .setRank(Rank.KINGDOM.toString())
+                        .build(),
+                    RankedName.newBuilder()
+                        .setKey("102")
+                        .setName("DNA_PHYLUM")
+                        .setRank(Rank.PHYLUM.toString())
+                        .build()))
+            .setIssues(IssueRecord.newBuilder().setIssueList(List.of("TAXON_MATCH_FUZZY")).build())
+            .build();
+
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder()
+            .multiTaxonRecord(
+                MultiTaxonRecord.newBuilder()
+                    .setTaxonRecords(new ArrayList<>(List.of(gbifTaxon)))
+                    .build())
+            .dnaTaxonRecord(
+                DnaTaxonRecord.newBuilder()
+                    .setRemarks("dna remarks")
+                    .setTaxonRecords(List.of(dnaTaxon))
+                    .build())
+            .build()
+            .convert();
+
+    // the DNA-assisted classification doesn't go into the classifications
+    Assert.assertEquals(
+        List.of(Constants.COL_DATASET_KEY.toString()), hdfsRecord.getChecklistkey());
+    Assert.assertEquals(
+        Map.of(Constants.COL_DATASET_KEY.toString(), List.of("1", "2")),
+        hdfsRecord.getClassifications());
+    Assert.assertEquals(
+        Map.of(Constants.COL_DATASET_KEY.toString(), List.of("101", "102")),
+        hdfsRecord.getDnaclassifications());
+    Assert.assertEquals(
+        List.of(Constants.COL_DATASET_KEY.toString()), hdfsRecord.getDnachecklistkey());
+    Assert.assertEquals(
+        "DNA_KINGDOM",
+        hdfsRecord
+            .getDnaclassificationdetails()
+            .get(Constants.COL_DATASET_KEY.toString())
+            .get("kingdom"));
+    Assert.assertTrue(
+        hdfsRecord.getDnataxonomicstatuses().containsKey(Constants.COL_DATASET_KEY.toString()));
+    Assert.assertEquals(
+        Map.of(Constants.COL_DATASET_KEY.toString(), List.of("TAXON_MATCH_FUZZY")),
+        hdfsRecord.getDnataxonomicissues());
+  }
+
+  /**
+   * The checklist keys are the checklists the record was interpreted against, with or without a
+   * match.
+   */
+  @Test
+  public void checklistKeysAreTheInterpretedChecklistsTest() {
+    String zaKey = "f5dc22ca-0bb1-4692-8a97-cc7ac54d7ed9";
+    RankedNameWithAuthorship usage =
+        RankedNameWithAuthorship.newBuilder()
+            .setKey("10")
+            .setName("Test species")
+            .setRank(Rank.SPECIES.toString())
+            .build();
+    TaxonRecord colMatch =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(Constants.COL_DATASET_KEY.toString())
+            .setUsage(usage)
+            .build();
+    // no match: incertae sedis for the GBIF Backbone, no usage for the other checklists
+    TaxonRecord nubNoMatch =
+        TaxonRecord.newBuilder()
+            .setDatasetKey(Constants.NUB_DATASET_KEY.toString())
+            .setUsage(TaxonomyInterpreter.INCERTAE_SEDIS_WITH_AUTHORSHIP)
+            .build();
+    TaxonRecord zaNoMatch = TaxonRecord.newBuilder().setDatasetKey(zaKey).build();
+    TaxonRecord zaMatch = TaxonRecord.newBuilder().setDatasetKey(zaKey).setUsage(usage).build();
+    TaxonRecord colNoMatch =
+        TaxonRecord.newBuilder().setDatasetKey(Constants.COL_DATASET_KEY.toString()).build();
+
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.builder()
+            .multiTaxonRecord(
+                MultiTaxonRecord.newBuilder()
+                    // COL twice, e.g. as a configured and a country checklist
+                    .setTaxonRecords(
+                        new ArrayList<>(List.of(colMatch, nubNoMatch, zaNoMatch, colMatch)))
+                    .build())
+            .dnaTaxonRecord(
+                DnaTaxonRecord.newBuilder().setTaxonRecords(List.of(colNoMatch, zaMatch)).build())
+            .build()
+            .convert();
+
+    // COL only once
+    Assert.assertEquals(
+        List.of(Constants.COL_DATASET_KEY.toString(), Constants.NUB_DATASET_KEY.toString(), zaKey),
+        hdfsRecord.getChecklistkey());
+    Assert.assertEquals(
+        List.of(Constants.COL_DATASET_KEY.toString(), zaKey), hdfsRecord.getDnachecklistkey());
+  }
+
+  @Test
+  public void noDnaTaxonRecordTest() {
+    Assert.assertTrue(
+        OccurrenceHdfsRecordConverter.builder()
+            .build()
+            .convert()
+            .getDnaclassifications()
+            .isEmpty());
   }
 
   @Test

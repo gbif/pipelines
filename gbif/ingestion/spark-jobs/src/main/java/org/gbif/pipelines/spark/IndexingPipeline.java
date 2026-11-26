@@ -6,6 +6,7 @@ import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
+import static org.gbif.pipelines.spark.util.SparkUtil.readParquetAs;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -19,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
@@ -186,8 +186,9 @@ public class IndexingPipeline {
     // Returns indices names in case of swapping
     Set<String> indices = EsIndexUtils.deleteRecordsByDatasetId(options);
 
-    // Read parquet files
-    Dataset<T> df = spark.read().parquet(inputPath).as(Encoders.bean(recordClass));
+    // Read parquet files, which can be from an older version when only indexing, e.g. without the
+    // DNA taxonomy
+    Dataset<T> df = readParquetAs(spark, inputPath, recordClass);
 
     String esMappingId = recordClass.equals(OccurrenceJsonRecord.class) ? "gbifId" : "internalId";
 

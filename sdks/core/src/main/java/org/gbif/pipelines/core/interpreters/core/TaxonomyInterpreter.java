@@ -8,7 +8,9 @@ import static org.gbif.pipelines.core.utils.ModelUtils.*;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -114,18 +116,42 @@ public class TaxonomyInterpreter {
         nameUsageMatchRequest,
         kvStore,
         tr,
-        r -> {
-          if (Constants.NUB_DATASET_KEY.toString().equals(checklistKey)) {
-            tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
-            tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
-          } else {
-            tr.setUsage(null);
-            tr.setClassification(Collections.emptyList());
-          }
-        },
+        r -> setNoMatch(checklistKey, tr),
         r -> {
           TaxonRecordConverter.convert(r, tr);
         });
+  }
+
+  /** Whether the taxon record has a match, i.e. a usage that isn't incertae sedis. */
+  public static boolean hasMatch(TaxonRecord tr) {
+    return tr.getUsage() != null && !INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey());
+  }
+
+  /**
+   * The checklists the record was interpreted against, with or without a match (TAXON_MATCH_NONE),
+   * and without duplicates: a checklist can be used twice, e.g. when a country checklist is also
+   * one of the configured checklists.
+   */
+  public static List<String> interpretedChecklistKeys(List<TaxonRecord> taxonRecords) {
+    return taxonRecords.stream()
+        .map(TaxonRecord::getDatasetKey)
+        .filter(Objects::nonNull)
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * Sets the usage of a taxon record without a match: incertae sedis for the GBIF Backbone, none
+   * for the other checklists.
+   */
+  protected static void setNoMatch(String checklistKey, TaxonRecord tr) {
+    if (Constants.NUB_DATASET_KEY.toString().equals(checklistKey)) {
+      tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
+      tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+    } else {
+      tr.setUsage(null);
+      tr.setClassification(Collections.emptyList());
+    }
   }
 
   public static void matchTaxon(

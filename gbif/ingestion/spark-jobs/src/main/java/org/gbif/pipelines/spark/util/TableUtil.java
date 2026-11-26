@@ -268,6 +268,16 @@ public class TableUtil {
                   ",\n%s_classification %s", prefix, HiveDataTypes.TYPE_CLASSIFICATION_STRUCT);
         }
       }
+
+      // add the DNA-assisted classification fields
+      Map<String, String> dnaUuidToColumnPrefix = config.getDnaClassifications();
+      if (dnaUuidToColumnPrefix != null) {
+        for (String prefix : dnaUuidToColumnPrefix.values()) {
+          fieldDefn +=
+              String.format(
+                  ",\n%s_classification %s", prefix, HiveDataTypes.TYPE_CLASSIFICATION_STRUCT);
+        }
+      }
     }
     return fieldDefn;
   }
