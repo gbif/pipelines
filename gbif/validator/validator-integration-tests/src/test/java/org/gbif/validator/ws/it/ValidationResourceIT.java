@@ -30,6 +30,7 @@ import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.validator.api.ClbCallbackToken;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -76,6 +77,9 @@ import org.springframework.test.util.TestSocketUtils;
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class ValidationResourceIT {
+
+  // validation.clbCallback.secret of application-test.yml
+  private static final String CLB_CALLBACK_SECRET = "it-callback-secret";
 
   // Directory used as temporary space to upload files
   @TempDir static Path workingDirectory;
@@ -339,6 +343,11 @@ public class ValidationResourceIT {
 
   private java.net.http.HttpResponse<String> anonymous(String method, String path, String body)
       throws Exception {
+    return anonymous(method, path, body, "application/xml");
+  }
+
+  private java.net.http.HttpResponse<String> anonymous(
+      String method, String path, String body, String contentType) throws Exception {
     java.net.http.HttpRequest.Builder request =
         java.net.http.HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
             .method(
@@ -347,7 +356,7 @@ public class ValidationResourceIT {
                     ? java.net.http.HttpRequest.BodyPublishers.noBody()
                     : java.net.http.HttpRequest.BodyPublishers.ofString(body));
     if (body != null) {
-      request.header("Content-Type", "application/xml");
+      request.header("Content-Type", contentType);
     }
     return java.net.http.HttpClient.newHttpClient()
         .send(request.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -368,6 +377,25 @@ public class ValidationResourceIT {
     assertEquals(200, anonymous("GET", "/validation/enumeration/FileFormat", null).statusCode());
     assertEquals(200, anonymous("GET", "/validation/sequence?sequence=ACGT", null).statusCode());
     assertEquals(201, anonymous("POST", "/validation/eml", "<eml/>").statusCode());
+  }
+
+  @Test
+  public void clbCallbackRequiresTokenIT() throws Exception {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    UUID key = validation.getKey();
+    String path = "/validation/clbValidationCallback/" + key;
+    String json = "application/json";
+
+    // missing, wrong and other validation tokens are rejected
+    assertEquals(403, anonymous("POST", path, "{}", json).statusCode());
+    assertEquals(403, anonymous("POST", path + "/bad-token", "{}", json).statusCode());
+    String otherToken = ClbCallbackToken.create(UUID.randomUUID(), CLB_CALLBACK_SECRET);
+    assertEquals(403, anonymous("POST", path + "/" + otherToken, "{}", json).statusCode());
+
+    // the token of the validation is accepted
+    String token = ClbCallbackToken.create(key, CLB_CALLBACK_SECRET);
+    assertEquals(204, anonymous("POST", path + "/" + token, "{}", json).statusCode());
   }
 
   @Test
