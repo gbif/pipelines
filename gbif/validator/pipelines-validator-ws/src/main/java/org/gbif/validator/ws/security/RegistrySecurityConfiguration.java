@@ -2,7 +2,6 @@ package org.gbif.validator.ws.security;
 
 import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.remoteauth.RemoteAuthClient;
-import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
 import org.gbif.ws.remoteauth.RestTemplateRemoteAuthClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -31,5 +30,5 @@ public class RegistrySecurityConfiguration {
   }
 
   @Configuration
-  public class SecurityConfiguration extends RemoteAuthWebSecurityConfigurer {}
+  public class SecurityConfiguration extends ValidatorWebSecurityConfigurer {}
 }

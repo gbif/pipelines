@@ -2,20 +2,23 @@ package org.gbif.validator.service;
 
 import static org.gbif.validator.service.ValidationFactory.metricsSubmitError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
+import static org.gbif.ws.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.ws.security.UserRoles.APP_ROLE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -27,6 +30,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.dwca.validation.MetadataPath;
+import org.gbif.dwca.validation.xml.XmlSecurity;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.utils.file.CompressionUtil.UnsupportedCompressionType;
@@ -38,19 +42,27 @@ import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
+import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileSizeException;
 import org.gbif.validator.ws.file.FileStoreManager;
+import org.gbif.validator.ws.file.InvalidFileException;
+import org.gbif.validator.ws.file.UnsupportedMediaTypeException;
 import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ValidationServiceImpl implements ValidationService<MultipartFile> {
+
+  private static final long MAX_EML_SIZE = 10L * 1024 * 1024;
 
   private final FileStoreManager fileStoreManager;
 
@@ -64,6 +76,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
+
+  /** Users and app keys allowed to update validations, comma separated. */
+  @Value("${validation.update.allowed:}")
+  private final String updateAllowed;
+
+  /** When false, updates by admins or apps not in validation.update.allowed are only logged. */
+  @Value("${validation.update.enforce:false}")
+  private final boolean enforceUpdateAllowed;
 
   private final ErrorMapper errorMapper;
 
@@ -87,6 +107,13 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
             || validationRequest.getNotificationEmail().isEmpty())) {
       throw errorMapper.apply(Validation.ErrorCode.NOTIFICATION_EMAILS_MISSING);
     }
+    if (validationRequest.getNotificationEmail() != null
+        && validationRequest.getNotificationEmail().size()
+            > ValidationRequest.MAX_NOTIFICATION_EMAILS) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "At most " + ValidationRequest.MAX_NOTIFICATION_EMAILS + " notification emails");
+    }
     if (reachedMaxRunningValidations(getPrincipal().getUsername())) {
       throw errorMapper.apply(Validation.ErrorCode.MAX_RUNNING_VALIDATIONS);
     }
@@ -99,6 +126,9 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     log.info("Staring validation for the file {}", file.getOriginalFilename());
     UUID key = UUID.randomUUID();
     FileStoreManager.AsyncDataFileTask task = fileStoreManager.uploadDataFile(file, key.toString());
+    Validation validation =
+        create(key, task.getStart(), Validation.Status.SUBMITTED, validationRequest);
+    // Attached once the validation is persisted, so its update can't run before the insert
     task.getTask()
         .whenCompleteAsync(
             (df, tr) -> {
@@ -111,10 +141,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                 if (tr.getCause() instanceof UnsupportedCompressionType) {
                   message += "Please check the archive compression type. ";
                 }
-                updateFailedValidation(key, message + tr.getCause().getMessage());
+                updateFailedValidation(key, message + userMessage(tr.getCause()));
               }
             });
-    return create(key, task.getStart(), Validation.Status.SUBMITTED, validationRequest);
+    return validation;
   }
 
   private GbifUserPrincipal getPrincipal() {
@@ -127,6 +157,32 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     throw new SecurityException("User credentials not found");
   }
 
+  private static boolean isAdminOrApp(GbifUserPrincipal principal) {
+    return principal.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .anyMatch(role -> ADMIN_ROLE.equals(role) || APP_ROLE.equals(role));
+  }
+
+  /** True if the user or app key is in validation.update.allowed. */
+  boolean isUpdateAllowed(String username) {
+    return username != null
+        && Arrays.stream(updateAllowed == null ? new String[0] : updateAllowed.split(","))
+            .map(String::trim)
+            .anyMatch(username::equals);
+  }
+
+  /** Asserts the current user created the validation, or is an admin or an app. */
+  private void checkCanModify(Validation validation) {
+    GbifUserPrincipal principal = getPrincipal();
+    if (!isAdminOrApp(principal) && !principal.getUsername().equals(validation.getUsername())) {
+      log.warn(
+          "User {} is not allowed to modify validation {}",
+          principal.getUsername(),
+          validation.getKey());
+      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    }
+  }
+
   @Override
   public Validation validateFileFromUrl(String fileURL, ValidationRequest validationRequest) {
     try {
@@ -135,40 +191,38 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       log.info("Starting validation for the URL {}", fileURL);
       UUID key = UUID.randomUUID();
       String encodedFileURL = EncodingUtil.encode(fileURL);
-      Optional<String> redirectedUrl = EncodingUtil.getRedirectedUrl(encodedFileURL);
-      if (redirectedUrl.isPresent()) {
-        encodedFileURL = redirectedUrl.get();
-      }
 
       // this should also become asynchronous at some point
       FileStoreManager.AsyncDownloadResult downloadResult =
-          fileStoreManager.downloadDataFile(
-              encodedFileURL,
-              key.toString(),
-              resultDataFile -> {
-                if (resultDataFile == null) {
+          fileStoreManager.downloadDataFile(encodedFileURL, key.toString());
+      Validation validation =
+          create(
+              key, downloadResult.getDataFile(), Validation.Status.DOWNLOADING, validationRequest);
+      // Attached once the validation is persisted, so its update can't run before the insert
+      downloadResult
+          .getDownloadTask()
+          .whenCompleteAsync(
+              (resultDataFile, err) -> {
+                if (err != null) {
+                  Throwable cause =
+                      err instanceof CompletionException && err.getCause() != null
+                          ? err.getCause()
+                          : err;
+                  log.error("Error processing file", cause);
+                  updateFailedValidation(key, userMessage(cause));
+                } else if (resultDataFile == null) {
                   log.error("Downloaded file is null for URL {}, key {}", fileURL, key);
-                  updateFailedValidation(key, "Downloaded file from " + fileURL + " is null");
-                  return;
-                }
-                try {
+                  updateFailedValidation(key, "The downloaded file is empty");
+                } else {
                   log.info(
-                      "File has been downloaded and decompressed from URL {}, key {} to path {} with size {} bytes",
+                      "File has been downloaded and decompressed from URL {}, key {} to path {}",
                       fileURL,
                       key,
-                      resultDataFile.getFilePath().toAbsolutePath(),
-                      Files.size(resultDataFile.getFilePath()));
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
+                      resultDataFile.getFilePath().toAbsolutePath());
+                  updateAndNotifySubmitted(key, resultDataFile);
                 }
-                updateAndNotifySubmitted(key, resultDataFile);
-              },
-              err -> {
-                log.error("Error processing file", err);
-                updateFailedValidation(key, err.getMessage());
               });
-      return create(
-          key, downloadResult.getDataFile(), Validation.Status.DOWNLOADING, validationRequest);
+      return validation;
     } catch (FileSizeException ex) {
       log.error("File limit error", ex);
       throw errorMapper.apply(Validation.ErrorCode.MAX_FILE_SIZE_VIOLATION);
@@ -194,17 +248,34 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   /** Updates validation data. */
   @Override
   public Validation update(Validation validation) {
-    if (validation.getKey() != null) {
-      Optional.ofNullable(get(validation.getKey()))
-          .ifPresent(
-              v ->
-                  log.info(
-                      "Updating validation key {}, status {}",
-                      validation.getKey(),
-                      validation.getStatus()));
-    } else {
+    if (validation.getKey() == null) {
       throw errorMapper.apply(Validation.ErrorCode.NOT_FOUND);
     }
+    Validation current = get(validation.getKey());
+    // the content of a validation is written by the validation pipeline only
+    if (!isAdminOrApp(getPrincipal())) {
+      log.warn(
+          "User {} is not allowed to update validation {}",
+          getPrincipal().getUsername(),
+          validation.getKey());
+      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    }
+    if (!isUpdateAllowed(getPrincipal().getUsername())) {
+      log.warn(
+          "User {} is not in validation.update.allowed, update of validation {} {}",
+          getPrincipal().getUsername(),
+          validation.getKey(),
+          enforceUpdateAllowed ? "rejected" : "allowed");
+      if (enforceUpdateAllowed) {
+        throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+      }
+    }
+    // a cancelled or deleted validation can't be resumed
+    if ((current.getDeleted() != null || current.getStatus() == Status.ABORTED)
+        && validation.isExecuting()) {
+      throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
+    }
+    log.info("Updating validation key {}, status {}", validation.getKey(), validation.getStatus());
     return updateAndGet(validation);
   }
 
@@ -212,6 +283,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   @Override
   public Validation cancel(UUID key) {
     Validation validation = get(key);
+    checkCanModify(validation);
     if (!validation.isExecuting()) {
       throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
     }
@@ -223,10 +295,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   @Override
   public void delete(UUID key) {
-    UUID keyToDelete = get(key).getKey();
+    Validation validation = get(key);
+    checkCanModify(validation);
     log.info("Delete validation record for key {}", key);
-    // A get is executed to check if the validation exists and current user has access
-    validationMapper.delete(keyToDelete);
+    validationMapper.delete(validation.getKey());
     fileStoreManager.deleteIfExist(key.toString());
   }
 
@@ -282,7 +354,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         .filter(step -> step.getStepType().equals(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()))
         .forEach(step -> step.setStatus(newStatus));
     validation.setStatus(newStatus);
-    update(validation);
+    updateAndGet(validation);
   }
 
   /** Persists a validation entity. */
@@ -319,17 +391,38 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
       v.setDataset(readEml(dataFile.getFilePath().getParent()));
 
-      // Update DB
-      updateAndGet(v);
+      // Update DB, unless the validation was cancelled or deleted meanwhile
+      if (!updateIfExecuting(v)) {
+        return;
+      }
 
       // Sent RabbitMQ message
       notify(key, dataFile, pipelinesSteps);
     } catch (Exception ex) {
-      updateFailedValidation(key, ex.getMessage());
+      log.error("Error submitting validation {}", key, ex);
+      updateFailedValidation(key, userMessage(ex));
     }
   }
 
-  private Dataset readEml(Path pathToArchive) {
+  /**
+   * Message of an error shown to users: the message of errors about the submitted file or URL, a
+   * generic one otherwise, so internal details aren't exposed.
+   */
+  static String userMessage(Throwable error) {
+    Throwable cause =
+        error instanceof CompletionException && error.getCause() != null ? error.getCause() : error;
+    if (cause instanceof FileSizeException
+        || cause instanceof DownloadFileManager.UnsafeUrlException
+        || cause instanceof UnsupportedMediaTypeException
+        || cause instanceof UnsupportedCompressionType
+        || cause instanceof InvalidFileException) {
+      return cause.getMessage();
+    }
+    return "The file could not be processed";
+  }
+
+  /** Reads the archive metadata, null if missing, too large, invalid or with a DOCTYPE. */
+  static Dataset readEml(Path pathToArchive) {
     try {
       Optional<Path> existedPath = MetadataPath.parsePath(pathToArchive);
 
@@ -338,13 +431,19 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         return null;
       }
 
-      String eml = Files.readString(existedPath.get());
+      if (Files.size(existedPath.get()) > MAX_EML_SIZE) {
+        log.error("Metadata file is too large: {}", existedPath.get());
+        return null;
+      }
+      byte[] eml = Files.readAllBytes(existedPath.get());
+      // DatasetEmlParser resolves external entities, documents with a DOCTYPE are not parsed
+      XmlSecurity.assertNoDoctype(eml);
       // Set the context classloader to ensure Digester can find GBIF classes
       Thread currentThread = Thread.currentThread();
       ClassLoader originalClassLoader = currentThread.getContextClassLoader();
       try {
-        currentThread.setContextClassLoader(getClass().getClassLoader());
-        return DatasetEmlParser.build(eml.getBytes(StandardCharsets.UTF_8));
+        currentThread.setContextClassLoader(ValidationServiceImpl.class.getClassLoader());
+        return DatasetEmlParser.build(eml);
       } finally {
         currentThread.setContextClassLoader(originalClassLoader);
       }
@@ -356,11 +455,30 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   }
 
   /** Updates the status of a validation process. */
-  private Validation updateFailedValidation(UUID key, String errorMessage) {
+  private void updateFailedValidation(UUID key, String errorMessage) {
     log.error("Failed validation for key {} with error {}", key, errorMessage);
     Validation validation =
         newValidationInstance(key, Validation.Status.FAILED, metricsSubmitError(errorMessage));
-    return updateAndGet(validation);
+    updateIfExecuting(validation);
+  }
+
+  /**
+   * Updates a validation unless it was finished, cancelled or deleted meanwhile, e.g. while its
+   * file was being submitted.
+   *
+   * @return true if the validation was updated
+   */
+  private boolean updateIfExecuting(Validation validation) {
+    if (validationMapper.updateIfExecuting(validation) == 0) {
+      log.info("Validation {} is not executing anymore, not updated", validation.getKey());
+      return false;
+    }
+    if (validation.hasFinished()) {
+      log.info(
+          "Validation {} finished with status {}", validation.getKey(), validation.getStatus());
+      emailService.sendEmailNotification(validation);
+    }
+    return true;
   }
 
   /** Updates and gets the updated validation */
@@ -402,10 +520,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     } else if (dataFile.getFileFormat() == FileFormat.XML) {
       stepType = StepType.VALIDATOR_XML_TO_VERBATIM;
     } else {
-      throw new IllegalArgumentException(
-          dataFile.getFileFormat()
-              + " file format is not supported, file name: "
-              + dataFile.getSourceFileName());
+      throw new InvalidFileException(dataFile.getFileFormat() + " file format is not supported");
     }
 
     return new LinkedHashSet<>(

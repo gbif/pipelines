@@ -40,6 +40,15 @@ public interface ValidationMapper {
   void update(Validation validation);
 
   /**
+   * Updates a validation like {@link #update(Validation)}, but only if it is executing and not
+   * deleted.
+   *
+   * @param validation to be updated
+   * @return number of updated validations, 0 if it was finished, cancelled or deleted
+   */
+  int updateIfExecuting(Validation validation);
+
+  /**
    * Paginates through validations, optionally filtered by username.
    *
    * @param username filter
