@@ -1,5 +1,6 @@
 package org.gbif.validator.ws.it;
 
+import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.ADMIN_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.OTHER_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
@@ -87,6 +88,8 @@ public class ValidationResourceIT {
 
   private final ValidationWsClient otherUserWsClient;
 
+  private final ValidationWsClient adminWsClient;
+
   private final GatedFileStoreManager fileStoreManager;
 
   @Autowired
@@ -98,6 +101,9 @@ public class ValidationResourceIT {
     otherUserWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, OTHER_USER.getUserName(), TEST_USER_PASSWORD);
+    adminWsClient =
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, ADMIN_USER.getUserName(), TEST_USER_PASSWORD);
   }
 
   @BeforeAll
@@ -306,10 +312,25 @@ public class ValidationResourceIT {
                         .build()))
             .build();
     validation.setMetrics(metrics);
-    validationWsClient.update(validation);
+    // only the validation pipeline (apps) and admins update validations
+    assertThrows(AccessDeniedException.class, () -> validationWsClient.update(validation));
+    adminWsClient.update(validation);
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertEquals(metrics, persistedValidation.getMetrics());
     assertEquals(Validation.Status.FINISHED, persistedValidation.getStatus());
+  }
+
+  @Test
+  public void cancelledValidationIsNotResumedIT() {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    validationWsClient.cancel(validation.getKey());
+
+    Validation cancelled = validationWsClient.get(validation.getKey());
+    cancelled.setStatus(Validation.Status.RUNNING);
+    assertThrows(IllegalArgumentException.class, () -> adminWsClient.update(cancelled));
+    assertEquals(
+        Validation.Status.ABORTED, validationWsClient.get(validation.getKey()).getStatus());
   }
 
   @Test

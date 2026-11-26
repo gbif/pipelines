@@ -91,6 +91,13 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
           .roles(Collections.singleton(UserRole.USER.name()))
           .build();
 
+  public static final LoggedUser ADMIN_USER =
+      LoggedUser.builder()
+          .userName("registryAdmin")
+          .email("registryAdmin@gbif.org")
+          .roles(Collections.singleton(UserRole.REGISTRY_ADMIN.name()))
+          .build();
+
   /**
    * Created from here to avoid scanning this class package in which other test configuration are
    * located.
@@ -107,6 +114,8 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   public GatedFileStoreManager uploadedFileManager(
       @Value("${spring.servlet.multipart.location}") String uploadWorkingDirectory,
       @Value("${storePath}") String storePath,
+      @Value("${validation.maxUnpackedSize:20GB}") String maxUnpackedSize,
+      @Value("${validation.maxUnpackedEntries:10000}") int maxUnpackedEntries,
       DownloadFileManager downloadFileManager)
       throws IOException {
     return new GatedFileStoreManager(uploadWorkingDirectory, storePath, downloadFileManager);
@@ -129,7 +138,11 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
 
   @Bean
   public RemoteAuthClient remoteAuthClient() {
-    return RemoteAuthClientMock.builder().testUser(TEST_USER).otherUser(OTHER_USER).build();
+    return RemoteAuthClientMock.builder()
+        .testUser(TEST_USER)
+        .otherUser(OTHER_USER)
+        .adminUser(ADMIN_USER)
+        .build();
   }
 
   @Bean

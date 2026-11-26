@@ -165,8 +165,8 @@ public class ValidationResource {
     validationService.delete(key);
   }
 
-  /** Updates the detail of Validation. */
-  @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
+  /** Updates the detail of Validation, used by the validation pipeline. */
+  @Secured({APP_ROLE, ADMIN_ROLE})
   @Operation(summary = "Update validation", description = "Update the details of a validation job.")
   @ApiResponses({
     @ApiResponse(

@@ -136,14 +136,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     throw new SecurityException("User credentials not found");
   }
 
+  private static boolean isAdminOrApp(GbifUserPrincipal principal) {
+    return principal.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .anyMatch(role -> ADMIN_ROLE.equals(role) || APP_ROLE.equals(role));
+  }
+
   /** Asserts the current user created the validation, or is an admin or an app. */
   private void checkCanModify(Validation validation) {
     GbifUserPrincipal principal = getPrincipal();
-    boolean adminOrApp =
-        principal.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .anyMatch(role -> ADMIN_ROLE.equals(role) || APP_ROLE.equals(role));
-    if (!adminOrApp && !principal.getUsername().equals(validation.getUsername())) {
+    if (!isAdminOrApp(principal) && !principal.getUsername().equals(validation.getUsername())) {
       log.warn(
           "User {} is not allowed to modify validation {}",
           principal.getUsername(),
@@ -220,7 +222,20 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     if (validation.getKey() == null) {
       throw errorMapper.apply(Validation.ErrorCode.NOT_FOUND);
     }
-    checkCanModify(get(validation.getKey()));
+    Validation current = get(validation.getKey());
+    // the content of a validation is written by the validation pipeline only
+    if (!isAdminOrApp(getPrincipal())) {
+      log.warn(
+          "User {} is not allowed to update validation {}",
+          getPrincipal().getUsername(),
+          validation.getKey());
+      throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    }
+    // a cancelled or deleted validation can't be resumed
+    if ((current.getDeleted() != null || current.getStatus() == Status.ABORTED)
+        && validation.isExecuting()) {
+      throw errorMapper.apply(Validation.ErrorCode.VALIDATION_IS_NOT_EXECUTING);
+    }
     log.info("Updating validation key {}, status {}", validation.getKey(), validation.getStatus());
     return updateAndGet(validation);
   }
