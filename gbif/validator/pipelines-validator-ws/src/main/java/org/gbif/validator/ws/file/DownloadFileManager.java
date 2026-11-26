@@ -208,7 +208,7 @@ public class DownloadFileManager {
   private Response open(String url, String method) throws IOException {
     HttpUrl current = HttpUrl.parse(url);
     if (current == null) {
-      throw new UnsafeUrlException("Only http and https URLs are supported: " + url);
+      throw new UnsafeUrlException("Only http and https URLs are supported");
     }
     for (int redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
       checkUrl(current.url());
@@ -221,7 +221,7 @@ public class DownloadFileManager {
       response.close();
       HttpUrl next = current.resolve(location);
       if (next == null) {
-        throw new UnsafeUrlException("Only http and https URLs are supported: " + location);
+        throw new UnsafeUrlException("Only http and https URLs are supported");
       }
       current = next;
     }
@@ -231,11 +231,11 @@ public class DownloadFileManager {
   /** Asserts the URL is http(s) and its host has only public addresses. */
   void checkUrl(URL url) throws IOException {
     if (!SUPPORTED_SCHEMES.contains(url.getProtocol().toLowerCase(Locale.ROOT))) {
-      throw new UnsafeUrlException("Only http and https URLs are supported: " + url);
+      throw new UnsafeUrlException("Only http and https URLs are supported");
     }
     String host = url.getHost();
     if (host == null || host.isEmpty()) {
-      throw new UnsafeUrlException("URL without host: " + url);
+      throw new UnsafeUrlException("URL without host");
     }
     // IP literals are not resolved through lookup(), so they are only checked here
     resolve(host);
@@ -258,7 +258,7 @@ public class DownloadFileManager {
     if (!allowedPrivateHosts.contains(host.toLowerCase(Locale.ROOT))) {
       for (InetAddress address : addresses) {
         if (!isPublic(address)) {
-          throw new UnsafeUrlException("URL host is not a public address: " + host);
+          throw new UnsafeUrlException("URL host is not a public address");
         }
       }
     }

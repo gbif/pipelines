@@ -143,7 +143,7 @@ public class FileStoreManager {
 
     // also false for URLs the validator doesn't fetch, see DownloadFileManager
     if (!downloadFileManager.isAvailable(url)) {
-      throw new IllegalArgumentException(
+      throw new InvalidFileException(
           "Failed to download the file, the resource is not reachable or not supported."
               + " Please check that the URL is correct");
     }
@@ -199,11 +199,11 @@ public class FileStoreManager {
    */
   static String sanitizeFileName(String fileName) {
     if (fileName == null) {
-      throw new IllegalArgumentException("Missing file name");
+      throw new InvalidFileException("Missing file name");
     }
     String name = FilenameUtils.getName(fileName);
     if (name == null || name.isBlank() || name.equals(".") || name.equals("..")) {
-      throw new IllegalArgumentException("Invalid file name: " + fileName);
+      throw new InvalidFileException("Invalid file name");
     }
     return name;
   }
@@ -212,7 +212,7 @@ public class FileStoreManager {
   static String downloadFileName(String fileName) {
     try {
       return sanitizeFileName(fileName);
-    } catch (IllegalArgumentException ex) {
+    } catch (InvalidFileException ex) {
       return DEFAULT_DOWNLOAD_FILE_NAME;
     }
   }

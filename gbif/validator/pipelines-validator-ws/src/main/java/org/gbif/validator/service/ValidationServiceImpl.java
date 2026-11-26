@@ -44,6 +44,7 @@ import org.gbif.validator.ws.file.DataFile;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileSizeException;
 import org.gbif.validator.ws.file.FileStoreManager;
+import org.gbif.validator.ws.file.InvalidFileException;
 import org.gbif.validator.ws.file.UnsupportedMediaTypeException;
 import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
@@ -377,8 +378,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   }
 
   /**
-   * Message of an error shown to users: the message of errors about the submitted file, a generic
-   * one otherwise, so internal details aren't exposed.
+   * Message of an error shown to users: the message of errors about the submitted file or URL, a
+   * generic one otherwise, so internal details aren't exposed.
    */
   static String userMessage(Throwable error) {
     Throwable cause =
@@ -387,7 +388,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         || cause instanceof DownloadFileManager.UnsafeUrlException
         || cause instanceof UnsupportedMediaTypeException
         || cause instanceof UnsupportedCompressionType
-        || cause instanceof IllegalArgumentException) {
+        || cause instanceof InvalidFileException) {
       return cause.getMessage();
     }
     return "The file could not be processed";
@@ -492,10 +493,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     } else if (dataFile.getFileFormat() == FileFormat.XML) {
       stepType = StepType.VALIDATOR_XML_TO_VERBATIM;
     } else {
-      throw new IllegalArgumentException(
-          dataFile.getFileFormat()
-              + " file format is not supported, file name: "
-              + dataFile.getSourceFileName());
+      throw new InvalidFileException(dataFile.getFileFormat() + " file format is not supported");
     }
 
     return new LinkedHashSet<>(

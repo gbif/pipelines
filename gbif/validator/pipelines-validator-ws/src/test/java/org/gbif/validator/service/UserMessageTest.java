@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.util.concurrent.CompletionException;
+import org.gbif.validator.ws.file.InvalidFileException;
 import org.junit.jupiter.api.Test;
 
 class UserMessageTest {
@@ -17,6 +18,9 @@ class UserMessageTest {
         "The file could not be processed",
         ValidationServiceImpl.userMessage(
             new CompletionException(new IllegalStateException("db host 10.0.0.1"))));
+    assertEquals(
+        "The file could not be processed",
+        ValidationServiceImpl.userMessage(new IllegalArgumentException("/internal/path/x")));
   }
 
   @Test
@@ -24,6 +28,6 @@ class UserMessageTest {
     assertEquals(
         "Unsupported format",
         ValidationServiceImpl.userMessage(
-            new CompletionException(new IllegalArgumentException("Unsupported format"))));
+            new CompletionException(new InvalidFileException("Unsupported format"))));
   }
 }
