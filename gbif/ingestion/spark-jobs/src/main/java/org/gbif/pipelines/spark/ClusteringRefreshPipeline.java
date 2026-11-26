@@ -22,7 +22,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,15 +35,14 @@ import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.spark.pojo.Occurrence;
-import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.schema.ParquetSchemas;
+import org.gbif.pipelines.spark.util.SimpleRecordLoader;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.*;
 
 /** Main class for the Spark pipeline that just reruns clustering interpretation. */
 @Slf4j
 public class ClusteringRefreshPipeline {
-
-  static final ObjectMapper MAPPER = MapperUtil.MAPPER;
 
   public static final String METRICS_FILENAME = "clustering.yml";
 
@@ -144,10 +142,8 @@ public class ClusteringRefreshPipeline {
   }
 
   private static Dataset<Occurrence> loadSimpleRecords(SparkSession spark, String outputPath) {
-    return spark
-        .read()
-        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-        .as(Encoders.bean(Occurrence.class));
+    // may be an attempt written before the typed schema
+    return SimpleRecordLoader.loadOccurrences(spark, outputPath + "/" + SIMPLE_OCCURRENCE);
   }
 
   /**
@@ -171,8 +167,7 @@ public class ClusteringRefreshPipeline {
         simpleRecords.map(
             (MapFunction<Occurrence, Occurrence>)
                 simpleRecord -> {
-                  IdentifierRecord idr =
-                      MAPPER.readValue(simpleRecord.getIdentifier(), IdentifierRecord.class);
+                  IdentifierRecord idr = simpleRecord.getIdentifier();
 
                   // Apply all transforms
                   ClusteringRecord cr = clusteringTransform.convert(idr);
@@ -188,7 +183,7 @@ public class ClusteringRefreshPipeline {
                       .temporal(simpleRecord.getTemporal())
                       .dnaDerivedData(simpleRecord.getDnaDerivedData())
                       .multimedia(simpleRecord.getMultimedia())
-                      .clustering(MAPPER.writeValueAsString(cr))
+                      .clustering(cr)
                       .build();
                 },
             Encoders.bean(Occurrence.class));
@@ -204,6 +199,10 @@ public class ClusteringRefreshPipeline {
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP);
+    ParquetSchemas.writeDescriptor(
+        spark,
+        outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP,
+        ParquetSchemas.Published.OCCURRENCE_SCHEMA);
 
     // re-load
     return spark

@@ -30,6 +30,7 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.hbase.HBaseStore;
 import org.gbif.pipelines.spark.pojo.Occurrence;
@@ -242,16 +243,13 @@ public class OrphanedIdentifiersPipelineTest {
     loaded.addAll(Arrays.asList(extraLoaded));
     List<Occurrence> occurrences = new ArrayList<>();
     for (Rec r : loaded) {
-      // null keys are omitted from the serialised IdentifierRecord, as in real data
-      String identifier =
-          "{\"id\":\""
-              + r.id
-              + "\",\"internalId\":\""
-              + r.id
-              + "-gbif\","
-              + (r.uniqueKey == null ? "" : "\"uniqueKey\":\"" + r.uniqueKey + "\",")
-              + (r.associatedKey == null ? "" : "\"associatedKey\":\"" + r.associatedKey + "\",")
-              + "\"issues\":{}}";
+      IdentifierRecord identifier =
+          IdentifierRecord.newBuilder()
+              .setId(r.id)
+              .setInternalId(r.id + "-gbif")
+              .setUniqueKey(r.uniqueKey)
+              .setAssociatedKey(r.associatedKey)
+              .build();
       occurrences.add(
           Occurrence.builder().id(r.id).internalId(r.id + "-gbif").identifier(identifier).build());
     }

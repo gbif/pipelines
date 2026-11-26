@@ -18,9 +18,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.JsonConverter;
@@ -36,6 +33,7 @@ import org.gbif.pipelines.spark.pojo.Event;
 import org.gbif.pipelines.spark.pojo.EventCoordinate;
 import org.gbif.pipelines.spark.pojo.EventTaxonCoverage;
 import org.gbif.pipelines.spark.pojo.Occurrence;
+import org.gbif.pipelines.spark.schema.ParquetSchemas;
 import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -88,7 +86,7 @@ public class DerivedMetadataUtil implements Serializable {
                   Event event = row._1();
                   DerivedMetadataRecord derived = row._2();
                   if (derived != null) {
-                    event.setDerivedMetadata(MAPPER.writeValueAsString(derived));
+                    event.setDerivedMetadata(derived);
                   }
                   return event;
                 },
@@ -96,6 +94,8 @@ public class DerivedMetadataUtil implements Serializable {
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_DERIVED);
+    ParquetSchemas.writeDescriptor(
+        spark, outputPath + "/" + SIMPLE_EVENT_WITH_DERIVED, ParquetSchemas.Published.EVENT_SCHEMA);
 
     return spark
         .read()
@@ -188,17 +188,13 @@ public class DerivedMetadataUtil implements Serializable {
                       Map<String, List<DerivedClassification>> classifications = new HashMap<>();
 
                       // retrieve taxonID from verbatim
-                      ExtendedRecord verbatim =
-                          MAPPER.readValue(occ.getVerbatim(), ExtendedRecord.class);
+                      ExtendedRecord verbatim = occ.getVerbatim();
                       ModelUtils.extractOptValue(verbatim, DwcTerm.taxonID)
                           .ifPresent(taxonIDs::add);
 
                       // map taxon records to classifications
-                      String taxonJson = occ.getTaxon();
-                      if (taxonJson != null) {
-
-                        MultiTaxonRecord multiTaxonRecord =
-                            MAPPER.readValue(taxonJson, MultiTaxonRecord.class);
+                      MultiTaxonRecord multiTaxonRecord = occ.getTaxon();
+                      if (multiTaxonRecord != null) {
 
                         if (multiTaxonRecord.getTaxonRecords() != null) {
 
@@ -775,20 +771,6 @@ public class DerivedMetadataUtil implements Serializable {
       SparkSession spark, Dataset<Event> events) {
     events.createOrReplaceTempView("simple_event");
 
-    // Explode lineage to get parent-child relations and use vectorized JSON parsing for temporal
-    StructType eventDateSchema =
-        new StructType(
-            new StructField[] {
-              DataTypes.createStructField(
-                  "eventDate",
-                  DataTypes.createStructType(
-                      new StructField[] {
-                        DataTypes.createStructField("gte", DataTypes.StringType, true),
-                        DataTypes.createStructField("lte", DataTypes.StringType, true)
-                      }),
-                  true)
-            });
-
     Dataset<Row> exploded =
         events
             .select(
@@ -797,7 +779,7 @@ public class DerivedMetadataUtil implements Serializable {
                 col("temporal"))
             .filter(col("parentId").isNotNull().and(col("temporal").isNotNull()));
 
-    Dataset<Row> parsed = exploded.withColumn("tmp", from_json(col("temporal"), eventDateSchema));
+    Dataset<Row> parsed = exploded.withColumn("tmp", col("temporal"));
 
     Dataset<Row> valid = parsed.filter(col("tmp.eventDate").isNotNull());
 
@@ -823,15 +805,7 @@ public class DerivedMetadataUtil implements Serializable {
       SparkSession spark, Dataset<Event> events) {
     events.createOrReplaceTempView("simple_event");
     // Use explode on lineage to generate parentId -> child location mappings
-    // then parse location JSON with from_json (vectorized) and filter using Catalyst expressions.
-
-    StructType locationSchema =
-        new StructType(
-            new StructField[] {
-              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
-              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
-              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
-            });
+    // then filter on the location struct using Catalyst expressions.
 
     Dataset<Row> exploded =
         events
@@ -841,7 +815,7 @@ public class DerivedMetadataUtil implements Serializable {
                 col("location"))
             .filter(col("parentId").isNotNull().and(col("location").isNotNull()));
 
-    Dataset<Row> parsed = exploded.withColumn("loc", from_json(col("location"), locationSchema));
+    Dataset<Row> parsed = exploded.withColumn("loc", col("location"));
 
     Dataset<Row> valid =
         parsed.filter(
@@ -876,26 +850,19 @@ public class DerivedMetadataUtil implements Serializable {
     Path successMarker = new Path(occurrencePath, "_SUCCESS");
 
     if (fs.exists(occurrencePath) && fs.exists(successMarker)) {
-      return spark.read().parquet(occurrencePath.toString()).as(encoder);
+      return SimpleRecordLoader.loadOccurrences(spark, occurrencePath.toString());
     }
 
     return spark.emptyDataset(encoder);
   }
 
   private static Dataset<EventCoordinate> getEventCoordinates(Dataset<Event> events) {
-    StructType locationSchema =
-        new StructType(
-            new StructField[] {
-              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
-              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
-              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
-            });
 
     Dataset<Row> parsed =
         events
             .select(col("id").as("eventId"), col("location"))
             .filter(col("location").isNotNull())
-            .withColumn("loc", from_json(col("location"), locationSchema));
+            .withColumn("loc", col("location"));
 
     Dataset<Row> valid =
         parsed.filter(
@@ -919,24 +886,12 @@ public class DerivedMetadataUtil implements Serializable {
 
   private static Dataset<Tuple2<String, EventDate>> getCoreIdEventDates(
       Dataset<Occurrence> occurrence) {
-    StructType eventDateSchema =
-        new StructType(
-            new StructField[] {
-              DataTypes.createStructField(
-                  "eventDate",
-                  DataTypes.createStructType(
-                      new StructField[] {
-                        DataTypes.createStructField("gte", DataTypes.StringType, true),
-                        DataTypes.createStructField("lte", DataTypes.StringType, true)
-                      }),
-                  true)
-            });
 
     Dataset<Row> parsed =
         occurrence
             .select(col("coreId"), col("temporal"))
             .filter(col("temporal").isNotNull())
-            .withColumn("tmp", from_json(col("temporal"), eventDateSchema));
+            .withColumn("tmp", col("temporal"));
 
     Dataset<Row> valid = parsed.filter(col("tmp.eventDate").isNotNull());
 
@@ -956,19 +911,12 @@ public class DerivedMetadataUtil implements Serializable {
   }
 
   private static Dataset<EventCoordinate> getCoreIdCoordinates(Dataset<Occurrence> occurrence) {
-    StructType locationSchema =
-        new StructType(
-            new StructField[] {
-              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
-              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
-              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
-            });
 
     Dataset<Row> parsed =
         occurrence
             .select(col("coreId"), col("location"))
             .filter(col("location").isNotNull())
-            .withColumn("loc", from_json(col("location"), locationSchema));
+            .withColumn("loc", col("location"));
 
     Dataset<Row> valid =
         parsed.filter(

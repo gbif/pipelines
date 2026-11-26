@@ -1,0 +1,2819 @@
+{
+  "type" : "struct",
+  "fields" : [ {
+    "name" : "audubon",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "audubonItems",
+        "type" : {
+          "type" : "array",
+          "elementType" : {
+            "type" : "struct",
+            "fields" : [ {
+              "name" : "accessUri",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "associatedObservationReference",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "associatedSpecimenReference",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "attributionLinkUrl",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "attributionLogoUrl",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "available",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "caption",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "captureDevice",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "city",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "commenter",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "commenterLiteral",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "comments",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "countryCode",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "countryName",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "createDate",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "creator",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "creatorUri",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "credit",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "cvTerm",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "dateIdentified",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "derivedFrom",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "description",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "digitizationDate",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "format",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "formatUri",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "fundingAttribution",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "furtherInformationUrl",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "hasServiceAccessPoint",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "hashFunction",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "hashValue",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "idOfContainingCollection",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "identificationQualifier",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "identifiedBy",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "identifier",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "language",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "languageUri",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "licenseLogoUrl",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "licensingException",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "lifeStage",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "locationCreated",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "locationShown",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "metadataCreator",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "metadataCreatorLiteral",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "metadataDate",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "metadataLanguage",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "metadataLanguageLiteral",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "metadataProvider",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "metadataProviderLiteral",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "modified",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "nameAccordingTo",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "otherScientificName",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "owner",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "physicalSetting",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "pixelXDimension",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "pixelYDimension",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "preparations",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "provider",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "providerId",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "providerLiteral",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "providerManagedId",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "provinceState",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "rating",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "relatedResourceId",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "resourceCreationTechnique",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "reviewer",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "reviewerComments",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "reviewerLiteral",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "rights",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "rightsUri",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "scientificName",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "scientificNameId",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "serviceExpectation",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "sex",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "source",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "sourceUri",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "subjectCategoryVocabulary",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "subjectOrientation",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "subjectPart",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "sublocation",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "subtype",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "subtypeLiteral",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "tag",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "taxonCount",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "taxonCoverage",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "temporal",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "timeOfDay",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "title",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "type",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "typeUri",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "usageTerms",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "variant",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "variantDescription",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "variantLiteral",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "vernacularName",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "webStatement",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "worldRegion",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            } ]
+          },
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "created",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "derivedMetadata",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "taxonomicCoverage",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "classifications",
+            "type" : {
+              "type" : "map",
+              "keyType" : "string",
+              "valueType" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "acceptedUsage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "environments",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "issues",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "iucnRedListCategoryCode",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "status",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "taxonKeys",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "usage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "valueContainsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "taxonIDs",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "temporalCoverage",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "gte",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "lte",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "wktConvexHull",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "eventCore",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "created",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "datasetID",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "datasetName",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "eventType",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "concept",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "lineage",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "tags",
+            "type" : {
+              "type" : "array",
+              "elementType" : {
+                "type" : "struct",
+                "fields" : [ {
+                  "name" : "name",
+                  "type" : "string",
+                  "nullable" : true,
+                  "metadata" : { }
+                }, {
+                  "name" : "value",
+                  "type" : "string",
+                  "nullable" : true,
+                  "metadata" : { }
+                } ]
+              },
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "fundingAttribution",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "fundingAttributionID",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "license",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "locationID",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "parentEventID",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "parentsLineage",
+        "type" : {
+          "type" : "array",
+          "elementType" : {
+            "type" : "struct",
+            "fields" : [ {
+              "name" : "eventType",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "id",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "order",
+              "type" : "integer",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "verbatimEventType",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            } ]
+          },
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "projectID",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "projectTitle",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "references",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "sampleSizeUnit",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "sampleSizeValue",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "samplingProtocol",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "eventInherited",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "eventType",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "inheritedFrom",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "locationID",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "humboldt",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "created",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "humboldtItems",
+        "type" : {
+          "type" : "array",
+          "elementType" : {
+            "type" : "struct",
+            "fields" : [ {
+              "name" : "absentTaxa",
+              "type" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "acceptedUsage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "checklistKey",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "classification",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : {
+                        "type" : "struct",
+                        "fields" : [ {
+                          "name" : "key",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "name",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "rank",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        } ]
+                      },
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "environments",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "issues",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "issueList",
+                        "type" : {
+                          "type" : "array",
+                          "elementType" : "string",
+                          "containsNull" : true
+                        },
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "iucnRedListCategoryCode",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "usage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "abundanceCap",
+              "type" : "integer",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "areNonTargetTaxaFullyReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "compilationSourceTypes",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "compilationTypes",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "eventDurationUnit",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "eventDurationValue",
+              "type" : "double",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "excludedDegreeOfEstablishmentScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "concept",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "lineage",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "tags",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : {
+                        "type" : "struct",
+                        "fields" : [ {
+                          "name" : "name",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "value",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        } ]
+                      },
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "excludedGrowthFormScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "excludedHabitatScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "excludedLifeStageScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "concept",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "lineage",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "tags",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : {
+                        "type" : "struct",
+                        "fields" : [ {
+                          "name" : "name",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "value",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        } ]
+                      },
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "excludedTaxonomicScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "acceptedUsage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "checklistKey",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "classification",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : {
+                        "type" : "struct",
+                        "fields" : [ {
+                          "name" : "key",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "name",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "rank",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        } ]
+                      },
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "environments",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "issues",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "issueList",
+                        "type" : {
+                          "type" : "array",
+                          "elementType" : "string",
+                          "containsNull" : true
+                        },
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "iucnRedListCategoryCode",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "usage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "geospatialScopeAreaUnit",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "geospatialScopeAreaValue",
+              "type" : "double",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "hasMaterialSamples",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "hasNonTargetOrganisms",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "hasNonTargetTaxa",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "hasVouchers",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "inventoryTypes",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isAbsenceReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isAbundanceCapReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isAbundanceReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isDegreeOfEstablishmentScopeFullyReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isGrowthFormScopeFullyReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isLeastSpecificTargetCategoryQuantityInclusive",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isLifeStageScopeFullyReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isSamplingEffortReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isTaxonomicScopeFullyReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "isVegetationCoverReported",
+              "type" : "boolean",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "materialSampleTypes",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "nonTargetTaxa",
+              "type" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "acceptedUsage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "checklistKey",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "classification",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : {
+                        "type" : "struct",
+                        "fields" : [ {
+                          "name" : "key",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "name",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "rank",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        } ]
+                      },
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "environments",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "issues",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "issueList",
+                        "type" : {
+                          "type" : "array",
+                          "elementType" : "string",
+                          "containsNull" : true
+                        },
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "iucnRedListCategoryCode",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "usage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "protocolDescriptions",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "protocolNames",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "protocolReferences",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "samplingEffortUnit",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "samplingEffortValue",
+              "type" : "double",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "samplingPerformedBy",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "siteCount",
+              "type" : "integer",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "targetDegreeOfEstablishmentScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "concept",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "lineage",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "tags",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : {
+                        "type" : "struct",
+                        "fields" : [ {
+                          "name" : "name",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "value",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        } ]
+                      },
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "targetGrowthFormScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "targetHabitatScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "targetLifeStageScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "concept",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "lineage",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "tags",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : {
+                        "type" : "struct",
+                        "fields" : [ {
+                          "name" : "name",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "value",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        } ]
+                      },
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "targetTaxonomicScope",
+              "type" : {
+                "type" : "array",
+                "elementType" : {
+                  "type" : "struct",
+                  "fields" : [ {
+                    "name" : "acceptedUsage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "checklistKey",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "classification",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : {
+                        "type" : "struct",
+                        "fields" : [ {
+                          "name" : "key",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "name",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        }, {
+                          "name" : "rank",
+                          "type" : "string",
+                          "nullable" : true,
+                          "metadata" : { }
+                        } ]
+                      },
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "environments",
+                    "type" : {
+                      "type" : "array",
+                      "elementType" : "string",
+                      "containsNull" : true
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "issues",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "issueList",
+                        "type" : {
+                          "type" : "array",
+                          "elementType" : "string",
+                          "containsNull" : true
+                        },
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "iucnRedListCategoryCode",
+                    "type" : "string",
+                    "nullable" : true,
+                    "metadata" : { }
+                  }, {
+                    "name" : "usage",
+                    "type" : {
+                      "type" : "struct",
+                      "fields" : [ {
+                        "name" : "key",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "name",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      }, {
+                        "name" : "rank",
+                        "type" : "string",
+                        "nullable" : true,
+                        "metadata" : { }
+                      } ]
+                    },
+                    "nullable" : true,
+                    "metadata" : { }
+                  } ]
+                },
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "taxonCompletenessProtocols",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "totalAreaSampledUnit",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "totalAreaSampledValue",
+              "type" : "double",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "verbatimSiteDescriptions",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "verbatimSiteNames",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "voucherInstitutions",
+              "type" : {
+                "type" : "array",
+                "elementType" : "string",
+                "containsNull" : true
+              },
+              "nullable" : true,
+              "metadata" : { }
+            } ]
+          },
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "id",
+    "type" : "string",
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "identifier",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "associatedKey",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "firstLoaded",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "internalId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "uniqueKey",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "image",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "created",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "imageItems",
+        "type" : {
+          "type" : "array",
+          "elementType" : {
+            "type" : "struct",
+            "fields" : [ {
+              "name" : "audience",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "contributor",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "created",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "creator",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "datasetId",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "description",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "format",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "identifier",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "latitude",
+              "type" : "double",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "license",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "longitude",
+              "type" : "double",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "publisher",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "references",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "rights",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "rightsHolder",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "spatial",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "title",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            } ]
+          },
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "internalId",
+    "type" : "string",
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "lineage",
+    "type" : {
+      "type" : "array",
+      "elementType" : "string",
+      "containsNull" : true
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "location",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "biome",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "continent",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "coordinatePrecision",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "coordinateUncertaintyInMeters",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "coreId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "country",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "countryCode",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "created",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "decimalLatitude",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "decimalLongitude",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "depth",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "depthAccuracy",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "distanceFromCentroidInMeters",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "elevation",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "elevationAccuracy",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "footprintWKT",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "gadm",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "level0Gid",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "level0Name",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "level1Gid",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "level1Name",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "level2Gid",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "level2Name",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "level3Gid",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "level3Name",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "gbifRegion",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "georeferencedBy",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "georeferencedDate",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "hasCoordinate",
+        "type" : "boolean",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "hasGeospatialIssue",
+        "type" : "boolean",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "higherGeography",
+        "type" : {
+          "type" : "array",
+          "elementType" : "string",
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "locality",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "maximumDepthInMeters",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "maximumDistanceAboveSurfaceInMeters",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "maximumElevationInMeters",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "minimumDepthInMeters",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "minimumDistanceAboveSurfaceInMeters",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "minimumElevationInMeters",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "parentId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "publishedByGbifRegion",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "publishingCountry",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "repatriated",
+        "type" : "boolean",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "stateProvince",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "waterBody",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "locationInherited",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "countryCode",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "decimalLatitude",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "decimalLongitude",
+        "type" : "double",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "inheritedFrom",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "stateProvince",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "measurementOrFact",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "created",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "measurementOrFactItems",
+        "type" : {
+          "type" : "array",
+          "elementType" : {
+            "type" : "struct",
+            "fields" : [ {
+              "name" : "measurementAccuracy",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "measurementDeterminedBy",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "measurementDeterminedDate",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "measurementID",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "measurementMethod",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "measurementRemarks",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "measurementType",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "measurementUnit",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "measurementValue",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            } ]
+          },
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "multimedia",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "created",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "multimediaItems",
+        "type" : {
+          "type" : "array",
+          "elementType" : {
+            "type" : "struct",
+            "fields" : [ {
+              "name" : "audience",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "contributor",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "created",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "creator",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "datasetId",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "description",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "format",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "identifier",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "license",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "publisher",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "references",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "rightsHolder",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "source",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "title",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            }, {
+              "name" : "type",
+              "type" : "string",
+              "nullable" : true,
+              "metadata" : { }
+            } ]
+          },
+          "containsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "temporal",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "coreId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "created",
+        "type" : "long",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "dateIdentified",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "datePrecision",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "day",
+        "type" : "integer",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "endDayOfYear",
+        "type" : "integer",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "eventDate",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "gte",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "interval",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          }, {
+            "name" : "lte",
+            "type" : "string",
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "issues",
+        "type" : {
+          "type" : "struct",
+          "fields" : [ {
+            "name" : "issueList",
+            "type" : {
+              "type" : "array",
+              "elementType" : "string",
+              "containsNull" : true
+            },
+            "nullable" : true,
+            "metadata" : { }
+          } ]
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "modified",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "month",
+        "type" : "integer",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "parentId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "startDayOfYear",
+        "type" : "integer",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "year",
+        "type" : "integer",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "temporalInherited",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "day",
+        "type" : "integer",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "inheritedFrom",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "month",
+        "type" : "integer",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "year",
+        "type" : "integer",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  }, {
+    "name" : "verbatim",
+    "type" : {
+      "type" : "struct",
+      "fields" : [ {
+        "name" : "coreId",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "coreRowType",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "coreTerms",
+        "type" : {
+          "type" : "map",
+          "keyType" : "string",
+          "valueType" : "string",
+          "valueContainsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "extensions",
+        "type" : {
+          "type" : "map",
+          "keyType" : "string",
+          "valueType" : {
+            "type" : "array",
+            "elementType" : {
+              "type" : "map",
+              "keyType" : "string",
+              "valueType" : "string",
+              "valueContainsNull" : true
+            },
+            "containsNull" : true
+          },
+          "valueContainsNull" : true
+        },
+        "nullable" : true,
+        "metadata" : { }
+      }, {
+        "name" : "id",
+        "type" : "string",
+        "nullable" : true,
+        "metadata" : { }
+      } ]
+    },
+    "nullable" : true,
+    "metadata" : { }
+  } ]
+}

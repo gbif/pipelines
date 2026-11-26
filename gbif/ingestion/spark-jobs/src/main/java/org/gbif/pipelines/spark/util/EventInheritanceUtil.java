@@ -3,16 +3,16 @@ package org.gbif.pipelines.spark.util;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.EventInterpretationPipeline.sparkLog;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.api.java.function.MapGroupsFunction;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
@@ -20,21 +20,20 @@ import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.spark.pojo.Event;
 import org.gbif.pipelines.spark.pojo.EventInheritedFields;
 import scala.Tuple2;
-import scala.collection.mutable.ListBuffer;
 
 /**
  * Utilities for enriching each event with inherited parent-derived event/location/temporal values
- * and outputs a new parquet dataset containing those inherited JSON fields.
+ * and outputs a new parquet dataset containing those inherited fields as typed structs.
  *
- * <p>Inherited fields include: - eventCore.eventType (inherited from parents' eventCore.eventType)
- * - location.d
+ * <p>Inherited fields include: eventCore.locationID and the parents' event types, location
+ * (countryCode, stateProvince, decimalLatitude, decimalLongitude) and temporal (year, month, day).
  */
 @Slf4j
 public class EventInheritanceUtil {
 
   /**
-   * Reads simple event serialised parquet, calculates location, eventcore and temporal fields that
-   * should be inherited from parents where available.
+   * Reads simple event parquet, calculates location, eventcore and temporal fields that should be
+   * inherited from parents where available.
    *
    * <p>This uses the pre-calculated lineage field to join events to their parents in order to
    * perform the inheritance logic.
@@ -45,215 +44,82 @@ public class EventInheritanceUtil {
    */
   public static Dataset<Event> runEventInheritance(SparkSession spark, String inputPath) {
 
-    log.info("Creating temp view Event");
+    final Encoder<Event> eventEncoder = Encoders.bean(Event.class);
 
-    sparkLog(spark, "event-interpretation", "Creating temp view Event");
+    sparkLog(spark, "event-interpretation", "Loading events for inheritance");
 
-    // load simple event
+    // load simple event, keeping only the fields inheritance needs to keep the shuffle small
     Dataset<Event> events =
-        spark.read().parquet(inputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
-
-    // Create a unique temp view name to avoid clashes in multi-threaded runs
-    final String simpleEventView = "simple_event_" + UUID.randomUUID().toString().replace('-', '_');
-    events.createOrReplaceTempView(simpleEventView);
-
-    log.info("Created temp view {} Event count: {}", simpleEventView, events.count());
+        spark
+            .read()
+            .parquet(inputPath + "/" + SIMPLE_EVENT)
+            .as(eventEncoder)
+            .map(
+                (MapFunction<Event, Event>)
+                    e ->
+                        Event.builder()
+                            .id(e.getId())
+                            .lineage(e.getLineage())
+                            .eventCore(e.getEventCore())
+                            .location(e.getLocation())
+                            .temporal(e.getTemporal())
+                            .build(),
+                eventEncoder);
 
     sparkLog(spark, "event-interpretation", "Joining to parents to get inherited info");
 
-    // Explode the lineage array to produce one row per parent id (use OUTER explode to
-    // preserve events with no parents). This avoids using array_contains in the join
-    // predicate which can cause heavy shuffles and OOMs.
-    // Build SQL referencing the unique temp view name
-    String joinSql =
-        String.format(
-            """
-        SELECT
-          e.id as id,
-          e.eventCore as eventCore,
-          e.location as location,
-          e.temporal as temporal,
-          pe.eventCore as eventCoreInfo,
-          pe.location as locationInfo,
-          pe.temporal as temporalInfo
-        FROM (
-          SELECT
-            se.id as id,
-            se.eventCore as eventCore,
-            se.location as location,
-            se.temporal as temporal,
-            parent_id
-          FROM %1$s se
-          LATERAL VIEW OUTER explode(se.lineage) as parent_id
-        ) e
-        LEFT OUTER JOIN %1$s pe
-          ON e.parent_id = pe.id
-    """,
-            simpleEventView);
+    // One row per (event, parent id). Events with no parents keep a single row with a null parent
+    // id. This avoids using array_contains in the join predicate which can cause heavy shuffles
+    // and OOMs.
+    Dataset<Tuple2<Event, String>> eventToParentId =
+        events.flatMap(
+            (FlatMapFunction<Event, Tuple2<Event, String>>)
+                e -> {
+                  List<String> lineage = e.getLineage();
+                  if (lineage == null || lineage.isEmpty()) {
+                    return Collections.singletonList(new Tuple2<Event, String>(e, null)).iterator();
+                  }
+                  List<Tuple2<Event, String>> rows = new ArrayList<>(lineage.size());
+                  for (String parentId : lineage) {
+                    rows.add(new Tuple2<>(e, parentId));
+                  }
+                  return rows.iterator();
+                },
+            Encoders.tuple(eventEncoder, Encoders.STRING()));
 
-    Dataset<Row> joinedToParents = spark.sql(joinSql);
-
-    log.info("Joined to parents: {}", joinedToParents.count());
+    Dataset<Event> parents = events.alias("parent");
+    Dataset<Tuple2<Tuple2<Event, String>, Event>> joinedToParents =
+        eventToParentId.joinWith(
+            parents, eventToParentId.col("_2").equalTo(parents.col("id")), "left_outer");
 
     sparkLog(spark, "event-interpretation", "Consolidating...");
-    ObjectMapper mapper = MapperUtil.MAPPER;
 
-    // one row per id
-    // Use groupByKey + mapGroups to stream rows per group and build parent lists incrementally
-    // This avoids collect_list over the whole shuffle which can cause OOM for large groups
-    StructType schema =
-        new StructType(
-            new StructField[] {
-              DataTypes.createStructField("id", DataTypes.StringType, true),
-              DataTypes.createStructField("eventCore", DataTypes.StringType, true),
-              DataTypes.createStructField("location", DataTypes.StringType, true),
-              DataTypes.createStructField("temporal", DataTypes.StringType, true),
-              DataTypes.createStructField(
-                  "eventCoreInfos", DataTypes.createArrayType(DataTypes.StringType), true),
-              DataTypes.createStructField(
-                  "locationInfos", DataTypes.createArrayType(DataTypes.StringType), true),
-              DataTypes.createStructField(
-                  "temporalInfos", DataTypes.createArrayType(DataTypes.StringType), true)
-            });
-
-    Dataset<Row> consolidated =
-        joinedToParents
-            .groupByKey((MapFunction<Row, String>) r -> r.getAs("id"), Encoders.STRING())
-            .mapGroups(
-                new org.apache.spark.api.java.function.MapGroupsFunction<String, Row, Row>() {
-                  @Override
-                  public Row call(String id, java.util.Iterator<Row> iter) {
-                    String eventCore = null;
-                    String location = null;
-                    String temporal = null;
-
-                    ListBuffer<String> eventCoreInfos = new ListBuffer<String>();
-                    ListBuffer<String> locationInfos = new ListBuffer<String>();
-                    ListBuffer<String> temporalInfos = new ListBuffer<String>();
-
-                    while (iter.hasNext()) {
-                      Row r = iter.next();
-
-                      if (eventCore == null) {
-                        eventCore = r.getAs("eventCore");
-                      }
-                      if (location == null) {
-                        location = r.getAs("location");
-                      }
-                      if (temporal == null) {
-                        temporal = r.getAs("temporal");
-                      }
-
-                      String eci = r.getAs("eventCoreInfo");
-                      if (eci != null) {
-                        eventCoreInfos.$plus$eq(eci);
-                      }
-                      String li = r.getAs("locationInfo");
-                      if (li != null) {
-                        locationInfos.$plus$eq(li);
-                      }
-                      String ti = r.getAs("temporalInfo");
-                      if (ti != null) {
-                        temporalInfos.$plus$eq(ti);
-                      }
-                    }
-
-                    return RowFactory.create(
-                        id,
-                        eventCore,
-                        location,
-                        temporal,
-                        eventCoreInfos.toSeq(),
-                        locationInfos.toSeq(),
-                        temporalInfos.toSeq());
-                  }
-                },
-                Encoders.row(schema));
-
-    log.info("Events consolidated: {}", consolidated.count());
-
-    sparkLog(spark, "event-interpretation", "eventsWithInheritedInfo...");
+    // One row per id. Use groupByKey + mapGroups to stream rows per group and build parent lists
+    // incrementally. This avoids collect_list over the whole shuffle which can cause OOM for large
+    // groups.
     Dataset<EventInheritedFields> eventsWithInheritedInfo =
-        consolidated.map(
-            (MapFunction<Row, EventInheritedFields>)
-                row -> {
-                  String coreId = row.getAs(0);
-                  EventCoreRecord eventCore =
-                      mapper.readValue((String) row.getAs(1), EventCoreRecord.class);
-                  LocationRecord location =
-                      mapper.readValue((String) row.getAs(2), LocationRecord.class);
-                  TemporalRecord temporal =
-                      mapper.readValue((String) row.getAs(3), TemporalRecord.class);
-
-                  List<EventCoreRecord> eventCoreFromParents =
-                      (row.getList(4))
-                          .stream()
-                              .map(
-                                  s -> {
-                                    try {
-                                      return mapper.readValue((String) s, EventCoreRecord.class);
-                                    } catch (Exception e) {
-                                      throw new RuntimeException(e);
-                                    }
-                                  })
-                              .toList();
-
-                  List<LocationRecord> locationsFromParents =
-                      (row.getList(5))
-                          .stream()
-                              .map(
-                                  s -> {
-                                    try {
-                                      return mapper.readValue((String) s, LocationRecord.class);
-                                    } catch (Exception e) {
-                                      throw new RuntimeException(e);
-                                    }
-                                  })
-                              .toList();
-
-                  List<TemporalRecord> temporalFromParents =
-                      (row.getList(6))
-                          .stream()
-                              .map(
-                                  s -> {
-                                    try {
-                                      return mapper.readValue((String) s, TemporalRecord.class);
-                                    } catch (Exception e) {
-                                      throw new RuntimeException(e);
-                                    }
-                                  })
-                              .toList();
-
-                  EventInheritedRecord eventInheritedFields =
-                      inheritEventFrom(eventCore, eventCoreFromParents);
-                  LocationInheritedRecord locationInheritedRecord =
-                      inheritLocationFrom(location, locationsFromParents);
-                  TemporalInheritedRecord temporalInheritedRecord =
-                      inheritTemporalFrom(temporal, temporalFromParents);
-
-                  return EventInheritedFields.builder()
-                      .id(coreId)
-                      .eventInherited(mapper.writeValueAsString(eventInheritedFields))
-                      .locationInherited(mapper.writeValueAsString(locationInheritedRecord))
-                      .temporalInherited(mapper.writeValueAsString(temporalInheritedRecord))
-                      .build();
-                },
-            Encoders.bean(EventInheritedFields.class));
+        joinedToParents
+            .groupByKey(
+                (MapFunction<Tuple2<Tuple2<Event, String>, Event>, String>)
+                    t -> t._1()._1().getId(),
+                Encoders.STRING())
+            .mapGroups(
+                (MapGroupsFunction<
+                        String, Tuple2<Tuple2<Event, String>, Event>, EventInheritedFields>)
+                    (id, iter) -> consolidate(id, iter),
+                Encoders.bean(EventInheritedFields.class));
 
     eventsWithInheritedInfo
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(inputPath + "/" + EVENT_INHERITED_FIELDS);
 
-    // Drop the temp view to release cached resources and file metadata
-    spark.catalog().dropTempView(simpleEventView);
-
     // Clear the catalog cache to invalidate any stale file metadata
     spark.catalog().clearCache();
 
     // Reload events from disk
     Dataset<Event> freshEvents =
-        spark.read().parquet(inputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+        spark.read().parquet(inputPath + "/" + SIMPLE_EVENT).as(eventEncoder);
 
     // Reload inherited fields from disk
     Dataset<EventInheritedFields> freshInheritedInfo =
@@ -281,7 +147,7 @@ public class EventInheritanceUtil {
                   }
                   return event;
                 },
-            Encoders.bean(Event.class))
+            eventEncoder)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(inputPath + "/" + SIMPLE_EVENT_WITH_INHERITED);
@@ -292,10 +158,42 @@ public class EventInheritanceUtil {
             + "/"
             + SIMPLE_EVENT_WITH_INHERITED);
 
-    return spark
-        .read()
-        .parquet(inputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
-        .as(Encoders.bean(Event.class));
+    return spark.read().parquet(inputPath + "/" + SIMPLE_EVENT_WITH_INHERITED).as(eventEncoder);
+  }
+
+  /** Builds the inherited fields for one event from the event and all its parents. */
+  private static EventInheritedFields consolidate(
+      String id, Iterator<Tuple2<Tuple2<Event, String>, Event>> iter) {
+    Event child = null;
+    List<EventCoreRecord> eventCoreFromParents = new ArrayList<>();
+    List<LocationRecord> locationsFromParents = new ArrayList<>();
+    List<TemporalRecord> temporalFromParents = new ArrayList<>();
+
+    while (iter.hasNext()) {
+      Tuple2<Tuple2<Event, String>, Event> row = iter.next();
+      if (child == null) {
+        child = row._1()._1();
+      }
+      Event parent = row._2();
+      if (parent != null) {
+        if (parent.getEventCore() != null) {
+          eventCoreFromParents.add(parent.getEventCore());
+        }
+        if (parent.getLocation() != null) {
+          locationsFromParents.add(parent.getLocation());
+        }
+        if (parent.getTemporal() != null) {
+          temporalFromParents.add(parent.getTemporal());
+        }
+      }
+    }
+
+    return EventInheritedFields.builder()
+        .id(id)
+        .eventInherited(inheritEventFrom(child.getEventCore(), eventCoreFromParents))
+        .locationInherited(inheritLocationFrom(child.getLocation(), locationsFromParents))
+        .temporalInherited(inheritTemporalFrom(child.getTemporal(), temporalFromParents))
+        .build();
   }
 
   private static EventInheritedRecord inheritEventFrom(

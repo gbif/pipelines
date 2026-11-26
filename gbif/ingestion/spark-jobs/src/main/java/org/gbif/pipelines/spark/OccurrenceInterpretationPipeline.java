@@ -26,7 +26,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +54,8 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.pojo.OccurrenceInterpretType;
-import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.schema.ParquetSchemas;
+import org.gbif.pipelines.spark.util.SimpleRecordLoader;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.*;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
@@ -75,8 +75,6 @@ import scala.Tuple2;
  */
 @Slf4j
 public class OccurrenceInterpretationPipeline {
-
-  static final ObjectMapper MAPPER = MapperUtil.MAPPER_NON_EMPTY;
 
   public static final String METRICS_FILENAME = "verbatim-to-occurrence.yml";
 
@@ -253,10 +251,8 @@ public class OccurrenceInterpretationPipeline {
 
   /** Helper to load the simple interpreted occurrences from disk. */
   private static Dataset<Occurrence> loadSimpleInterpreted(SparkSession spark, String outputPath) {
-    return spark
-        .read()
-        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-        .as(Encoders.bean(Occurrence.class));
+    // may be an attempt written before the typed schema
+    return SimpleRecordLoader.loadOccurrences(spark, outputPath + "/" + SIMPLE_OCCURRENCE);
   }
 
   private static void generateOutputs(
@@ -467,8 +463,8 @@ public class OccurrenceInterpretationPipeline {
                           .id(er.getId())
                           .coreId(er.getCoreId())
                           .internalId(ir.getInternalId())
-                          .verbatim(MAPPER.writeValueAsString(er))
-                          .identifier(MAPPER.writeValueAsString(ir))
+                          .verbatim(er)
+                          .identifier(ir)
                           .build();
                     },
                 Encoders.bean(Occurrence.class))
@@ -538,10 +534,8 @@ public class OccurrenceInterpretationPipeline {
         simpleRecords.map(
             (MapFunction<Occurrence, Occurrence>)
                 simpleRecord -> {
-                  ExtendedRecord er =
-                      MAPPER.readValue(simpleRecord.getVerbatim(), ExtendedRecord.class);
-                  IdentifierRecord idr =
-                      MAPPER.readValue(simpleRecord.getIdentifier(), IdentifierRecord.class);
+                  ExtendedRecord er = simpleRecord.getVerbatim();
+                  IdentifierRecord idr = simpleRecord.getIdentifier();
 
                   // Apply all transforms
                   ExtendedRecord verbatim = defaultValuesTransform.convert(er);
@@ -563,15 +557,15 @@ public class OccurrenceInterpretationPipeline {
                       .id(simpleRecord.getId())
                       .coreId(simpleRecord.getCoreId())
                       .identifier(simpleRecord.getIdentifier())
-                      .verbatim(MAPPER.writeValueAsString(verbatim))
-                      .basic(MAPPER.writeValueAsString(br))
-                      .taxon(MAPPER.writeValueAsString(tr))
-                      .location(MAPPER.writeValueAsString(lr))
-                      .grscicoll(MAPPER.writeValueAsString(gr))
-                      .temporal(MAPPER.writeValueAsString(ter))
-                      .dnaDerivedData(MAPPER.writeValueAsString(dr))
-                      .multimedia(MAPPER.writeValueAsString(mmr))
-                      .clustering(MAPPER.writeValueAsString(cr))
+                      .verbatim(verbatim)
+                      .basic(br)
+                      .taxon(tr)
+                      .location(lr)
+                      .grscicoll(gr)
+                      .temporal(ter)
+                      .dnaDerivedData(dr)
+                      .multimedia(mmr)
+                      .clustering(cr)
                       .build();
                 },
             Encoders.bean(Occurrence.class));
@@ -584,6 +578,8 @@ public class OccurrenceInterpretationPipeline {
 
     // write simple interpreted records to disk
     interpreted.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + SIMPLE_OCCURRENCE);
+    ParquetSchemas.writeDescriptor(
+        spark, outputPath + "/" + SIMPLE_OCCURRENCE, ParquetSchemas.Published.OCCURRENCE_SCHEMA);
 
     return spark
         .read()
@@ -778,21 +774,16 @@ public class OccurrenceInterpretationPipeline {
                   OccurrenceJsonConverter c =
                       OccurrenceJsonConverter.builder()
                           .metadata(metadataRecord)
-                          .verbatim(MAPPER.readValue(record.getVerbatim(), ExtendedRecord.class))
-                          .basic(MAPPER.readValue(record.getBasic(), BasicRecord.class))
-                          .location(MAPPER.readValue(record.getLocation(), LocationRecord.class))
-                          .temporal(MAPPER.readValue(record.getTemporal(), TemporalRecord.class))
-                          .multiTaxon(MAPPER.readValue(record.getTaxon(), MultiTaxonRecord.class))
-                          .grscicoll(MAPPER.readValue(record.getGrscicoll(), GrscicollRecord.class))
-                          .identifier(
-                              MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
-                          .multimedia(
-                              MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
-                          .dnaDerivedData(
-                              MAPPER.readValue(
-                                  record.getDnaDerivedData(), DnaDerivedDataRecord.class))
-                          .clustering(
-                              MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
+                          .verbatim(record.getVerbatim())
+                          .basic(record.getBasic())
+                          .location(record.getLocation())
+                          .temporal(record.getTemporal())
+                          .multiTaxon(record.getTaxon())
+                          .grscicoll(record.getGrscicoll())
+                          .identifier(record.getIdentifier())
+                          .multimedia(record.getMultimedia())
+                          .dnaDerivedData(record.getDnaDerivedData())
+                          .clustering(record.getClustering())
                           .build();
 
                   return c.convert();
@@ -843,26 +834,16 @@ public class OccurrenceInterpretationPipeline {
                   OccurrenceHdfsRecordConverter c =
                       OccurrenceHdfsRecordConverter.builder()
                           .metadataRecord(metadataRecord)
-                          .extendedRecord(
-                              MAPPER.readValue(record.getVerbatim(), ExtendedRecord.class))
-                          .basicRecord(MAPPER.readValue(record.getBasic(), BasicRecord.class))
-                          .locationRecord(
-                              MAPPER.readValue(record.getLocation(), LocationRecord.class))
-                          .temporalRecord(
-                              MAPPER.readValue(record.getTemporal(), TemporalRecord.class))
-                          .multiTaxonRecord(
-                              MAPPER.readValue(record.getTaxon(), MultiTaxonRecord.class))
-                          .grscicollRecord(
-                              MAPPER.readValue(record.getGrscicoll(), GrscicollRecord.class))
-                          .identifierRecord(
-                              MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
-                          .multimediaRecord(
-                              MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
-                          .dnaDerivedDataRecord(
-                              MAPPER.readValue(
-                                  record.getDnaDerivedData(), DnaDerivedDataRecord.class))
-                          .clusteringRecord(
-                              MAPPER.readValue(record.getClustering(), ClusteringRecord.class))
+                          .extendedRecord(record.getVerbatim())
+                          .basicRecord(record.getBasic())
+                          .locationRecord(record.getLocation())
+                          .temporalRecord(record.getTemporal())
+                          .multiTaxonRecord(record.getTaxon())
+                          .grscicollRecord(record.getGrscicoll())
+                          .identifierRecord(record.getIdentifier())
+                          .multimediaRecord(record.getMultimedia())
+                          .dnaDerivedDataRecord(record.getDnaDerivedData())
+                          .clusteringRecord(record.getClustering())
                           .build();
 
                   return c.convert();

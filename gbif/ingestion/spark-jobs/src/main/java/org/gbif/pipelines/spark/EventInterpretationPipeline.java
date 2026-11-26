@@ -13,7 +13,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,16 +41,12 @@ import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
-import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
-import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
-import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.spark.pojo.Event;
 import org.gbif.pipelines.spark.pojo.EventLineage;
 import org.gbif.pipelines.spark.util.DerivedMetadataUtil;
 import org.gbif.pipelines.spark.util.EventInheritanceUtil;
 import org.gbif.pipelines.spark.util.LineageUtil;
-import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.*;
 import scala.Tuple2;
@@ -59,8 +54,6 @@ import scala.Tuple2;
 /** Event interpretation pipeline. */
 @Slf4j
 public class EventInterpretationPipeline {
-
-  static final ObjectMapper MAPPER = MapperUtil.MAPPER_NON_EMPTY;
 
   public static final String METRICS_FILENAME = "verbatim-to-event.yml";
 
@@ -236,39 +229,8 @@ public class EventInterpretationPipeline {
     return simpleRecords.map(
         (MapFunction<Event, ParentJsonRecord>)
             r -> {
-              String eventCoreInherited = r.getEventInherited();
-              String locationInherited = r.getLocationInherited();
-              String temporalInherited = r.getTemporalInherited();
-              EventInheritedRecord eventInheritedRecord = null;
-              LocationInheritedRecord locationInheritedRecord = null;
-              TemporalInheritedRecord temporalInheritedRecord = null;
-              DerivedMetadataRecord derivedMetadataRecord = null;
-
-              if (eventCoreInherited != null) {
-                eventInheritedRecord =
-                    MAPPER.readValue(
-                        r.getEventInherited(),
-                        org.gbif.pipelines.io.avro.json.EventInheritedRecord.class);
-              }
-              if (locationInherited != null) {
-                locationInheritedRecord =
-                    MAPPER.readValue(
-                        r.getLocationInherited(),
-                        org.gbif.pipelines.io.avro.json.LocationInheritedRecord.class);
-              }
-              if (temporalInherited != null) {
-                temporalInheritedRecord =
-                    MAPPER.readValue(
-                        r.getTemporalInherited(),
-                        org.gbif.pipelines.io.avro.json.TemporalInheritedRecord.class);
-              }
-
-              if (r.getDerivedMetadata() != null && !r.getDerivedMetadata().isEmpty()) {
-                derivedMetadataRecord =
-                    MAPPER.readValue(
-                        r.getDerivedMetadata(),
-                        org.gbif.pipelines.io.avro.json.DerivedMetadataRecord.class);
-              } else {
+              DerivedMetadataRecord derivedMetadataRecord = r.getDerivedMetadata();
+              if (derivedMetadataRecord == null) {
                 derivedMetadataRecord = new DerivedMetadataRecord();
                 derivedMetadataRecord.setId(r.getId());
               }
@@ -276,16 +238,16 @@ public class EventInterpretationPipeline {
               ParentJsonConverter c =
                   ParentJsonConverter.builder()
                       .metadata(metadata)
-                      .eventCore(MAPPER.readValue(r.getEventCore(), EventCoreRecord.class))
-                      .identifier(MAPPER.readValue(r.getIdentifier(), IdentifierRecord.class))
-                      .verbatim(MAPPER.readValue(r.getVerbatim(), ExtendedRecord.class))
-                      .temporal(MAPPER.readValue(r.getTemporal(), TemporalRecord.class))
-                      .location(MAPPER.readValue(r.getLocation(), LocationRecord.class))
-                      .humboldtRecord(MAPPER.readValue(r.getHumboldt(), HumboldtRecord.class))
-                      .multimedia(MAPPER.readValue(r.getMultimedia(), MultimediaRecord.class))
-                      .eventInheritedRecord(eventInheritedRecord)
-                      .locationInheritedRecord(locationInheritedRecord)
-                      .temporalInheritedRecord(temporalInheritedRecord)
+                      .eventCore(r.getEventCore())
+                      .identifier(r.getIdentifier())
+                      .verbatim(r.getVerbatim())
+                      .temporal(r.getTemporal())
+                      .location(r.getLocation())
+                      .humboldtRecord(r.getHumboldt())
+                      .multimedia(r.getMultimedia())
+                      .eventInheritedRecord(r.getEventInherited())
+                      .locationInheritedRecord(r.getLocationInherited())
+                      .temporalInheritedRecord(r.getTemporalInherited())
                       .derivedMetadata(derivedMetadataRecord)
                       .build();
               return c.convertToParent();
@@ -301,16 +263,13 @@ public class EventInterpretationPipeline {
               EventHdfsRecordConverter c =
                   EventHdfsRecordConverter.builder()
                       .metadataRecord(metadata)
-                      .extendedRecord(MAPPER.readValue(record.getVerbatim(), ExtendedRecord.class))
-                      .locationRecord(MAPPER.readValue(record.getLocation(), LocationRecord.class))
-                      .temporalRecord(MAPPER.readValue(record.getTemporal(), TemporalRecord.class))
-                      .identifierRecord(
-                          MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
-                      .multimediaRecord(
-                          MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
-                      .eventCoreRecord(
-                          MAPPER.readValue(record.getEventCore(), EventCoreRecord.class))
-                      .humboldtRecord(MAPPER.readValue(record.getHumboldt(), HumboldtRecord.class))
+                      .extendedRecord(record.getVerbatim())
+                      .locationRecord(record.getLocation())
+                      .temporalRecord(record.getTemporal())
+                      .identifierRecord(record.getIdentifier())
+                      .multimediaRecord(record.getMultimedia())
+                      .eventCoreRecord(record.getEventCore())
+                      .humboldtRecord(record.getHumboldt())
                       .build();
 
               return c.convert();
@@ -401,14 +360,14 @@ public class EventInterpretationPipeline {
                   return Event.builder()
                       .id(verbatim.getId())
                       .lineage(lineageIds)
-                      .identifier(MAPPER.writeValueAsString(idr))
-                      .verbatim(MAPPER.writeValueAsString(verbatim))
-                      .location(MAPPER.writeValueAsString(lr))
-                      .temporal(MAPPER.writeValueAsString(ter))
-                      .multimedia(MAPPER.writeValueAsString(mmr))
-                      .measurementOrFact(MAPPER.writeValueAsString(mfr))
-                      .eventCore(MAPPER.writeValueAsString(ecr))
-                      .humboldt(MAPPER.writeValueAsString(hr))
+                      .identifier(idr)
+                      .verbatim(verbatim)
+                      .location(lr)
+                      .temporal(ter)
+                      .multimedia(mmr)
+                      .measurementOrFact(mfr)
+                      .eventCore(ecr)
+                      .humboldt(hr)
                       .build();
                 },
             Encoders.bean(Event.class));

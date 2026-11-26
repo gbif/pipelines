@@ -21,7 +21,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
@@ -33,15 +32,14 @@ import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.spark.pojo.Occurrence;
-import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.schema.ParquetSchemas;
+import org.gbif.pipelines.spark.util.SimpleRecordLoader;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.MultiTaxonomyTransform;
 
 /** Main class for the Spark pipeline that just reruns taxonomy interpretation. */
 @Slf4j
 public class TaxonomyRefreshPipeline {
-
-  static final ObjectMapper MAPPER = MapperUtil.MAPPER;
 
   public static final String METRICS_FILENAME = "taxonomy.yml";
 
@@ -135,10 +133,8 @@ public class TaxonomyRefreshPipeline {
   }
 
   private static Dataset<Occurrence> loadSimpleRecords(SparkSession spark, String outputPath) {
-    return spark
-        .read()
-        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-        .as(Encoders.bean(Occurrence.class));
+    // may be an attempt written before the typed schema
+    return SimpleRecordLoader.loadOccurrences(spark, outputPath + "/" + SIMPLE_OCCURRENCE);
   }
 
   /**
@@ -162,8 +158,7 @@ public class TaxonomyRefreshPipeline {
         simpleRecords.map(
             (MapFunction<Occurrence, Occurrence>)
                 simpleRecord -> {
-                  ExtendedRecord er =
-                      MAPPER.readValue(simpleRecord.getVerbatim(), ExtendedRecord.class);
+                  ExtendedRecord er = simpleRecord.getVerbatim();
 
                   // Apply taxonomy transforms
                   MultiTaxonRecord mtr = taxonomyTransform.convert(er);
@@ -174,7 +169,7 @@ public class TaxonomyRefreshPipeline {
                       .identifier(simpleRecord.getIdentifier())
                       .verbatim(simpleRecord.getVerbatim())
                       .basic(simpleRecord.getBasic())
-                      .taxon(MAPPER.writeValueAsString(mtr))
+                      .taxon(mtr)
                       .location(simpleRecord.getLocation())
                       .grscicoll(simpleRecord.getGrscicoll())
                       .temporal(simpleRecord.getTemporal())
@@ -190,6 +185,10 @@ public class TaxonomyRefreshPipeline {
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP);
+    ParquetSchemas.writeDescriptor(
+        spark,
+        outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP,
+        ParquetSchemas.Published.OCCURRENCE_SCHEMA);
 
     // re-load
     return spark

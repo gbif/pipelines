@@ -11,6 +11,7 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.core.config.model.DerivedMetadataConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.RankedNameWithAuthorship;
@@ -29,17 +30,14 @@ public class CalculateDerivedMetadataTest {
 
     SparkSession spark = SparkTestSession.create();
 
-    ObjectMapper mapper = new ObjectMapper();
-
     List<Occurrence> occurrences =
         List.of(
             Occurrence.builder()
                 .coreId("event-id-1")
-                .verbatim("{}")
+                .verbatim(new ExtendedRecord())
                 .id("1")
                 .taxon(
                     multiTaxon(
-                        mapper,
                         taxon(
                             "the-dataset-key-uuid",
                             usage("taxon-key-3", "SPECIES", "Panthera leo", "Linnaeus, 1758"),
@@ -55,11 +53,10 @@ public class CalculateDerivedMetadataTest {
                 .build(),
             Occurrence.builder()
                 .coreId("event-id-1")
-                .verbatim("{}")
+                .verbatim(new ExtendedRecord())
                 .id("2")
                 .taxon(
                     multiTaxon(
-                        mapper,
                         taxon(
                             "the-dataset-key-uuid",
                             usage("taxon-key-4", "SPECIES", "Panthera tigris", "Linnaeus, 1758"),
@@ -75,11 +72,10 @@ public class CalculateDerivedMetadataTest {
                 .build(),
             Occurrence.builder()
                 .coreId("event-id-1")
-                .verbatim("{}")
+                .verbatim(new ExtendedRecord())
                 .id("3")
                 .taxon(
                     multiTaxon(
-                        mapper,
                         taxon(
                             "the-dataset-key-uuid",
                             usage("taxon-key-4", "SPECIES", "Panthera tigris", "Linnaeus, 1758"),
@@ -145,9 +141,7 @@ public class CalculateDerivedMetadataTest {
         .build();
   }
 
-  private static String multiTaxon(ObjectMapper mapper, TaxonRecord... records) throws Exception {
-
-    return mapper.writeValueAsString(
-        MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(records)).build());
+  private static MultiTaxonRecord multiTaxon(TaxonRecord... records) {
+    return MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(records)).build();
   }
 }

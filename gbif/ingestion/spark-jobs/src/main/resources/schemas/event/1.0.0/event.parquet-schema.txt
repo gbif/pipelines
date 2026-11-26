@@ -1,0 +1,857 @@
+message event {
+  optional group audubon {
+    optional group audubonItems (LIST) {
+      repeated group list {
+        optional group element {
+          optional binary accessUri (STRING);
+          optional binary associatedObservationReference (STRING);
+          optional binary associatedSpecimenReference (STRING);
+          optional binary attributionLinkUrl (STRING);
+          optional binary attributionLogoUrl (STRING);
+          optional binary available (STRING);
+          optional binary caption (STRING);
+          optional binary captureDevice (STRING);
+          optional binary city (STRING);
+          optional binary commenter (STRING);
+          optional binary commenterLiteral (STRING);
+          optional binary comments (STRING);
+          optional binary countryCode (STRING);
+          optional binary countryName (STRING);
+          optional binary createDate (STRING);
+          optional binary creator (STRING);
+          optional binary creatorUri (STRING);
+          optional binary credit (STRING);
+          optional binary cvTerm (STRING);
+          optional binary dateIdentified (STRING);
+          optional binary derivedFrom (STRING);
+          optional binary description (STRING);
+          optional binary digitizationDate (STRING);
+          optional binary format (STRING);
+          optional binary formatUri (STRING);
+          optional binary fundingAttribution (STRING);
+          optional binary furtherInformationUrl (STRING);
+          optional binary hasServiceAccessPoint (STRING);
+          optional binary hashFunction (STRING);
+          optional binary hashValue (STRING);
+          optional binary idOfContainingCollection (STRING);
+          optional binary identificationQualifier (STRING);
+          optional binary identifiedBy (STRING);
+          optional binary identifier (STRING);
+          optional binary language (STRING);
+          optional binary languageUri (STRING);
+          optional binary licenseLogoUrl (STRING);
+          optional binary licensingException (STRING);
+          optional binary lifeStage (STRING);
+          optional binary locationCreated (STRING);
+          optional binary locationShown (STRING);
+          optional binary metadataCreator (STRING);
+          optional binary metadataCreatorLiteral (STRING);
+          optional binary metadataDate (STRING);
+          optional binary metadataLanguage (STRING);
+          optional binary metadataLanguageLiteral (STRING);
+          optional binary metadataProvider (STRING);
+          optional binary metadataProviderLiteral (STRING);
+          optional binary modified (STRING);
+          optional binary nameAccordingTo (STRING);
+          optional binary otherScientificName (STRING);
+          optional binary owner (STRING);
+          optional binary physicalSetting (STRING);
+          optional binary pixelXDimension (STRING);
+          optional binary pixelYDimension (STRING);
+          optional binary preparations (STRING);
+          optional binary provider (STRING);
+          optional binary providerId (STRING);
+          optional binary providerLiteral (STRING);
+          optional binary providerManagedId (STRING);
+          optional binary provinceState (STRING);
+          optional binary rating (STRING);
+          optional binary relatedResourceId (STRING);
+          optional binary resourceCreationTechnique (STRING);
+          optional binary reviewer (STRING);
+          optional binary reviewerComments (STRING);
+          optional binary reviewerLiteral (STRING);
+          optional binary rights (STRING);
+          optional binary rightsUri (STRING);
+          optional binary scientificName (STRING);
+          optional binary scientificNameId (STRING);
+          optional binary serviceExpectation (STRING);
+          optional binary sex (STRING);
+          optional binary source (STRING);
+          optional binary sourceUri (STRING);
+          optional binary subjectCategoryVocabulary (STRING);
+          optional binary subjectOrientation (STRING);
+          optional binary subjectPart (STRING);
+          optional binary sublocation (STRING);
+          optional binary subtype (STRING);
+          optional binary subtypeLiteral (STRING);
+          optional binary tag (STRING);
+          optional binary taxonCount (STRING);
+          optional binary taxonCoverage (STRING);
+          optional binary temporal (STRING);
+          optional binary timeOfDay (STRING);
+          optional binary title (STRING);
+          optional binary type (STRING);
+          optional binary typeUri (STRING);
+          optional binary usageTerms (STRING);
+          optional binary variant (STRING);
+          optional binary variantDescription (STRING);
+          optional binary variantLiteral (STRING);
+          optional binary vernacularName (STRING);
+          optional binary webStatement (STRING);
+          optional binary worldRegion (STRING);
+        }
+      }
+    }
+    optional int64 created;
+    optional binary id (STRING);
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+  }
+  optional group derivedMetadata {
+    optional binary id (STRING);
+    optional group taxonomicCoverage {
+      optional group classifications (MAP) {
+        repeated group key_value {
+          required binary key (STRING);
+          optional group value (LIST) {
+            repeated group list {
+              optional group element {
+                optional group acceptedUsage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+                optional group environments (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group issues (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional binary iucnRedListCategoryCode (STRING);
+                optional binary status (STRING);
+                optional group taxonKeys (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group usage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+              }
+            }
+          }
+        }
+      }
+      optional group taxonIDs (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+    optional group temporalCoverage {
+      optional binary gte (STRING);
+      optional binary lte (STRING);
+    }
+    optional binary wktConvexHull (STRING);
+  }
+  optional group eventCore {
+    optional int64 created;
+    optional group datasetID (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional group datasetName (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional group eventType {
+      optional binary concept (STRING);
+      optional group lineage (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+      optional group tags (LIST) {
+        repeated group list {
+          optional group element {
+            optional binary name (STRING);
+            optional binary value (STRING);
+          }
+        }
+      }
+    }
+    optional group fundingAttribution (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional group fundingAttributionID (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional binary id (STRING);
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+    optional binary license (STRING);
+    optional binary locationID (STRING);
+    optional binary parentEventID (STRING);
+    optional group parentsLineage (LIST) {
+      repeated group list {
+        optional group element {
+          optional binary eventType (STRING);
+          optional binary id (STRING);
+          optional int32 order;
+          optional binary verbatimEventType (STRING);
+        }
+      }
+    }
+    optional group projectID (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional group projectTitle (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional binary references (STRING);
+    optional binary sampleSizeUnit (STRING);
+    optional double sampleSizeValue;
+    optional group samplingProtocol (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+  }
+  optional group eventInherited {
+    optional group eventType (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional binary id (STRING);
+    optional binary inheritedFrom (STRING);
+    optional binary locationID (STRING);
+  }
+  optional group humboldt {
+    optional int64 created;
+    optional group humboldtItems (LIST) {
+      repeated group list {
+        optional group element {
+          optional group absentTaxa (LIST) {
+            repeated group list {
+              optional group element {
+                optional group acceptedUsage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+                optional binary checklistKey (STRING);
+                optional group classification (LIST) {
+                  repeated group list {
+                    optional group element {
+                      optional binary key (STRING);
+                      optional binary name (STRING);
+                      optional binary rank (STRING);
+                    }
+                  }
+                }
+                optional group environments (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group issues {
+                  optional group issueList (LIST) {
+                    repeated group list {
+                      optional binary element (STRING);
+                    }
+                  }
+                }
+                optional binary iucnRedListCategoryCode (STRING);
+                optional group usage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+              }
+            }
+          }
+          optional int32 abundanceCap;
+          optional boolean areNonTargetTaxaFullyReported;
+          optional group compilationSourceTypes (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group compilationTypes (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional binary eventDurationUnit (STRING);
+          optional double eventDurationValue;
+          optional group excludedDegreeOfEstablishmentScope (LIST) {
+            repeated group list {
+              optional group element {
+                optional binary concept (STRING);
+                optional group lineage (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group tags (LIST) {
+                  repeated group list {
+                    optional group element {
+                      optional binary name (STRING);
+                      optional binary value (STRING);
+                    }
+                  }
+                }
+              }
+            }
+          }
+          optional group excludedGrowthFormScope (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group excludedHabitatScope (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group excludedLifeStageScope (LIST) {
+            repeated group list {
+              optional group element {
+                optional binary concept (STRING);
+                optional group lineage (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group tags (LIST) {
+                  repeated group list {
+                    optional group element {
+                      optional binary name (STRING);
+                      optional binary value (STRING);
+                    }
+                  }
+                }
+              }
+            }
+          }
+          optional group excludedTaxonomicScope (LIST) {
+            repeated group list {
+              optional group element {
+                optional group acceptedUsage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+                optional binary checklistKey (STRING);
+                optional group classification (LIST) {
+                  repeated group list {
+                    optional group element {
+                      optional binary key (STRING);
+                      optional binary name (STRING);
+                      optional binary rank (STRING);
+                    }
+                  }
+                }
+                optional group environments (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group issues {
+                  optional group issueList (LIST) {
+                    repeated group list {
+                      optional binary element (STRING);
+                    }
+                  }
+                }
+                optional binary iucnRedListCategoryCode (STRING);
+                optional group usage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+              }
+            }
+          }
+          optional binary geospatialScopeAreaUnit (STRING);
+          optional double geospatialScopeAreaValue;
+          optional boolean hasMaterialSamples;
+          optional boolean hasNonTargetOrganisms;
+          optional boolean hasNonTargetTaxa;
+          optional boolean hasVouchers;
+          optional group inventoryTypes (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional boolean isAbsenceReported;
+          optional boolean isAbundanceCapReported;
+          optional boolean isAbundanceReported;
+          optional boolean isDegreeOfEstablishmentScopeFullyReported;
+          optional boolean isGrowthFormScopeFullyReported;
+          optional boolean isLeastSpecificTargetCategoryQuantityInclusive;
+          optional boolean isLifeStageScopeFullyReported;
+          optional boolean isSamplingEffortReported;
+          optional boolean isTaxonomicScopeFullyReported;
+          optional boolean isVegetationCoverReported;
+          optional group materialSampleTypes (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group nonTargetTaxa (LIST) {
+            repeated group list {
+              optional group element {
+                optional group acceptedUsage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+                optional binary checklistKey (STRING);
+                optional group classification (LIST) {
+                  repeated group list {
+                    optional group element {
+                      optional binary key (STRING);
+                      optional binary name (STRING);
+                      optional binary rank (STRING);
+                    }
+                  }
+                }
+                optional group environments (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group issues {
+                  optional group issueList (LIST) {
+                    repeated group list {
+                      optional binary element (STRING);
+                    }
+                  }
+                }
+                optional binary iucnRedListCategoryCode (STRING);
+                optional group usage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+              }
+            }
+          }
+          optional group protocolDescriptions (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group protocolNames (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group protocolReferences (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional binary samplingEffortUnit (STRING);
+          optional double samplingEffortValue;
+          optional group samplingPerformedBy (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional int32 siteCount;
+          optional group targetDegreeOfEstablishmentScope (LIST) {
+            repeated group list {
+              optional group element {
+                optional binary concept (STRING);
+                optional group lineage (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group tags (LIST) {
+                  repeated group list {
+                    optional group element {
+                      optional binary name (STRING);
+                      optional binary value (STRING);
+                    }
+                  }
+                }
+              }
+            }
+          }
+          optional group targetGrowthFormScope (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group targetHabitatScope (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group targetLifeStageScope (LIST) {
+            repeated group list {
+              optional group element {
+                optional binary concept (STRING);
+                optional group lineage (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group tags (LIST) {
+                  repeated group list {
+                    optional group element {
+                      optional binary name (STRING);
+                      optional binary value (STRING);
+                    }
+                  }
+                }
+              }
+            }
+          }
+          optional group targetTaxonomicScope (LIST) {
+            repeated group list {
+              optional group element {
+                optional group acceptedUsage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+                optional binary checklistKey (STRING);
+                optional group classification (LIST) {
+                  repeated group list {
+                    optional group element {
+                      optional binary key (STRING);
+                      optional binary name (STRING);
+                      optional binary rank (STRING);
+                    }
+                  }
+                }
+                optional group environments (LIST) {
+                  repeated group list {
+                    optional binary element (STRING);
+                  }
+                }
+                optional group issues {
+                  optional group issueList (LIST) {
+                    repeated group list {
+                      optional binary element (STRING);
+                    }
+                  }
+                }
+                optional binary iucnRedListCategoryCode (STRING);
+                optional group usage {
+                  optional binary key (STRING);
+                  optional binary name (STRING);
+                  optional binary rank (STRING);
+                }
+              }
+            }
+          }
+          optional group taxonCompletenessProtocols (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional binary totalAreaSampledUnit (STRING);
+          optional double totalAreaSampledValue;
+          optional group verbatimSiteDescriptions (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group verbatimSiteNames (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+          optional group voucherInstitutions (LIST) {
+            repeated group list {
+              optional binary element (STRING);
+            }
+          }
+        }
+      }
+    }
+    optional binary id (STRING);
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+  }
+  optional binary id (STRING);
+  optional group identifier {
+    optional binary associatedKey (STRING);
+    optional int64 firstLoaded;
+    optional binary id (STRING);
+    optional binary internalId (STRING);
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+    optional binary uniqueKey (STRING);
+  }
+  optional group image {
+    optional int64 created;
+    optional binary id (STRING);
+    optional group imageItems (LIST) {
+      repeated group list {
+        optional group element {
+          optional binary audience (STRING);
+          optional binary contributor (STRING);
+          optional binary created (STRING);
+          optional binary creator (STRING);
+          optional binary datasetId (STRING);
+          optional binary description (STRING);
+          optional binary format (STRING);
+          optional binary identifier (STRING);
+          optional double latitude;
+          optional binary license (STRING);
+          optional double longitude;
+          optional binary publisher (STRING);
+          optional binary references (STRING);
+          optional binary rights (STRING);
+          optional binary rightsHolder (STRING);
+          optional binary spatial (STRING);
+          optional binary title (STRING);
+        }
+      }
+    }
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+  }
+  optional binary internalId (STRING);
+  optional group lineage (LIST) {
+    repeated group list {
+      optional binary element (STRING);
+    }
+  }
+  optional group location {
+    optional binary biome (STRING);
+    optional binary continent (STRING);
+    optional double coordinatePrecision;
+    optional double coordinateUncertaintyInMeters;
+    optional binary coreId (STRING);
+    optional binary country (STRING);
+    optional binary countryCode (STRING);
+    optional int64 created;
+    optional double decimalLatitude;
+    optional double decimalLongitude;
+    optional double depth;
+    optional double depthAccuracy;
+    optional double distanceFromCentroidInMeters;
+    optional double elevation;
+    optional double elevationAccuracy;
+    optional binary footprintWKT (STRING);
+    optional group gadm {
+      optional binary level0Gid (STRING);
+      optional binary level0Name (STRING);
+      optional binary level1Gid (STRING);
+      optional binary level1Name (STRING);
+      optional binary level2Gid (STRING);
+      optional binary level2Name (STRING);
+      optional binary level3Gid (STRING);
+      optional binary level3Name (STRING);
+    }
+    optional binary gbifRegion (STRING);
+    optional group georeferencedBy (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional binary georeferencedDate (STRING);
+    optional boolean hasCoordinate;
+    optional boolean hasGeospatialIssue;
+    optional group higherGeography (LIST) {
+      repeated group list {
+        optional binary element (STRING);
+      }
+    }
+    optional binary id (STRING);
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+    optional binary locality (STRING);
+    optional double maximumDepthInMeters;
+    optional double maximumDistanceAboveSurfaceInMeters;
+    optional double maximumElevationInMeters;
+    optional double minimumDepthInMeters;
+    optional double minimumDistanceAboveSurfaceInMeters;
+    optional double minimumElevationInMeters;
+    optional binary parentId (STRING);
+    optional binary publishedByGbifRegion (STRING);
+    optional binary publishingCountry (STRING);
+    optional boolean repatriated;
+    optional binary stateProvince (STRING);
+    optional binary waterBody (STRING);
+  }
+  optional group locationInherited {
+    optional binary countryCode (STRING);
+    optional double decimalLatitude;
+    optional double decimalLongitude;
+    optional binary id (STRING);
+    optional binary inheritedFrom (STRING);
+    optional binary stateProvince (STRING);
+  }
+  optional group measurementOrFact {
+    optional int64 created;
+    optional binary id (STRING);
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+    optional group measurementOrFactItems (LIST) {
+      repeated group list {
+        optional group element {
+          optional binary measurementAccuracy (STRING);
+          optional binary measurementDeterminedBy (STRING);
+          optional binary measurementDeterminedDate (STRING);
+          optional binary measurementID (STRING);
+          optional binary measurementMethod (STRING);
+          optional binary measurementRemarks (STRING);
+          optional binary measurementType (STRING);
+          optional binary measurementUnit (STRING);
+          optional binary measurementValue (STRING);
+        }
+      }
+    }
+  }
+  optional group multimedia {
+    optional int64 created;
+    optional binary id (STRING);
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+    optional group multimediaItems (LIST) {
+      repeated group list {
+        optional group element {
+          optional binary audience (STRING);
+          optional binary contributor (STRING);
+          optional binary created (STRING);
+          optional binary creator (STRING);
+          optional binary datasetId (STRING);
+          optional binary description (STRING);
+          optional binary format (STRING);
+          optional binary identifier (STRING);
+          optional binary license (STRING);
+          optional binary publisher (STRING);
+          optional binary references (STRING);
+          optional binary rightsHolder (STRING);
+          optional binary source (STRING);
+          optional binary title (STRING);
+          optional binary type (STRING);
+        }
+      }
+    }
+  }
+  optional group temporal {
+    optional binary coreId (STRING);
+    optional int64 created;
+    optional binary dateIdentified (STRING);
+    optional binary datePrecision (STRING);
+    optional int32 day;
+    optional int32 endDayOfYear;
+    optional group eventDate {
+      optional binary gte (STRING);
+      optional binary interval (STRING);
+      optional binary lte (STRING);
+    }
+    optional binary id (STRING);
+    optional group issues {
+      optional group issueList (LIST) {
+        repeated group list {
+          optional binary element (STRING);
+        }
+      }
+    }
+    optional binary modified (STRING);
+    optional int32 month;
+    optional binary parentId (STRING);
+    optional int32 startDayOfYear;
+    optional int32 year;
+  }
+  optional group temporalInherited {
+    optional int32 day;
+    optional binary id (STRING);
+    optional binary inheritedFrom (STRING);
+    optional int32 month;
+    optional int32 year;
+  }
+  optional group verbatim {
+    optional binary coreId (STRING);
+    optional binary coreRowType (STRING);
+    optional group coreTerms (MAP) {
+      repeated group key_value {
+        required binary key (STRING);
+        optional binary value (STRING);
+      }
+    }
+    optional group extensions (MAP) {
+      repeated group key_value {
+        required binary key (STRING);
+        optional group value (LIST) {
+          repeated group list {
+            optional group element (MAP) {
+              repeated group key_value {
+                required binary key (STRING);
+                optional binary value (STRING);
+              }
+            }
+          }
+        }
+      }
+    }
+    optional binary id (STRING);
+  }
+}

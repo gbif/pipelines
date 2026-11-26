@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 
-/**
- * POJO that holds the contents of an Event. Each string property is JSON serialisation of the
- * output from a transform.
- */
+/** POJO that holds the values an Event inherits from its parent events, as typed records. */
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class EventInheritedFields {
 
   String id;
-  String locationInherited;
-  String temporalInherited;
-  String eventInherited;
+  LocationInheritedRecord locationInherited;
+  TemporalInheritedRecord temporalInherited;
+  EventInheritedRecord eventInherited;
 }

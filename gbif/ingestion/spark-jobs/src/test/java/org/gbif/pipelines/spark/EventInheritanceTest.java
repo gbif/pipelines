@@ -4,7 +4,6 @@ import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import static org.junit.Assert.assertEquals;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
@@ -52,41 +51,37 @@ public class EventInheritanceTest {
   @Test
   public void testInheritance() throws Exception {
 
-    final ObjectMapper MAPPER = new ObjectMapper();
     Event parentEvent =
         Event.builder()
             .id("parent-event-id-1")
             .lineage(List.of())
             .eventCore(
-                MAPPER.writeValueAsString(
-                    EventCoreRecord.newBuilder()
-                        .setId("parent-event-id-1")
-                        .setEventType(VocabularyConcept.newBuilder().setConcept("Project").build())
-                        .setLocationID("location-id-1")
-                        .build()))
+                EventCoreRecord.newBuilder()
+                    .setId("parent-event-id-1")
+                    .setEventType(VocabularyConcept.newBuilder().setConcept("Project").build())
+                    .setLocationID("location-id-1")
+                    .build())
             .location(
-                MAPPER.writeValueAsString(
-                    LocationRecord.newBuilder()
-                        .setId("parent-event-id-1")
-                        .setCountryCode("KE")
-                        .setBiome("Biome")
-                        .setContinent("Africa")
-                        .setDecimalLatitude(-13.2921)
-                        .setDecimalLongitude(12.2921)
-                        .build()))
+                LocationRecord.newBuilder()
+                    .setId("parent-event-id-1")
+                    .setCountryCode("KE")
+                    .setBiome("Biome")
+                    .setContinent("Africa")
+                    .setDecimalLatitude(-13.2921)
+                    .setDecimalLongitude(12.2921)
+                    .build())
             .temporal(
-                MAPPER.writeValueAsString(
-                    TemporalRecord.newBuilder()
-                        .setId("parent-event-id-1")
-                        .setEventDate(
-                            EventDate.newBuilder()
-                                .setLte("2020-12-01T00:00:00Z")
-                                .setGte("2020-12-01T23:59:59Z")
-                                .build())
-                        .setYear(2020)
-                        .setMonth(12)
-                        .setDay(1)
-                        .build()))
+                TemporalRecord.newBuilder()
+                    .setId("parent-event-id-1")
+                    .setEventDate(
+                        EventDate.newBuilder()
+                            .setLte("2020-12-01T00:00:00Z")
+                            .setGte("2020-12-01T23:59:59Z")
+                            .build())
+                    .setYear(2020)
+                    .setMonth(12)
+                    .setDay(1)
+                    .build())
             .build();
 
     Event childEvent =
@@ -94,19 +89,13 @@ public class EventInheritanceTest {
             .id("child-event-id-1")
             .lineage(List.of("parent-event-id-1"))
             .eventCore(
-                MAPPER.writeValueAsString(
-                    EventCoreRecord.newBuilder()
-                        .setId("child-event-id-1")
-                        .setParentEventID("parent-event-id-1")
-                        .setEventType(
-                            VocabularyConcept.newBuilder().setConcept("SiteVisit").build())
-                        .build()))
-            .location(
-                MAPPER.writeValueAsString(
-                    LocationRecord.newBuilder().setId("child-event-id-1").build()))
-            .temporal(
-                MAPPER.writeValueAsString(
-                    TemporalRecord.newBuilder().setId("child-event-id-1").build()))
+                EventCoreRecord.newBuilder()
+                    .setId("child-event-id-1")
+                    .setParentEventID("parent-event-id-1")
+                    .setEventType(VocabularyConcept.newBuilder().setConcept("SiteVisit").build())
+                    .build())
+            .location(LocationRecord.newBuilder().setId("child-event-id-1").build())
+            .temporal(TemporalRecord.newBuilder().setId("child-event-id-1").build())
             .build();
 
     Event granChildEvent =
@@ -114,18 +103,13 @@ public class EventInheritanceTest {
             .id("gran-child-event-id-1")
             .lineage(List.of("parent-event-id-1", "child-event-id-1"))
             .eventCore(
-                MAPPER.writeValueAsString(
-                    EventCoreRecord.newBuilder()
-                        .setId("gran-child-event-id-1")
-                        .setParentEventID("child-event-id-1")
-                        .setEventType(VocabularyConcept.newBuilder().setConcept("Sample").build())
-                        .build()))
-            .location(
-                MAPPER.writeValueAsString(
-                    LocationRecord.newBuilder().setId("gran-child-event-id-1").build()))
-            .temporal(
-                MAPPER.writeValueAsString(
-                    TemporalRecord.newBuilder().setId("gran-child-event-id-1").build()))
+                EventCoreRecord.newBuilder()
+                    .setId("gran-child-event-id-1")
+                    .setParentEventID("child-event-id-1")
+                    .setEventType(VocabularyConcept.newBuilder().setConcept("Sample").build())
+                    .build())
+            .location(LocationRecord.newBuilder().setId("gran-child-event-id-1").build())
+            .temporal(TemporalRecord.newBuilder().setId("gran-child-event-id-1").build())
             .build();
 
     // create working area for test
@@ -169,26 +153,20 @@ public class EventInheritanceTest {
       if (event.getId().equals("child-event-id-1")) {
 
         // check the child has inherited from both parent
-        EventInheritedRecord eventInheritedRecord =
-            MAPPER.readValue(event.getEventInherited(), EventInheritedRecord.class);
+        EventInheritedRecord eventInheritedRecord = event.getEventInherited();
         assertEquals("location-id-1", eventInheritedRecord.getLocationID());
-        LocationInheritedRecord locationInheritedRecord =
-            MAPPER.readValue(event.getLocationInherited(), LocationInheritedRecord.class);
+        LocationInheritedRecord locationInheritedRecord = event.getLocationInherited();
         assertEquals("KE", locationInheritedRecord.getCountryCode());
-        TemporalInheritedRecord temporalInheritedRecord =
-            MAPPER.readValue(event.getTemporalInherited(), TemporalInheritedRecord.class);
+        TemporalInheritedRecord temporalInheritedRecord = event.getTemporalInherited();
         assertEquals(2020, (int) temporalInheritedRecord.getYear());
       } else if (event.getId().equals("gran-child-event-id-1")) {
 
         // check the granchild has inherited from both parent and child
-        EventInheritedRecord eventInheritedRecord =
-            MAPPER.readValue(event.getEventInherited(), EventInheritedRecord.class);
+        EventInheritedRecord eventInheritedRecord = event.getEventInherited();
         assertEquals("location-id-1", eventInheritedRecord.getLocationID());
-        LocationInheritedRecord locationInheritedRecord =
-            MAPPER.readValue(event.getLocationInherited(), LocationInheritedRecord.class);
+        LocationInheritedRecord locationInheritedRecord = event.getLocationInherited();
         assertEquals("KE", locationInheritedRecord.getCountryCode());
-        TemporalInheritedRecord temporalInheritedRecord =
-            MAPPER.readValue(event.getTemporalInherited(), TemporalInheritedRecord.class);
+        TemporalInheritedRecord temporalInheritedRecord = event.getTemporalInherited();
         assertEquals(2020, (int) temporalInheritedRecord.getYear());
 
       } else if (event.getId().equals("parent-event-id-1")) {

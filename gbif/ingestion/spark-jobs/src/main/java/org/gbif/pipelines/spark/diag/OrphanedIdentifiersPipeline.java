@@ -33,6 +33,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -47,6 +48,7 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.hbase.HBaseStore;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SimpleRecordLoader;
 
 /**
  * Finds identifiers (uniqueKeys) that were assigned during interpretation but are missing from the
@@ -216,19 +218,25 @@ public class OrphanedIdentifiersPipeline {
             .map(p -> new Path(p, SIMPLE_OCCURRENCE).toString())
             .toArray(String[]::new);
 
-    Dataset<Row> loaded =
-        spark
-            .read()
-            .parquet(simplePaths)
-            .select(
-                regexp_extract(input_file_name(), DATASET_KEY_FROM_PATH, 1).as("datasetKey"),
-                from_json(col("identifier"), IDENTIFIER_SCHEMA).as("ir"))
-            .select(
-                col("datasetKey"),
-                col("ir.id").as("id"),
-                col("ir.internalId").as("internalId"),
-                col("ir.uniqueKey").as("uniqueKey"),
-                col("ir.associatedKey").as("associatedKey"));
+    // Attempts written before the typed schema hold identifier as a JSON string, later ones as a
+    // struct. Parquet files with conflicting column types can't be read together, so split them.
+    List<String> legacyPaths = new ArrayList<>();
+    List<String> typedPaths = new ArrayList<>();
+    for (String p : simplePaths) {
+      if (SimpleRecordLoader.isLegacyJson(spark.read().parquet(p).schema())) {
+        legacyPaths.add(p);
+      } else {
+        typedPaths.add(p);
+      }
+    }
+    Dataset<Row> loaded = null;
+    if (!legacyPaths.isEmpty()) {
+      loaded = loadIdentifiers(spark, legacyPaths, from_json(col("identifier"), IDENTIFIER_SCHEMA));
+    }
+    if (!typedPaths.isEmpty()) {
+      Dataset<Row> typed = loadIdentifiers(spark, typedPaths, col("identifier"));
+      loaded = loaded == null ? typed : loaded.unionByName(typed);
+    }
     loaded.createOrReplaceTempView(LOADED_VIEW);
 
     // 3. candidateIdentifiers - from identifiers, one read per dataset to add its key
@@ -434,5 +442,24 @@ public class OrphanedIdentifiersPipeline {
     fs.delete(tmpDir, true);
 
     return rows.sparkSession().read().option("header", "true").csv(target.toString()).count();
+  }
+
+  /**
+   * Reads the identifier fields of simple occurrences, given how to obtain the identifier struct.
+   */
+  private static Dataset<Row> loadIdentifiers(
+      SparkSession spark, List<String> paths, Column identifierStruct) {
+    return spark
+        .read()
+        .parquet(paths.toArray(new String[0]))
+        .select(
+            regexp_extract(input_file_name(), DATASET_KEY_FROM_PATH, 1).as("datasetKey"),
+            identifierStruct.as("ir"))
+        .select(
+            col("datasetKey"),
+            col("ir.id").as("id"),
+            col("ir.internalId").as("internalId"),
+            col("ir.uniqueKey").as("uniqueKey"),
+            col("ir.associatedKey").as("associatedKey"));
   }
 }
