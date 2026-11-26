@@ -6,8 +6,11 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
-import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
@@ -39,6 +42,8 @@ public class ValidatorWsConfiguration {
     private String eml;
     private String emlGbifProfile;
     private String[] dwcMeta;
+    // hosts whose schemas can be loaded besides the ones above
+    private Set<String> trustedHosts = SchemaValidatorFactory.DEFAULT_TRUSTED_HOSTS;
   }
 
   @Bean
@@ -50,11 +55,11 @@ public class ValidatorWsConfiguration {
   @Bean
   @SneakyThrows
   public SchemaValidatorFactory schemaValidatorFactory(XmlSchemaLocations xmlSchemaLocations) {
-    SchemaValidatorFactory schemaValidatorFactory =
-        new SchemaValidatorFactory(xmlSchemaLocations.getDwcMeta());
-    schemaValidatorFactory.load(new URI(xmlSchemaLocations.getEml()));
-    schemaValidatorFactory.load(new URI(xmlSchemaLocations.getEmlGbifProfile()));
-    return schemaValidatorFactory;
+    List<String> schemas = new ArrayList<>(Arrays.asList(xmlSchemaLocations.getDwcMeta()));
+    schemas.add(xmlSchemaLocations.getEml());
+    schemas.add(xmlSchemaLocations.getEmlGbifProfile());
+    return new SchemaValidatorFactory(
+        xmlSchemaLocations.getTrustedHosts(), schemas.toArray(new String[0]));
   }
 
   @Bean

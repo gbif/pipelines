@@ -3,7 +3,7 @@ package org.gbif.dwca.validation.xml;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.sax.SAXSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.Validator;
 import lombok.Builder;
@@ -15,6 +15,7 @@ import org.gbif.validator.api.EvaluationType;
 import org.gbif.validator.api.Level;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -25,23 +26,30 @@ public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
 
   private final Schema schema;
 
-  /**
-   * Properties XMLConstants.ACCESS_EXTERNAL_DTD and XMLConstants.ACCESS_EXTERNAL_SCHEMA are not
-   * supported by Java 8 we currently use
-   */
+  /** Validator that doesn't fetch anything referenced by the document. */
   @SneakyThrows
   private Validator newValidator(Schema schema) {
-    Validator validator = schema.newValidator();
+    Validator validator = XmlSecurity.harden(schema.newValidator());
     validator.setErrorHandler(new CollectorErrorHandler());
     return validator;
   }
 
+  /** Validates the document, documents with a DOCTYPE are rejected as a fatal error. */
   @SneakyThrows
   @Override
   public List<IssueInfo> validate(String document) {
     Validator validator = newValidator(schema);
-    validator.validate(new StreamSource(new StringReader(document)));
-    return ((CollectorErrorHandler) validator.getErrorHandler()).getErrors();
+    CollectorErrorHandler errorHandler = (CollectorErrorHandler) validator.getErrorHandler();
+    try {
+      validator.validate(
+          new SAXSource(XmlSecurity.xmlReader(), new InputSource(new StringReader(document))));
+    } catch (SAXParseException ex) {
+      // already collected by the error handler, unless the reader failed before validating
+      if (errorHandler.getErrors().isEmpty()) {
+        errorHandler.fatalErrorNoThrow(ex);
+      }
+    }
+    return errorHandler.getErrors();
   }
 
   /**
@@ -69,10 +77,14 @@ public class XmlSchemaValidatorImpl implements XmlSchemaValidator {
 
     @Override
     public void fatalError(SAXParseException exception) throws SAXException {
+      fatalErrorNoThrow(exception);
+      throw exception;
+    }
+
+    void fatalErrorNoThrow(SAXParseException exception) {
       errors.add(
           IssueInfo.create(
               EvaluationType.EML_GBIF_SCHEMA, Level.FATAL.name(), exception.getMessage()));
-      throw exception;
     }
   }
 }
