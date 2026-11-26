@@ -10,6 +10,8 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.dwc.terms.MixsTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CaseExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
@@ -26,6 +28,8 @@ import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 public final class NucleotideMapping {
 
   public static final String ROW_TYPE_DNA_DERIVED_DATA = Extension.DNA_DERIVED_DATA.getRowType();
+
+  public static final String EVENT_READ_TOTALS = "__dwcdp_event_read_totals";
 
   // Terms in the registered DNA Derived Data extension that the term factory cannot resolve
   // from the DwC-DP field names.
@@ -102,6 +106,23 @@ public final class NucleotideMapping {
         MappingPath.root(graph, "occurrence"),
         "identification-nucleotide-sequence-for-occurrence",
         "occurrence_pk");
+  }
+
+  /** Collects the distinct processed totals of analyses linked to the Event. */
+  public static CoreFragment eventReadTotals(SchemaGraph graph) {
+    MappingPath analysis =
+        MappingPath.root(graph, "event")
+            .join("nucleotide-analysis")
+            .via("event_fk")
+            .optional()
+            .fanOut();
+    return CoreFragmentBuilder.coreFragment("event-dna-read-totals", analysis)
+        .field(
+            TargetFieldMapping.oneOf(
+                EVENT_READ_TOTALS,
+                ValueAggregation.firstNonNull(),
+                analysis.field("processedTotalReadCount")))
+        .build();
   }
 
   /** Sequences associated with an occurrence nested under its Event. */

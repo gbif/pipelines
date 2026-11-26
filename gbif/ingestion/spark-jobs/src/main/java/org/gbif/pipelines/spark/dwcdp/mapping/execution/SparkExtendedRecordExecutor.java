@@ -221,6 +221,7 @@ public final class SparkExtendedRecordExecutor {
                     }
                   }
 
+                  DnaReadCountFallbacks.apply(coreRowType, coreTerms, extensions);
                   return ExtendedRecord.newBuilder()
                       .setId(id)
                       .setCoreId(null)

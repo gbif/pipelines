@@ -33,6 +33,9 @@ public final class EventDwcaMapping {
                 TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
             .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
             .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
+            .mergeCoreTarget(
+                NucleotideMapping.EVENT_READ_TOTALS, ValueAggregation.pipeDelimitedDistinct())
+            .importCoreFragment(NucleotideMapping.eventReadTotals(graph))
             .importCoreFragment(EventCoreMapping.parentEvent(graph))
             .importCoreFragment(EventCoreMapping.geologicalContext(graph))
             .importCoreFragment(EventCoreMapping.eventConductedBy(graph))

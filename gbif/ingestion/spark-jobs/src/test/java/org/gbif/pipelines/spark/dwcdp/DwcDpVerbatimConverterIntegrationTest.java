@@ -109,13 +109,15 @@ class DwcDpVerbatimConverterIntegrationTest {
                 table(
                     session,
                     List.of(
-                        RowFactory.create("A1", "S1", "E1", "M1", "P1"),
-                        RowFactory.create("A2", "S1", "E1", null, "P2")),
+                        RowFactory.create("A1", "S1", "E1", "M1", "P1", "131", "36207"),
+                        RowFactory.create("A2", "S1", "E1", null, "P2", "55", "36207")),
                     "nucleotideAnalysis_pk",
                     "nucleotideSequence_fk",
                     "event_fk",
                     "materialEntity_fk",
-                    "molecularProtocol_fk"),
+                    "molecularProtocol_fk",
+                    "readCount",
+                    "processedTotalReadCount"),
             "molecular-protocol",
                 table(
                     session,
@@ -144,10 +146,21 @@ class DwcDpVerbatimConverterIntegrationTest {
             .first();
     String dna = Extension.DNA_DERIVED_DATA.getRowType();
     assertEquals(2, event.getExtensions().get(dna).size());
+    assertEquals("36207", event.getCoreTerms().get(DwcTerm.sampleSizeValue.qualifiedName()));
+    assertEquals(
+        "DNA sequence reads", event.getCoreTerms().get(DwcTerm.sampleSizeUnit.qualifiedName()));
     Map<String, ExtendedRecord> occurrences =
         OccurrenceExtensionConverter.convert(event).stream()
             .collect(Collectors.toMap(ExtendedRecord::getId, record -> record));
     assertEquals(2, occurrences.size());
+    Map<String, String> quantity = occurrences.get("occ-1").getCoreTerms();
+    assertEquals("131", quantity.get(DwcTerm.organismQuantity.qualifiedName()));
+    assertEquals("DNA sequence reads", quantity.get(DwcTerm.organismQuantityType.qualifiedName()));
+    assertNull(
+        occurrences
+            .get("gbif:dwcdp:occurrence:occurrence_pk:O2")
+            .getCoreTerms()
+            .get(DwcTerm.organismQuantity.qualifiedName()));
     String occurrenceId = DwcTerm.occurrenceID.qualifiedName();
     assertEquals(
         List.of(
@@ -159,7 +172,11 @@ class DwcDpVerbatimConverterIntegrationTest {
                 MixsTerm.target_gene.qualifiedName(),
                 "COI",
                 MixsTerm.seq_meth.qualifiedName(),
-                "Illumina")),
+                "Illumina",
+                "readCount",
+                "131",
+                "processedTotalReadCount",
+                "36207")),
         occurrences.get("occ-1").getExtensions().get(dna));
     assertNull(occurrences.get("gbif:dwcdp:occurrence:occurrence_pk:O2").getExtensions().get(dna));
   }
