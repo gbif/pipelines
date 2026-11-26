@@ -67,7 +67,8 @@ public class VerbatimExtensionsInterpretationPipeline {
   }
 
   /** Register UDFs used in the processing. */
-  private static void registerUdfs(SparkSession spark) {
+  @VisibleForTesting
+  static void registerUdfs(SparkSession spark) {
     spark
         .udf()
         .register(
@@ -77,7 +78,8 @@ public class VerbatimExtensionsInterpretationPipeline {
   }
 
   /** Read extended records and explode extensions into separate rows. */
-  private static Dataset<Row> readExtendedRecords(
+  @VisibleForTesting
+  static Dataset<Row> readExtendedRecords(
       SparkSession spark, DatasetType datasetType, String inputPath, String datasetId) {
 
     String verbatimDirectory =
@@ -115,7 +117,16 @@ public class VerbatimExtensionsInterpretationPipeline {
           "Loaded {} extended records for dataset {} of type SAMPLING_EVENT",
           extendedRecords.count(),
           datasetId);
-      df = extendedRecords.toDF().withColumnRenamed("id", "gbifid");
+      // eventIDs are only unique within a dataset, so the event core uses the internal id as
+      // gbifid. Take it from the interpreted events so extension rows join with the event core.
+      Dataset<Row> idGbifIdTuple =
+          spark
+              .read()
+              .parquet(inputPath + "/" + Directories.SIMPLE_EVENT)
+              .select(col("id"), col("internalId").alias("gbifid"));
+
+      Dataset<Row> joined = extendedRecords.join(idGbifIdTuple, "id");
+      df = joined.drop("id").toDF();
     }
 
     // Explode extensions into separate rows

@@ -400,6 +400,7 @@ public class EventInterpretationPipeline {
 
                   return Event.builder()
                       .id(verbatim.getId())
+                      .internalId(idr.getInternalId())
                       .lineage(lineageIds)
                       .identifier(MAPPER.writeValueAsString(idr))
                       .verbatim(MAPPER.writeValueAsString(verbatim))
