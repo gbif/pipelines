@@ -1,5 +1,7 @@
 package org.gbif.validator.ws.it;
 
+import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.ADMIN_USER;
+import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.OTHER_ADMIN_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.OTHER_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
@@ -12,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,6 +31,7 @@ import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.validator.api.ClbCallbackToken;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -75,6 +79,9 @@ import org.springframework.test.util.TestSocketUtils;
 @AutoConfigureMockMvc
 public class ValidationResourceIT {
 
+  // validation.clbCallback.secret of application-test.yml
+  private static final String CLB_CALLBACK_SECRET = "it-callback-secret";
+
   // Directory used as temporary space to upload files
   @TempDir static Path workingDirectory;
 
@@ -87,17 +94,30 @@ public class ValidationResourceIT {
 
   private final ValidationWsClient otherUserWsClient;
 
+  private final ValidationWsClient adminWsClient;
+
+  private final ValidationWsClient otherAdminWsClient;
+
+  private final int port;
+
   private final GatedFileStoreManager fileStoreManager;
 
   @Autowired
   public ValidationResourceIT(@LocalServerPort int port, GatedFileStoreManager fileStoreManager) {
     this.fileStoreManager = fileStoreManager;
+    this.port = port;
     validationWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, TEST_USER.getUserName(), TEST_USER_PASSWORD);
     otherUserWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, OTHER_USER.getUserName(), TEST_USER_PASSWORD);
+    adminWsClient =
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, ADMIN_USER.getUserName(), TEST_USER_PASSWORD);
+    otherAdminWsClient =
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, OTHER_ADMIN_USER.getUserName(), TEST_USER_PASSWORD);
   }
 
   @BeforeAll
@@ -306,10 +326,98 @@ public class ValidationResourceIT {
                         .build()))
             .build();
     validation.setMetrics(metrics);
-    validationWsClient.update(validation);
+    // only the validation pipeline (apps) and admins update validations
+    assertThrows(AccessDeniedException.class, () -> validationWsClient.update(validation));
+    adminWsClient.update(validation);
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertEquals(metrics, persistedValidation.getMetrics());
     assertEquals(Validation.Status.FINISHED, persistedValidation.getStatus());
+  }
+
+  @Test
+  public void cancelledValidationIsNotResumedIT() {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    validationWsClient.cancel(validation.getKey());
+
+    Validation cancelled = validationWsClient.get(validation.getKey());
+    cancelled.setStatus(Validation.Status.RUNNING);
+    assertThrows(IllegalArgumentException.class, () -> adminWsClient.update(cancelled));
+    assertEquals(
+        Validation.Status.ABORTED, validationWsClient.get(validation.getKey()).getStatus());
+  }
+
+  @Test
+  public void onlyAllowedUsersUpdateValidationsIT() {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+
+    // admin not in validation.update.allowed
+    Validation update = validationWsClient.get(validation.getKey());
+    update.setStatus(Status.FAILED);
+    assertThrows(AccessDeniedException.class, () -> otherAdminWsClient.update(update));
+    assertNotEquals(Status.FAILED, validationWsClient.get(validation.getKey()).getStatus());
+
+    // allowed admin
+    adminWsClient.update(update);
+    assertEquals(Status.FAILED, validationWsClient.get(validation.getKey()).getStatus());
+  }
+
+  private java.net.http.HttpResponse<String> anonymous(String method, String path, String body)
+      throws Exception {
+    return anonymous(method, path, body, "application/xml");
+  }
+
+  private java.net.http.HttpResponse<String> anonymous(
+      String method, String path, String body, String contentType) throws Exception {
+    java.net.http.HttpRequest.Builder request =
+        java.net.http.HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+            .method(
+                method,
+                body == null
+                    ? java.net.http.HttpRequest.BodyPublishers.noBody()
+                    : java.net.http.HttpRequest.BodyPublishers.ofString(body));
+    if (body != null) {
+      request.header("Content-Type", contentType);
+    }
+    return java.net.http.HttpClient.newHttpClient()
+        .send(request.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+  }
+
+  @Test
+  public void anonymousRequestsIT() throws Exception {
+    // authentication required
+    java.net.http.HttpResponse<String> list = anonymous("GET", "/validation", null);
+    assertEquals(401, list.statusCode());
+    assertEquals("GBIF realm=\"GBIF\"", list.headers().firstValue("WWW-Authenticate").orElse(null));
+    assertEquals(401, anonymous("GET", "/validation/" + UUID.randomUUID(), null).statusCode());
+    assertEquals(401, anonymous("GET", "/actuator/env", null).statusCode());
+    assertEquals(401, anonymous("GET", "/unknown", null).statusCode());
+
+    // public
+    assertEquals(200, anonymous("GET", "/validation/eml/schemas", null).statusCode());
+    assertEquals(200, anonymous("GET", "/validation/enumeration/FileFormat", null).statusCode());
+    assertEquals(200, anonymous("GET", "/validation/sequence?sequence=ACGT", null).statusCode());
+    assertEquals(201, anonymous("POST", "/validation/eml", "<eml/>").statusCode());
+  }
+
+  @Test
+  public void clbCallbackRequiresTokenIT() throws Exception {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    UUID key = validation.getKey();
+    String path = "/validation/clbValidationCallback/" + key;
+    String json = "application/json";
+
+    // missing, wrong and other validation tokens are rejected
+    assertEquals(403, anonymous("POST", path, "{}", json).statusCode());
+    assertEquals(403, anonymous("POST", path + "/bad-token", "{}", json).statusCode());
+    String otherToken = ClbCallbackToken.create(UUID.randomUUID(), CLB_CALLBACK_SECRET);
+    assertEquals(403, anonymous("POST", path + "/" + otherToken, "{}", json).statusCode());
+
+    // the token of the validation is accepted
+    String token = ClbCallbackToken.create(key, CLB_CALLBACK_SECRET);
+    assertEquals(204, anonymous("POST", path + "/" + token, "{}", json).statusCode());
   }
 
   @Test

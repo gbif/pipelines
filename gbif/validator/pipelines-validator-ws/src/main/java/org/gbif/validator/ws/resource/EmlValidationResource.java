@@ -14,12 +14,16 @@ import lombok.SneakyThrows;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.ws.config.ValidatorWsConfiguration;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @Tag(name = "EML Validation", description = "EML validation operations")
 @RestController
@@ -30,6 +34,9 @@ public class EmlValidationResource {
   private final ValidatorWsConfiguration.XmlSchemaLocations schemaLocations;
 
   private final SchemaValidatorFactory schemaValidatorFactory;
+
+  @Value("${validation.eml.maxSize:10MB}")
+  private String maxSize;
 
   /** Validates an EML document. */
   @Operation(
@@ -51,6 +58,10 @@ public class EmlValidationResource {
               description = "EML document as XML bytes")
           @RequestBody
           byte[] document) {
+    if (document.length > DataSize.parse(maxSize).toBytes()) {
+      throw new ResponseStatusException(
+          HttpStatus.PAYLOAD_TOO_LARGE, "EML document exceeds " + maxSize);
+    }
     String xmlDoc = new String(document, StandardCharsets.UTF_8);
     return schemaValidatorFactory.validate(xmlDoc);
   }

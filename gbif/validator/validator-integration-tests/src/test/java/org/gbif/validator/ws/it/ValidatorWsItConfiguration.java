@@ -14,10 +14,10 @@ import org.gbif.validator.it.mocks.RemoteAuthClientMock;
 import org.gbif.validator.ws.config.ValidatorWsConfiguration;
 import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.security.RegistrySecurityConfiguration;
+import org.gbif.validator.ws.security.ValidatorWebSecurityConfigurer;
 import org.gbif.ws.remoteauth.IdentityServiceClient;
 import org.gbif.ws.remoteauth.LoggedUser;
 import org.gbif.ws.remoteauth.RemoteAuthClient;
-import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
 import org.gbif.ws.security.AppKeySigningService;
 import org.gbif.ws.security.FileSystemKeyStore;
 import org.gbif.ws.security.GbifAuthenticationManagerImpl;
@@ -91,6 +91,21 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
           .roles(Collections.singleton(UserRole.USER.name()))
           .build();
 
+  public static final LoggedUser ADMIN_USER =
+      LoggedUser.builder()
+          .userName("registryAdmin")
+          .email("registryAdmin@gbif.org")
+          .roles(Collections.singleton(UserRole.REGISTRY_ADMIN.name()))
+          .build();
+
+  /** Admin not in validation.update.allowed. */
+  public static final LoggedUser OTHER_ADMIN_USER =
+      LoggedUser.builder()
+          .userName("otherRegistryAdmin")
+          .email("otherRegistryAdmin@gbif.org")
+          .roles(Collections.singleton(UserRole.REGISTRY_ADMIN.name()))
+          .build();
+
   /**
    * Created from here to avoid scanning this class package in which other test configuration are
    * located.
@@ -107,6 +122,8 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   public GatedFileStoreManager uploadedFileManager(
       @Value("${spring.servlet.multipart.location}") String uploadWorkingDirectory,
       @Value("${storePath}") String storePath,
+      @Value("${validation.maxUnpackedSize:20GB}") String maxUnpackedSize,
+      @Value("${validation.maxUnpackedEntries:10000}") int maxUnpackedEntries,
       DownloadFileManager downloadFileManager)
       throws IOException {
     return new GatedFileStoreManager(uploadWorkingDirectory, storePath, downloadFileManager);
@@ -129,7 +146,12 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
 
   @Bean
   public RemoteAuthClient remoteAuthClient() {
-    return RemoteAuthClientMock.builder().testUser(TEST_USER).otherUser(OTHER_USER).build();
+    return RemoteAuthClientMock.builder()
+        .testUser(TEST_USER)
+        .otherUser(OTHER_USER)
+        .adminUser(ADMIN_USER)
+        .otherAdminUser(OTHER_ADMIN_USER)
+        .build();
   }
 
   @Bean
@@ -153,5 +175,5 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
   }
 
   @Configuration
-  public class SecurityConfiguration extends RemoteAuthWebSecurityConfigurer {}
+  public class SecurityConfiguration extends ValidatorWebSecurityConfigurer {}
 }

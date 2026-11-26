@@ -91,6 +91,13 @@ class FileStoreManagerTest extends DownloadFileBaseTest {
         IllegalArgumentException.class, () -> FileStoreManager.sanitizeFileName(null));
   }
 
+  @Test
+  void downloadFileNameTest() {
+    assertEquals("a.zip", FileStoreManager.downloadFileName("../../a.zip"));
+    assertEquals("download", FileStoreManager.downloadFileName(".."));
+    assertEquals("download", FileStoreManager.downloadFileName(null));
+  }
+
   /** Generic method to test file uploads. */
   @SneakyThrows
   public void uploadTest(
