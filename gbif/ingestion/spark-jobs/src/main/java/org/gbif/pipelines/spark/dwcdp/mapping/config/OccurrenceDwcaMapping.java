@@ -101,8 +101,10 @@ public final class OccurrenceDwcaMapping {
                         ValueExpression.literal("gbif:dwcdp:occurrence:occurrence_pk:"),
                         ValueExpression.field(occurrence.field("occurrence_pk")))));
     DirectFieldMappings.from(graph, "occurrence", occurrence).addTo(builder);
+    if (graph.hasColumn("occurrence", "recordedByID")) {
+      builder.importCoreFragment(OccurrenceCoreMapping.recordedBy(graph));
+    }
     return builder
-        .importCoreFragment(OccurrenceCoreMapping.recordedBy(graph))
         .importCoreFragment(OccurrenceCoreMapping.identifiedBy(graph))
         .importCoreFragment(OccurrenceCoreMapping.organism(graph))
         .importCoreFragment(OccurrenceCoreMapping.acceptedIdentification(graph))

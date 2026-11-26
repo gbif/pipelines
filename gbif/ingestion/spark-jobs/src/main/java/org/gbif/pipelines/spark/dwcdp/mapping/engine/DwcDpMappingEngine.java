@@ -41,6 +41,10 @@ public final class DwcDpMappingEngine {
   }
 
   /** Engine backed by the classpath bundle marked {@code isLatest=true}. */
+  public static DwcDpMappingEngine forPackage(DataPackage dataPackage) {
+    return new DwcDpMappingEngine(new DwcDpSchemaLoader().forPackage(dataPackage));
+  }
+
   public static DwcDpMappingEngine currentSchema() {
     return new DwcDpMappingEngine(new DwcDpSchemaLoader().current());
   }

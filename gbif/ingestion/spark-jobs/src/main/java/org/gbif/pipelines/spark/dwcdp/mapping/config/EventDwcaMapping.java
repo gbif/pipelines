@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder.mappingPlan;
 
+import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
@@ -77,7 +78,10 @@ public final class EventDwcaMapping {
         .mergeTarget(DwcTerm.basisOfRecord.qualifiedName(), ValueAggregation.firstNonNull())
         .importFragment(OccurrenceMapping.directOccurrence(graph))
         .importFragment(OccurrenceMapping.eventIdentity(graph))
-        .importFragment(OccurrenceMapping.recordedBy(graph))
+        .importFragments(
+            graph.hasColumn("occurrence", "recordedByID")
+                ? List.of(OccurrenceMapping.recordedBy(graph))
+                : List.of())
         .importFragment(OccurrenceMapping.identifiedBy(graph))
         .importFragment(OccurrenceMapping.organism(graph))
         .importFragment(OccurrenceMapping.acceptedIdentification(graph))

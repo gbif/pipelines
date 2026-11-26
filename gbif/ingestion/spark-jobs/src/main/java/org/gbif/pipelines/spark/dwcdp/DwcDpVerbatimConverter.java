@@ -138,7 +138,7 @@ public class DwcDpVerbatimConverter {
     Dataset<ExtendedRecord> records;
     MappingExecutionOutput mappingExecution = null;
     List<MappingBranchExecutionMetrics> branchMetrics = List.of();
-    DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
+    DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.forPackage(dataPackage);
     MappingPlan ingestPlan = null;
 
     if (containsEvents && dataPackage.findResource("event").isPresent()) {
@@ -210,7 +210,7 @@ public class DwcDpVerbatimConverter {
    */
   static Dataset<ExtendedRecord> buildEventCoreDataset(
       SparkSession spark, DataPackage dataPackage, String basePath) {
-    DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
+    DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.forPackage(dataPackage);
     return mappingEngine.execute(
         parquetTableLoader(spark, dataPackage, basePath),
         EventDwcaMapping.current(mappingEngine.schemaGraph()),
@@ -229,7 +229,7 @@ public class DwcDpVerbatimConverter {
    */
   static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(
       SparkSession spark, DataPackage dataPackage, String basePath) {
-    DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
+    DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.forPackage(dataPackage);
     return mappingEngine.execute(
         parquetTableLoader(spark, dataPackage, basePath),
         OccurrenceDwcaMapping.current(mappingEngine.schemaGraph()),

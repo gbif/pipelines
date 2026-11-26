@@ -19,6 +19,7 @@ public final class EventOccurrenceNestedContextMapping {
     MappingPath occurrence = MappingPath.root(graph, "occurrence");
     MappingPath material = MappingPath.root(graph, "material");
 
+    var evidence = graph.resolve("occurrence", "material", "evidenceForOccurrenceID");
     return new NestedExtensionContext(
         OccurrenceMapping.ROW_TYPE_OCCURRENCE,
         "event",
@@ -27,9 +28,9 @@ public final class EventOccurrenceNestedContextMapping {
         event.field("event_pk"),
         occurrence.field("occurrence_pk"),
         occurrence.field("event_fk"),
-        occurrence.field("occurrenceID"),
+        occurrence.field(evidence.sourceColumn()),
         material.field("materialEntity_pk"),
-        material.field("evidenceForOccurrenceID"),
+        material.field(evidence.targetColumn()),
         Optional.of(DwcTerm.eventID.qualifiedName()),
         discoveryFragments(graph),
         contextualFragments(graph));

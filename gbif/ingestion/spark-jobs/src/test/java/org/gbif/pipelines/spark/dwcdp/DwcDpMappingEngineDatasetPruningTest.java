@@ -16,6 +16,7 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingInputRequirements;
@@ -89,6 +90,10 @@ class DwcDpMappingEngineDatasetPruningTest {
                     fragment.sourceResource().equals("event")
                         || fragment.sourceResource().equals("occurrence")));
 
+    assertTrue(
+        scoped.extensions().stream()
+            .noneMatch(
+                extension -> extension.rowType().equals(Extension.DNA_DERIVED_DATA.getRowType())));
     assertFalse(requirements.usesResource("media"));
     assertFalse(requirements.usesResource("agent"));
     assertFalse(requirements.usesResource("protocol"));

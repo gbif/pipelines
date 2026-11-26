@@ -75,6 +75,11 @@
         </dependency>
         <dependency>
             <groupId>org.gbif</groupId>
+            <artifactId>dwc-dp-validator-dwcdp</artifactId>
+            <version>${dwc-dp-analyser.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gbif</groupId>
             <artifactId>dwc-dp-schemas</artifactId>
             <version>${dwc-dp-schemas.version}</version>
         </dependency>
