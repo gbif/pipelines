@@ -27,6 +27,9 @@ public class RemoteAuthClientMock implements RemoteAuthClient {
   /** Authenticated when its user name is sent in a Basic header. */
   private final LoggedUser adminUser;
 
+  /** Authenticated when its user name is sent in a Basic header. */
+  private final LoggedUser otherAdminUser;
+
   @SneakyThrows
   @Override
   public ResponseEntity<String> remoteAuth(String s, HttpHeaders httpHeaders) {
@@ -36,6 +39,8 @@ public class RemoteAuthClientMock implements RemoteAuthClient {
       user = otherUser;
     } else if (adminUser != null && adminUser.getUserName().equals(userName)) {
       user = adminUser;
+    } else if (otherAdminUser != null && otherAdminUser.getUserName().equals(userName)) {
+      user = otherAdminUser;
     }
     return ResponseEntity.ok(OBJECT_MAPPER.writeValueAsString(user));
   }

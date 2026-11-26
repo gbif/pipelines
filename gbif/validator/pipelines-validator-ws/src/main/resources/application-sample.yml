@@ -34,6 +34,12 @@ gbif:
     from: @gbif.mail.url@`
 maxRunningValidationPerUser: 3
 validation:
+  update:
+    # comma separated users and app keys allowed to update validations (PUT /validation/{key}), e.g. the
+    # registry user of the pipelines validator tasks
+    allowed:
+    # false (default): updates by other admins or apps are only logged at WARN; true: they are rejected
+    enforce: false
   url:
     # comma separated hosts that may be fetched even if they resolve to non-public addresses
     allowedPrivateHosts:

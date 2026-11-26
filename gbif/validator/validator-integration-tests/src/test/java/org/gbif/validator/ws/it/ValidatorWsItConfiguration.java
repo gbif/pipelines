@@ -98,6 +98,14 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
           .roles(Collections.singleton(UserRole.REGISTRY_ADMIN.name()))
           .build();
 
+  /** Admin not in validation.update.allowed. */
+  public static final LoggedUser OTHER_ADMIN_USER =
+      LoggedUser.builder()
+          .userName("otherRegistryAdmin")
+          .email("otherRegistryAdmin@gbif.org")
+          .roles(Collections.singleton(UserRole.REGISTRY_ADMIN.name()))
+          .build();
+
   /**
    * Created from here to avoid scanning this class package in which other test configuration are
    * located.
@@ -142,6 +150,7 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
         .testUser(TEST_USER)
         .otherUser(OTHER_USER)
         .adminUser(ADMIN_USER)
+        .otherAdminUser(OTHER_ADMIN_USER)
         .build();
   }
 

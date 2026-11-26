@@ -1,6 +1,7 @@
 package org.gbif.validator.ws.it;
 
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.ADMIN_USER;
+import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.OTHER_ADMIN_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.OTHER_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
@@ -95,6 +96,8 @@ public class ValidationResourceIT {
 
   private final ValidationWsClient adminWsClient;
 
+  private final ValidationWsClient otherAdminWsClient;
+
   private final int port;
 
   private final GatedFileStoreManager fileStoreManager;
@@ -112,6 +115,9 @@ public class ValidationResourceIT {
     adminWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, ADMIN_USER.getUserName(), TEST_USER_PASSWORD);
+    otherAdminWsClient =
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, OTHER_ADMIN_USER.getUserName(), TEST_USER_PASSWORD);
   }
 
   @BeforeAll
@@ -339,6 +345,22 @@ public class ValidationResourceIT {
     assertThrows(IllegalArgumentException.class, () -> adminWsClient.update(cancelled));
     assertEquals(
         Validation.Status.ABORTED, validationWsClient.get(validation.getKey()).getStatus());
+  }
+
+  @Test
+  public void onlyAllowedUsersUpdateValidationsIT() {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+
+    // admin not in validation.update.allowed
+    Validation update = validationWsClient.get(validation.getKey());
+    update.setStatus(Status.FAILED);
+    assertThrows(AccessDeniedException.class, () -> otherAdminWsClient.update(update));
+    assertNotEquals(Status.FAILED, validationWsClient.get(validation.getKey()).getStatus());
+
+    // allowed admin
+    adminWsClient.update(update);
+    assertEquals(Status.FAILED, validationWsClient.get(validation.getKey()).getStatus());
   }
 
   private java.net.http.HttpResponse<String> anonymous(String method, String path, String body)

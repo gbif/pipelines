@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -75,6 +76,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   @Value("${maxRunningValidationPerUser}")
   private final int maxRunningValidationPerUser;
+
+  /** Users and app keys allowed to update validations, comma separated. */
+  @Value("${validation.update.allowed:}")
+  private final String updateAllowed;
+
+  /** When false, updates by admins or apps not in validation.update.allowed are only logged. */
+  @Value("${validation.update.enforce:false}")
+  private final boolean enforceUpdateAllowed;
 
   private final ErrorMapper errorMapper;
 
@@ -152,6 +161,14 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return principal.getAuthorities().stream()
         .map(GrantedAuthority::getAuthority)
         .anyMatch(role -> ADMIN_ROLE.equals(role) || APP_ROLE.equals(role));
+  }
+
+  /** True if the user or app key is in validation.update.allowed. */
+  boolean isUpdateAllowed(String username) {
+    return username != null
+        && Arrays.stream(updateAllowed == null ? new String[0] : updateAllowed.split(","))
+            .map(String::trim)
+            .anyMatch(username::equals);
   }
 
   /** Asserts the current user created the validation, or is an admin or an app. */
@@ -242,6 +259,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
           getPrincipal().getUsername(),
           validation.getKey());
       throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+    }
+    if (!isUpdateAllowed(getPrincipal().getUsername())) {
+      log.warn(
+          "User {} is not in validation.update.allowed, update of validation {} {}",
+          getPrincipal().getUsername(),
+          validation.getKey(),
+          enforceUpdateAllowed ? "rejected" : "allowed");
+      if (enforceUpdateAllowed) {
+        throw errorMapper.apply(Validation.ErrorCode.AUTHORIZATION_ERROR);
+      }
     }
     // a cancelled or deleted validation can't be resumed
     if ((current.getDeleted() != null || current.getStatus() == Status.ABORTED)
