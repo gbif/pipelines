@@ -41,15 +41,19 @@ import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
 import org.gbif.validator.persistence.mapper.ValidationMapper;
 import org.gbif.validator.ws.file.DataFile;
+import org.gbif.validator.ws.file.DownloadFileManager;
 import org.gbif.validator.ws.file.FileSizeException;
 import org.gbif.validator.ws.file.FileStoreManager;
+import org.gbif.validator.ws.file.UnsupportedMediaTypeException;
 import org.gbif.ws.security.GbifUserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Slf4j
@@ -93,6 +97,13 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
             || validationRequest.getNotificationEmail().isEmpty())) {
       throw errorMapper.apply(Validation.ErrorCode.NOTIFICATION_EMAILS_MISSING);
     }
+    if (validationRequest.getNotificationEmail() != null
+        && validationRequest.getNotificationEmail().size()
+            > ValidationRequest.MAX_NOTIFICATION_EMAILS) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "At most " + ValidationRequest.MAX_NOTIFICATION_EMAILS + " notification emails");
+    }
     if (reachedMaxRunningValidations(getPrincipal().getUsername())) {
       throw errorMapper.apply(Validation.ErrorCode.MAX_RUNNING_VALIDATIONS);
     }
@@ -120,7 +131,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                 if (tr.getCause() instanceof UnsupportedCompressionType) {
                   message += "Please check the archive compression type. ";
                 }
-                updateFailedValidation(key, message + tr.getCause().getMessage());
+                updateFailedValidation(key, message + userMessage(tr.getCause()));
               }
             });
     return validation;
@@ -180,10 +191,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                           ? err.getCause()
                           : err;
                   log.error("Error processing file", cause);
-                  updateFailedValidation(key, cause.getMessage());
+                  updateFailedValidation(key, userMessage(cause));
                 } else if (resultDataFile == null) {
                   log.error("Downloaded file is null for URL {}, key {}", fileURL, key);
-                  updateFailedValidation(key, "Downloaded file from " + fileURL + " is null");
+                  updateFailedValidation(key, "The downloaded file is empty");
                 } else {
                   log.info(
                       "File has been downloaded and decompressed from URL {}, key {} to path {}",
@@ -360,8 +371,26 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       // Sent RabbitMQ message
       notify(key, dataFile, pipelinesSteps);
     } catch (Exception ex) {
-      updateFailedValidation(key, ex.getMessage());
+      log.error("Error submitting validation {}", key, ex);
+      updateFailedValidation(key, userMessage(ex));
     }
+  }
+
+  /**
+   * Message of an error shown to users: the message of errors about the submitted file, a generic
+   * one otherwise, so internal details aren't exposed.
+   */
+  static String userMessage(Throwable error) {
+    Throwable cause =
+        error instanceof CompletionException && error.getCause() != null ? error.getCause() : error;
+    if (cause instanceof FileSizeException
+        || cause instanceof DownloadFileManager.UnsafeUrlException
+        || cause instanceof UnsupportedMediaTypeException
+        || cause instanceof UnsupportedCompressionType
+        || cause instanceof IllegalArgumentException) {
+      return cause.getMessage();
+    }
+    return "The file could not be processed";
   }
 
   /** Reads the archive metadata, null if missing, too large, invalid or with a DOCTYPE. */

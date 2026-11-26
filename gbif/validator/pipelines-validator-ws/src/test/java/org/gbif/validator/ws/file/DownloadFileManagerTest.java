@@ -66,11 +66,16 @@ class DownloadFileManagerTest extends DownloadFileBaseTest {
           "fd00::1",
           "::127.0.0.1",
           "64:ff9b::a9fe:a9fe",
-          "::ffff:10.0.0.1"
+          "::ffff:10.0.0.1",
+          "2002:a9fe:a9fe::1",
+          "2002:7f00:1::",
+          "2001:0:4136:e378:8000:63bf:3fff:fdd2",
+          "2001:db8::1"
         }) {
       assertFalse(DownloadFileManager.isPublic(InetAddress.getByName(address)), address);
     }
-    for (String address : new String[] {"8.8.8.8", "130.225.0.1", "2001:4860:4860::8888"}) {
+    for (String address :
+        new String[] {"8.8.8.8", "130.225.0.1", "2001:4860:4860::8888", "2002:808:808::1"}) {
       assertTrue(DownloadFileManager.isPublic(InetAddress.getByName(address)), address);
     }
   }

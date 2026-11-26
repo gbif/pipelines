@@ -44,6 +44,8 @@ public class FileStoreManager {
     private final CompletableFuture<DataFile> task;
   }
 
+  private static final String DEFAULT_DOWNLOAD_FILE_NAME = "download";
+
   private final Path storePath;
 
   private final DownloadFileManager downloadFileManager;
@@ -142,9 +144,8 @@ public class FileStoreManager {
     // also false for URLs the validator doesn't fetch, see DownloadFileManager
     if (!downloadFileManager.isAvailable(url)) {
       throw new IllegalArgumentException(
-          "Failed to download file from "
-              + url
-              + ". The resource is not reachable. Please check that the URL is correct");
+          "Failed to download the file, the resource is not reachable or not supported."
+              + " Please check that the URL is correct");
     }
 
     downloadFileManager.checkSize(url);
@@ -154,7 +155,8 @@ public class FileStoreManager {
 
     // extract the file name from http headers if available
     String headerFileName = getFileNameFromContentDisposition(finalUrl);
-    final String fileName = headerFileName != null ? headerFileName : getFileName(finalUrl);
+    final String fileName =
+        downloadFileName(headerFileName != null ? headerFileName : getFileName(finalUrl));
     Path destinationFolder = getDestinationPath(targetDirectory);
     createIfNotExists(destinationFolder);
     Path dataFilePath = getDestinationPath(targetDirectory).resolve(fileName);
@@ -180,7 +182,7 @@ public class FileStoreManager {
 
     Matcher matcher = Pattern.compile("filename=\"?([^\";]+)\"?").matcher(contentDisposition);
 
-    return matcher.find() ? Paths.get(matcher.group(1)).getFileName().toString() : null;
+    return matcher.find() ? matcher.group(1) : null;
   }
 
   @SneakyThrows
@@ -196,6 +198,9 @@ public class FileStoreManager {
    * be written outside its target directory.
    */
   static String sanitizeFileName(String fileName) {
+    if (fileName == null) {
+      throw new IllegalArgumentException("Missing file name");
+    }
     String name = FilenameUtils.getName(fileName);
     if (name == null || name.isBlank() || name.equals(".") || name.equals("..")) {
       throw new IllegalArgumentException("Invalid file name: " + fileName);
@@ -203,9 +208,22 @@ public class FileStoreManager {
     return name;
   }
 
-  @SneakyThrows
+  /** File name of a downloaded file, a default name if the URL or header has no usable name. */
+  static String downloadFileName(String fileName) {
+    try {
+      return sanitizeFileName(fileName);
+    } catch (IllegalArgumentException ex) {
+      return DEFAULT_DOWNLOAD_FILE_NAME;
+    }
+  }
+
   private static String getFileName(String url) {
-    return Paths.get(new URI(url).getPath()).getFileName().toString();
+    try {
+      Path name = Paths.get(new URI(url).getPath()).getFileName();
+      return name != null ? name.toString() : null;
+    } catch (Exception ex) {
+      return null;
+    }
   }
 
   /** Creates the directory(path) if it doesn't exist. */

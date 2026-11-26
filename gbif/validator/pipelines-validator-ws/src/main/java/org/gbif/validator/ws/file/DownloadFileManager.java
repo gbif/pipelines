@@ -298,6 +298,20 @@ public class DownloadFileManager {
         return false;
       }
     }
+    int w0 = ((b[0] & 0xff) << 8) | (b[1] & 0xff);
+    int w1 = ((b[2] & 0xff) << 8) | (b[3] & 0xff);
+    // 6to4 (2002::/16) embeds an IPv4 address in bytes 2-5
+    if (w0 == 0x2002) {
+      try {
+        return isPublic(InetAddress.getByAddress(Arrays.copyOfRange(b, 2, 6)));
+      } catch (IOException e) {
+        return false;
+      }
+    }
+    // Teredo (2001::/32) and documentation (2001:db8::/32) addresses
+    if (w0 == 0x2001 && (w1 == 0 || w1 == 0x0db8)) {
+      return false;
+    }
     // fc00::/7, unique local addresses
     return (b[0] & 0xfe) != 0xfc;
   }
