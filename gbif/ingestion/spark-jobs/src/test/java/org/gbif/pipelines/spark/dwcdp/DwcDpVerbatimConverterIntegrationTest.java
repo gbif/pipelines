@@ -52,11 +52,12 @@ class DwcDpVerbatimConverterIntegrationTest {
   SparkSession spark;
 
   @BeforeAll
-  void setup() {
+  void setup(@TempDir Path checkpoints) {
     spark =
         SparkTestSession.createBuilder()
             .appName("DwcDpVerbatimConverterIntegrationTest")
             .getOrCreate();
+    spark.sparkContext().setCheckpointDir(checkpoints.toUri().toString());
   }
 
   @AfterAll

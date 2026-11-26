@@ -3,6 +3,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.execution;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Diagnostic coverage for Event-core Occurrence discovery and contextual Material enrichment.
@@ -55,8 +57,9 @@ class NestedOccurrenceContextPipelineDiagnosticTest {
   private NestedExtensionContext context;
 
   @BeforeAll
-  void setup() {
+  void setup(@TempDir Path checkpoints) {
     spark = SparkTestSession.createBuilder().appName(getClass().getSimpleName()).getOrCreate();
+    spark.sparkContext().setCheckpointDir(checkpoints.toUri().toString());
     graph = new DwcDpSchemaLoader().current();
     context = EventOccurrenceNestedContextMapping.context(graph);
   }
