@@ -7,8 +7,6 @@ import static org.gbif.pipelines.spark.util.IndexSettings.resolveIndexAlias;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -26,6 +24,7 @@ import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsQueryBoosts;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.spark.IndexingPipeline;
+import org.gbif.pipelines.spark.records.IndexSchema;
 import org.gbif.wrangler.lock.Mutex;
 
 /**
@@ -81,7 +80,6 @@ public class EsIndexUtils {
   }
 
   private static IndexParams createIndexParams(IndexingPipeline.ElasticOptions options) {
-    Path mappingsPath = Paths.get(options.getEsSchemaPath());
     boolean independentIndex = options.getEsIndexName().startsWith(options.getDatasetId());
 
     Map<String, String> settings = new HashMap<>(6);
@@ -129,7 +127,7 @@ public class EsIndexUtils {
         .indexName(options.getEsIndexName())
         .datasetKey(options.getDatasetId())
         .attempt(options.getAttempt())
-        .pathMappings(mappingsPath)
+        .mappings(IndexSchema.mappings(options.getEsSchemaPath(), options.isSourceEnabled()))
         .settings(settings)
         .build();
   }

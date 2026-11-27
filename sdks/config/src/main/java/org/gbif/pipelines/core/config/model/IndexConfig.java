@@ -28,4 +28,11 @@ public class IndexConfig implements Serializable {
   public String eventAlias = "event";
   public String eventVersion;
   public String eventSchemaPath = "elasticsearch/es-event-schema.json";
+
+  /**
+   * Keeps the _source of the indices. Once records are served from the HBase records tables, set to
+   * false: new indices are created with the _source disabled and the fields that aren't indexed
+   * aren't sent. Existing indices keep their mappings until they are rebuilt.
+   */
+  public boolean sourceEnabled = true;
 }
