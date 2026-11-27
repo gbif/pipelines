@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.apache.hadoop.hdfs.DFSUtilClient;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -90,6 +91,93 @@ class DataPackageConversionPipelineTest {
 
     assertFalse(out.resources().isEmpty());
     assertNull(out.resources().get(0).dialect());
+  }
+
+  @Test
+  void stagesFileAliasesAndEscapesColonsInTheDeclaredPath(@TempDir Path dir) throws Exception {
+    Path source = Files.createDirectories(dir.resolve("input/dataset"));
+    Path target = Files.writeString(source.resolve("source.txt"), "id\tvalue\n1\tkept\n");
+    Files.createSymbolicLink(source.resolve("2024-01-01T00:00:00.tsv"), target.getFileName());
+    Files.writeString(
+        source.resolve("datapackage.json"),
+        """
+        {"resources":[{"name":"event","path":"2024-01-01T00:00:00.tsv"}]}
+        """);
+
+    Path staged = stagePackage(dir);
+    String path =
+        MapperUtil.MAPPER
+            .readTree(Files.readString(staged.resolve("datapackage.json")))
+            .path("resources")
+            .get(0)
+            .path("path")
+            .asText();
+    assertEquals("2024-01-01T00%3A00%3A00.parquet", path);
+    assertTrue(DFSUtilClient.isValidName("/" + path));
+    assertTrue(Files.isDirectory(staged.resolve(path)));
+    assertEquals(
+        "kept", spark.read().parquet("file:" + staged + "/" + path).first().getAs("value"));
+  }
+
+  @Test
+  void stagesParquetDirectoryWithInPackagePartSymlink(@TempDir Path dir) throws Exception {
+    Path source = Files.createDirectories(dir.resolve("input/dataset"));
+    Path parts = source.resolve("original");
+    spark.range(1, 2).coalesce(1).write().parquet(parts.toUri().toString());
+    Path resource = Files.createDirectory(source.resolve("event.parquet"));
+    try (var files = Files.list(parts)) {
+      Path part =
+          files.filter(path -> path.toString().endsWith(".parquet")).findFirst().orElseThrow();
+      Files.createSymbolicLink(resource.resolve("part-0.parquet"), resource.relativize(part));
+    }
+    Files.writeString(
+        source.resolve("datapackage.json"),
+        """
+        {"resources":[{"name":"event","path":"event.parquet"}]}
+        """);
+
+    Path staged = stagePackage(dir);
+    assertEquals(
+        1L,
+        spark
+            .read()
+            .parquet(staged.resolve("event.parquet").toUri().toString())
+            .first()
+            .getLong(0));
+  }
+
+  @Test
+  void preservesInlineDataWhenTheParserIgnoresBlankPaths(@TempDir Path dir) throws Exception {
+    Path source = Files.createDirectories(dir.resolve("input/dataset"));
+    Files.writeString(
+        source.resolve("datapackage.json"),
+        """
+        {"resources":[
+          {"name":"inline","data":[{"id":1}]},
+          {"name":"blank","path":"","data":[{"id":2}]},
+          {"name":"blank-list","path":[""," "],"data":[{"id":3}]}
+        ]}
+        """);
+
+    Path staged = stagePackage(dir);
+    assertEquals(
+        MapperUtil.MAPPER.readTree(Files.readString(source.resolve("datapackage.json"))),
+        MapperUtil.MAPPER.readTree(Files.readString(staged.resolve("datapackage.json"))));
+    try (var files = Files.list(staged)) {
+      assertEquals(
+          List.of("datapackage.json"),
+          files
+              .map(path -> path.getFileName().toString())
+              .filter(name -> !name.endsWith(".crc"))
+              .toList());
+    }
+  }
+
+  private Path stagePackage(Path dir) throws IOException {
+    Path output = dir.resolve("output");
+    DataPackageConversionPipeline.runCopy(
+        createPipeline(dir.resolve("input").toString(), output.toUri().toString(), "dataset", 0));
+    return output.resolve("dataset/0").resolve(DATAPACKAGE_SUBDIR);
   }
 
   @Test

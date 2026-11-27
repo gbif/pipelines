@@ -41,6 +41,16 @@ class DataPackageConverterTest {
     mapper = new ObjectMapper();
   }
 
+  @Test
+  void resolvesTheCanonicalFileBehindAnInPackageSymlink(@TempDir Path dir) throws Exception {
+    Path source = dir.toRealPath();
+    Path target = Files.writeString(source.resolve("target.csv"), "id\n1\n");
+    Path link = Files.createSymbolicLink(source.resolve("alias.csv"), target.getFileName());
+
+    assertEquals(
+        target, DataPackageConverter.resolveInputPath(source, "event", link.getFileName()));
+  }
+
   @AfterAll
   void teardown() {
     spark.stop();
