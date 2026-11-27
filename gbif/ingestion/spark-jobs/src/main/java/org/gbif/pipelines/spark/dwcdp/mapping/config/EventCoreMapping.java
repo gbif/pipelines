@@ -49,14 +49,15 @@ public final class EventCoreMapping {
    * Resolves eventConductedByID through agent.agentID while preserving an explicit publisher value.
    */
   public static CoreFragment eventConductedBy(SchemaGraph graph) {
+    String recordedBy = graph.hasColumn("event", "recordedBy") ? "recordedBy" : "eventConductedBy";
     return AgentMapping.core(
         graph,
         new AgentMapping.Spec(
             "event-conducted-by-agent",
             "event",
-            "eventConductedByID",
-            "eventConductedBy",
-            TargetTerms.resolve("eventConductedBy")));
+            recordedBy + "ID",
+            recordedBy,
+            TargetTerms.resolve(recordedBy)));
   }
 
   /**

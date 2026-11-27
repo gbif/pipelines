@@ -9,9 +9,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CaseExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionRowComposition;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.PredicateExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
 
 /**
@@ -135,9 +138,18 @@ public final class CompiledMappingDatasetPruner {
               fragment -> !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
           .forEach(fragments::add);
     } else {
+      List<CompiledFragment> contributors =
+          structurallyAvailable.stream()
+              .filter(
+                  fragment ->
+                      !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
+              .toList();
       structurallyAvailable.stream()
           .filter(
-              fragment -> !fragment.targets().isEmpty() || mergeOwners.contains(fragment.name()))
+              fragment ->
+                  contributors.contains(fragment)
+                      || contributors.stream()
+                          .anyMatch(candidate -> candidate.enrichesBranch(fragment)))
           .forEach(fragments::add);
     }
 
@@ -299,6 +311,9 @@ public final class CompiledMappingDatasetPruner {
     List<CompiledSourceField> sources = pruneSources(producer, scope, available);
     boolean expression = producer.expressionValue();
     boolean positional = !expression && fixedSourcePrefix(producer.aggregation()) > 0;
+    if (expression && nullWhenGuardFieldIsUnavailable(producer.expression(), available)) {
+      return Optional.empty();
+    }
     // Expression dependencies are nullable at execution time: SparkPathResult.columnOrNull
     // supplies null for physically unavailable fields. Keep the expression producer so row-level
     // fallback semantics (for example firstNonBlank(naturalId, generatedId)) can still evaluate
@@ -327,6 +342,20 @@ public final class CompiledMappingDatasetPruner {
             producer.origin(),
             producer.contributionIdentity(),
             producer.orderBy()));
+  }
+
+  private static boolean nullWhenGuardFieldIsUnavailable(
+      ValueExpression expression, Predicate<FieldRef> available) {
+    if (!(expression instanceof CaseExpression conditional)) {
+      return false;
+    }
+    // An unavailable field is null at execution time, so the first CASE branch always wins.
+    CaseExpression.Branch first = conditional.branches().get(0);
+    return first.predicate() instanceof PredicateExpression.IsNull isNull
+        && isNull.expression() instanceof ValueExpression.FieldExpression field
+        && !available.test(field.field())
+        && first.value() instanceof ValueExpression.LiteralExpression literal
+        && literal.value() == null;
   }
 
   /**

@@ -10,6 +10,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DataPackage {
 
+  private String profile;
   private List<DataPackageResource> resources = new ArrayList<>();
 
   public Optional<DataPackageResource> findResource(String name) {

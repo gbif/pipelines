@@ -148,6 +148,9 @@ public final class MappingInputRequirementsAnalyzer {
                 column(out, relationStep.relation().targetResource(), select.selector());
               }
             });
+    relationStep
+        .joinPredicate()
+        .ifPresent(predicate -> predicate.requiredFields().forEach(field -> addField(out, field)));
     if (relationStep.filter().isPresent()) {
       String targetResource = relationStep.relation().targetResource();
       if (relationStep.filter().requiresAllColumns()) {

@@ -14,11 +14,14 @@ final class OccurrenceExtensionRouting {
   static void addOccurrenceId(ExtensionFragmentBuilder builder, MappingPath occurrence) {
     builder.field(
         TargetFieldMapping.expression(
-            DwcTerm.occurrenceID.qualifiedName(),
-            ValueExpression.firstNonBlank(
-                ValueExpression.field(occurrence.field("occurrenceID")),
-                ValueExpression.concat(
-                    ValueExpression.literal("gbif:dwcdp:occurrence:occurrence_pk:"),
-                    ValueExpression.field(occurrence.field("occurrence_pk"))))));
+            DwcTerm.occurrenceID.qualifiedName(), occurrenceId(occurrence)));
+  }
+
+  static ValueExpression occurrenceId(MappingPath occurrence) {
+    return ValueExpression.firstNonBlank(
+        ValueExpression.field(occurrence.field("occurrenceID")),
+        ValueExpression.concat(
+            ValueExpression.literal("gbif:dwcdp:occurrence:occurrence_pk:"),
+            ValueExpression.field(occurrence.field("occurrence_pk"))));
   }
 }

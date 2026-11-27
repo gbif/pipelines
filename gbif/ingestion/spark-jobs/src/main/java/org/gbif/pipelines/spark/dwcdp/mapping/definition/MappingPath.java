@@ -50,6 +50,28 @@ public final class MappingPath {
     return new JoinBuilder(this, RelationStep.inferred(targetResource));
   }
 
+  /** Adds a predicate to the last join, using fields from either side of that join. */
+  public MappingPath andOn(PredicateExpression predicate) {
+    if (relations.isEmpty()) {
+      throw new IllegalStateException("A join predicate requires a relation");
+    }
+    List<RelationStep> steps = new ArrayList<>(relations);
+    int last = steps.size() - 1;
+    for (FieldRef field : predicate.requiredFields()) {
+      SchemaPath path = field.path();
+      int depth = path.relations().size();
+      if (!rootResource().equals(path.rootResource())
+          || depth > schemaPath.relations().size()
+          || !schemaPath.relations().subList(0, depth).equals(path.relations())
+          || !graph.hasColumn(path.currentResource(), field.column())) {
+        throw new IllegalArgumentException(
+            "Unknown join predicate field: " + field.qualifiedName());
+      }
+    }
+    steps.set(last, steps.get(last).andOn(predicate));
+    return new MappingPath(graph, schemaPath, steps);
+  }
+
   private MappingPath append(RelationStep step) {
     SchemaRelation relation = resolve(step);
     List<RelationStep> nextRelations = new ArrayList<>(relations);

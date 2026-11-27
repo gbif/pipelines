@@ -63,9 +63,11 @@ public final class OccurrenceDwcaMapping {
         .importFragment(ReferenceMapping.dnaSequenceIdentificationReferencesForOccurrence(graph))
         .endExtension()
         .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
+        .unionRows()
         .importFragment(NucleotideMapping.materialAnalysesForOccurrence(graph))
         .importFragment(NucleotideMapping.materialAnalysisSequenceForOccurrence(graph))
         .importFragment(NucleotideMapping.materialAnalysisProtocolForOccurrence(graph))
+        .importFragment(NucleotideMapping.identificationSequencesForOccurrence(graph))
         .endExtension()
         .extension(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE)
         .importFragment(ChronometricMapping.agesForOccurrence(graph))
@@ -99,8 +101,10 @@ public final class OccurrenceDwcaMapping {
                         ValueExpression.literal("gbif:dwcdp:occurrence:occurrence_pk:"),
                         ValueExpression.field(occurrence.field("occurrence_pk")))));
     DirectFieldMappings.from(graph, "occurrence", occurrence).addTo(builder);
+    if (graph.hasColumn("occurrence", "recordedByID")) {
+      builder.importCoreFragment(OccurrenceCoreMapping.recordedBy(graph));
+    }
     return builder
-        .importCoreFragment(OccurrenceCoreMapping.recordedBy(graph))
         .importCoreFragment(OccurrenceCoreMapping.identifiedBy(graph))
         .importCoreFragment(OccurrenceCoreMapping.organism(graph))
         .importCoreFragment(OccurrenceCoreMapping.acceptedIdentification(graph))

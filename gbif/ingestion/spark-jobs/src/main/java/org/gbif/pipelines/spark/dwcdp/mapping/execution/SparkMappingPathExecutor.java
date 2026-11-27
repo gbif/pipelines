@@ -249,9 +249,22 @@ public final class SparkMappingPathExecutor {
               targetPath.field(useNestedContextLink ? nestedContextLink : relation.targetColumn()));
 
       Dataset<Row> parent = current.withColumn(INTERNAL_PARENT_ID, monotonically_increasing_id());
-      Dataset<Row> joined =
-          parent.join(
-              target, parent.col(sourceAlias).equalTo(target.col(targetAlias)), "left_outer");
+      Column join = parent.col(sourceAlias).equalTo(target.col(targetAlias));
+      if (step.joinPredicate().isPresent()) {
+        join =
+            join.and(
+                SparkValueExpression.build(
+                    step.joinPredicate().orElseThrow(),
+                    field -> {
+                      String left = aliases.get(field);
+                      String right = targetAliases.get(field);
+                      if (left != null) {
+                        return parent.col(left);
+                      }
+                      return right == null ? lit(null) : target.col(right);
+                    }));
+      }
+      Dataset<Row> joined = parent.join(target, join, "left_outer");
 
       WindowSpec parentWindow = Window.partitionBy(col(INTERNAL_PARENT_ID));
       joined = joined.withColumn(INTERNAL_MATCH_COUNT, count(col(targetAlias)).over(parentWindow));
@@ -463,6 +476,7 @@ public final class SparkMappingPathExecutor {
       required.add(path.field(relation.sourceColumn()));
       SchemaPath targetPath = path.append(relation);
       required.add(targetPath.field(relation.targetColumn()));
+      step.joinPredicate().ifPresent(predicate -> required.addAll(predicate.requiredFields()));
       step.cardinalityStrategy()
           .filter(CardinalityStrategy.Select.class::isInstance)
           .map(CardinalityStrategy.Select.class::cast)

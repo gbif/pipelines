@@ -9,11 +9,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
+import org.gbif.dp.validator.dwcdp.DwcDpProfileRegistry;
+import org.gbif.dp.validator.dwcdp.DwcDpSchemaVersion;
+import org.gbif.dp.validator.dwcdp.SchemaFetchPolicy;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
+import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 
-/** Loads the official versioned DwC-DP schemas from {@code schemas/} on the classpath. */
+/** Loads DwC-DP schema bundles from the classpath and the released 1.0 profile. */
 public final class DwcDpSchemaLoader {
+  private static final String RELEASE_PROFILE =
+      "https://rs.tdwg.org/dwc-dp/1.0/dwc-dp-profile.json";
   private static final String ROOT = "schemas/";
+  private static SchemaGraph releaseGraph;
   private final ClassLoader classLoader;
   private final ObjectMapper mapper;
 
@@ -44,16 +52,73 @@ public final class DwcDpSchemaLoader {
   }
 
   public SchemaGraph version(String version) {
-    return loadVersionBase(version.endsWith("/") ? version : version + "/");
+    String base = version.endsWith("/") ? version : version + "/";
+    return "1.0/".equals(base) ? releasedSchema() : loadVersionBase(base);
+  }
+
+  public SchemaGraph forPackage(DataPackage dataPackage) {
+    return forPackage(dataPackage, DwcDpSchemaLoader::releasedSchema);
+  }
+
+  SchemaGraph forPackage(DataPackage dataPackage, Supplier<SchemaGraph> releaseGraph) {
+    String profile = dataPackage.getProfile();
+    return RELEASE_PROFILE.equals(profile)
+            || RELEASE_PROFILE.replace("https:", "http:").equals(profile)
+        ? releaseGraph.get()
+        : current();
+  }
+
+  private static synchronized SchemaGraph releasedSchema() {
+    if (releaseGraph == null) {
+      releaseGraph = new DwcDpSchemaLoader().loadRelease();
+    }
+    return releaseGraph;
+  }
+
+  private SchemaGraph loadRelease() {
+    DwcDpSchemaVersion version =
+        new DwcDpProfileRegistry(SchemaFetchPolicy.defaults())
+            .resolve(RELEASE_PROFILE)
+            .orElseThrow(() -> new IllegalStateException("Unable to resolve " + RELEASE_PROFILE));
+    return loadBundle(
+        path ->
+            version
+                .tableSchemaSource()
+                .read(path)
+                .orElseThrow(() -> new IOException("Missing DwC-DP 1.0 schema: " + path)));
   }
 
   private SchemaGraph loadVersionBase(String base) {
-    JsonNode index = read(ROOT + base + "index.json");
+    return loadBundle(path -> read(ROOT + base + path).toString());
+  }
+
+  SchemaGraph loadBundle(SchemaSource source) {
+    try {
+      JsonNode index = mapper.readTree(source.read("index.json"));
+      List<JsonNode> schemas = new ArrayList<>();
+      JsonNode tableSchemas = index.path("tableSchemas");
+      if (!tableSchemas.isArray() || tableSchemas.isEmpty()) {
+        throw new IOException("DwC-DP schema bundle has no table schemas");
+      }
+      for (JsonNode descriptor : tableSchemas) {
+        schemas.add(mapper.readTree(source.read(text(descriptor, "url"))));
+      }
+      return buildGraph(schemas);
+    } catch (IOException e) {
+      throw new IllegalStateException("Unable to read DwC-DP schema bundle", e);
+    }
+  }
+
+  @FunctionalInterface
+  interface SchemaSource {
+    String read(String path) throws IOException;
+  }
+
+  private SchemaGraph buildGraph(List<JsonNode> schemas) {
     Map<String, SchemaResource> resources = new LinkedHashMap<>();
     List<PendingForeignKey> foreignKeys = new ArrayList<>();
 
-    for (JsonNode descriptor : index.path("tableSchemas")) {
-      JsonNode schema = read(ROOT + base + text(descriptor, "url"));
+    for (JsonNode schema : schemas) {
       String resourceName = text(schema, "name");
       Map<String, SchemaField> fields = new LinkedHashMap<>();
       for (JsonNode field : schema.path("fields")) {

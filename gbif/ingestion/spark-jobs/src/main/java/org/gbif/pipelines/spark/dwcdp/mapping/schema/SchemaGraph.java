@@ -68,12 +68,20 @@ public interface SchemaGraph {
   default SchemaRelation resolve(
       String sourceResource, String targetResource, String viaColumn, String predicate) {
     List<SchemaRelation> candidates = relations(sourceResource, targetResource);
+    // Existing mappings name the draft evidence link. The release uses the occurrence PK.
+    if ("occurrence".equals(sourceResource)
+        && "material".equals(targetResource)
+        && "evidenceForOccurrenceID".equals(viaColumn)
+        && hasColumn("material", "evidenceForOccurrence_fk")) {
+      viaColumn = "evidenceForOccurrence_fk";
+    }
     if (viaColumn != null) {
+      String joinColumn = viaColumn;
       List<SchemaRelation> sourceMatches =
-          candidates.stream().filter(r -> r.sourceColumn().equals(viaColumn)).toList();
+          candidates.stream().filter(r -> r.sourceColumn().equals(joinColumn)).toList();
       candidates =
           sourceMatches.isEmpty()
-              ? candidates.stream().filter(r -> r.usesColumn(viaColumn)).toList()
+              ? candidates.stream().filter(r -> r.usesColumn(joinColumn)).toList()
               : sourceMatches;
     }
     if (predicate != null) {

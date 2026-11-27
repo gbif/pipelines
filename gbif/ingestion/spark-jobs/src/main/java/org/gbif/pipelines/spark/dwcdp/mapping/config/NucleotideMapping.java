@@ -1,17 +1,26 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression.field;
 
+import java.util.Map;
+import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.dwc.terms.MixsTerm;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CaseExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.PredicateExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueExpression;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 
@@ -19,6 +28,18 @@ import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
 public final class NucleotideMapping {
 
   public static final String ROW_TYPE_DNA_DERIVED_DATA = Extension.DNA_DERIVED_DATA.getRowType();
+
+  public static final String EVENT_READ_TOTALS = "__dwcdp_event_read_totals";
+
+  // Terms in the registered DNA Derived Data extension that the term factory cannot resolve
+  // from the DwC-DP field names.
+  private static final Map<String, String> MOLECULAR_PROTOCOL_TERM_OVERRIDES =
+      Map.of(
+          "samp_taxon_id", "https://w3id.org/mixs/0001320",
+          "neg_cont_type", "https://w3id.org/mixs/0001321",
+          "pos_cont_type", "https://w3id.org/mixs/0001322",
+          "single_cell_lysis_appr", "https://w3id.org/mixs/0000076",
+          "single_cell_lysis_prot", "https://w3id.org/mixs/0000054");
 
   private NucleotideMapping() {}
 
@@ -74,6 +95,90 @@ public final class NucleotideMapping {
             .scopeKey("event_pk")
             .rowMatch(paths.analysis().field("nucleotideAnalysis_pk"));
 
+    addMolecularProtocolFields(graph, protocol, builder);
+    return builder.build();
+  }
+
+  /** Sequences and matching analysis and protocol metadata linked through identifications. */
+  public static ExtensionFragment identificationSequencesForOccurrence(SchemaGraph graph) {
+    return identificationSequences(
+        graph,
+        MappingPath.root(graph, "occurrence"),
+        "identification-nucleotide-sequence-for-occurrence",
+        "occurrence_pk");
+  }
+
+  /** Collects the distinct processed totals of analyses linked to the Event. */
+  public static CoreFragment eventReadTotals(SchemaGraph graph) {
+    MappingPath analysis =
+        MappingPath.root(graph, "event")
+            .join("nucleotide-analysis")
+            .via("event_fk")
+            .optional()
+            .fanOut();
+    return CoreFragmentBuilder.coreFragment("event-dna-read-totals", analysis)
+        .field(
+            TargetFieldMapping.oneOf(
+                EVENT_READ_TOTALS,
+                ValueAggregation.firstNonNull(),
+                analysis.field("processedTotalReadCount")))
+        .build();
+  }
+
+  /** Sequences associated with an occurrence nested under its Event. */
+  public static ExtensionFragment identificationSequencesForEventOccurrence(SchemaGraph graph) {
+    MappingPath event = MappingPath.root(graph, "event");
+    return identificationSequences(
+        graph,
+        event.join("occurrence").via("event_fk").optional().fanOut(),
+        "identification-nucleotide-sequence-for-event-occurrence",
+        "event_pk");
+  }
+
+  private static ExtensionFragment identificationSequences(
+      SchemaGraph graph, MappingPath occurrence, String name, String scopeKey) {
+    MappingPath identification =
+        occurrence.join("identification").via("occurrence_fk").optional().fanOut();
+    MappingPath sequence =
+        identification
+            .join("nucleotide-sequence")
+            .via("nucleotideSequence_fk")
+            .optional()
+            .exactlyOne();
+
+    MappingPath analysis =
+        sequence.join("nucleotide-analysis").via("nucleotideSequence_fk").optional().fanOut();
+    ValueExpression extract = field(identification.field("materialEntity_fk"));
+    MappingPath protocol =
+        analysis
+            .andOn(
+                PredicateExpression.any(
+                    PredicateExpression.equals(extract, field(analysis.field("materialEntity_fk"))),
+                    PredicateExpression.all(
+                        PredicateExpression.isNull(extract),
+                        PredicateExpression.equals(
+                            field(occurrence.field("event_fk")),
+                            field(analysis.field("event_fk"))))))
+            .join("molecular-protocol")
+            .via("molecularProtocol_fk")
+            .optional()
+            .exactlyOne();
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(name, ROW_TYPE_DNA_DERIVED_DATA, protocol).scopeKey(scopeKey);
+    if (occurrence.rootResource().equals("event")) {
+      builder.field(
+          TargetFieldMapping.expression(
+              DwcTerm.occurrenceID.qualifiedName(),
+              CaseExpression.builder()
+                  .when(
+                      PredicateExpression.isNull(field(sequence.field("nucleotideSequence_pk"))),
+                      ValueExpression.literal(null))
+                  .otherwise(OccurrenceExtensionRouting.occurrenceId(occurrence))));
+    }
+
+    addSequenceFields(graph, sequence, builder);
+    DirectFieldMappings.from(graph, "nucleotide-analysis", analysis).addTo(builder);
     addMolecularProtocolFields(graph, protocol, builder);
     return builder.build();
   }
@@ -180,7 +285,8 @@ public final class NucleotideMapping {
       if (isStructural(column) || column.equals("target_gene")) {
         continue;
       }
-      TargetTerms.resolveOutput(column)
+      Optional.ofNullable(MOLECULAR_PROTOCOL_TERM_OVERRIDES.get(column))
+          .or(() -> TargetTerms.resolveOutput(column))
           .filter(target -> !target.equals(dnaSequenceTarget))
           .ifPresent(target -> builder.field(inferred(target, protocol.field(column))));
     }

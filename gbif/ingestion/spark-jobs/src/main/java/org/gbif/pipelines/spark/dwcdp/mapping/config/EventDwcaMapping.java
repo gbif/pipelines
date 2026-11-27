@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
 import static org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder.mappingPlan;
 
+import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
@@ -32,6 +33,9 @@ public final class EventDwcaMapping {
                 TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
             .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
             .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
+            .mergeCoreTarget(
+                NucleotideMapping.EVENT_READ_TOTALS, ValueAggregation.pipeDelimitedDistinct())
+            .importCoreFragment(NucleotideMapping.eventReadTotals(graph))
             .importCoreFragment(EventCoreMapping.parentEvent(graph))
             .importCoreFragment(EventCoreMapping.geologicalContext(graph))
             .importCoreFragment(EventCoreMapping.eventConductedBy(graph))
@@ -77,7 +81,10 @@ public final class EventDwcaMapping {
         .mergeTarget(DwcTerm.basisOfRecord.qualifiedName(), ValueAggregation.firstNonNull())
         .importFragment(OccurrenceMapping.directOccurrence(graph))
         .importFragment(OccurrenceMapping.eventIdentity(graph))
-        .importFragment(OccurrenceMapping.recordedBy(graph))
+        .importFragments(
+            graph.hasColumn("occurrence", "recordedByID")
+                ? List.of(OccurrenceMapping.recordedBy(graph))
+                : List.of())
         .importFragment(OccurrenceMapping.identifiedBy(graph))
         .importFragment(OccurrenceMapping.organism(graph))
         .importFragment(OccurrenceMapping.acceptedIdentification(graph))
@@ -164,9 +171,11 @@ public final class EventDwcaMapping {
         .importFragment(HumboldtMapping.samplingEffortProtocol(graph))
         .endExtension()
         .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
+        .unionRows()
         .importFragment(NucleotideMapping.eventAnalyses(graph))
         .importFragment(NucleotideMapping.eventAnalysisSequence(graph))
         .importFragment(NucleotideMapping.eventAnalysisProtocol(graph))
+        .importFragment(NucleotideMapping.identificationSequencesForEventOccurrence(graph))
         .endExtension()
         .extension(ChronometricMapping.ROW_TYPE_CHRONOMETRIC_AGE)
         .importFragment(ChronometricMapping.eventAges(graph))

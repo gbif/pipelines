@@ -335,7 +335,8 @@ public final class MappingCompiler {
               step.explicitColumns(),
               step.requirement(),
               step.cardinalityStrategy(),
-              step.filter()));
+              step.filter(),
+              step.joinPredicate()));
       path = path.append(relation);
     }
     List<CompiledTargetProducer> targets =
@@ -357,7 +358,8 @@ public final class MappingCompiler {
               step.explicitColumns(),
               step.requirement(),
               step.cardinalityStrategy(),
-              step.filter()));
+              step.filter(),
+              step.joinPredicate()));
       path = path.append(relation);
     }
 
