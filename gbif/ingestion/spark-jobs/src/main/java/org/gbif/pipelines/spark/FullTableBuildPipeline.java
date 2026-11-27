@@ -16,11 +16,14 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
 import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
@@ -164,9 +167,10 @@ public class FullTableBuildPipeline {
 
     // load hdfs view
     Dataset<Row> hdfs =
-        spark
-            .read()
-            .parquet(scanResult.successfulPaths().toArray(new String[0]))
+        readHdfsParquet(
+                spark,
+                expectedHdfsSchema(spark, config, args.datasetType),
+                scanResult.successfulPaths())
             .coalesce(args.numberOfShards);
 
     String coreDwcTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
@@ -323,6 +327,33 @@ public class FullTableBuildPipeline {
     }
 
     log.info(timeAndRecPerSecond("full-table-build", start, avroToHdfsCountAttempted));
+  }
+
+  /**
+   * The schema the interpretation pipelines currently write to the hdfs parquet directories.
+   *
+   * <p>The source directories are written by different pipeline versions, so not every file has
+   * every column (e.g. {@code environments} and {@code *_classification.environments}). Without an
+   * explicit schema Spark takes the schema of a single file and applies it to all of them, which
+   * silently drops newer columns or fails the insert on nested struct mismatches, depending on
+   * which file it picks. Reading with this schema makes fields missing from older files read as
+   * NULL.
+   */
+  static StructType expectedHdfsSchema(
+      SparkSession spark, PipelinesConfig config, DatasetType datasetType) {
+    if (datasetType == DatasetType.SAMPLING_EVENT) {
+      return Encoders.bean(EventHdfsRecord.class).schema();
+    }
+    // add the classification structs with the same transformation the interpretation uses, so
+    // they match the configured classifications exactly
+    Dataset<Row> empty =
+        spark.createDataFrame(
+            Collections.emptyList(), Encoders.bean(OccurrenceHdfsRecord.class).schema());
+    return OccurrenceInterpretationPipeline.withClassificationColumns(config, empty).schema();
+  }
+
+  static Dataset<Row> readHdfsParquet(SparkSession spark, StructType schema, List<String> paths) {
+    return spark.read().schema(schema).parquet(paths.toArray(new String[0]));
   }
 
   private static long loadTempLoadingTable(

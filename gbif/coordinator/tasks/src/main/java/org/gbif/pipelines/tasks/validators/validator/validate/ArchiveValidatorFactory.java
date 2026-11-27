@@ -37,7 +37,8 @@ public class ArchiveValidatorFactory {
                   config.clbConfig.url,
                   config.clbConfig.user,
                   config.clbConfig.password,
-                  config.clbConfig.callbackUrl))
+                  config.clbConfig.callbackUrl,
+                  config.clbConfig.callbackSecret))
           .build();
     }
 
@@ -63,7 +64,8 @@ public class ArchiveValidatorFactory {
                   config.clbConfig.url,
                   config.clbConfig.user,
                   config.clbConfig.password,
-                  config.clbConfig.callbackUrl))
+                  config.clbConfig.callbackUrl,
+                  config.clbConfig.callbackSecret))
           .build();
     }
 

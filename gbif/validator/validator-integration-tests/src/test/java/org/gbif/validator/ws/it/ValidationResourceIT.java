@@ -1,14 +1,20 @@
 package org.gbif.validator.ws.it;
 
+import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.ADMIN_USER;
+import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.OTHER_ADMIN_USER;
+import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.OTHER_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER;
 import static org.gbif.validator.ws.it.ValidatorWsItConfiguration.TEST_USER_PASSWORD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,12 +23,15 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.validator.api.ClbCallbackToken;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -31,6 +40,7 @@ import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.api.ValidationRequest;
 import org.gbif.validator.api.ValidationSearchRequest;
+import org.gbif.validator.it.mocks.GatedFileStoreManager;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -44,6 +54,7 @@ import org.mockserver.junit.jupiter.MockServerExtension;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpStatusCode;
+import org.mockserver.verify.VerificationTimes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,6 +62,7 @@ import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -67,6 +79,9 @@ import org.springframework.test.util.TestSocketUtils;
 @AutoConfigureMockMvc
 public class ValidationResourceIT {
 
+  // validation.clbCallback.secret of application-test.yml
+  private static final String CLB_CALLBACK_SECRET = "it-callback-secret";
+
   // Directory used as temporary space to upload files
   @TempDir static Path workingDirectory;
 
@@ -77,11 +92,32 @@ public class ValidationResourceIT {
 
   private final ValidationWsClient validationWsClient;
 
+  private final ValidationWsClient otherUserWsClient;
+
+  private final ValidationWsClient adminWsClient;
+
+  private final ValidationWsClient otherAdminWsClient;
+
+  private final int port;
+
+  private final GatedFileStoreManager fileStoreManager;
+
   @Autowired
-  public ValidationResourceIT(@LocalServerPort int port) {
+  public ValidationResourceIT(@LocalServerPort int port, GatedFileStoreManager fileStoreManager) {
+    this.fileStoreManager = fileStoreManager;
+    this.port = port;
     validationWsClient =
         ValidationWsClient.getInstance(
             "http://localhost:" + port, TEST_USER.getUserName(), TEST_USER_PASSWORD);
+    otherUserWsClient =
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, OTHER_USER.getUserName(), TEST_USER_PASSWORD);
+    adminWsClient =
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, ADMIN_USER.getUserName(), TEST_USER_PASSWORD);
+    otherAdminWsClient =
+        ValidationWsClient.getInstance(
+            "http://localhost:" + port, OTHER_ADMIN_USER.getUserName(), TEST_USER_PASSWORD);
   }
 
   @BeforeAll
@@ -239,6 +275,17 @@ public class ValidationResourceIT {
   }
 
   @Test
+  public void validationSubmitPrivateUrlIT() {
+    // localhost is not an allowed private host, only 127.0.0.1 is
+    String url = "http://localhost:" + clientAndServer.getPort() + "/private.zip";
+    Assertions.assertThrows(
+        RuntimeException.class,
+        () -> validationWsClient.validateFileFromUrl(url, testValidationRequest()));
+    clientAndServer.verify(
+        HttpRequest.request().withPath("/private.zip"), VerificationTimes.never());
+  }
+
+  @Test
   public void validationSubmitUrlWrongEmailFormatIT() {
     Assertions.assertThrows(
         IllegalArgumentException.class,
@@ -279,10 +326,98 @@ public class ValidationResourceIT {
                         .build()))
             .build();
     validation.setMetrics(metrics);
-    validationWsClient.update(validation);
+    // only the validation pipeline (apps) and admins update validations
+    assertThrows(AccessDeniedException.class, () -> validationWsClient.update(validation));
+    adminWsClient.update(validation);
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertEquals(metrics, persistedValidation.getMetrics());
     assertEquals(Validation.Status.FINISHED, persistedValidation.getStatus());
+  }
+
+  @Test
+  public void cancelledValidationIsNotResumedIT() {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    validationWsClient.cancel(validation.getKey());
+
+    Validation cancelled = validationWsClient.get(validation.getKey());
+    cancelled.setStatus(Validation.Status.RUNNING);
+    assertThrows(IllegalArgumentException.class, () -> adminWsClient.update(cancelled));
+    assertEquals(
+        Validation.Status.ABORTED, validationWsClient.get(validation.getKey()).getStatus());
+  }
+
+  @Test
+  public void onlyAllowedUsersUpdateValidationsIT() {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+
+    // admin not in validation.update.allowed
+    Validation update = validationWsClient.get(validation.getKey());
+    update.setStatus(Status.FAILED);
+    assertThrows(AccessDeniedException.class, () -> otherAdminWsClient.update(update));
+    assertNotEquals(Status.FAILED, validationWsClient.get(validation.getKey()).getStatus());
+
+    // allowed admin
+    adminWsClient.update(update);
+    assertEquals(Status.FAILED, validationWsClient.get(validation.getKey()).getStatus());
+  }
+
+  private java.net.http.HttpResponse<String> anonymous(String method, String path, String body)
+      throws Exception {
+    return anonymous(method, path, body, "application/xml");
+  }
+
+  private java.net.http.HttpResponse<String> anonymous(
+      String method, String path, String body, String contentType) throws Exception {
+    java.net.http.HttpRequest.Builder request =
+        java.net.http.HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+            .method(
+                method,
+                body == null
+                    ? java.net.http.HttpRequest.BodyPublishers.noBody()
+                    : java.net.http.HttpRequest.BodyPublishers.ofString(body));
+    if (body != null) {
+      request.header("Content-Type", contentType);
+    }
+    return java.net.http.HttpClient.newHttpClient()
+        .send(request.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+  }
+
+  @Test
+  public void anonymousRequestsIT() throws Exception {
+    // authentication required
+    java.net.http.HttpResponse<String> list = anonymous("GET", "/validation", null);
+    assertEquals(401, list.statusCode());
+    assertEquals("GBIF realm=\"GBIF\"", list.headers().firstValue("WWW-Authenticate").orElse(null));
+    assertEquals(401, anonymous("GET", "/validation/" + UUID.randomUUID(), null).statusCode());
+    assertEquals(401, anonymous("GET", "/actuator/env", null).statusCode());
+    assertEquals(401, anonymous("GET", "/unknown", null).statusCode());
+
+    // public
+    assertEquals(200, anonymous("GET", "/validation/eml/schemas", null).statusCode());
+    assertEquals(200, anonymous("GET", "/validation/enumeration/FileFormat", null).statusCode());
+    assertEquals(200, anonymous("GET", "/validation/sequence?sequence=ACGT", null).statusCode());
+    assertEquals(201, anonymous("POST", "/validation/eml", "<eml/>").statusCode());
+  }
+
+  @Test
+  public void clbCallbackRequiresTokenIT() throws Exception {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    UUID key = validation.getKey();
+    String path = "/validation/clbValidationCallback/" + key;
+    String json = "application/json";
+
+    // missing, wrong and other validation tokens are rejected
+    assertEquals(403, anonymous("POST", path, "{}", json).statusCode());
+    assertEquals(403, anonymous("POST", path + "/bad-token", "{}", json).statusCode());
+    String otherToken = ClbCallbackToken.create(UUID.randomUUID(), CLB_CALLBACK_SECRET);
+    assertEquals(403, anonymous("POST", path + "/" + otherToken, "{}", json).statusCode());
+
+    // the token of the validation is accepted
+    String token = ClbCallbackToken.create(key, CLB_CALLBACK_SECRET);
+    assertEquals(204, anonymous("POST", path + "/" + token, "{}", json).statusCode());
   }
 
   @Test
@@ -314,6 +449,53 @@ public class ValidationResourceIT {
     assertTrue(
         validations.getResults().stream()
             .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));
+  }
+
+  @Test
+  public void otherUserCannotModifyValidationIT() throws Exception {
+    File archive = readTestFileInputStream("/archive.zip");
+    Validation validation = validationWsClient.submitFile(archive);
+    assertNotNull(validation);
+
+    // Validations can be read by everyone
+    Validation persistedValidation = otherUserWsClient.get(validation.getKey());
+    assertNotNull(persistedValidation);
+
+    persistedValidation.setStatus(Status.FINISHED);
+    assertThrows(AccessDeniedException.class, () -> otherUserWsClient.update(persistedValidation));
+    assertThrows(AccessDeniedException.class, () -> otherUserWsClient.cancel(validation.getKey()));
+    assertThrows(AccessDeniedException.class, () -> otherUserWsClient.delete(validation.getKey()));
+
+    Validation unchanged = validationWsClient.get(validation.getKey());
+    assertNull(unchanged.getDeleted());
+    assertNotEquals(Status.FINISHED, unchanged.getStatus());
+
+    // The owner can delete it
+    validationWsClient.delete(validation.getKey());
+    assertNotNull(validationWsClient.get(validation.getKey()).getDeleted());
+  }
+
+  @Test
+  public void deleteWhileSubmittingValidationIT() throws Exception {
+    File archive = readTestFileInputStream("/archive.zip");
+    // Hold the end of the submission until the validation is deleted
+    CompletableFuture<Void> gate = fileStoreManager.hold();
+    Validation validation;
+    try {
+      validation = validationWsClient.submitFile(archive);
+      assertNotNull(validation);
+      validationWsClient.delete(validation.getKey());
+    } finally {
+      gate.complete(null);
+    }
+
+    // Wait for the extraction and the update after it, both run in the common pool
+    assertTrue(ForkJoinPool.commonPool().awaitQuiescence(30, TimeUnit.SECONDS));
+
+    // The end of the submission must not undo the deletion
+    Validation deletedValidation = validationWsClient.get(validation.getKey());
+    assertNotNull(deletedValidation.getDeleted());
+    assertEquals(Status.SUBMITTED, deletedValidation.getStatus());
   }
 
   @Test

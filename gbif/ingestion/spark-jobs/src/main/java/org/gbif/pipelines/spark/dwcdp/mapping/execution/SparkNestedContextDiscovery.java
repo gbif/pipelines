@@ -4,8 +4,11 @@ import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.countDistinct;
 import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.not;
+import static org.apache.spark.sql.functions.trim;
 
 import java.util.Arrays;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
@@ -13,9 +16,12 @@ import org.gbif.pipelines.spark.dwcdp.mapping.definition.NestedContextDiscoveryF
 import org.gbif.pipelines.spark.dwcdp.mapping.definition.NestedExtensionContext;
 import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.util.TableLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Executes declarative nested-scope discovery into opaque parent/row/context identities. */
 final class SparkNestedContextDiscovery {
+  private static final Logger LOG = LoggerFactory.getLogger(SparkNestedContextDiscovery.class);
   static final String COL_PARENT = "__dwcdp_nested_parent";
   static final String COL_ROW = "__dwcdp_nested_row";
   static final String COL_CONTEXT = "__dwcdp_nested_context";
@@ -35,9 +41,30 @@ final class SparkNestedContextDiscovery {
         continue;
       }
       SparkPathResult result = pathExecutor.execute(loader, fragment.path().schemaPath());
+      // A shared contextual object (for example a DNA sequence) is not evidence that a row
+      // belongs to every parent using that object. Explicit row ownership takes precedence;
+      // indirect discovery remains available when the publisher omitted the parent key.
+      Column declaredParent =
+          result.columnOrNull(fragment.rowIdentity().path().field(context.rowParentKey().column()));
+      Column compatibleParent =
+          declaredParent
+              .isNull()
+              .or(trim(declaredParent.cast("string")).equalTo(""))
+              .or(declaredParent.equalTo(result.column(fragment.parentIdentity())));
+      Dataset<Row> candidates = result.dataset();
+      long conflictingRows = candidates.filter(not(compatibleParent)).count();
+      if (conflictingRows > 0) {
+        LOG.warn(
+            "Nested discovery {} rejected {} candidate rows conflicting with declared {}.{}; "
+                + "shared-resource fan-out must not create additional owners",
+            fragment.name(),
+            conflictingRows,
+            context.rowResource(),
+            context.rowParentKey().column());
+      }
       Dataset<Row> branch =
-          result
-              .dataset()
+          candidates
+              .filter(compatibleParent)
               .select(
                   result.column(fragment.parentIdentity()).cast("string").as(COL_PARENT),
                   result.column(fragment.rowIdentity()).cast("string").as(COL_ROW),

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.io.TempDir;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DwcDpMappingEngineDatasetPruningTest {
@@ -40,11 +42,12 @@ class DwcDpMappingEngineDatasetPruningTest {
   private SparkSession spark;
 
   @BeforeAll
-  void setupSpark() {
+  void setupSpark(@TempDir Path checkpoints) {
     spark =
         SparkTestSession.createBuilder()
             .appName("DwcDpMappingEngineDatasetPruningTest")
             .getOrCreate();
+    spark.sparkContext().setCheckpointDir(checkpoints.toUri().toString());
   }
 
   @AfterAll

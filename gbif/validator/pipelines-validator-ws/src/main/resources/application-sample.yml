@@ -26,7 +26,7 @@ gbif:
     url: @gbif.api.url@
   ws:
     security:
-      wrappedContent: false
+      wrapContent: false
   portal:
     url: @gbif.portal.url@
   mail:
@@ -34,6 +34,27 @@ gbif:
     from: @gbif.mail.url@`
 maxRunningValidationPerUser: 3
 validation:
+  update:
+    # comma separated users and app keys allowed to update validations (PUT /validation/{key}), e.g. the
+    # registry user of the pipelines validator tasks
+    allowed:
+    # false (default): updates by other admins or apps are only logged at WARN; true: they are rejected
+    enforce: false
+  url:
+    # comma separated hosts that may be fetched even if they resolve to non-public addresses
+    allowedPrivateHosts:
+  # largest file downloaded from a URL, defaults to spring.servlet.multipart.max-file-size
+  maxFileSize: @upload.maxUploadSize@
+  # limits on what a zip or gzip file unpacks to
+  maxUnpackedSize: 20GB
+  maxUnpackedEntries: 10000
+  eml:
+    # largest document accepted by /validation/eml
+    maxSize: 10MB
+  clbCallback:
+    # signs ChecklistBank callback URLs, same value as --clb-callback-secret of the validator tasks;
+    # if empty, callbacks are not authenticated
+    secret: @validation.clbCallback.secret@
   datasource:
     url: @validation.datasource.url@
     password: @validation.datasource.password@
@@ -60,3 +81,9 @@ spring:
       location: @upload.workingDirectory@
       max-file-size: @upload.maxUploadSize@
       max-request-size: @upload.maxUploadSize@
+management:
+  endpoints:
+    web:
+      exposure:
+        # other endpoints are for admins only, see RegistrySecurityConfiguration
+        include: health

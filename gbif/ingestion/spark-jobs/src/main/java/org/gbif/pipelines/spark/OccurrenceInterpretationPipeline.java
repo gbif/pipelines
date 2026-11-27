@@ -869,15 +869,34 @@ public class OccurrenceInterpretationPipeline {
                 },
             Encoders.bean(OccurrenceHdfsRecord.class));
 
-    if (config.getTableBuildConfig() == null
-        || config.getTableBuildConfig().getClassifications() == null
-        || config.getTableBuildConfig().getClassifications().isEmpty()) {
+    if (!hasClassifications(config)) {
       return dataset.toDF();
+    }
+
+    // for small datasets, to reduce the number of small files created, we coalesce to a single
+    // shard
+    return withClassificationColumns(config, dataset.toDF()).coalesce(numshards);
+  }
+
+  private static boolean hasClassifications(PipelinesConfig config) {
+    return config.getTableBuildConfig() != null
+        && config.getTableBuildConfig().getClassifications() != null
+        && !config.getTableBuildConfig().getClassifications().isEmpty();
+  }
+
+  /**
+   * Adds a struct column per configured classification (e.g. "gbif_classification") derived from
+   * the classification maps of an {@link OccurrenceHdfsRecord} dataframe.
+   */
+  public static Dataset<Row> withClassificationColumns(
+      PipelinesConfig config, Dataset<Row> hdfsRecords) {
+    if (!hasClassifications(config)) {
+      return hdfsRecords;
     }
 
     Map<String, String> uuidToColumnPrefix = config.getTableBuildConfig().getClassifications();
 
-    Dataset<Row> withClassifications = dataset.toDF();
+    Dataset<Row> withClassifications = hdfsRecords;
 
     for (Map.Entry<String, String> uuidToColumn : uuidToColumnPrefix.entrySet()) {
 
@@ -939,10 +958,6 @@ public class OccurrenceInterpretationPipeline {
                   coalesce(taxonomicIssue, array().cast("array<string>")).as("taxonomicissue"),
                   taxonomicStatus.as("taxonomicstatus")));
     }
-
-    // for small datasets, to reduce the number of small files created, we coalesce to a single
-    // shard
-    withClassifications = withClassifications.coalesce(numshards);
     return withClassifications;
   }
 }

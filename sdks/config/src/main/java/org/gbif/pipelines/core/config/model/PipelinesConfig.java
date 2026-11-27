@@ -132,4 +132,10 @@ public class PipelinesConfig implements Serializable {
   private DnaConfig dnaConfig = new DnaConfig();
 
   private TableBuildConfig tableBuildConfig = new TableBuildConfig();
+
+  /**
+   * GitHub API token, used by the metrics report to read ingestion-management issues without the
+   * unauthenticated rate limit (60 requests an hour).
+   */
+  private String githubToken;
 }

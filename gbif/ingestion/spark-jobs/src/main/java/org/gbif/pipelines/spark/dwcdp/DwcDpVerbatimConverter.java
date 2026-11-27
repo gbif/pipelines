@@ -12,8 +12,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -21,7 +23,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
-import org.apache.spark.storage.StorageLevel;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
@@ -90,6 +91,8 @@ public class DwcDpVerbatimConverter {
   static final String STATISTICS_REPORT = REPORT_DIRECTORY + "/statistics.txt";
   static final String STATISTICS_REPORT_JSON = REPORT_DIRECTORY + "/statistics.json";
 
+  private static final Object CHECKPOINT_DIRECTORY_LOCK = new Object();
+
   private DwcDpVerbatimConverter() {}
 
   public record VerbatimConversionMetrics(
@@ -105,22 +108,53 @@ public class DwcDpVerbatimConverter {
       boolean containsOccurrences)
       throws IOException {
 
+    String workspacePath =
+        PathUtil.interpretedAttemptPath(config.getInputPath(), datasetId, attempt);
+    Path checkpointPath =
+        fileSystem.makeQualified(
+            new Path(workspacePath, "_dwcdp-checkpoints/" + UUID.randomUUID()));
+    try {
+      return convert(
+          spark,
+          fileSystem,
+          workspacePath,
+          checkpointPath,
+          datasetId,
+          attempt,
+          containsEvents,
+          containsOccurrences);
+    } finally {
+      try {
+        fileSystem.delete(checkpointPath, true);
+      } catch (IOException e) {
+        log.warn("Could not clean up DwC-DP checkpoints at {}", checkpointPath, e);
+      }
+    }
+  }
+
+  private static VerbatimConversionMetrics convert(
+      SparkSession spark,
+      FileSystem fileSystem,
+      String workspacePath,
+      Path checkpointPath,
+      String datasetId,
+      int attempt,
+      boolean containsEvents,
+      boolean containsOccurrences)
+      throws IOException {
     ThreadContext.put("datasetKey", datasetId);
     ThreadContext.put("attempt", String.valueOf(attempt));
 
     long start = System.currentTimeMillis();
     log.info(
-        "Starting DwcDpVerbatimConverter for dataset {} attempt {}, containsEvents={}, containsOccurrences={}",
+        "Starting DwcDpVerbatimConverter for dataset {} attempt {}, containsEvents={},"
+            + " containsOccurrences={}",
         datasetId,
         attempt,
         containsEvents,
         containsOccurrences);
 
-    String workspacePath =
-        PathUtil.interpretedAttemptPath(config.getInputPath(), datasetId, attempt);
-    String verbatimOutputPath =
-        PathUtil.interpretedAttemptPath(config.getInputPath(), datasetId, attempt)
-            + "/verbatim.avro";
+    String verbatimOutputPath = workspacePath + "/verbatim.avro";
     String datapackagePath =
         (workspacePath.endsWith("/") ? workspacePath : workspacePath + "/") + DATAPACKAGE_SUBDIR;
 
@@ -144,13 +178,18 @@ public class DwcDpVerbatimConverter {
     if (containsEvents && dataPackage.findResource("event").isPresent()) {
       log.info("Building event-core ExtendedRecords with declarative mapping engine");
       ingestPlan = EventDwcaMapping.current(mappingEngine.schemaGraph());
-      mappingExecution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
-      records = mappingExecution.records();
-      branchMetrics = mappingExecution.branchMetrics();
     } else if (containsOccurrences && dataPackage.findResource("occurrence").isPresent()) {
       log.info("Building occurrence-core ExtendedRecords with declarative mapping engine");
       ingestPlan = OccurrenceDwcaMapping.current(mappingEngine.schemaGraph());
-      mappingExecution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
+    }
+
+    if (ingestPlan != null) {
+      // Standalone callbacks share a SparkContext. Keep the directory fixed while the
+      // mapping engine creates its eager checkpoints.
+      synchronized (CHECKPOINT_DIRECTORY_LOCK) {
+        spark.sparkContext().setCheckpointDir(checkpointPath.toString());
+        mappingExecution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
+      }
       records = mappingExecution.records();
       branchMetrics = mappingExecution.branchMetrics();
     } else {
@@ -160,13 +199,10 @@ public class DwcDpVerbatimConverter {
       records = spark.emptyDataset(Encoders.bean(ExtendedRecord.class));
     }
 
-    if (ingestPlan != null) {
-      writeIngestPlans(fileSystem, workspacePath, mappingEngine, ingestPlan, dataPackage);
-    }
-
-    records.persist(StorageLevel.MEMORY_AND_DISK());
-    VerbatimConversionMetrics metrics;
     try {
+      if (ingestPlan != null) {
+        writeIngestPlans(fileSystem, workspacePath, mappingEngine, ingestPlan, dataPackage);
+      }
       String tempOutputPath = verbatimOutputPath + ".parts";
       records
           .coalesce(1)
@@ -177,22 +213,27 @@ public class DwcDpVerbatimConverter {
           .save(tempOutputPath);
 
       mergeToSingleFile(fileSystem, tempOutputPath, verbatimOutputPath);
-
-      metrics =
-          writeMetrics(
-              spark,
-              dataPackage,
-              workspacePath,
-              fileSystem,
-              datasetId,
-              Optional.of(records),
-              branchMetrics);
     } finally {
-      records.unpersist(false);
       if (mappingExecution != null) {
         mappingExecution.close();
       }
     }
+
+    Dataset<ExtendedRecord> writtenRecords =
+        spark
+            .read()
+            .format("avro")
+            .load(verbatimOutputPath)
+            .as(Encoders.bean(ExtendedRecord.class));
+    VerbatimConversionMetrics metrics =
+        writeMetrics(
+            spark,
+            dataPackage,
+            workspacePath,
+            fileSystem,
+            datasetId,
+            Optional.of(writtenRecords),
+            branchMetrics);
 
     log.info(
         "DwcDpVerbatimConverter completed for dataset {} attempt {} in {}ms, metrics: {}",

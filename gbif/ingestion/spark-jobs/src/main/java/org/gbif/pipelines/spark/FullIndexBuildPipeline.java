@@ -158,10 +158,14 @@ public class FullIndexBuildPipeline {
       return;
     }
 
-    // load all hdfs view parquet
+    // load all json parquet. mergeSchema is required as datasets may have been
+    // interpreted with different schema versions (e.g. newly added nested fields).
+    // Without it, Spark uses the schema of a single file and silently drops fields
+    // missing from that file for all datasets.
     Dataset<Row> hdfs =
         spark
             .read()
+            .option("mergeSchema", "true")
             .parquet(scanResult.successfulPaths().toArray(new String[0]))
             .coalesce(args.numberOfShards);
 

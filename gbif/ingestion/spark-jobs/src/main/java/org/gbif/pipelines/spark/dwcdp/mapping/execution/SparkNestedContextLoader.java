@@ -54,7 +54,7 @@ final class SparkNestedContextLoader {
    *
    * <p>The left join preserves every discovered parent/row ownership. A unique context is attached
    * only when discovery resolved exactly one context identity; zero or ambiguous contexts remain
-   * null. Eager local checkpointing is intentional here: downstream contextual fragments should
+   * null. Eager reliable checkpointing is intentional here: downstream contextual fragments should
    * depend on this compact resolved relation, not inherit and replicate the complete discovery DAG.
    */
   static Dataset<Row> resolvedContext(SparkNestedContextDiscovery.Result discovery) {
@@ -77,7 +77,7 @@ final class SparkNestedContextLoader {
                 .as(SparkNestedContextDiscovery.COL_ROW),
             col("ctx." + SparkNestedContextDiscovery.COL_CONTEXT)
                 .as(SparkNestedContextDiscovery.COL_CONTEXT))
-        .localCheckpoint(true);
+        .checkpoint(true);
   }
 
   private static Dataset<Row> nestedRows(

@@ -97,7 +97,8 @@ public final class SparkExtensionMaterializer {
       throw new IllegalArgumentException(
           "Extension "
               + extension.rowType()
-              + " has multiple row-defining fragments; declare UNION row composition when fragments are independent row sets: "
+              + " has multiple row-defining fragments; declare UNION row composition when fragments"
+              + " are independent row sets: "
               + rowFragments.stream().map(CompiledFragment::name).toList());
     }
 
@@ -513,14 +514,14 @@ public final class SparkExtensionMaterializer {
    * contribution boundary; downstream joins and target merges should consume its keyed result, not
    * inherit the complete aggregate/projection lineage that produced its target columns.
    *
-   * <p>Eager local checkpointing is deliberately the conservative execution policy for now. It
+   * <p>Eager reliable checkpointing is deliberately the conservative execution policy for now. It
    * bounds Catalyst planning complexity at the cost of an additional materialization boundary. A
    * later physical planner can selectively inline simple fragments without changing mapping
    * semantics.
    */
   private static FragmentResult isolateFragmentResult(FragmentResult result) {
     return new FragmentResult(
-        result.dataset().localCheckpoint(true), result.parentKeySource(), result.targets());
+        result.dataset().checkpoint(true), result.parentKeySource(), result.targets());
   }
 
   /**

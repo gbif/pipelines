@@ -30,12 +30,15 @@ import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.spark.util.SparkTestSession;
@@ -96,6 +99,50 @@ public class EventInterpretationTest extends MockedServicesTest {
     // Validate EventHdfsRecord output
     checkHdfsTableOutputs(testResourcesRoot, testUuid, 1);
     checkJsonOutputs(testResourcesRoot, testUuid, 1);
+    checkSimpleEventInternalIds(config, testUuid, 1);
+    checkVerbatimExtensionGbifIds(config, testUuid, 1);
+  }
+
+  /**
+   * The verbatim extension rows of an event dataset must use the event internal id (sha1 of
+   * datasetKey + id) as gbifid, so they can be joined with the event core table in downloads.
+   */
+  private void checkVerbatimExtensionGbifIds(PipelinesConfig config, String testUuid, int attempt) {
+    String inputPath = String.format("%s/%s/%d", config.getInputPath(), testUuid, attempt);
+    VerbatimExtensionsInterpretationPipeline.registerUdfs(spark);
+
+    List<Row> rows =
+        VerbatimExtensionsInterpretationPipeline.readExtendedRecords(
+                spark, DatasetType.SAMPLING_EVENT, inputPath, testUuid)
+            .select("gbifid", "coreId", "directory")
+            .collectAsList();
+
+    String humboldtDirectory = Extension.HUMBOLDT.name().toLowerCase();
+    assertTrue(rows.stream().anyMatch(r -> humboldtDirectory.equals(r.getString(2))));
+    for (Row row : rows) {
+      assertEquals(HashConverter.getSha1(testUuid, row.getString(1)), row.getString(0));
+    }
+  }
+
+  /**
+   * The internal id stored in the simple events is used as gbifid of the verbatim extension tables,
+   * so it must be populated and match the event core gbifid (sha1 of datasetKey + id).
+   */
+  private void checkSimpleEventInternalIds(PipelinesConfig config, String testUuid, int attempt) {
+    List<Row> rows =
+        spark
+            .read()
+            .parquet(
+                String.format(
+                    "%s/%s/%d/%s",
+                    config.getOutputPath(), testUuid, attempt, Directories.SIMPLE_EVENT))
+            .select("id", "internalId")
+            .collectAsList();
+
+    assertFalse(rows.isEmpty());
+    for (Row row : rows) {
+      assertEquals(HashConverter.getSha1(testUuid, row.getString(0)), row.getString(1));
+    }
   }
 
   private void checkHdfsTableOutputs(String outputFile, String testUuid, int attempt)

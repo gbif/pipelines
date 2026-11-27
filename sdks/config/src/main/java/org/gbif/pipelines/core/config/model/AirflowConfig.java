@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AirflowConfig implements Serializable {
-  public String user;
-  public String pass;
+  @ToString.Exclude public String user;
+  @ToString.Exclude public String pass;
   public String address;
   public int apiCheckDelaySec = 5;
 

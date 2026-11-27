@@ -2,9 +2,7 @@ package org.gbif.validator.ws.file;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,6 +52,52 @@ class FileStoreManagerTest extends DownloadFileBaseTest {
     uploadTest("/dwca/", "Archive.zip", "application/zip", FileFormat.DWCA);
   }
 
+  @SneakyThrows
+  @Test
+  void uploadFileNameWithPathTest() {
+    try (InputStream archive = readTestFileInputStream("/dwca/Archive.zip")) {
+      MockMultipartFile mockMultipartFile =
+          new MockMultipartFile("file", "../../Archive.zip", "application/zip", archive);
+      FileStoreManager fileStoreManager =
+          new FileStoreManager(
+              workingDirectory.toString(),
+              storeDirectory.toString(),
+              ctx.getBean(DownloadFileManager.class));
+      UUID targetDirectory = UUID.randomUUID();
+
+      FileStoreManager.AsyncDataFileTask task =
+          fileStoreManager.uploadDataFile(mockMultipartFile, targetDirectory.toString());
+      task.getTask().get();
+      DataFile dataFile = task.getStart();
+
+      assertEquals("Archive.zip", dataFile.getSourceFileName());
+      assertEquals(
+          storeDirectory.resolve(targetDirectory.toString()).resolve("Archive.zip"),
+          dataFile.getFilePath());
+    }
+  }
+
+  @Test
+  void sanitizeFileNameTest() {
+    assertEquals("a.zip", FileStoreManager.sanitizeFileName("a.zip"));
+    assertEquals("a.zip", FileStoreManager.sanitizeFileName("../../a.zip"));
+    assertEquals("a.zip", FileStoreManager.sanitizeFileName("/tmp/a.zip"));
+    assertEquals("a.zip", FileStoreManager.sanitizeFileName("..\\..\\a.zip"));
+    Assertions.assertThrows(
+        IllegalArgumentException.class, () -> FileStoreManager.sanitizeFileName(".."));
+    Assertions.assertThrows(
+        IllegalArgumentException.class, () -> FileStoreManager.sanitizeFileName(""));
+    Assertions.assertThrows(
+        IllegalArgumentException.class, () -> FileStoreManager.sanitizeFileName(null));
+  }
+
+  @Test
+  void downloadFileNameTest() {
+    assertEquals("a.zip", FileStoreManager.downloadFileName("../../a.zip"));
+    assertEquals("download", FileStoreManager.downloadFileName(".."));
+    assertEquals("download", FileStoreManager.downloadFileName(null));
+  }
+
   /** Generic method to test file uploads. */
   @SneakyThrows
   public void uploadTest(
@@ -99,12 +143,11 @@ class FileStoreManagerTest extends DownloadFileBaseTest {
 
     // When
     FileStoreManager.AsyncDownloadResult downloadResult =
-        fileStoreManager.downloadDataFile(
-            testPath("/Archive.zip"), key.toString(), System.out::println, err -> fail());
+        fileStoreManager.downloadDataFile(testPath("/Archive.zip"), key.toString());
 
     // Should
-    File downloadFile = downloadResult.getDownloadTask().get();
-    Path parent = downloadFile.toPath().getParent();
+    DataFile downloadFile = downloadResult.getDownloadTask().get();
+    Path parent = downloadFile.getFilePath().getParent();
 
     assertTrue(Files.exists(parent.resolve("eml.xml")));
     assertTrue(Files.exists(parent.resolve("meta.xml")));

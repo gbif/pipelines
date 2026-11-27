@@ -1,5 +1,8 @@
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.spark.ArgsConstants.OCCURRENCE_ID_VALID_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.TRIPLET_VALID_ARG;
+
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +31,10 @@ public class OccurrenceInterpretationDistributedCallback extends OccurrenceInter
         fileSystem,
         pipelinesConfig.getAirflowConfig().interpretationDag,
         StepType.VERBATIM_TO_INTERPRETED,
-        List.of("--interpretTypes=" + String.join(",", message.getInterpretTypes())));
+        List.of(
+            "--interpretTypes=" + String.join(",", message.getInterpretTypes()),
+            TRIPLET_VALID_ARG + "=" + message.getValidationResult().isTripletValid(),
+            OCCURRENCE_ID_VALID_ARG + "=" + message.getValidationResult().isOccurrenceIdValid()));
 
     // After a successful run, cleanup previous attempts
     CleanupUtil.cleanupPreviousOnSuccess(

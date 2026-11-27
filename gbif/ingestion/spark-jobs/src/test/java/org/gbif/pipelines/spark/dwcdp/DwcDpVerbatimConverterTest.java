@@ -10,7 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -46,6 +48,7 @@ import org.gbif.pipelines.spark.util.TableLoader;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -75,6 +78,11 @@ class DwcDpVerbatimConverterTest {
   @BeforeAll
   void setup() {
     spark = SparkTestSession.createBuilder().appName("DwcDpVerbatimConverterTest").getOrCreate();
+  }
+
+  @BeforeEach
+  void setCheckpointDirectory(@TempDir Path checkpoints) {
+    spark.sparkContext().setCheckpointDir(checkpoints.toUri().toString());
   }
 
   @AfterAll
@@ -649,24 +657,54 @@ class DwcDpVerbatimConverterTest {
 
   @Test
   void eventAssertionFieldsRemappedToEmofTermsInExtension(@TempDir Path dir) throws Exception {
+    String datasetId = UUID.randomUUID().toString();
+    int attempt = 1;
+    Path workspace = dir.resolve(datasetId).resolve(Integer.toString(attempt));
+    Path datapackage = workspace.resolve(DataPackageConverter.DATAPACKAGE_SUBDIR);
+
     // event table uses internal surrogate PK; eventID is the natural DwC identifier
     writeParquet(
-        dir,
+        datapackage,
         "data/event.parquet",
         schema("event_pk", "eventID"),
         List.of(RowFactory.create("EPK-001", "EVT001")));
 
     // assertion links via event_fk (surrogate), not via eventID
     writeParquet(
-        dir,
+        datapackage,
         "data/event-assertion.parquet",
         schema("assertionID", "event_fk", "assertionType", "assertionValue", "assertionUnit"),
         List.of(RowFactory.create("A001", "EPK-001", "Temperature", "25.0", "Celsius")));
 
-    DataPackage dp = DataPackageFixtures.withEventAndAssertion();
+    MapperUtil.MAPPER.writeValue(
+        datapackage.resolve("datapackage.json").toFile(),
+        DataPackageFixtures.withEventAndAssertion());
+
+    PipelinesConfig config = new PipelinesConfig();
+    config.setInputPath(dir.toUri().toString());
+    config.setOutputPath(dir.toUri().toString());
+    FileSystem fs = FileSystem.getLocal(spark.sparkContext().hadoopConfiguration());
+    DwcDpVerbatimConverter.convert(spark, fs, config, datasetId, attempt, true, false);
+
+    Path checkpoint = Path.of(URI.create(spark.sparkContext().getCheckpointDir().get()));
+    assertTrue(checkpoint.startsWith(workspace.resolve("_dwcdp-checkpoints")));
+    assertFalse(Files.exists(checkpoint));
+
+    var report =
+        MapperUtil.MAPPER.readTree(
+            workspace.resolve(DwcDpVerbatimConverter.STATISTICS_REPORT_JSON).toFile());
+    var output = report.get("output");
+    assertEquals(1L, output.get("coreRecordsWritten").asLong());
+    assertEquals(1, output.get("extensions").size());
+    assertEquals(1L, output.get("extensions").get(0).get("rows").asLong());
 
     List<ExtendedRecord> records =
-        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+        spark
+            .read()
+            .format("avro")
+            .load(workspace.resolve("verbatim.avro").toUri().toString())
+            .as(Encoders.bean(ExtendedRecord.class))
+            .collectAsList();
 
     assertEquals(1, records.size());
     ExtendedRecord r = records.get(0);

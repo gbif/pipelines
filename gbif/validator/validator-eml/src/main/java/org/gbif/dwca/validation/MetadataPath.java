@@ -2,13 +2,16 @@ package org.gbif.dwca.validation;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataPath {
 
@@ -35,7 +38,7 @@ public class MetadataPath {
                     Matcher matcher = PATTERN.matcher(str);
                     return matcher.find() ? matcher.group(2) : "";
                   })
-              .map(rootDirectory::resolve);
+              .flatMap(name -> resolveInside(rootDirectory, name));
 
       if (fromMetaXml.isPresent()) {
         return fromMetaXml;
@@ -53,5 +56,20 @@ public class MetadataPath {
     }
 
     return Optional.empty();
+  }
+
+  /** Resolves a file name from meta.xml, empty if it points outside the archive directory. */
+  private static Optional<Path> resolveInside(Path rootDirectory, String name) {
+    try {
+      Path root = rootDirectory.toAbsolutePath().normalize();
+      Path path = root.resolve(name).normalize();
+      if (!path.startsWith(root) || path.equals(root) || !Files.isRegularFile(path)) {
+        log.warn("Ignoring metadata location {} outside of {}", name, rootDirectory);
+        return Optional.empty();
+      }
+      return Optional.of(path);
+    } catch (InvalidPathException ex) {
+      return Optional.empty();
+    }
   }
 }
