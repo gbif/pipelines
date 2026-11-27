@@ -2,7 +2,6 @@ package org.gbif.pipelines.spark.dwcdp.mapping.schema;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Suppliers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -22,8 +21,7 @@ public final class DwcDpSchemaLoader {
   private static final String RELEASE_PROFILE =
       "https://rs.tdwg.org/dwc-dp/1.0/dwc-dp-profile.json";
   private static final String ROOT = "schemas/";
-  private static final Supplier<SchemaGraph> RELEASE_GRAPH =
-      Suppliers.memoize(() -> new DwcDpSchemaLoader().loadRelease());
+  private static SchemaGraph releaseGraph;
   private final ClassLoader classLoader;
   private final ObjectMapper mapper;
 
@@ -55,11 +53,11 @@ public final class DwcDpSchemaLoader {
 
   public SchemaGraph version(String version) {
     String base = version.endsWith("/") ? version : version + "/";
-    return "1.0/".equals(base) ? RELEASE_GRAPH.get() : loadVersionBase(base);
+    return "1.0/".equals(base) ? releasedSchema() : loadVersionBase(base);
   }
 
   public SchemaGraph forPackage(DataPackage dataPackage) {
-    return forPackage(dataPackage, RELEASE_GRAPH);
+    return forPackage(dataPackage, DwcDpSchemaLoader::releasedSchema);
   }
 
   SchemaGraph forPackage(DataPackage dataPackage, Supplier<SchemaGraph> releaseGraph) {
@@ -68,6 +66,13 @@ public final class DwcDpSchemaLoader {
             || RELEASE_PROFILE.replace("https:", "http:").equals(profile)
         ? releaseGraph.get()
         : current();
+  }
+
+  private static synchronized SchemaGraph releasedSchema() {
+    if (releaseGraph == null) {
+      releaseGraph = new DwcDpSchemaLoader().loadRelease();
+    }
+    return releaseGraph;
   }
 
   private SchemaGraph loadRelease() {
