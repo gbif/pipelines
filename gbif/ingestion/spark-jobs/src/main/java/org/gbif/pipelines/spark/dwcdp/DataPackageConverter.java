@@ -4,17 +4,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.Column;
@@ -41,6 +46,9 @@ public class DataPackageConverter {
 
   public static final String DATAPACKAGE_SUBDIR = "datapackage";
 
+  // Hadoop interprets URI schemes and glob patterns in paths passed to Spark.
+  private static final Pattern UNSUPPORTED_PATH_SYNTAX = Pattern.compile("^[^/]*:|[*?\\[{]");
+
   private final DataPackageParser parser;
   private final ObjectMapper mapper;
   private final long targetPartitionByteSize;
@@ -53,8 +61,8 @@ public class DataPackageConverter {
   }
 
   public void convert(SparkSession spark, Path source, String destination) throws IOException {
-    Path descriptorPath = getDescriptorPath(source);
-    Path sourceBase = descriptorPath.getParent();
+    Path descriptorPath = getDescriptorPath(source.toAbsolutePath());
+    Path sourceBase = descriptorPath.getParent().toRealPath();
 
     // Keep descriptor parsing independent of the storage backend. The shared descriptor parser
     // consumes text, while Hadoop is only involved when writing the converted package.
@@ -68,22 +76,41 @@ public class DataPackageConverter {
     String datapackageDestination =
         (destination.endsWith("/") ? destination : destination + "/") + DATAPACKAGE_SUBDIR;
 
-    Map<String, Long> metrics = new HashMap<>();
-
+    List<ResourceConversion> conversions = new ArrayList<>();
     for (ResourceDescriptor resource : descriptor.resources()) {
       if (resource.paths().isEmpty()) {
         log.debug("Skipping resource [{}] without a path", resource.name());
         continue;
       }
 
-      List<Path> inputs = resolveInputPaths(sourceBase, resource.paths());
-      String outputRelative = swapExtension(resource.paths().get(0), "parquet");
-      String outputUri = datapackageDestination + "/" + outputRelative;
+      List<Path> inputs = new ArrayList<>(resource.paths().size());
+      for (String path : resource.paths()) {
+        inputs.add(resolveInputPath(sourceBase, resource.name(), path));
+      }
 
-      long count = readAndWrite(spark, resource, inputs, outputUri);
-      metrics.put("COUNT_" + resource.name().toUpperCase(Locale.ROOT), count);
-
+      String outputRelative =
+          swapExtension(posixPath(sourceBase.relativize(inputs.get(0))), "parquet");
+      conversions.add(new ResourceConversion(resource, inputs, outputRelative));
       updateOutputResource(outputDescriptor, resource.name(), outputRelative);
+    }
+    // The parser can skip resources that are still present in the original JSON.
+    for (JsonNode resource : outputDescriptor.path("resources")) {
+      JsonNode path = resource.path("path");
+      String name = resource.path("name").asText();
+      if (path.isArray()) {
+        for (JsonNode entry : path) {
+          relativeResourcePath(name, entry.asText());
+        }
+      } else if (!path.isMissingNode() && !path.isNull()) {
+        relativeResourcePath(name, path.asText());
+      }
+    }
+
+    Map<String, Long> metrics = new HashMap<>();
+    for (ResourceConversion conversion : conversions) {
+      String outputUri = datapackageDestination + "/" + conversion.outputRelative();
+      long count = readAndWrite(spark, conversion.resource(), conversion.inputs(), outputUri);
+      metrics.put("COUNT_" + conversion.resource().name().toUpperCase(Locale.ROOT), count);
     }
 
     metrics.put("COUNT_MAX", metrics.values().stream().mapToLong(Long::longValue).max().orElse(0));
@@ -97,21 +124,65 @@ public class DataPackageConverter {
     writeDescriptor(spark, outputDescriptor, datapackageDestination);
   }
 
-  private static List<Path> resolveInputPaths(Path sourceBase, List<String> resourcePaths) {
-    List<Path> resolved = new ArrayList<>(resourcePaths.size());
-    for (String resourcePath : resourcePaths) {
-      Path path;
-      if (resourcePath.startsWith("file:")) {
-        path = Path.of(URI.create(resourcePath));
-      } else {
-        path = Path.of(resourcePath);
-        if (!path.isAbsolute()) {
-          path = sourceBase.resolve(path);
-        }
-      }
-      resolved.add(path.normalize());
+  private record ResourceConversion(
+      ResourceDescriptor resource, List<Path> inputs, String outputRelative) {}
+
+  private static Path resolveInputPath(Path sourceBase, String resourceName, String resourcePath)
+      throws IOException {
+    Path input = sourceBase.resolve(relativeResourcePath(resourceName, resourcePath));
+    Path realInput = input.toRealPath();
+    if (!realInput.startsWith(sourceBase) || realInput.equals(sourceBase)) {
+      throw invalidResourcePath(resourceName, resourcePath);
     }
-    return List.copyOf(resolved);
+    if (Files.isDirectory(realInput)) {
+      // A Parquet resource can be a directory of part files that Spark enumerates.
+      try (var paths = Files.walk(realInput, FileVisitOption.FOLLOW_LINKS)) {
+        var links = paths.filter(Files::isSymbolicLink).iterator();
+        while (links.hasNext()) {
+          if (!links.next().toRealPath().startsWith(sourceBase)) {
+            throw invalidResourcePath(resourceName, resourcePath);
+          }
+        }
+      } catch (UncheckedIOException e) {
+        throw e.getCause();
+      }
+    }
+    return input;
+  }
+
+  private static Path relativeResourcePath(String resourceName, String resourcePath)
+      throws IOException {
+    Path path;
+    try {
+      path = Path.of(resourcePath);
+    } catch (InvalidPathException e) {
+      throw new IOException(invalidResourcePath(resourceName, resourcePath).getMessage(), e);
+    }
+    Path normalized = path.normalize();
+    if (path.isAbsolute()
+        || normalized.toString().isBlank()
+        || resourcePath.indexOf('\\') >= 0
+        || UNSUPPORTED_PATH_SYNTAX.matcher(posixPath(normalized)).find()) {
+      throw invalidResourcePath(resourceName, resourcePath);
+    }
+    for (Path segment : path) {
+      if (segment.toString().equals("..")) {
+        throw invalidResourcePath(resourceName, resourcePath);
+      }
+    }
+    return normalized;
+  }
+
+  private static String posixPath(Path path) {
+    return path.toString().replace(File.separatorChar, '/');
+  }
+
+  private static IOException invalidResourcePath(String resourceName, String resourcePath) {
+    return new IOException(
+        "Resource ["
+            + resourceName
+            + "] must use a relative path within the data package: "
+            + resourcePath);
   }
 
   private static @NonNull Path getDescriptorPath(Path source) {
